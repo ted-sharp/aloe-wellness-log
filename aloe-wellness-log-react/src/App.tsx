@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-ro
 import RecordInput from './pages/RecordInput';
 import RecordList from './pages/RecordList';
 import RecordGraph from './pages/RecordGraph';
+import RecordCalendar from './pages/RecordCalendar';
 import { useRecordsStore } from './store/records';
 import './App.css'
 
@@ -18,11 +19,13 @@ function App() {
         <Link to="/">記録入力</Link>
         <Link to="/list">記録一覧</Link>
         <Link to="/graph">記録グラフ</Link>
+        <Link to="/calendar">記録カレンダー</Link>
       </nav>
       <Routes>
         <Route path="/" element={<RecordInput />} />
         <Route path="/list" element={<RecordList />} />
         <Route path="/graph" element={<RecordGraph />} />
+        <Route path="/calendar" element={<RecordCalendar />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
