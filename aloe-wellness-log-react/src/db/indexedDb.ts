@@ -68,4 +68,40 @@ export async function getAllFields(): Promise<Field[]> {
     request.onsuccess = () => resolve(request.result as Field[]);
     request.onerror = () => reject(request.error);
   });
+}
+
+// 記録項目の更新
+export async function updateField(field: Field) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(FIELDS_STORE, 'readwrite');
+    const store = tx.objectStore(FIELDS_STORE);
+    store.put(field);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// 記録データの更新
+export async function updateRecord(record: RecordItem) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(RECORDS_STORE, 'readwrite');
+    const store = tx.objectStore(RECORDS_STORE);
+    store.put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// 記録データの削除
+export async function deleteRecord(id: string) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(RECORDS_STORE, 'readwrite');
+    const store = tx.objectStore(RECORDS_STORE);
+    store.delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 } 
