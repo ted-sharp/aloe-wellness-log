@@ -48,19 +48,27 @@ export default function RecordInput() {
     setValues((prev) => ({ ...prev, [fieldId]: value }));
   };
 
+  // 項目が入力されているかどうかを判定する関数
+  const hasValue = (field: Field, value: string | number | boolean | undefined): boolean => {
+    if (field.type === 'number') {
+      return value !== undefined && value !== '' && !isNaN(Number(value));
+    } else if (field.type === 'string') {
+      return value !== undefined && value !== '' && String(value).trim() !== '';
+    } else if (field.type === 'boolean') {
+      return value === true; // チェックされている場合のみ
+    }
+    return false;
+  };
+
   const validate = () => {
+    // 入力された項目のみバリデーション
     for (const field of fields) {
       const val = values[field.fieldId];
-      if (field.type === 'number') {
-        if (val === undefined || val === '' || isNaN(Number(val))) {
-          return `${field.name}は数値で入力してください`;
-        }
-      } else if (field.type === 'string') {
-        if (val === undefined || val === '') {
-          return `${field.name}を入力してください`;
+      if (hasValue(field, val)) {
+        if (field.type === 'number' && isNaN(Number(val))) {
+          return `${field.name}は正しい数値で入力してください`;
         }
       }
-      // boolean型は未入力でもOK
     }
     return null;
   };
@@ -80,24 +88,21 @@ export default function RecordInput() {
       // より一意性を保つために現在のタイムスタンプを追加
       const uniqueTimestamp = Date.now();
 
+      // 入力された項目のみ保存
       for (const field of fields) {
-        let value = values[field.fieldId];
+        const value = values[field.fieldId];
 
-        // boolean型の場合、未設定ならfalseを明示的に設定
-        if (field.type === 'boolean' && value === undefined) {
-          value = false;
-        } else if (value === undefined) {
-          value = '';
+        // 入力されている項目のみ記録
+        if (hasValue(field, value)) {
+          await addRecord({
+            id: `${selectedDateTime.toISOString()}-${field.fieldId}-${uniqueTimestamp}`,
+            date: recordDate,
+            time: recordTime,
+            datetime: selectedDateTime.toISOString(),
+            fieldId: field.fieldId,
+            value: value,
+          });
         }
-
-        await addRecord({
-          id: `${selectedDateTime.toISOString()}-${field.fieldId}-${uniqueTimestamp}`,
-          date: recordDate,
-          time: recordTime,
-          datetime: selectedDateTime.toISOString(),
-          fieldId: field.fieldId,
-          value: value,
-        });
       }
 
       // 備考が入力されている場合、備考も保存
