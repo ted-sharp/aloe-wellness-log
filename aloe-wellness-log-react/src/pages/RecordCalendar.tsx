@@ -1,11 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useRecordsStore } from '../store/records';
 
 export default function RecordCalendar() {
-  const { records, fields } = useRecordsStore();
+  const { records, fields, loadRecords, loadFields } = useRecordsStore();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    loadFields();
+    loadRecords();
+  }, [loadFields, loadRecords]);
 
   // 日付ごとに記録があるかどうかを判定
   const recordDates = useMemo(() => {
@@ -16,7 +21,11 @@ export default function RecordCalendar() {
   // 選択日の記録一覧
   const selectedRecords = useMemo(() => {
     if (!selectedDate) return [];
-    const dateStr = selectedDate.toISOString().slice(0, 10);
+    // タイムゾーンを考慮した日付文字列を作成
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     return records.filter(r => r.date === dateStr);
   }, [records, selectedDate]);
 
@@ -28,7 +37,11 @@ export default function RecordCalendar() {
         value={selectedDate}
         tileContent={({ date, view }) => {
           if (view === 'month') {
-            const dateStr = date.toISOString().slice(0, 10);
+            // タイムゾーンを考慮した日付文字列を作成
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             if (recordDates.has(dateStr)) {
               return <span className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-500 align-middle" title="記録あり"></span>;
             }
@@ -58,4 +71,4 @@ export default function RecordCalendar() {
       )}
     </div>
   );
-} 
+}

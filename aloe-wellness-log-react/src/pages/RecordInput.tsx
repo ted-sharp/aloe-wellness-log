@@ -136,56 +136,74 @@ export default function RecordInput() {
     <div className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
         {fields.map((field) => (
-          <div key={field.fieldId} className="flex items-center gap-2">
+          <div key={field.fieldId} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             {editFieldId === field.fieldId ? (
-              <>
-                <input
-                  type="text"
-                  value={editField.name ?? ''}
-                  onChange={e => setEditField(f => ({ ...f, name: e.target.value }))}
-                  className="border rounded px-2 py-1 w-32"
-                />
-                <input
-                  type="text"
-                  value={editField.unit ?? ''}
-                  onChange={e => setEditField(f => ({ ...f, unit: e.target.value }))}
-                  className="border rounded px-2 py-1 w-20"
-                  placeholder="単位"
-                />
-                <button type="button" onClick={handleEditFieldSave} className="text-green-600">保存</button>
-                <button type="button" onClick={() => setEditFieldId(null)} className="text-gray-500">キャンセル</button>
-              </>
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">項目名</label>
+                    <input
+                      type="text"
+                      value={editField.name ?? ''}
+                      onChange={e => setEditField(f => ({ ...f, name: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="w-full sm:w-24">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">単位</label>
+                    <input
+                      type="text"
+                      value={editField.unit ?? ''}
+                      onChange={e => setEditField(f => ({ ...f, unit: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="例: kg"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button type="button" onClick={handleEditFieldSave} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors">💾 保存</button>
+                  <button type="button" onClick={() => setEditFieldId(null)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium transition-colors">❌ キャンセル</button>
+                </div>
+              </div>
             ) : (
-              <>
-                <label className="block font-bold mb-1 w-32">{field.name}</label>
-                <input
-                  type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
-                  value={field.type === 'boolean' ? undefined : values[field.fieldId] ?? ''}
-                  checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
-                  onChange={(e) =>
-                    handleChange(
-                      field.fieldId,
-                      field.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
-                    )
-                  }
-                  className="border rounded px-2 py-1"
-                />
-                {field.unit && <span className="ml-2">{field.unit}</span>}
-                <button
-                  type="button"
-                  className="ml-2 bg-gray-200 px-2 py-1 rounded text-sm"
-                  onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
-                >
-                  前回と同じ
-                </button>
-                <button type="button" onClick={() => handleEditField(field)} className="text-blue-600 ml-2">編集</button>
-              </>
+                            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-lg font-semibold text-gray-800">{field.name}</label>
+                  <button type="button" onClick={() => handleEditField(field)} className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 px-3 py-1.5 rounded text-sm font-medium text-yellow-700 transition-colors w-24">✏️ 編集</button>
+                </div>
+                                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                                        <input
+                      type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
+                      value={field.type === 'boolean' ? undefined : values[field.fieldId] ?? ''}
+                      checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
+                      onChange={(e) =>
+                        handleChange(
+                          field.fieldId,
+                          field.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
+                        )
+                      }
+                      className={field.type === 'boolean'
+                        ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        : "border border-gray-300 rounded px-3 py-2 w-20 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+                    />
+                    {field.unit && <span className="text-gray-600 font-medium">{field.unit}</span>}
+                  </div>
+                  <button
+                    type="button"
+                    className="bg-blue-100 hover:bg-blue-200 border border-blue-300 px-3 py-1.5 rounded text-sm font-medium text-blue-700 transition-colors w-24"
+                    onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
+                  >
+                    📋 前回値
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         ))}
         {formError && <div className="text-red-500 font-bold">{formError}</div>}
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          記録する
+        <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-lg transition-colors shadow-md hover:shadow-lg">
+          📝 記録する
         </button>
       </form>
 
@@ -216,12 +234,12 @@ export default function RecordInput() {
               placeholder="単位(任意)"
               className="border rounded px-2 py-1 w-20"
             />
-            <button type="submit" className="bg-green-500 text-white px-3 py-1 rounded">追加</button>
-            <button type="button" onClick={() => setShowAddField(false)} className="text-gray-500">キャンセル</button>
+            <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors">✅ 追加</button>
+            <button type="button" onClick={() => setShowAddField(false)} className="ml-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded font-medium text-gray-700 transition-colors">❌ キャンセル</button>
             {addFieldError && <span className="text-red-500 ml-2">{addFieldError}</span>}
           </form>
         ) : (
-          <button onClick={() => setShowAddField(true)} className="bg-gray-200 px-3 py-1 rounded">+ 新しい項目を追加</button>
+          <button onClick={() => setShowAddField(true)} className="bg-green-100 hover:bg-green-200 border border-green-300 px-4 py-2 rounded font-medium text-green-700 transition-colors">➕ 新しい項目を追加</button>
         )}
       </div>
       {toast && (
@@ -231,4 +249,4 @@ export default function RecordInput() {
       )}
     </div>
   );
-} 
+}
