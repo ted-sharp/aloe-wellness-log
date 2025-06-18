@@ -10,7 +10,10 @@ const PERIOD_OPTIONS = [
 
 export default function RecordGraph() {
   const { records, fields } = useRecordsStore();
-  const numberFields = fields.filter(f => f.type === 'number' || f.type === 'string');
+  // 数値・文字列型のフィールドをorder順でソート
+  const numberFields = fields
+    .filter(f => f.type === 'number' || f.type === 'string')
+    .sort((a, b) => (a.order || 999) - (b.order || 999));
   const [selectedFieldId, setSelectedFieldId] = useState(
     numberFields.length > 0 ? numberFields[0].fieldId : ''
   );
@@ -74,4 +77,4 @@ export default function RecordGraph() {
       </div>
     </div>
   );
-} 
+}
