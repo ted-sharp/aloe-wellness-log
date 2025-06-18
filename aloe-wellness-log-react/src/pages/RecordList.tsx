@@ -13,7 +13,26 @@ export default function RecordList() {
   }, [loadFields, loadRecords]);
 
   // fieldIdから項目名・型を取得
-  const getField = (fieldId: string) => fields.find(f => f.fieldId === fieldId);
+  const getField = (fieldId: string) => {
+    if (fieldId === 'notes') {
+      return { fieldId: 'notes', name: '📝 備考', type: 'string' as const, order: 0 };
+    }
+    return fields.find(f => f.fieldId === fieldId);
+  };
+
+  // 項目の順序を制御する関数
+  const sortRecordsByFieldOrder = (records: RecordItem[]) => {
+    return [...records].sort((a, b) => {
+      const fieldA = getField(a.fieldId);
+      const fieldB = getField(b.fieldId);
+
+      // order属性で並び替え（小さいほど上に表示）
+      const orderA = fieldA?.order ?? 999;
+      const orderB = fieldB?.order ?? 999;
+
+      return orderA - orderB;
+    });
+  };
 
   // 日付・時刻で降順ソート（新しい順）
   const sortedRecords = [...records].sort((a, b) => {
@@ -61,7 +80,7 @@ export default function RecordList() {
             📅 {datetime}
           </div>
           <ul className="space-y-3">
-            {recs.map((rec) => {
+            {sortRecordsByFieldOrder(recs).map((rec) => {
               const field = getField(rec.fieldId);
               return (
                 <li key={rec.id} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-100 transition-colors">

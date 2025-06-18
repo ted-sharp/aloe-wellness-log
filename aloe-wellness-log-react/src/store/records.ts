@@ -3,11 +3,11 @@ import type { RecordItem, Field } from '../types/record';
 import * as db from '../db/indexedDb';
 
 const initialFields: Field[] = [
-  { fieldId: "weight", name: "体重", unit: "kg", type: "number" },
-  { fieldId: "blood_pressure", name: "血圧", unit: "mmHg", type: "string" },
-  { fieldId: "exercise", name: "運動有無(通勤時の早歩き)", type: "boolean" },
-  { fieldId: "meal", name: "食事有無(80kcal減)", type: "boolean" },
-  { fieldId: "sleep", name: "睡眠有無(0時までに寝る)", type: "boolean" }
+  { fieldId: "weight", name: "体重", unit: "kg", type: "number", order: 1 },
+  { fieldId: "blood_pressure", name: "血圧", unit: "mmHg", type: "string", order: 2 },
+  { fieldId: "exercise", name: "運動有無(通勤時の早歩き)", type: "boolean", order: 3 },
+  { fieldId: "meal", name: "食事有無(80kcal減)", type: "boolean", order: 4 },
+  { fieldId: "sleep", name: "睡眠有無(0時までに寝る)", type: "boolean", order: 5 }
 ];
 
 type RecordsState = {
@@ -21,6 +21,7 @@ type RecordsState = {
   updateField: (field: Field) => Promise<void>;
   updateRecord: (record: RecordItem) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
+
   // 今後、fieldsの追加・取得もここに追加できますわ
 };
 
@@ -36,8 +37,35 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     const records = await db.getAllRecords();
     set({ records });
   },
-  loadFields: async () => {
-    const fields = await db.getAllFields();
+    loadFields: async () => {
+    let fields = await db.getAllFields();
+
+    // order属性のマイグレーションを実行
+    let needsUpdate = false;
+    const orderMapping: Record<string, number> = {
+      'weight': 1,
+      'blood_pressure': 2,
+      'exercise': 3,
+      'meal': 4,
+      'sleep': 5
+    };
+
+    const updatedFields = fields.map((field) => {
+      const expectedOrder = orderMapping[field.fieldId];
+      if (field.order === undefined || (expectedOrder && field.order !== expectedOrder)) {
+        needsUpdate = true;
+        return { ...field, order: expectedOrder || 999 };
+      }
+      return field;
+    });
+
+    if (needsUpdate) {
+      for (const field of updatedFields) {
+        await db.updateField(field);
+      }
+      fields = updatedFields;
+    }
+
     set({ fields });
   },
   addField: async (field) => {
@@ -68,4 +96,5 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     const records = await db.getAllRecords();
     set({ records });
   },
-})); 
+
+}));

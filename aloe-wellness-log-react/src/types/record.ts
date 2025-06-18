@@ -5,6 +5,7 @@ export type Field = {
   unit?: string;
   type: 'number' | 'string' | 'boolean';
   default?: number | string | boolean;
+  order?: number; // 表示順序（小さいほど上に表示）
 };
 
 // 記録データの型（縦持ちスキーマ）
@@ -15,4 +16,4 @@ export type RecordItem = {
   datetime: string;  // ISO8601
   fieldId: string;
   value: number | string | boolean;
-}; 
+};

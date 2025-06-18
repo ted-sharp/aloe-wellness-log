@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRecordsStore } from '../store/records';
-import type { Field, RecordItem } from '../types/record';
+import type { Field } from '../types/record';
 
 const FIELD_TYPES = [
   { value: 'number', label: '数値' },
@@ -12,18 +12,32 @@ type NewField = {
   name: string;
   type: 'number' | 'string' | 'boolean';
   unit?: string;
+  order?: number;
 };
 
 export default function RecordInput() {
   const { fields, loadFields, addRecord, addField, loadRecords, updateField, records } = useRecordsStore();
   const [values, setValues] = useState<Record<string, any>>({});
   const [showAddField, setShowAddField] = useState(false);
-  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '' });
+  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '', order: 1 });
   const [editFieldId, setEditFieldId] = useState<string | null>(null);
   const [editField, setEditField] = useState<Partial<Field>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [addFieldError, setAddFieldError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // 日時管理用のstate（デフォルトは現在時刻）
+  const [recordDate, setRecordDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().slice(0, 10); // YYYY-MM-DD
+  });
+  const [recordTime, setRecordTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5); // HH:MM
+  });
+
+  // 備考管理用のstate
+  const [recordNotes, setRecordNotes] = useState<string>('');
 
   useEffect(() => {
     loadFields();
@@ -59,20 +73,44 @@ export default function RecordInput() {
       setFormError(error);
       return;
     }
-    const now = new Date();
+    // 選択された日時を使用
+    const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
     for (const field of fields) {
+      let value = values[field.fieldId];
+
+      // boolean型の場合、未設定ならfalseを明示的に設定
+      if (field.type === 'boolean' && value === undefined) {
+        value = false;
+      } else if (value === undefined) {
+        value = '';
+      }
+
       await addRecord({
-        id: `${now.toISOString()}-${field.fieldId}`,
-        date: now.toISOString().slice(0, 10),
-        time: now.toTimeString().slice(0, 5),
-        datetime: now.toISOString(),
+        id: `${selectedDateTime.toISOString()}-${field.fieldId}`,
+        date: recordDate,
+        time: recordTime,
+        datetime: selectedDateTime.toISOString(),
         fieldId: field.fieldId,
-        value: values[field.fieldId] ?? '',
+        value: value,
       });
     }
+
+    // 備考が入力されている場合、備考も保存
+    if (recordNotes.trim()) {
+      await addRecord({
+        id: `${selectedDateTime.toISOString()}-notes`,
+        date: recordDate,
+        time: recordTime,
+        datetime: selectedDateTime.toISOString(),
+        fieldId: 'notes',
+        value: recordNotes.trim(),
+      });
+    }
+
     setToast('記録を保存しましたわ');
     setTimeout(() => setToast(null), 2000);
     setValues({});
+    setRecordNotes('');
   };
 
   const handleAddField = async (e: React.FormEvent) => {
@@ -92,8 +130,9 @@ export default function RecordInput() {
       name: newField.name.trim(),
       type: newField.type,
       unit: newField.unit?.trim() || undefined,
+      order: newField.order || 1,
     });
-    setNewField({ name: '', type: 'number', unit: '' });
+    setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder() });
     setShowAddField(false);
     await loadFields();
     setToast('項目を追加しましたわ');
@@ -132,10 +171,76 @@ export default function RecordInput() {
     return rec ? rec.value : '';
   };
 
+  // 次のデフォルト順序を計算する関数
+  const getNextDefaultOrder = (): number => {
+    if (fields.length === 0) return 1;
+    const maxOrder = Math.max(...fields.map(f => f.order || 0));
+    return maxOrder + 1;
+  };
+
   return (
     <div className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-        {fields.map((field) => (
+        {/* 日時選択セクション */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="space-y-3">
+            <label className="text-lg font-semibold text-gray-800">📅 記録日時</label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">日付</label>
+                <input
+                  type="date"
+                  value={recordDate}
+                  onChange={(e) => setRecordDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">時刻</label>
+                <input
+                  type="time"
+                  value={recordTime}
+                  onChange={(e) => setRecordTime(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    setRecordDate(now.toISOString().slice(0, 10));
+                    setRecordTime(now.toTimeString().slice(0, 5));
+                  }}
+                  className="bg-purple-100 hover:bg-purple-200 border border-purple-300 px-4 py-2 rounded font-medium text-purple-700 transition-colors"
+                >
+                  🕐 現在時刻
+                </button>
+              </div>
+            </div>
+          </div>
+                </div>
+
+        {/* 備考入力セクション */}
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="space-y-3">
+            <label className="text-lg font-semibold text-gray-800">📝 備考・メモ</label>
+            <div>
+              <textarea
+                value={recordNotes}
+                onChange={(e) => setRecordNotes(e.target.value)}
+                placeholder="その時の体調、気づき、特記事項など（任意）"
+                className="w-full border border-gray-300 rounded px-3 py-2 h-24 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                maxLength={500}
+              />
+              <div className="text-right text-sm text-gray-500 mt-1">
+                {recordNotes.length}/500文字
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {[...fields].sort((a, b) => (a.order || 999) - (b.order || 999)).map((field) => (
           <div key={field.fieldId} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             {editFieldId === field.fieldId ? (
               <div className="space-y-3">
@@ -209,37 +314,78 @@ export default function RecordInput() {
 
       <div className="mb-4">
         {showAddField ? (
-          <form onSubmit={handleAddField} className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              value={newField.name}
-              onChange={e => setNewField(f => ({ ...f, name: e.target.value }))}
-              placeholder="項目名"
-              className="border rounded px-2 py-1 w-32"
-              required
-            />
-            <select
-              value={newField.type}
-              onChange={e => setNewField(f => ({ ...f, type: e.target.value as NewField['type'] }))}
-              className="border rounded px-2 py-1"
-            >
-              {FIELD_TYPES.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              value={newField.unit}
-              onChange={e => setNewField(f => ({ ...f, unit: e.target.value }))}
-              placeholder="単位(任意)"
-              className="border rounded px-2 py-1 w-20"
-            />
-            <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors">✅ 追加</button>
-            <button type="button" onClick={() => setShowAddField(false)} className="ml-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded font-medium text-gray-700 transition-colors">❌ キャンセル</button>
-            {addFieldError && <span className="text-red-500 ml-2">{addFieldError}</span>}
-          </form>
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">➕ 新しい項目を追加</h3>
+            <form onSubmit={handleAddField} className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">項目名</label>
+                  <input
+                    type="text"
+                    value={newField.name}
+                    onChange={e => setNewField(f => ({ ...f, name: e.target.value }))}
+                    placeholder="例: 血圧"
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="w-full md:w-24">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">データ型</label>
+                  <select
+                    value={newField.type}
+                    onChange={e => setNewField(f => ({ ...f, type: e.target.value as NewField['type'] }))}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {FIELD_TYPES.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-full md:w-32">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">単位（任意）</label>
+                  <input
+                    type="text"
+                    value={newField.unit}
+                    onChange={e => setNewField(f => ({ ...f, unit: e.target.value }))}
+                    placeholder="例: mmHg"
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="w-full md:w-20">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">表示順序</label>
+                  <input
+                    type="number"
+                    value={newField.order || ''}
+                    onChange={e => setNewField(f => ({ ...f, order: parseInt(e.target.value) || 1 }))}
+                    placeholder="1"
+                    min="1"
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded font-medium transition-colors">✅ 追加</button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddField(false)}
+                  className="bg-gray-100 hover:bg-gray-200 border border-gray-300 px-6 py-2 rounded font-medium text-gray-700 transition-colors"
+                >
+                  ❌ キャンセル
+                </button>
+              </div>
+              {addFieldError && <div className="text-red-500 font-medium mt-2">{addFieldError}</div>}
+            </form>
+          </div>
         ) : (
-          <button onClick={() => setShowAddField(true)} className="bg-green-100 hover:bg-green-200 border border-green-300 px-4 py-2 rounded font-medium text-green-700 transition-colors">➕ 新しい項目を追加</button>
+          <button
+            onClick={() => {
+              setShowAddField(true);
+              setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder() });
+            }}
+            className="bg-green-100 hover:bg-green-200 border border-green-300 px-4 py-2 rounded font-medium text-green-700 transition-colors"
+          >
+            ➕ 新しい項目を追加
+          </button>
         )}
       </div>
       {toast && (
