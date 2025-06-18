@@ -30,11 +30,15 @@ export const useRecordsStore = create<RecordsState>((set) => ({
   fields: [],
   loadRecords: async () => {
     const records = await db.getAllRecords();
+    console.log('📋 読み込まれた記録数:', records.length);
+    console.log('📋 読み込まれた記録:', records);
     set({ records });
   },
   addRecord: async (record) => {
+    console.log('💾 記録を保存中:', record);
     await db.addRecord(record);
     const records = await db.getAllRecords();
+    console.log('💾 保存後の記録数:', records.length);
     set({ records });
   },
     loadFields: async () => {

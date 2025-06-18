@@ -17,7 +17,7 @@ type NewField = {
 
 export default function RecordInput() {
   const { fields, loadFields, addRecord, addField, loadRecords, updateField, records } = useRecordsStore();
-  const [values, setValues] = useState<Record<string, any>>({});
+  const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [showAddField, setShowAddField] = useState(false);
   const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '', order: 1 });
   const [editFieldId, setEditFieldId] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export default function RecordInput() {
     loadRecords();
   }, [loadFields, loadRecords]);
 
-  const handleChange = (fieldId: string, value: any) => {
+  const handleChange = (fieldId: string, value: string | number | boolean) => {
     setValues((prev) => ({ ...prev, [fieldId]: value }));
   };
 
@@ -73,44 +73,53 @@ export default function RecordInput() {
       setFormError(error);
       return;
     }
-    // 選択された日時を使用
-    const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
-    for (const field of fields) {
-      let value = values[field.fieldId];
 
-      // boolean型の場合、未設定ならfalseを明示的に設定
-      if (field.type === 'boolean' && value === undefined) {
-        value = false;
-      } else if (value === undefined) {
-        value = '';
+    try {
+      // 選択された日時を使用
+      const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
+      // より一意性を保つために現在のタイムスタンプを追加
+      const uniqueTimestamp = Date.now();
+
+      for (const field of fields) {
+        let value = values[field.fieldId];
+
+        // boolean型の場合、未設定ならfalseを明示的に設定
+        if (field.type === 'boolean' && value === undefined) {
+          value = false;
+        } else if (value === undefined) {
+          value = '';
+        }
+
+        await addRecord({
+          id: `${selectedDateTime.toISOString()}-${field.fieldId}-${uniqueTimestamp}`,
+          date: recordDate,
+          time: recordTime,
+          datetime: selectedDateTime.toISOString(),
+          fieldId: field.fieldId,
+          value: value,
+        });
       }
 
-      await addRecord({
-        id: `${selectedDateTime.toISOString()}-${field.fieldId}`,
-        date: recordDate,
-        time: recordTime,
-        datetime: selectedDateTime.toISOString(),
-        fieldId: field.fieldId,
-        value: value,
-      });
-    }
+      // 備考が入力されている場合、備考も保存
+      if (recordNotes.trim()) {
+        await addRecord({
+          id: `${selectedDateTime.toISOString()}-notes-${uniqueTimestamp}`,
+          date: recordDate,
+          time: recordTime,
+          datetime: selectedDateTime.toISOString(),
+          fieldId: 'notes',
+          value: recordNotes.trim(),
+        });
+      }
 
-    // 備考が入力されている場合、備考も保存
-    if (recordNotes.trim()) {
-      await addRecord({
-        id: `${selectedDateTime.toISOString()}-notes`,
-        date: recordDate,
-        time: recordTime,
-        datetime: selectedDateTime.toISOString(),
-        fieldId: 'notes',
-        value: recordNotes.trim(),
-      });
+      setToast('記録を保存いたしましたわ');
+      setTimeout(() => setToast(null), 2000);
+      setValues({});
+      setRecordNotes('');
+    } catch (error) {
+      console.error('保存エラー:', error);
+      setFormError('保存に失敗いたしましたわ。もう一度お試しくださいませ。');
     }
-
-    setToast('記録を保存しましたわ');
-    setTimeout(() => setToast(null), 2000);
-    setValues({});
-    setRecordNotes('');
   };
 
   const handleAddField = async (e: React.FormEvent) => {
@@ -166,7 +175,7 @@ export default function RecordInput() {
   };
 
   // 前回値を取得する関数
-  const getLastValue = (fieldId: string): any => {
+  const getLastValue = (fieldId: string): string | number | boolean => {
     const rec = [...records].reverse().find(r => r.fieldId === fieldId);
     return rec ? rec.value : '';
   };
@@ -280,7 +289,7 @@ export default function RecordInput() {
                   <div className="flex items-center gap-2">
                                         <input
                       type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
-                      value={field.type === 'boolean' ? undefined : values[field.fieldId] ?? ''}
+                      value={field.type === 'boolean' ? undefined : String(values[field.fieldId] ?? '')}
                       checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
                       onChange={(e) =>
                         handleChange(

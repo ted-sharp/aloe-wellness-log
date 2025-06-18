@@ -8,7 +8,7 @@ const FIELDS_STORE = 'fields';
 export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(RECORDS_STORE)) {
         db.createObjectStore(RECORDS_STORE, { keyPath: 'id' });
@@ -22,13 +22,13 @@ export function openDb(): Promise<IDBDatabase> {
   });
 }
 
-// 記録データの追加
+// 記録データの追加（既存の場合は更新）
 export async function addRecord(record: RecordItem) {
   const db = await openDb();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(RECORDS_STORE, 'readwrite');
     const store = tx.objectStore(RECORDS_STORE);
-    store.add(record);
+    store.put(record); // addをputに変更して既存レコードの更新を可能にする
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -104,4 +104,4 @@ export async function deleteRecord(id: string) {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
-} 
+}
