@@ -77,16 +77,16 @@ export default function RecordExport() {
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold mb-4">エクスポート</h3>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             onClick={handleExportCSV}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             📊 CSV形式でダウンロード
           </button>
           <button
             onClick={handleExportJSON}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             📄 JSON形式でダウンロード
           </button>
