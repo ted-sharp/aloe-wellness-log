@@ -236,7 +236,7 @@ export default function RecordInput() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-50 min-h-screen">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
         {/* 日時選択セクション */}
         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">

@@ -61,7 +61,7 @@ export default function RecordExport() {
   };
 
     return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-50 min-h-screen">
       <h2 className="text-xl font-bold mb-4">エクスポート</h2>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">

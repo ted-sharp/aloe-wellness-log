@@ -73,7 +73,7 @@ export default function RecordCalendar() {
   }, [selectedRecords]);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto bg-gray-50 min-h-screen">
       <h2 className="text-xl font-bold mb-4">記録カレンダー</h2>
       <Calendar
         onChange={date => setSelectedDate(date as Date)}
