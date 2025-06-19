@@ -24,6 +24,9 @@ type RecordsState = {
   updateField: (field: Field) => Promise<void>;
   updateRecord: (record: RecordItem) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
+  deleteAllRecords: () => Promise<void>;
+  deleteAllFields: () => Promise<void>;
+  deleteAllData: () => Promise<void>;
 
   // 今後、fieldsの追加・取得もここに追加できますわ
 };
@@ -118,5 +121,20 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     const records = await db.getAllRecords();
     set({ records });
   },
-
+  deleteAllRecords: async () => {
+    await db.deleteAllRecords();
+    const records = await db.getAllRecords();
+    set({ records });
+  },
+  deleteAllFields: async () => {
+    await db.deleteAllFields();
+    const fields = await db.getAllFields();
+    set({ fields });
+  },
+  deleteAllData: async () => {
+    await db.deleteAllData();
+    const records = await db.getAllRecords();
+    const fields = await db.getAllFields();
+    set({ records, fields });
+  },
 }));

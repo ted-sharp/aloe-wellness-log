@@ -105,3 +105,41 @@ export async function deleteRecord(id: string) {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+// 全記録データの削除
+export async function deleteAllRecords() {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(RECORDS_STORE, 'readwrite');
+    const store = tx.objectStore(RECORDS_STORE);
+    store.clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// 全項目データの削除
+export async function deleteAllFields() {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(FIELDS_STORE, 'readwrite');
+    const store = tx.objectStore(FIELDS_STORE);
+    store.clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// 全データ削除（記録と項目の両方）
+export async function deleteAllData() {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction([RECORDS_STORE, FIELDS_STORE], 'readwrite');
+    const recordStore = tx.objectStore(RECORDS_STORE);
+    const fieldStore = tx.objectStore(FIELDS_STORE);
+    recordStore.clear();
+    fieldStore.clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}

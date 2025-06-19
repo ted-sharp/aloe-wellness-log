@@ -33,7 +33,7 @@ function App() {
           <Link to="/list" className="px-3 py-2 hover:bg-gray-100 rounded">記録一覧</Link>
           <Link to="/graph" className="px-3 py-2 hover:bg-gray-100 rounded">記録グラフ</Link>
           <Link to="/calendar" className="px-3 py-2 hover:bg-gray-100 rounded">記録カレンダー</Link>
-          <Link to="/export" className="px-3 py-2 hover:bg-gray-100 rounded">エクスポート</Link>
+          <Link to="/export" className="px-3 py-2 hover:bg-gray-100 rounded">管理</Link>
         </nav>
 
         {/* モバイル用ハンバーガーボタン */}
@@ -59,7 +59,7 @@ function App() {
               <Link to="/list" onClick={closeMenu} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">記録一覧</Link>
               <Link to="/graph" onClick={closeMenu} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">記録グラフ</Link>
               <Link to="/calendar" onClick={closeMenu} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">記録カレンダー</Link>
-              <Link to="/export" onClick={closeMenu} className="px-4 py-3 hover:bg-gray-50">エクスポート</Link>
+              <Link to="/export" onClick={closeMenu} className="px-4 py-3 hover:bg-gray-50">管理</Link>
             </nav>
           </div>
         )}
