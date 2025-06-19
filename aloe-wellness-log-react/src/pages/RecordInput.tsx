@@ -17,7 +17,7 @@ type NewField = {
 };
 
 export default function RecordInput() {
-  const { fields, loadFields, addRecord, addField, loadRecords, updateField, records } = useRecordsStore();
+  const { fields, loadFields, addRecord, addField, loadRecords, updateField, records, deleteField } = useRecordsStore();
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [showSelectField, setShowSelectField] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
@@ -27,6 +27,8 @@ export default function RecordInput() {
   const [formError, setFormError] = useState<string | null>(null);
   const [addFieldError, setAddFieldError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [editingExistingFieldId, setEditingExistingFieldId] = useState<string | null>(null);
+  const [editingExistingField, setEditingExistingField] = useState<Partial<Field>>({});
 
   // 一時的に表示する項目のIDを管理
   const [temporaryDisplayFields, setTemporaryDisplayFields] = useState<Set<string>>(new Set());
@@ -181,7 +183,11 @@ export default function RecordInput() {
 
   const handleEditField = (field: Field) => {
     setEditFieldId(field.fieldId);
-    setEditField({ name: field.name, unit: field.unit });
+    setEditField({
+      name: field.name,
+      unit: field.unit,
+      defaultDisplay: field.defaultDisplay
+    });
   };
 
   const handleEditFieldSave = async () => {
@@ -196,6 +202,7 @@ export default function RecordInput() {
         ...original,
         name: editField.name.trim(),
         unit: editField.unit?.trim() || undefined,
+        defaultDisplay: editField.defaultDisplay !== false,
       });
       await loadFields();
       setToast('項目を編集しましたわ');
@@ -233,6 +240,60 @@ export default function RecordInput() {
   // 非表示項目のリストを取得
   const getHiddenFields = () => {
     return fields.filter(field => field.defaultDisplay === false);
+  };
+
+  // 既存項目の編集機能
+  const handleEditExistingField = (field: Field) => {
+    setEditingExistingFieldId(field.fieldId);
+    setEditingExistingField({
+      name: field.name,
+      unit: field.unit,
+      order: field.order,
+      defaultDisplay: field.defaultDisplay
+    });
+  };
+
+  const handleEditExistingFieldSave = async () => {
+    if (!editingExistingFieldId || !editingExistingField.name?.trim()) {
+      setEditingExistingFieldId(null);
+      setEditingExistingField({});
+      return;
+    }
+    const original = fields.find(f => f.fieldId === editingExistingFieldId);
+    if (original) {
+      await updateField({
+        ...original,
+        name: editingExistingField.name.trim(),
+        unit: editingExistingField.unit?.trim() || undefined,
+        order: editingExistingField.order || 1,
+        defaultDisplay: editingExistingField.defaultDisplay !== false,
+      });
+      await loadFields();
+      setToast('項目を編集しましたわ');
+      setTimeout(() => setToast(null), 2000);
+    }
+    setEditingExistingFieldId(null);
+    setEditingExistingField({});
+  };
+
+  // 既存項目の削除機能
+  const handleDeleteExistingField = async (field: Field) => {
+    const isConfirmed = window.confirm(
+      `項目「${field.name}」を削除してもよろしいですか？\n\nこの項目に関連するすべての記録データも削除されます。`
+    );
+
+    if (isConfirmed) {
+      try {
+        await deleteField(field.fieldId);
+        await loadFields();
+        setToast('項目を削除しましたわ');
+        setTimeout(() => setToast(null), 2000);
+      } catch (error) {
+        console.error('削除エラー:', error);
+        setToast('項目の削除に失敗しました');
+        setTimeout(() => setToast(null), 2000);
+      }
+    }
   };
 
   return (
@@ -325,6 +386,17 @@ export default function RecordInput() {
                     />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={editField.defaultDisplay !== false}
+                      onChange={e => setEditField(f => ({ ...f, defaultDisplay: e.target.checked }))}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
+                  </label>
+                </div>
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={handleEditFieldSave} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-medium transition-colors">💾 保存</button>
                   <button type="button" onClick={() => setEditFieldId(null)} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium transition-colors">❌ キャンセル</button>
@@ -336,9 +408,9 @@ export default function RecordInput() {
                   <label className="text-lg font-semibold text-gray-800">{field.name}</label>
                   <button type="button" onClick={() => handleEditField(field)} className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 px-3 py-1.5 rounded text-sm font-medium text-yellow-700 transition-colors w-24">✏️ 編集</button>
                 </div>
-                                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                                        <input
+                    <input
                       type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
                       value={field.type === 'boolean' ? undefined : String(values[field.fieldId] ?? '')}
                       checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
@@ -382,13 +454,106 @@ export default function RecordInput() {
                   <h4 className="font-medium text-gray-700">既存の項目から選択:</h4>
                   <div className="space-y-2">
                     {getHiddenFields().map((field) => (
-                      <button
-                        key={field.fieldId}
-                        onClick={() => handleShowExistingField(field.fieldId)}
-                        className="w-full text-left bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-3 rounded font-medium text-blue-800 transition-colors"
-                      >
-                        ➕ {field.name} {field.unit && `(${field.unit})`}
-                      </button>
+                      <div key={field.fieldId} className="bg-blue-50 border border-blue-200 rounded p-3">
+                        {editingExistingFieldId === field.fieldId ? (
+                          <div className="space-y-3">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <div className="flex-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">項目名</label>
+                                <input
+                                  type="text"
+                                  value={editingExistingField.name ?? ''}
+                                  onChange={e => setEditingExistingField(f => ({ ...f, name: e.target.value }))}
+                                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="項目名"
+                                />
+                              </div>
+                              <div className="w-full sm:w-32">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">単位（任意）</label>
+                                <input
+                                  type="text"
+                                  value={editingExistingField.unit ?? ''}
+                                  onChange={e => setEditingExistingField(f => ({ ...f, unit: e.target.value }))}
+                                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="例: kg"
+                                />
+                              </div>
+                              <div className="w-full sm:w-20">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">表示順序</label>
+                                <input
+                                  type="number"
+                                  value={editingExistingField.order || ''}
+                                  onChange={e => setEditingExistingField(f => ({ ...f, order: parseInt(e.target.value) || 1 }))}
+                                  className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="1"
+                                  min="1"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={editingExistingField.defaultDisplay !== false}
+                                  onChange={e => setEditingExistingField(f => ({ ...f, defaultDisplay: e.target.checked }))}
+                                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
+                              </label>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={handleEditExistingFieldSave}
+                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                💾 保存
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingExistingFieldId(null);
+                                  setEditingExistingField({});
+                                }}
+                                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                ❌ キャンセル
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-blue-800">
+                                {field.name} {field.unit && `(${field.unit})`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleShowExistingField(field.fieldId)}
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                ➕ 追加
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleEditExistingField(field)}
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                ✏️ 編集
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteExistingField(field)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors"
+                              >
+                                🗑️ 削除
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                   <hr className="my-4" />
@@ -403,7 +568,7 @@ export default function RecordInput() {
                 }}
                 className="w-full bg-green-50 hover:bg-green-100 border border-green-200 px-4 py-3 rounded font-medium text-green-800 transition-colors"
               >
-                ✨ 完全に新しい項目を作成
+                ✨ 新しい項目を作成
               </button>
             </div>
             <div className="flex gap-2 pt-4">
@@ -499,7 +664,7 @@ export default function RecordInput() {
             onClick={() => setShowSelectField(true)}
             className="bg-green-100 hover:bg-green-200 border border-green-300 px-4 py-2 rounded font-medium text-green-700 transition-colors"
           >
-            ➕ 新しい項目を追加
+            ➕ 項目を追加
           </button>
         )}
       </div>

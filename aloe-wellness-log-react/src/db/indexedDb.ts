@@ -106,6 +106,18 @@ export async function deleteRecord(id: string) {
   });
 }
 
+// フィールド（項目）の削除
+export async function deleteField(fieldId: string) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(FIELDS_STORE, 'readwrite');
+    const store = tx.objectStore(FIELDS_STORE);
+    store.delete(fieldId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // 全記録データの削除
 export async function deleteAllRecords() {
   const db = await openDb();
