@@ -6,6 +6,7 @@ export type Field = {
   type: 'number' | 'string' | 'boolean';
   default?: number | string | boolean;
   order?: number; // 表示順序（小さいほど上に表示）
+  defaultDisplay?: boolean; // デフォルトで記録入力画面に表示するかどうか
 };
 
 // 記録データの型（縦持ちスキーマ）

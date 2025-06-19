@@ -3,14 +3,14 @@ import type { RecordItem, Field } from '../types/record';
 import * as db from '../db/indexedDb';
 
 const initialFields: Field[] = [
-  { fieldId: "weight", name: "体重", unit: "kg", type: "number", order: 1 },
-  { fieldId: "systolic_bp", name: "収縮期血圧(最高血圧)", unit: "mmHg", type: "number", order: 2 },
-  { fieldId: "diastolic_bp", name: "拡張期血圧(最低血圧)", unit: "mmHg", type: "number", order: 3 },
-  { fieldId: "heart_rate", name: "心拍数", unit: "bpm", type: "number", order: 4 },
-  { fieldId: "body_temperature", name: "体温", unit: "℃", type: "number", order: 5 },
-  { fieldId: "exercise", name: "運動有無(早歩き)", type: "boolean", order: 6 },
-  { fieldId: "meal", name: "食事有無(-80kcal)", type: "boolean", order: 7 },
-  { fieldId: "sleep", name: "睡眠有無(早寝)", type: "boolean", order: 8 }
+  { fieldId: "weight", name: "体重", unit: "kg", type: "number", order: 1, defaultDisplay: true },
+  { fieldId: "systolic_bp", name: "収縮期血圧(最高血圧)", unit: "mmHg", type: "number", order: 2, defaultDisplay: true },
+  { fieldId: "diastolic_bp", name: "拡張期血圧(最低血圧)", unit: "mmHg", type: "number", order: 3, defaultDisplay: true },
+  { fieldId: "heart_rate", name: "心拍数", unit: "bpm", type: "number", order: 4, defaultDisplay: true },
+  { fieldId: "body_temperature", name: "体温", unit: "℃", type: "number", order: 5, defaultDisplay: true },
+  { fieldId: "exercise", name: "運動有無(早歩き)", type: "boolean", order: 6, defaultDisplay: true },
+  { fieldId: "meal", name: "食事有無(-80kcal)", type: "boolean", order: 7, defaultDisplay: true },
+  { fieldId: "sleep", name: "睡眠有無(早寝)", type: "boolean", order: 8, defaultDisplay: true }
 ];
 
 type RecordsState = {
@@ -47,7 +47,7 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     loadFields: async () => {
     let fields = await db.getAllFields();
 
-    // order属性のマイグレーションを実行
+    // order属性とdefaultDisplay属性のマイグレーションを実行
     let needsUpdate = false;
     const orderMapping: Record<string, number> = {
       'weight': 1,
@@ -63,12 +63,22 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     };
 
     const updatedFields = fields.map((field) => {
+      const updatedField = { ...field };
+
+      // order属性のマイグレーション
       const expectedOrder = orderMapping[field.fieldId];
       if (field.order === undefined || (expectedOrder && field.order !== expectedOrder)) {
         needsUpdate = true;
-        return { ...field, order: expectedOrder || 999 };
+        updatedField.order = expectedOrder || 999;
       }
-      return field;
+
+      // defaultDisplay属性のマイグレーション（既存フィールドはデフォルトで表示）
+      if (field.defaultDisplay === undefined) {
+        needsUpdate = true;
+        updatedField.defaultDisplay = true;
+      }
+
+      return updatedField;
     });
 
     if (needsUpdate) {

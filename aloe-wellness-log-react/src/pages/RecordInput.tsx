@@ -13,18 +13,23 @@ type NewField = {
   type: 'number' | 'string' | 'boolean';
   unit?: string;
   order?: number;
+  defaultDisplay?: boolean;
 };
 
 export default function RecordInput() {
   const { fields, loadFields, addRecord, addField, loadRecords, updateField, records } = useRecordsStore();
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
+  const [showSelectField, setShowSelectField] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
-  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '', order: 1 });
+  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '', order: 1, defaultDisplay: true });
   const [editFieldId, setEditFieldId] = useState<string | null>(null);
   const [editField, setEditField] = useState<Partial<Field>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [addFieldError, setAddFieldError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // 一時的に表示する項目のIDを管理
+  const [temporaryDisplayFields, setTemporaryDisplayFields] = useState<Set<string>>(new Set());
 
   // 日時管理用のstate（デフォルトは現在時刻）
   const [recordDate, setRecordDate] = useState(() => {
@@ -119,7 +124,20 @@ export default function RecordInput() {
 
       setToast('記録を保存いたしましたわ');
       setTimeout(() => setToast(null), 2000);
-      setValues({});
+
+      // defaultDisplay: false の項目のみクリア、defaultDisplay: true の項目は保持
+      setValues(prev => {
+        const newValues: Record<string, string | number | boolean> = {};
+        for (const field of fields) {
+          if (field.defaultDisplay !== false && prev[field.fieldId] !== undefined) {
+            newValues[field.fieldId] = prev[field.fieldId];
+          }
+        }
+        return newValues;
+      });
+
+      // 一時表示項目をクリア
+      setTemporaryDisplayFields(new Set());
       setRecordNotes('');
     } catch (error) {
       console.error('保存エラー:', error);
@@ -145,9 +163,17 @@ export default function RecordInput() {
       type: newField.type,
       unit: newField.unit?.trim() || undefined,
       order: newField.order || 1,
+      defaultDisplay: !!newField.defaultDisplay,
     });
-    setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder() });
+
+    // defaultDisplay: false の項目は一時的に表示リストに追加
+    if (!newField.defaultDisplay) {
+      setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
+    }
+
+    setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder(), defaultDisplay: true });
     setShowAddField(false);
+    setShowSelectField(false);
     await loadFields();
     setToast('項目を追加しましたわ');
     setTimeout(() => setToast(null), 2000);
@@ -190,6 +216,23 @@ export default function RecordInput() {
     if (fields.length === 0) return 1;
     const maxOrder = Math.max(...fields.map(f => f.order || 0));
     return maxOrder + 1;
+  };
+
+  // 非表示項目を一時的に表示に追加する関数
+  const handleShowExistingField = (fieldId: string) => {
+    const field = fields.find(f => f.fieldId === fieldId);
+    if (field) {
+      // 一時表示リストに追加（defaultDisplayは変更しない）
+      setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
+      setShowSelectField(false);
+      setToast('項目を一時表示に追加しましたわ');
+      setTimeout(() => setToast(null), 2000);
+    }
+  };
+
+  // 非表示項目のリストを取得
+  const getHiddenFields = () => {
+    return fields.filter(field => field.defaultDisplay === false);
   };
 
   return (
@@ -254,7 +297,10 @@ export default function RecordInput() {
           </div>
         </div>
 
-        {[...fields].sort((a, b) => (a.order || 999) - (b.order || 999)).map((field) => (
+        {[...fields]
+          .filter(field => field.defaultDisplay !== false || temporaryDisplayFields.has(field.fieldId)) // デフォルト表示項目または一時表示項目
+          .sort((a, b) => (a.order || 999) - (b.order || 999))
+          .map((field) => (
           <div key={field.fieldId} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             {editFieldId === field.fieldId ? (
               <div className="space-y-3">
@@ -327,9 +373,51 @@ export default function RecordInput() {
       </form>
 
       <div className="mb-4">
-        {showAddField ? (
+        {showSelectField ? (
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">➕ 新しい項目を追加</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 項目を選択</h3>
+            <div className="space-y-3">
+              {getHiddenFields().length > 0 && (
+                <>
+                  <h4 className="font-medium text-gray-700">既存の項目から選択:</h4>
+                  <div className="space-y-2">
+                    {getHiddenFields().map((field) => (
+                      <button
+                        key={field.fieldId}
+                        onClick={() => handleShowExistingField(field.fieldId)}
+                        className="w-full text-left bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-3 rounded font-medium text-blue-800 transition-colors"
+                      >
+                        ➕ {field.name} {field.unit && `(${field.unit})`}
+                      </button>
+                    ))}
+                  </div>
+                  <hr className="my-4" />
+                </>
+              )}
+              <h4 className="font-medium text-gray-700">新しい項目を作成:</h4>
+              <button
+                onClick={() => {
+                  setShowSelectField(false);
+                  setShowAddField(true);
+                  setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder(), defaultDisplay: true });
+                }}
+                className="w-full bg-green-50 hover:bg-green-100 border border-green-200 px-4 py-3 rounded font-medium text-green-800 transition-colors"
+              >
+                ✨ 完全に新しい項目を作成
+              </button>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <button
+                onClick={() => setShowSelectField(false)}
+                className="bg-gray-100 hover:bg-gray-200 border border-gray-300 px-6 py-2 rounded font-medium text-gray-700 transition-colors"
+              >
+                ❌ キャンセル
+              </button>
+            </div>
+          </div>
+        ) : showAddField ? (
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">✨ 新しい項目を作成</h3>
             <form onSubmit={handleAddField} className="space-y-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 min-w-0">
@@ -377,14 +465,30 @@ export default function RecordInput() {
                   />
                 </div>
               </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={newField.defaultDisplay !== false}
+                      onChange={e => setNewField(f => ({ ...f, defaultDisplay: e.target.checked }))}
+                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
+                  </label>
+                </div>
+              </div>
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded font-medium transition-colors">✅ 追加</button>
                 <button
                   type="button"
-                  onClick={() => setShowAddField(false)}
+                  onClick={() => {
+                    setShowAddField(false);
+                    setShowSelectField(true);
+                  }}
                   className="bg-gray-100 hover:bg-gray-200 border border-gray-300 px-6 py-2 rounded font-medium text-gray-700 transition-colors"
                 >
-                  ❌ キャンセル
+                  ⬅️ 戻る
                 </button>
               </div>
               {addFieldError && <div className="text-red-500 font-medium mt-2">{addFieldError}</div>}
@@ -392,10 +496,7 @@ export default function RecordInput() {
           </div>
         ) : (
           <button
-            onClick={() => {
-              setShowAddField(true);
-              setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder() });
-            }}
+            onClick={() => setShowSelectField(true)}
             className="bg-green-100 hover:bg-green-200 border border-green-300 px-4 py-2 rounded font-medium text-green-700 transition-colors"
           >
             ➕ 新しい項目を追加
