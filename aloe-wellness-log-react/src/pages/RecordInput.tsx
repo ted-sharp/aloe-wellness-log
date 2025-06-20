@@ -139,19 +139,13 @@ export default function RecordInput() {
       setToast('記録を保存いたしましたわ');
       setTimeout(() => setToast(null), 2000);
 
-      // defaultDisplay: false の項目のみクリア、defaultDisplay: true の項目は保持
-      setValues(prev => {
-        const newValues: Record<string, string | number | boolean> = {};
-        for (const field of fields) {
-          if (field.defaultDisplay !== false && prev[field.fieldId] !== undefined) {
-            newValues[field.fieldId] = prev[field.fieldId];
-          }
-        }
-        return newValues;
-      });
+      // 全ての入力値をクリア（記録後は毎回空の状態にする）
+      setValues({});
 
-      // 一時表示項目をクリア
+      // 一時表示項目をクリア（defaultDisplay: false の項目を非表示に戻す）
       setTemporaryDisplayFields(new Set());
+
+      // 備考もクリア
       setRecordNotes('');
     } catch (error) {
       console.error('保存エラー:', error);
