@@ -165,7 +165,7 @@ export default function RecordList() {
                                 )
                               }
                               className={field?.type === 'boolean'
-                                ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block"
                                 : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full"}
                             />
                           </div>
