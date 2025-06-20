@@ -15,18 +15,28 @@ export default function RecordList() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string | number | boolean>('');
   const [expandedTexts, setExpandedTexts] = useState<Set<string>>(new Set());
+  const [showButtons, setShowButtons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadFields();
     loadRecords();
   }, [loadFields, loadRecords]);
 
-  // fieldIdから項目名・型を取得
+    // fieldIdから項目名・型を取得
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
       return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
     }
-    return fields.find(f => f.fieldId === fieldId);
+
+    // 優先順位1: fieldIdで検索
+    let field = fields.find(f => f.fieldId === fieldId);
+
+    // 優先順位2: nameで検索（fieldIdで見つからない場合）
+    if (!field) {
+      field = fields.find(f => f.name === fieldId);
+    }
+
+    return field;
   };
 
 
@@ -99,6 +109,22 @@ export default function RecordList() {
     return expandedTexts.has(recordId);
   };
 
+  const toggleButtons = (recordId: string) => {
+    setShowButtons(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
+  };
+
+  const areButtonsShown = (recordId: string) => {
+    return showButtons.has(recordId);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-12">一覧</h1>
@@ -120,12 +146,15 @@ export default function RecordList() {
               {sortRecordsByFieldOrder(recs).map((rec) => {
                 const field = getField(rec.fieldId);
                 return (
-                  <li key={rec.id} className="bg-gray-50 rounded-lg p-4 flex items-start gap-4 hover:bg-gray-100 transition-colors duration-200">
+                  <li key={rec.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
                     {editId === rec.id ? (
-                      <>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
-                            <span className="text-xl font-medium text-gray-700 flex-shrink-0">{field ? field.name : rec.fieldId}:</span>
+                      // 編集モード
+                      <div>
+                        <div className="grid grid-cols-2 gap-2 items-stretch mb-4">
+                          <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                            {field ? field.name : rec.fieldId}
+                          </div>
+                          <div className="pl-2">
                             <input
                               type={field?.type === 'number' ? 'number' : field?.type === 'boolean' ? 'checkbox' : 'text'}
                               value={field?.type === 'boolean' ? undefined : String(editValue)}
@@ -137,11 +166,11 @@ export default function RecordList() {
                               }
                               className={field?.type === 'boolean'
                                 ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 flex-1 min-w-0"}
+                                : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full"}
                             />
                           </div>
                         </div>
-                        <div className="flex gap-3 flex-shrink-0">
+                        <div className="flex gap-3 justify-center">
                           <button onClick={() => handleEditSave(rec)} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiCheckCircle className="w-4 h-4" />
                             保存
@@ -151,29 +180,24 @@ export default function RecordList() {
                             キャンセル
                           </button>
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mb-3">
-                            <span className="text-xl font-medium text-gray-700 flex-shrink-0">{field ? field.name : rec.fieldId}:</span>
-                            <div className="text-lg text-gray-800 font-semibold flex-1 min-w-0">
-                              {typeof rec.value === 'boolean' ? (
-                                rec.value ? (
-                                  <span className="flex items-center gap-2 text-green-600">
-                                    <HiCheckCircle className="w-6 h-6" />
-                                    あり
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-2 text-red-600">
-                                    <HiXCircle className="w-6 h-6" />
-                                    なし
-                                  </span>
-                                )
-                              ) : typeof rec.value === 'string' && rec.value.length > 30 ? (
+                      // 表示モード
+                      <div>
+                        {field?.fieldId === 'notes' ? (
+                          // 備考は縦棒区切りの左寄せレイアウト（カレンダーと同じ）
+                          <div className="flex items-stretch gap-2 cursor-pointer" onClick={() => toggleButtons(rec.id)}>
+                            <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
+                              {field ? field.name : rec.fieldId}
+                            </div>
+                            <div className="text-lg text-gray-800 font-semibold pl-2 flex-1 min-w-0">
+                              {typeof rec.value === 'string' && rec.value.length > 30 ? (
                                 <button
-                                  onClick={() => toggleTextExpansion(rec.id)}
-                                  className="text-left hover:text-blue-600 transition-colors break-words w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTextExpansion(rec.id);
+                                  }}
+                                  className="text-left hover:text-blue-600 transition-colors break-words max-w-80"
                                   title="クリックして全文表示"
                                 >
                                   {isTextExpanded(rec.id) ? rec.value : truncateText(rec.value)}
@@ -181,21 +205,53 @@ export default function RecordList() {
                               ) : (
                                 <span className="break-words">{rec.value}</span>
                               )}
-                              {field?.unit && typeof rec.value !== 'boolean' && <span className="text-gray-600 ml-2 flex-shrink-0">{field.unit}</span>}
                             </div>
                           </div>
-                        </div>
-                        <div className="flex gap-3 flex-shrink-0">
-                          <button onClick={() => handleEdit(rec)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2">
-                            <HiPencil className="w-4 h-4" />
-                            編集
-                          </button>
-                          <button onClick={() => handleDelete(rec)} className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2">
-                            <HiTrash className="w-4 h-4" />
-                            削除
-                          </button>
-                        </div>
-                      </>
+                        ) : (
+                          // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
+                          <div className="grid grid-cols-2 gap-2 items-stretch cursor-pointer" onClick={() => toggleButtons(rec.id)}>
+                            <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                              {field ? field.name : rec.fieldId}
+                            </div>
+                            <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                              {typeof rec.value === 'boolean' ? (
+                                rec.value ? (
+                                  <span className="inline-flex items-center gap-2 text-green-600">
+                                    <HiCheckCircle className="w-6 h-6" />
+                                    あり
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-2 text-red-600">
+                                    <HiXCircle className="w-6 h-6" />
+                                    なし
+                                  </span>
+                                )
+                              ) : (
+                                <span className="break-words">
+                                  {rec.value}
+                                  {field?.unit && typeof rec.value !== 'boolean' && (
+                                    <span className="text-gray-600 ml-1">{field.unit}</span>
+                                  )}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 編集・削除ボタン（クリックで表示/非表示） */}
+                        {areButtonsShown(rec.id) && (
+                          <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                            <button onClick={() => handleEdit(rec)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                              <HiPencil className="w-4 h-4" />
+                              編集
+                            </button>
+                            <button onClick={() => handleDelete(rec)} className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                              <HiTrash className="w-4 h-4" />
+                              削除
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </li>
                 );

@@ -8,8 +8,7 @@ import {
   HiDocument,
   HiExclamationTriangle,
   HiTrash,
-  HiArrowDownTray,
-  HiArrowUpTray
+  HiArrowDownTray
 } from 'react-icons/hi2';
 
 function formatDateForFilename(date: Date) {

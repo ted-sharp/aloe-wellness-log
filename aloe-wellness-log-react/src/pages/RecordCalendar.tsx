@@ -19,12 +19,21 @@ export default function RecordCalendar() {
     loadRecords();
   }, [loadFields, loadRecords]);
 
-  // fieldIdから項目名・型を取得（RecordListと同じ関数）
+    // fieldIdから項目名・型を取得（RecordListと同じ関数）
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
       return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
     }
-    return fields.find(f => f.fieldId === fieldId);
+
+    // 優先順位1: fieldIdで検索
+    let field = fields.find(f => f.fieldId === fieldId);
+
+    // 優先順位2: nameで検索（fieldIdで見つからない場合）
+    if (!field) {
+      field = fields.find(f => f.name === fieldId);
+    }
+
+    return field;
   };
 
   // テキスト省略機能のヘルパー関数
@@ -181,34 +190,57 @@ export default function RecordCalendar() {
                     {sortRecordsByFieldOrder(recs).map((rec) => {
                       const field = getField(rec.fieldId);
                       return (
-                        <li key={rec.id} className="bg-gray-50 rounded-lg p-4 flex items-center gap-4 hover:bg-gray-100 transition-colors duration-200 min-w-0">
-                          <span className="text-xl font-medium text-gray-700 flex-shrink-0">{field ? field.name : rec.fieldId}:</span>
-                          <div className="text-lg text-gray-800 font-semibold flex-1 min-w-0">
-                            {typeof rec.value === 'boolean' ? (
-                              rec.value ? (
-                                <span className="flex items-center gap-2 text-green-600">
-                                  <HiCheckCircle className="w-6 h-6" />
-                                  あり
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-2 text-red-600">
-                                  <HiXCircle className="w-6 h-6" />
-                                  なし
-                                </span>
-                              )
-                            ) : typeof rec.value === 'string' && rec.value.length > 30 ? (
-                              <button
-                                onClick={() => toggleTextExpansion(rec.id)}
-                                className="text-left hover:text-blue-600 transition-colors break-words w-full"
-                                title="クリックして全文表示"
-                              >
-                                {isTextExpanded(rec.id) ? rec.value : truncateText(rec.value)}
-                              </button>
-                            ) : (
-                              <span className="break-words">{rec.value}</span>
-                            )}
-                            {field?.unit && typeof rec.value !== 'boolean' && <span className="text-gray-600 ml-2 flex-shrink-0">{field.unit}</span>}
-                          </div>
+                        <li key={rec.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                          {field?.fieldId === 'notes' ? (
+                            // 備考は縦棒区切りの左寄せレイアウト
+                            <div className="flex items-stretch gap-2">
+                              <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
+                                {field ? field.name : rec.fieldId}
+                              </div>
+                              <div className="text-lg text-gray-800 font-semibold pl-2 flex-1 min-w-0">
+                                {typeof rec.value === 'string' && rec.value.length > 30 ? (
+                                  <button
+                                    onClick={() => toggleTextExpansion(rec.id)}
+                                    className="text-left hover:text-blue-600 transition-colors break-words w-full"
+                                    title="クリックして全文表示"
+                                  >
+                                    {isTextExpanded(rec.id) ? rec.value : truncateText(rec.value)}
+                                  </button>
+                                ) : (
+                                  <span className="break-words">{rec.value}</span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
+                            <div className="grid grid-cols-2 gap-2 items-stretch">
+                              <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                                {field ? field.name : rec.fieldId}
+                              </div>
+                              <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                                {typeof rec.value === 'boolean' ? (
+                                  rec.value ? (
+                                    <span className="inline-flex items-center gap-2 text-green-600">
+                                      <HiCheckCircle className="w-6 h-6" />
+                                      あり
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-2 text-red-600">
+                                      <HiXCircle className="w-6 h-6" />
+                                      なし
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="break-words">
+                                    {rec.value}
+                                    {field?.unit && typeof rec.value !== 'boolean' && (
+                                      <span className="text-gray-600 ml-1">{field.unit}</span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </li>
                       );
                     })}
