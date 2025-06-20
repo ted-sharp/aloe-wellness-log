@@ -29,12 +29,12 @@ function App() {
       <Router>
         <div className="relative">
           {/* デスクトップ用ナビゲーション */}
-          <nav className="hidden md:flex gap-6 mb-12 p-6 bg-white rounded-lg shadow-lg mx-4 mt-4">
-            <Link to="/" className="bg-slate-800 !text-white px-6 py-3 rounded-lg shadow-lg hover:bg-slate-900 transition-colors duration-200 font-bold text-lg border-2 border-slate-800 hover:border-slate-900 hover:!text-white visited:!text-white active:!text-white">記録入力</Link>
-            <Link to="/list" className="bg-slate-700 !text-white px-6 py-3 rounded-lg shadow-lg hover:bg-slate-800 transition-colors duration-200 font-bold text-lg border-2 border-slate-700 hover:border-slate-800 hover:!text-white visited:!text-white active:!text-white">記録一覧</Link>
-            <Link to="/graph" className="bg-slate-700 !text-white px-6 py-3 rounded-lg shadow-lg hover:bg-slate-800 transition-colors duration-200 font-bold text-lg border-2 border-slate-700 hover:border-slate-800 hover:!text-white visited:!text-white active:!text-white">記録グラフ</Link>
-            <Link to="/calendar" className="bg-slate-700 !text-white px-6 py-3 rounded-lg shadow-lg hover:bg-slate-800 transition-colors duration-200 font-bold text-lg border-2 border-slate-700 hover:border-slate-800 hover:!text-white visited:!text-white active:!text-white">記録カレンダー</Link>
-            <Link to="/export" className="bg-orange-600 !text-white px-6 py-3 rounded-lg shadow-lg hover:bg-orange-700 transition-colors duration-200 font-bold text-lg border-2 border-orange-600 hover:border-orange-700 hover:!text-white visited:!text-white active:!text-white">管理</Link>
+          <nav className="hidden md:flex gap-4 mb-12 p-4 bg-white rounded-lg shadow-lg mx-4 mt-4">
+            <Link to="/" className="bg-green-600 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium text-base border-2 border-green-600 hover:border-green-700 hover:!text-white visited:!text-white active:!text-white">入力</Link>
+            <Link to="/list" className="bg-blue-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium text-base border-2 border-blue-500 hover:border-blue-600 hover:!text-white visited:!text-white active:!text-white">一覧</Link>
+            <Link to="/graph" className="bg-blue-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium text-base border-2 border-blue-500 hover:border-blue-600 hover:!text-white visited:!text-white active:!text-white">グラフ</Link>
+            <Link to="/calendar" className="bg-blue-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium text-base border-2 border-blue-500 hover:border-blue-600 hover:!text-white visited:!text-white active:!text-white">カレンダー</Link>
+            <Link to="/export" className="bg-purple-600 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-purple-700 transition-colors duration-200 font-medium text-base border-2 border-purple-600 hover:border-purple-700 hover:!text-white visited:!text-white active:!text-white">管理</Link>
           </nav>
 
           {/* モバイル用ハンバーガーボタン */}
@@ -56,11 +56,11 @@ function App() {
           {isMenuOpen && (
             <div className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-50 mb-4">
               <nav className="flex flex-col">
-                <Link to="/" onClick={closeMenu} className="px-6 py-4 !text-slate-800 font-bold text-lg hover:bg-slate-50 border-b border-gray-100 transition-colors duration-200 hover:!text-slate-800 visited:!text-slate-800 active:!text-slate-800">記録入力</Link>
-                <Link to="/list" onClick={closeMenu} className="px-6 py-4 !text-slate-700 font-bold text-lg hover:bg-slate-50 border-b border-gray-100 transition-colors duration-200 hover:!text-slate-700 visited:!text-slate-700 active:!text-slate-700">記録一覧</Link>
-                <Link to="/graph" onClick={closeMenu} className="px-6 py-4 !text-slate-700 font-bold text-lg hover:bg-slate-50 border-b border-gray-100 transition-colors duration-200 hover:!text-slate-700 visited:!text-slate-700 active:!text-slate-700">記録グラフ</Link>
-                <Link to="/calendar" onClick={closeMenu} className="px-6 py-4 !text-slate-700 font-bold text-lg hover:bg-slate-50 border-b border-gray-100 transition-colors duration-200 hover:!text-slate-700 visited:!text-slate-700 active:!text-slate-700">記録カレンダー</Link>
-                <Link to="/export" onClick={closeMenu} className="px-6 py-4 !text-orange-600 font-bold text-lg hover:bg-orange-50 transition-colors duration-200 hover:!text-orange-600 visited:!text-orange-600 active:!text-orange-600">管理</Link>
+                <Link to="/" onClick={closeMenu} className="px-4 py-3 !text-green-600 font-medium text-base hover:bg-green-50 border-b border-gray-100 transition-colors duration-200 hover:!text-green-600 visited:!text-green-600 active:!text-green-600">入力</Link>
+                <Link to="/list" onClick={closeMenu} className="px-4 py-3 !text-blue-500 font-medium text-base hover:bg-blue-50 border-b border-gray-100 transition-colors duration-200 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500">一覧</Link>
+                <Link to="/graph" onClick={closeMenu} className="px-4 py-3 !text-blue-500 font-medium text-base hover:bg-blue-50 border-b border-gray-100 transition-colors duration-200 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500">グラフ</Link>
+                <Link to="/calendar" onClick={closeMenu} className="px-4 py-3 !text-blue-500 font-medium text-base hover:bg-blue-50 border-b border-gray-100 transition-colors duration-200 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500">カレンダー</Link>
+                <Link to="/export" onClick={closeMenu} className="px-4 py-3 !text-purple-600 font-medium text-base hover:bg-purple-50 transition-colors duration-200 hover:!text-purple-600 visited:!text-purple-600 active:!text-purple-600">管理</Link>
               </nav>
             </div>
           )}
