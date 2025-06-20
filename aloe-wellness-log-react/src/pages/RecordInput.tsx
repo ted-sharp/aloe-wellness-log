@@ -449,7 +449,7 @@ export default function RecordInput() {
                 </div>
 
                 {/* 保存・キャンセルボタン（中央寄せ） */}
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
                   <button type="button" onClick={handleEditFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                     <HiCheckCircle className="w-4 h-4" />
                     保存
