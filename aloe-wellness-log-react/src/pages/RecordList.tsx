@@ -100,7 +100,7 @@ export default function RecordList() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-800 mb-12">記録一覧</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">一覧</h1>
 
       {Object.entries(grouped).length === 0 && (
         <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">

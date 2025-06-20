@@ -100,7 +100,7 @@ export default function RecordCalendar() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-800 mb-12">記録カレンダー</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">カレンダー</h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <style>{`

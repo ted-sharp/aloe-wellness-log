@@ -36,7 +36,7 @@ export default function RecordGraph() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto bg-gray-50 min-h-screen">
-      <h2 className="text-xl font-bold mb-4">記録グラフ</h2>
+              <h1 className="text-3xl font-bold text-gray-800 mb-12">グラフ</h1>
       <div className="flex gap-4 mb-4 items-center">
         <label>
           項目：
