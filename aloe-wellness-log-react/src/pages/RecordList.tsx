@@ -79,11 +79,23 @@ export default function RecordList() {
     await updateRecord({ ...rec, value: editValue });
     setEditId(null);
     setEditValue('');
+    // ボタン表示状態もクリア
+    setShowButtons(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(rec.id);
+      return newSet;
+    });
   };
 
   const handleDelete = async (rec: RecordItem) => {
     if (window.confirm('本当に削除してよろしいですか？')) {
       await deleteRecord(rec.id);
+      // ボタン表示状態もクリア
+      setShowButtons(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(rec.id);
+        return newSet;
+      });
     }
   };
 
@@ -150,32 +162,58 @@ export default function RecordList() {
                     {editId === rec.id ? (
                       // 編集モード
                       <div>
-                        <div className="grid grid-cols-2 gap-2 items-stretch mb-4">
-                          <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
-                            {field ? field.name : rec.fieldId}
+                        {field?.fieldId === 'notes' ? (
+                          // 備考編集は左寄せレイアウト（通常表示と同じ）
+                          <div className="flex items-stretch gap-2 mb-4">
+                            <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
+                              {field ? field.name : rec.fieldId}
+                            </div>
+                            <div className="pl-2 flex-1 min-w-0">
+                              <textarea
+                                value={String(editValue)}
+                                onChange={e => setEditValue(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full h-24 resize-none"
+                              />
+                            </div>
                           </div>
-                          <div className="pl-2">
-                            <input
-                              type={field?.type === 'number' ? 'number' : field?.type === 'boolean' ? 'checkbox' : 'text'}
-                              value={field?.type === 'boolean' ? undefined : String(editValue)}
-                              checked={field?.type === 'boolean' ? !!editValue : undefined}
-                              onChange={e =>
-                                setEditValue(
-                                  field?.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
-                                )
-                              }
-                              className={field?.type === 'boolean'
-                                ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block"
-                                : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full"}
-                            />
+                        ) : (
+                          // 備考以外は二分割グリッドレイアウト
+                          <div className="grid grid-cols-2 gap-2 items-stretch mb-4">
+                            <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                              {field ? field.name : rec.fieldId}
+                            </div>
+                            <div className="pl-2">
+                              <input
+                                type={field?.type === 'number' ? 'number' : field?.type === 'boolean' ? 'checkbox' : 'text'}
+                                value={field?.type === 'boolean' ? undefined : String(editValue)}
+                                checked={field?.type === 'boolean' ? !!editValue : undefined}
+                                onChange={e =>
+                                  setEditValue(
+                                    field?.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
+                                  )
+                                }
+                                className={field?.type === 'boolean'
+                                  ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block"
+                                  : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full"}
+                              />
+                            </div>
                           </div>
-                        </div>
+                        )}
                         <div className="flex gap-3 justify-center">
                           <button onClick={() => handleEditSave(rec)} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiCheckCircle className="w-4 h-4" />
                             保存
                           </button>
-                          <button onClick={() => setEditId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                          <button onClick={() => {
+                            setEditId(null);
+                            setEditValue('');
+                            // ボタン表示状態もクリア
+                            setShowButtons(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(rec.id);
+                              return newSet;
+                            });
+                          }} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiXMark className="w-4 h-4" />
                             キャンセル
                           </button>
