@@ -3,7 +3,6 @@ import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 import {
   HiCalendarDays,
-  HiDocumentText,
   HiCheckCircle,
   HiXMark,
   HiPencil,
@@ -28,17 +27,7 @@ export default function RecordList() {
     return fields.find(f => f.fieldId === fieldId);
   };
 
-  const getFieldName = (field: any) => {
-    if (field?.fieldId === 'notes') {
-      return (
-        <span className="flex items-center gap-2">
-          <HiDocumentText className="w-5 h-5 text-blue-600" />
-          {field.name}
-        </span>
-      );
-    }
-    return field ? field.name : '';
-  };
+
 
   // 項目の順序を制御する関数
   const sortRecordsByFieldOrder = (records: RecordItem[]) => {
@@ -127,11 +116,11 @@ export default function RecordList() {
                           />
                         </div>
                         <div className="flex gap-3">
-                          <button onClick={() => handleEditSave(rec)} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                          <button onClick={() => handleEditSave(rec)} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiCheckCircle className="w-4 h-4" />
                             保存
                           </button>
-                          <button onClick={() => setEditId(null)} className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                          <button onClick={() => setEditId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiXMark className="w-4 h-4" />
                             キャンセル
                           </button>
@@ -151,11 +140,11 @@ export default function RecordList() {
                           </span>
                         </div>
                         <div className="flex gap-3">
-                          <button onClick={() => handleEdit(rec)} className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                          <button onClick={() => handleEdit(rec)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiPencil className="w-4 h-4" />
                             編集
                           </button>
-                          <button onClick={() => handleDelete(rec)} className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                          <button onClick={() => handleDelete(rec)} className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2">
                             <HiTrash className="w-4 h-4" />
                             削除
                           </button>

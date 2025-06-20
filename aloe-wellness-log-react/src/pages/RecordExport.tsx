@@ -122,14 +122,14 @@ export default function RecordExport() {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <button
             onClick={handleExportCSV}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <HiArrowDownTray className="w-5 h-5" />
             CSV形式でダウンロード
           </button>
           <button
             onClick={handleExportJSON}
-            className="bg-indigo-500 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-indigo-600 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <HiDocument className="w-5 h-5" />
             JSON形式でダウンロード
@@ -157,7 +157,7 @@ export default function RecordExport() {
         </div>
         <button
           onClick={handleDeleteAllData}
-          className="bg-red-500 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-red-600 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+          className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-red-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <HiTrash className="w-5 h-5" />
           全データを削除

@@ -354,7 +354,7 @@ export default function RecordInput() {
                     setRecordDate(now.toISOString().slice(0, 10));
                     setRecordTime(now.toTimeString().slice(0, 5));
                   }}
-                  className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
                 >
                   <HiClock className="w-5 h-5" />
                   現在時刻
@@ -426,11 +426,11 @@ export default function RecordInput() {
                   </label>
                 </div>
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={handleEditFieldSave} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                  <button type="button" onClick={handleEditFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                     <HiCheckCircle className="w-5 h-5" />
                     保存
                   </button>
-                  <button type="button" onClick={() => setEditFieldId(null)} className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                  <button type="button" onClick={() => setEditFieldId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                     <HiXMark className="w-5 h-5" />
                     キャンセル
                   </button>
@@ -440,7 +440,7 @@ export default function RecordInput() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-medium text-gray-800">{field.name}</h3>
-                  <button type="button" onClick={() => handleEditField(field)} className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                  <button type="button" onClick={() => handleEditField(field)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2">
                     <HiPencil className="w-4 h-4" />
                     編集
                   </button>
@@ -465,7 +465,7 @@ export default function RecordInput() {
                   </div>
                   <button
                     type="button"
-                    className="bg-indigo-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                    className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
                     onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
                   >
                     <HiClipboardDocumentList className="w-4 h-4" />
@@ -479,7 +479,7 @@ export default function RecordInput() {
 
         {formError && <div className="text-red-600 font-semibold bg-red-50 p-4 rounded-lg border border-red-200">{formError}</div>}
 
-        <button type="submit" className="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
+        <button type="submit" className="bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-xl shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
           <HiDocumentText className="w-6 h-6" />
           記録する
         </button>
@@ -546,11 +546,11 @@ export default function RecordInput() {
                               </label>
                             </div>
                             <div className="flex gap-2 pt-2">
-                              <button type="button" onClick={handleEditExistingFieldSave} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                              <button type="button" onClick={handleEditExistingFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                                 <HiCheckCircle className="w-4 h-4" />
                                 保存
                               </button>
-                              <button type="button" onClick={() => setEditingExistingFieldId(null)} className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                              <button type="button" onClick={() => setEditingExistingFieldId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                                 <HiXMark className="w-4 h-4" />
                                 キャンセル
                               </button>
@@ -566,7 +566,7 @@ export default function RecordInput() {
                               <button
                                 type="button"
                                 onClick={() => handleShowExistingField(field.fieldId)}
-                                className="bg-indigo-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                                className="bg-teal-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center gap-2"
                               >
                                 <HiPlus className="w-4 h-4" />
                                 一時表示
@@ -574,7 +574,7 @@ export default function RecordInput() {
                               <button
                                 type="button"
                                 onClick={() => handleEditExistingField(field)}
-                                className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
                               >
                                 <HiPencil className="w-4 h-4" />
                                 編集
@@ -582,7 +582,7 @@ export default function RecordInput() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteExistingField(field)}
-                                className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                                className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
                               >
                                 <HiTrash className="w-4 h-4" />
                                 削除
@@ -658,11 +658,11 @@ export default function RecordInput() {
                     </div>
                     {addFieldError && <div className="text-red-600 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">{addFieldError}</div>}
                     <div className="flex gap-2 pt-2">
-                      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                      <button type="submit" className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center gap-2">
                         <HiPlus className="w-4 h-4" />
                         追加
                       </button>
-                      <button type="button" onClick={() => setShowAddField(false)} className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                      <button type="button" onClick={() => setShowAddField(false)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                         <HiXMark className="w-4 h-4" />
                         キャンセル
                       </button>
@@ -675,7 +675,7 @@ export default function RecordInput() {
                   <button
                     type="button"
                     onClick={() => setShowAddField(true)}
-                    className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                    className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center gap-2"
                   >
                     <HiPlus className="w-4 h-4" />
                     新しい項目を追加
@@ -684,7 +684,7 @@ export default function RecordInput() {
                 <button
                   type="button"
                   onClick={() => setShowSelectField(false)}
-                  className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                  className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200 font-medium flex items-center gap-2"
                 >
                   <HiArrowLeft className="w-5 h-5" />
                   戻る
@@ -696,7 +696,7 @@ export default function RecordInput() {
           <button
             type="button"
             onClick={() => setShowSelectField(true)}
-            className="bg-indigo-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2"
+            className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
           >
             <HiClipboardDocumentList className="w-5 h-5" />
             項目を選択・追加
