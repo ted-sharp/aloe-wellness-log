@@ -147,12 +147,9 @@ export default function RecordExport() {
           <HiExclamationTriangle className="w-6 h-6 text-red-600" />
           危険な操作
         </h2>
-        <div className="mb-6">
+        <div className="mb-6 text-left">
           <p className="text-base text-red-700 mb-3">
-            <strong>全データ削除:</strong> すべての記録データが完全に削除されます。
-          </p>
-          <p className="text-base text-red-600">
-            削除前にデータのエクスポートをすることを強くお勧めします。
+            <strong>全データ削除:</strong> 記録データが完全に削除されます。
           </p>
         </div>
         <button
