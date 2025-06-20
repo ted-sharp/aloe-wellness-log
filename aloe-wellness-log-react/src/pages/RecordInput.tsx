@@ -45,6 +45,9 @@ export default function RecordInput() {
   // 一時的に表示する項目のIDを管理
   const [temporaryDisplayFields, setTemporaryDisplayFields] = useState<Set<string>>(new Set());
 
+  // ボタン表示状態を管理（一覧画面と同様）
+  const [showButtons, setShowButtons] = useState<Set<string>>(new Set());
+
   // 日時管理用のstate（デフォルトは現在時刻）
   const [recordDate, setRecordDate] = useState(() => {
     const now = new Date();
@@ -200,6 +203,8 @@ export default function RecordInput() {
     if (!editFieldId || !editField.name?.trim()) {
       setEditFieldId(null);
       setEditField({});
+      // ボタン表示状態もクリア
+      setShowButtons(new Set());
       return;
     }
     const original = fields.find(f => f.fieldId === editFieldId);
@@ -216,6 +221,8 @@ export default function RecordInput() {
     }
     setEditFieldId(null);
     setEditField({});
+    // ボタン表示状態もクリア
+    setShowButtons(new Set());
   };
 
   // 前回値を取得する関数
@@ -304,6 +311,23 @@ export default function RecordInput() {
     }
   };
 
+  // ボタン表示/非表示の切り替え（一覧画面と同様）
+  const toggleButtons = (fieldId: string) => {
+    setShowButtons(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fieldId)) {
+        newSet.delete(fieldId);
+      } else {
+        newSet.add(fieldId);
+      }
+      return newSet;
+    });
+  };
+
+  const areButtonsShown = (fieldId: string) => {
+    return showButtons.has(fieldId);
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-12">入力</h1>
@@ -388,29 +412,31 @@ export default function RecordInput() {
           .map((field) => (
           <div key={field.fieldId} className="bg-white p-6 rounded-2xl shadow-md">
             {editFieldId === field.fieldId ? (
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="block text-base font-medium text-gray-700 mb-2">項目名</label>
+                            <div>
+                {/* 項目名入力（左）と単位入力（右）のレイアウト */}
+                <div className="grid grid-cols-2 gap-2 items-stretch mb-4">
+                  <div className="text-right pr-2 border-r border-gray-200">
                     <input
                       type="text"
                       value={editField.name ?? ''}
                       onChange={e => setEditField(f => ({ ...f, name: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                      placeholder="項目名"
                     />
                   </div>
-                  <div className="w-full sm:w-32">
-                    <label className="block text-base font-medium text-gray-700 mb-2">単位</label>
+                  <div className="pl-2">
                     <input
                       type="text"
                       value={editField.unit ?? ''}
                       onChange={e => setEditField(f => ({ ...f, unit: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                      placeholder="例: kg"
+                      placeholder="単位（例: kg）"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+
+                {/* デフォルト表示チェックボックス（中央寄せ） */}
+                <div className="flex justify-center mb-4">
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -421,53 +447,75 @@ export default function RecordInput() {
                     <span className="text-base font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
                   </label>
                 </div>
-                <div className="flex gap-3 pt-2">
+
+                {/* 保存・キャンセルボタン（中央寄せ） */}
+                <div className="flex gap-3 justify-center">
                   <button type="button" onClick={handleEditFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
-                    <HiCheckCircle className="w-5 h-5" />
+                    <HiCheckCircle className="w-4 h-4" />
                     保存
                   </button>
-                  <button type="button" onClick={() => setEditFieldId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
-                    <HiXMark className="w-5 h-5" />
+                  <button type="button" onClick={() => {
+                    setEditFieldId(null);
+                    setEditField({});
+                    // ボタン表示状態もクリア
+                    setShowButtons(new Set());
+                  }} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                    <HiXMark className="w-4 h-4" />
                     キャンセル
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-medium text-gray-800">{field.name}</h3>
-                  <button type="button" onClick={() => handleEditField(field)} className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2">
-                    <HiPencil className="w-4 h-4" />
-                    編集
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
-                      value={field.type === 'boolean' ? undefined : String(values[field.fieldId] ?? '')}
-                      checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
-                      onChange={(e) =>
-                        handleChange(
-                          field.fieldId,
-                          field.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
-                        )
-                      }
-                      className={field.type === 'boolean'
-                        ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        : "border border-gray-300 rounded-lg px-4 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"}
-                    />
-                    {field.unit && <span className="text-gray-600 font-medium">{field.unit}</span>}
+              <div>
+                {/* 一覧画面と同じレイアウト：項目名左、入力欄右 */}
+                <div className="grid grid-cols-2 gap-2 items-stretch cursor-pointer" onClick={() => toggleButtons(field.fieldId)}>
+                  <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                    {field.name}
                   </div>
-                  <button
-                    type="button"
-                    className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
-                    onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
-                  >
-                    <HiClipboardDocumentList className="w-4 h-4" />
-                    前回値
-                  </button>
+                  <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type={field.type === 'number' ? 'number' : field.type === 'boolean' ? 'checkbox' : 'text'}
+                        value={field.type === 'boolean' ? undefined : String(values[field.fieldId] ?? '')}
+                        checked={field.type === 'boolean' ? !!values[field.fieldId] : undefined}
+                        onChange={(e) => {
+                          e.stopPropagation(); // 親のクリックイベントを防ぐ
+                          handleChange(
+                            field.fieldId,
+                            field.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
+                          );
+                        }}
+                        onClick={(e) => e.stopPropagation()} // 親のクリックイベントを防ぐ
+                        className={field.type === 'boolean'
+                          ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block"
+                          : "border border-gray-300 rounded-lg px-4 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"}
+                      />
+                      {field.unit && <span className="text-gray-600 font-medium">{field.unit}</span>}
+                    </div>
+                  </div>
                 </div>
+
+                {/* 編集・前回値ボタン（クリックで表示/非表示） */}
+                {areButtonsShown(field.fieldId) && (
+                  <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => handleEditField(field)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                    >
+                      <HiPencil className="w-4 h-4" />
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                      onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
+                    >
+                      <HiClipboardDocumentList className="w-4 h-4" />
+                      前回値
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
