@@ -5,6 +5,7 @@ import {
   HiCalendarDays,
   HiCheckCircle,
   HiXMark,
+  HiXCircle,
   HiPencil,
   HiTrash
 } from 'react-icons/hi2';
@@ -158,7 +159,17 @@ export default function RecordList() {
                             <span className="text-xl font-medium text-gray-700 flex-shrink-0">{field ? field.name : rec.fieldId}:</span>
                             <div className="text-lg text-gray-800 font-semibold flex-1 min-w-0">
                               {typeof rec.value === 'boolean' ? (
-                                rec.value ? 'あり' : 'なし'
+                                rec.value ? (
+                                  <span className="flex items-center gap-2 text-green-600">
+                                    <HiCheckCircle className="w-6 h-6" />
+                                    あり
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-2 text-red-600">
+                                    <HiXCircle className="w-6 h-6" />
+                                    なし
+                                  </span>
+                                )
                               ) : typeof rec.value === 'string' && rec.value.length > 30 ? (
                                 <button
                                   onClick={() => toggleTextExpansion(rec.id)}

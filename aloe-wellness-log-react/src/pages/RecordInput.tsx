@@ -17,7 +17,7 @@ import {
 const FIELD_TYPES = [
   { value: 'number', label: '数値' },
   { value: 'string', label: '文字列' },
-  { value: 'boolean', label: '有無' },
+  { value: 'boolean', label: '成否' },
 ] as const;
 
 type NewField = {
@@ -243,9 +243,11 @@ export default function RecordInput() {
     }
   };
 
-  // 非表示項目のリストを取得
+  // 非表示項目のリストを取得（order順でソート）
   const getHiddenFields = () => {
-    return fields.filter(field => field.defaultDisplay === false);
+    return fields
+      .filter(field => field.defaultDisplay === false)
+      .sort((a, b) => (a.order || 999) - (b.order || 999));
   };
 
   // 既存項目の編集機能
@@ -489,7 +491,7 @@ export default function RecordInput() {
             <div className="space-y-4">
               {getHiddenFields().length > 0 && (
                 <>
-                  <h4 className="text-xl font-medium text-gray-700">既存の項目から選択:</h4>
+                  <h4 className="text-xl font-medium text-gray-700 text-left">既存の項目から選択:</h4>
                   <div className="space-y-3">
                     {getHiddenFields().map((field) => (
                       <div key={field.fieldId} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -563,7 +565,7 @@ export default function RecordInput() {
                                 className="bg-teal-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center gap-2"
                               >
                                 <HiPlus className="w-4 h-4" />
-                                一時表示
+                                追加
                               </button>
                               <button
                                 type="button"
@@ -591,7 +593,7 @@ export default function RecordInput() {
               )}
               {showAddField && (
                 <form onSubmit={handleAddField} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="text-xl font-medium text-gray-700 mb-4">新しい項目を追加:</h4>
+                  <h4 className="text-xl font-medium text-gray-700 mb-4 text-left">新しい項目を追加:</h4>
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className="flex-1">
