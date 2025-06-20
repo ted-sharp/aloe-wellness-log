@@ -119,26 +119,26 @@ export default function RecordExport() {
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">データエクスポート</h2>
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col gap-4 mb-6">
           <button
             onClick={handleExportCSV}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
           >
             <HiArrowDownTray className="w-5 h-5" />
             CSV形式でダウンロード
           </button>
           <button
             onClick={handleExportJSON}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
           >
             <HiDocument className="w-5 h-5" />
             JSON形式でダウンロード
           </button>
         </div>
 
-        <div className="text-sm text-gray-600 space-y-1">
-          <p>• CSV形式: Excel等での分析に適しています</p>
-          <p>• JSON形式: プログラムでの処理やバックアップに適しています</p>
+        <div className="text-sm text-gray-600 space-y-1 text-left">
+          <p>• CSV形式: Excel等での分析に適しています。</p>
+          <p>• JSON形式: プログラムでの処理やバックアップに適しています。</p>
         </div>
       </div>
 
@@ -149,15 +149,15 @@ export default function RecordExport() {
         </h2>
         <div className="mb-6">
           <p className="text-base text-red-700 mb-3">
-            <strong>全データ削除:</strong> すべての記録データと項目設定が完全に削除されます。
+            <strong>全データ削除:</strong> すべての記録データが完全に削除されます。
           </p>
           <p className="text-base text-red-600">
-            削除前にデータのエクスポートでバックアップを取ることを強くお勧めします。
+            削除前にデータのエクスポートをすることを強くお勧めします。
           </p>
         </div>
         <button
           onClick={handleDeleteAllData}
-          className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-red-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
+          className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-red-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
         >
           <HiTrash className="w-5 h-5" />
           全データを削除
