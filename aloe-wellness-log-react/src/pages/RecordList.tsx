@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
+import {
+  HiCalendarDays,
+  HiDocumentText,
+  HiCheckCircle,
+  HiXMark,
+  HiPencil,
+  HiTrash
+} from 'react-icons/hi2';
 
 export default function RecordList() {
   const { records, fields, loadRecords, loadFields, updateRecord, deleteRecord } = useRecordsStore();
@@ -15,9 +23,21 @@ export default function RecordList() {
   // fieldIdから項目名・型を取得
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
-      return { fieldId: 'notes', name: '📝 備考', type: 'string' as const, order: 0 };
+      return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
     }
     return fields.find(f => f.fieldId === fieldId);
+  };
+
+  const getFieldName = (field: any) => {
+    if (field?.fieldId === 'notes') {
+      return (
+        <span className="flex items-center gap-2">
+          <HiDocumentText className="w-5 h-5 text-blue-600" />
+          {field.name}
+        </span>
+      );
+    }
+    return field ? field.name : '';
   };
 
   // 項目の順序を制御する関数
@@ -67,68 +87,88 @@ export default function RecordList() {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      <h2 className="text-xl font-bold mb-4">記録一覧</h2>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-4xl font-bold text-gray-800 mb-12">記録一覧</h1>
+
       {Object.entries(grouped).length === 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-          <p>記録がありませんわ。</p>
+        <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
+          <p className="text-lg">記録がありませんわ。</p>
         </div>
       )}
-      {Object.entries(grouped).map(([datetime, recs]) => (
-        <div key={datetime} className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="font-semibold text-lg text-gray-800 mb-4 border-b border-gray-200 pb-2">
-            📅 {datetime}
+
+      <div className="space-y-8">
+        {Object.entries(grouped).map(([datetime, recs]) => (
+          <div key={datetime} className="bg-white rounded-2xl shadow-md p-6">
+            <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
+              <HiCalendarDays className="w-6 h-6 text-blue-600" />
+              {datetime}
+            </div>
+            <ul className="space-y-4">
+              {sortRecordsByFieldOrder(recs).map((rec) => {
+                const field = getField(rec.fieldId);
+                return (
+                  <li key={rec.id} className="bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-gray-100 transition-colors duration-200">
+                    {editId === rec.id ? (
+                      <>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xl font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
+                          <input
+                            type={field?.type === 'number' ? 'number' : field?.type === 'boolean' ? 'checkbox' : 'text'}
+                            value={field?.type === 'boolean' ? undefined : String(editValue)}
+                            checked={field?.type === 'boolean' ? !!editValue : undefined}
+                            onChange={e =>
+                              setEditValue(
+                                field?.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
+                              )
+                            }
+                            className={field?.type === 'boolean'
+                              ? "w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              : "border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"}
+                          />
+                        </div>
+                        <div className="flex gap-3">
+                          <button onClick={() => handleEditSave(rec)} className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center gap-2">
+                            <HiCheckCircle className="w-4 h-4" />
+                            保存
+                          </button>
+                          <button onClick={() => setEditId(null)} className="bg-indigo-500 !text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                            <HiXMark className="w-4 h-4" />
+                            キャンセル
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xl font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
+                          <span className="text-lg text-gray-800 font-semibold">
+                            {typeof rec.value === 'boolean'
+                              ? rec.value
+                                ? 'あり'
+                                : 'なし'
+                              : rec.value}
+                            {field?.unit && typeof rec.value !== 'boolean' && <span className="text-gray-600 ml-2">{field.unit}</span>}
+                          </span>
+                        </div>
+                        <div className="flex gap-3">
+                          <button onClick={() => handleEdit(rec)} className="bg-amber-400 text-gray-800 px-4 py-2 rounded-lg shadow-md hover:bg-amber-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                            <HiPencil className="w-4 h-4" />
+                            編集
+                          </button>
+                          <button onClick={() => handleDelete(rec)} className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-colors duration-200 font-medium flex items-center gap-2">
+                            <HiTrash className="w-4 h-4" />
+                            削除
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-          <ul className="space-y-3">
-            {sortRecordsByFieldOrder(recs).map((rec) => {
-              const field = getField(rec.fieldId);
-              return (
-                <li key={rec.id} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between hover:bg-gray-100 transition-colors">
-                  {editId === rec.id ? (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
-                        <input
-                          type={field?.type === 'number' ? 'number' : field?.type === 'boolean' ? 'checkbox' : 'text'}
-                          value={field?.type === 'boolean' ? undefined : String(editValue)}
-                          checked={field?.type === 'boolean' ? !!editValue : undefined}
-                          onChange={e =>
-                            setEditValue(
-                              field?.type === 'boolean' ? e.currentTarget.checked : e.currentTarget.value
-                            )
-                          }
-                          className="border rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEditSave(rec)} className="bg-green-100 hover:bg-green-200 border border-green-300 px-3 py-1.5 rounded text-sm font-medium text-green-700 transition-colors">💾 保存</button>
-                        <button onClick={() => setEditId(null)} className="bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1.5 rounded text-sm font-medium text-gray-700 transition-colors">❌ キャンセル</button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
-                        <span className="text-gray-900 font-semibold">
-                          {typeof rec.value === 'boolean'
-                            ? rec.value
-                              ? 'あり'
-                              : 'なし'
-                            : rec.value}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEdit(rec)} className="bg-blue-100 hover:bg-blue-200 border border-blue-300 px-3 py-1.5 rounded text-sm font-medium text-blue-700 transition-colors">✏️ 編集</button>
-                        <button onClick={() => handleDelete(rec)} className="bg-red-100 hover:bg-red-200 border border-red-300 px-3 py-1.5 rounded text-sm font-medium text-red-700 transition-colors">🗑️ 削除</button>
-                      </div>
-                    </>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

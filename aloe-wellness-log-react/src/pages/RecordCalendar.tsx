@@ -3,6 +3,10 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
+import {
+  HiClock,
+  HiDocumentText
+} from 'react-icons/hi2';
 
 export default function RecordCalendar() {
   const { records, fields, loadRecords, loadFields } = useRecordsStore();
@@ -16,9 +20,21 @@ export default function RecordCalendar() {
   // fieldIdから項目名・型を取得（RecordListと同じ関数）
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
-      return { fieldId: 'notes', name: '📝 備考', type: 'string' as const, order: 0 };
+      return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
     }
     return fields.find(f => f.fieldId === fieldId);
+  };
+
+  const getFieldDisplayName = (field: any) => {
+    if (field?.fieldId === 'notes') {
+      return (
+        <span className="flex items-center gap-2">
+          <HiDocumentText className="w-5 h-5 text-blue-600" />
+          {field.name}
+        </span>
+      );
+    }
+    return field ? field.name : '';
   };
 
   // 項目の順序を制御する関数（RecordListと同じ関数）
@@ -73,52 +89,94 @@ export default function RecordCalendar() {
   }, [selectedRecords]);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto bg-gray-50 min-h-screen">
-      <h2 className="text-xl font-bold mb-4">記録カレンダー</h2>
-      <Calendar
-        onChange={date => setSelectedDate(date as Date)}
-        value={selectedDate}
-        tileContent={({ date, view }) => {
-          if (view === 'month') {
-            // タイムゾーンを考慮した日付文字列を作成
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            if (recordDates.has(dateStr)) {
-              return <span className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-500 align-middle" title="記録あり"></span>;
-            }
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-4xl font-bold text-gray-800 mb-12">記録カレンダー</h1>
+
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <style>{`
+          .react-calendar {
+            width: 100%;
+            background: transparent;
+            border: none;
+            font-family: inherit;
           }
-          return null;
-        }}
-      />
+          .react-calendar__tile {
+            padding: 12px 8px;
+            background: transparent;
+            border-radius: 8px;
+            transition: all 0.2s;
+          }
+          .react-calendar__tile:enabled:hover,
+          .react-calendar__tile:enabled:focus {
+            background-color: #dbeafe;
+          }
+          .react-calendar__tile--active {
+            background: #2563eb !important;
+            color: white;
+          }
+          .react-calendar__navigation button {
+            color: #374151;
+            font-weight: 500;
+            font-size: 16px;
+            padding: 8px 16px;
+          }
+          .react-calendar__navigation button:enabled:hover,
+          .react-calendar__navigation button:enabled:focus {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+          }
+          .react-calendar__month-view__weekdays {
+            font-weight: 600;
+            color: #6b7280;
+          }
+        `}</style>
+        <Calendar
+          onChange={date => setSelectedDate(date as Date)}
+          value={selectedDate}
+          tileContent={({ date, view }) => {
+            if (view === 'month') {
+              // タイムゾーンを考慮した日付文字列を作成
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              const dateStr = `${year}-${month}-${day}`;
+              if (recordDates.has(dateStr)) {
+                return <span className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-600 align-middle" title="記録あり"></span>;
+              }
+            }
+            return null;
+          }}
+        />
+      </div>
+
       {selectedDate && (
-        <div className="mt-6">
-          <h3 className="font-bold mb-4 text-lg">{selectedDate.toLocaleDateString()} の記録</h3>
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-8">{selectedDate.toLocaleDateString()} の記録</h2>
           {selectedRecords.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-              <p>この日の記録はありませんわ。</p>
+            <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
+              <p className="text-lg">この日の記録はありませんわ。</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-8">
               {Object.entries(groupedSelectedRecords).map(([datetime, recs]) => (
-                <div key={datetime} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="font-semibold text-lg text-gray-800 mb-4 border-b border-gray-200 pb-2">
-                    🕐 {recs[0].time}
+                <div key={datetime} className="bg-white rounded-2xl shadow-md p-6">
+                  <div className="text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4 flex items-center gap-2">
+                    <HiClock className="w-6 h-6 text-blue-600" />
+                    {recs[0].time}
                   </div>
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {sortRecordsByFieldOrder(recs).map((rec) => {
                       const field = getField(rec.fieldId);
                       return (
-                        <li key={rec.id} className="bg-gray-50 rounded-lg p-3 flex items-center gap-3 hover:bg-gray-100 transition-colors">
-                          <span className="font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
-                          <span className="text-gray-900 font-semibold">
+                        <li key={rec.id} className="bg-gray-50 rounded-lg p-4 flex items-center gap-4 hover:bg-gray-100 transition-colors duration-200">
+                          <span className="text-xl font-medium text-gray-700">{field ? field.name : rec.fieldId}:</span>
+                          <span className="text-lg text-gray-800 font-semibold">
                             {typeof rec.value === 'boolean'
                               ? rec.value
                                 ? 'あり'
                                 : 'なし'
                               : rec.value}
-                            {field?.unit && typeof rec.value !== 'boolean' && <span className="text-gray-600 ml-1">{field.unit}</span>}
+                            {field?.unit && typeof rec.value !== 'boolean' && <span className="text-gray-600 ml-2">{field.unit}</span>}
                           </span>
                         </li>
                       );
