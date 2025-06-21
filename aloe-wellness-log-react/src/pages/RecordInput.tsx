@@ -121,8 +121,6 @@ type NewField = {
   name: string;
   type: 'number' | 'string' | 'boolean';
   unit?: string;
-  order?: number;
-  defaultDisplay?: boolean;
 };
 
 export default function RecordInput() {
@@ -130,7 +128,8 @@ export default function RecordInput() {
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [showSelectField, setShowSelectField] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
-  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '', order: 1, defaultDisplay: true });
+
+  const [newField, setNewField] = useState<NewField>({ name: '', type: 'number', unit: '' });
   const [editFieldId, setEditFieldId] = useState<string | null>(null);
   const [editField, setEditField] = useState<Partial<Field>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -278,22 +277,22 @@ export default function RecordInput() {
       name: newField.name.trim(),
       type: newField.type,
       unit: newField.unit?.trim() || undefined,
-      order: newField.order || 1,
-      defaultDisplay: !!newField.defaultDisplay,
+      order: getNextDefaultOrder(), // 自動的に次の順序を設定
+      defaultDisplay: false, // 既存項目追加では非表示がデフォルト
     });
 
-    // defaultDisplay: false の項目は一時的に表示リストに追加
-    if (!newField.defaultDisplay) {
-      setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
-    }
+    // 非表示項目として追加するので、一時的に表示リストに追加
+    setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
 
-    setNewField({ name: '', type: 'number', unit: '', order: getNextDefaultOrder(), defaultDisplay: true });
+    setNewField({ name: '', type: 'number', unit: '' });
     setShowAddField(false);
     setShowSelectField(false);
     await loadFields();
     setToast('項目を追加しましたわ');
     setTimeout(() => setToast(null), 2000);
   };
+
+
 
   const handleEditField = (field: Field) => {
     setEditFieldId(field.fieldId);
@@ -354,6 +353,36 @@ export default function RecordInput() {
     }
   };
 
+  // 非表示項目を永続的に表示状態に変更する関数
+  const handleShowExistingFieldPermanently = async (fieldId: string) => {
+    const field = fields.find(f => f.fieldId === fieldId);
+    if (field) {
+      try {
+        // defaultDisplay を true に変更
+        await updateField({
+          ...field,
+          defaultDisplay: true,
+        });
+
+        // 一時表示リストから削除（もし含まれていれば）
+        setTemporaryDisplayFields(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldId);
+          return newSet;
+        });
+
+        setShowSelectButtons(new Set()); // ボタン表示状態をクリア
+        await loadFields(); // フィールド一覧を再読み込み
+        setToast('項目を表示状態に変更しましたわ');
+        setTimeout(() => setToast(null), 2000);
+      } catch (error) {
+        console.error('表示状態変更エラー:', error);
+        setToast('表示状態の変更に失敗しました');
+        setTimeout(() => setToast(null), 2000);
+      }
+    }
+  };
+
   // 非表示項目のリストを取得（order順でソート）
   const getHiddenFields = () => {
     return fields
@@ -366,9 +395,7 @@ export default function RecordInput() {
     setEditingExistingFieldId(field.fieldId);
     setEditingExistingField({
       name: field.name,
-      unit: field.unit,
-      order: field.order,
-      defaultDisplay: field.defaultDisplay
+      unit: field.unit
     });
     setShowSelectButtons(new Set()); // ボタン表示状態をクリア
   };
@@ -386,8 +413,10 @@ export default function RecordInput() {
         ...original,
         name: editingExistingField.name.trim(),
         unit: editingExistingField.unit?.trim() || undefined,
-        order: editingExistingField.order || 1,
-        defaultDisplay: editingExistingField.defaultDisplay !== false,
+        // orderは元の値を保持（並び替えはドラッグ&ドロップで行う）
+        order: original.order,
+        // defaultDisplayも元の値を保持（表示管理は並び替えモーダルで行う）
+        defaultDisplay: original.defaultDisplay,
       });
       await loadFields();
       setToast('項目を編集しましたわ');
@@ -847,7 +876,7 @@ export default function RecordInput() {
           <div className="bg-white p-6 rounded-2xl shadow-md">
             <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <HiClipboardDocumentList className="w-6 h-6 text-blue-600" />
-              項目を選択
+              項目を選択・表示
             </h3>
             <div className="space-y-4">
               {getHiddenFields().length > 0 && (
@@ -879,30 +908,8 @@ export default function RecordInput() {
                                 />
                               </div>
                             </div>
-                            {/* 下段：表示順序とチェックボックス */}
-                            <div className="grid grid-cols-2 gap-2 items-center">
-                              <div className="text-right pr-2 border-r border-gray-200">
-                                <input
-                                  type="number"
-                                  value={editingExistingField.order || ''}
-                                  onChange={e => setEditingExistingField(f => ({ ...f, order: parseInt(e.target.value) || 1 }))}
-                                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                                  placeholder="表示順序"
-                                  min="1"
-                                />
-                              </div>
-                              <div className="pl-2">
-                                <label className="flex items-center gap-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={editingExistingField.defaultDisplay !== false}
-                                    onChange={e => setEditingExistingField(f => ({ ...f, defaultDisplay: e.target.checked }))}
-                                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                  />
-                                  <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
-                                </label>
-                              </div>
-                            </div>
+                            {/* デフォルト表示設定 */}
+
                             <div className="flex gap-2 justify-center pt-2 border-t border-gray-200">
                               <button type="button" onClick={handleEditExistingFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                                 <HiCheckCircle className="w-4 h-4" />
@@ -929,9 +936,17 @@ export default function RecordInput() {
                               </div>
                             </div>
 
-                            {/* 追加・編集・削除ボタン（クリックで表示/非表示） */}
+                            {/* 表示・追加・編集・削除ボタン（クリックで表示/非表示） */}
                             {areSelectButtonsShown(field.fieldId) && (
                               <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                                <button
+                                  type="button"
+                                  onClick={() => handleShowExistingFieldPermanently(field.fieldId)}
+                                  className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                                >
+                                  <HiCheckCircle className="w-4 h-4" />
+                                  表示
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleShowExistingField(field.fieldId)}
@@ -966,8 +981,11 @@ export default function RecordInput() {
                 </>
               )}
               {showAddField && (
-                <form onSubmit={handleAddField} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="text-xl font-medium text-gray-700 mb-4 text-left">新しい項目を追加:</h4>
+                <form onSubmit={handleAddField} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="text-xl font-medium text-gray-700 mb-4 text-left flex items-center gap-2">
+                    <HiPlus className="w-6 h-6 text-green-600" />
+                    新しい項目を追加
+                  </h4>
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row gap-3">
                       <div className="flex-1">
@@ -1003,29 +1021,8 @@ export default function RecordInput() {
                           placeholder="例: kg"
                         />
                       </div>
-                      <div className="w-full sm:w-20">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">表示順序</label>
-                        <input
-                          type="number"
-                          value={newField.order || ''}
-                          onChange={e => setNewField(f => ({ ...f, order: parseInt(e.target.value) || 1 }))}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                          placeholder="1"
-                          min="1"
-                        />
-                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={newField.defaultDisplay}
-                          onChange={e => setNewField(f => ({ ...f, defaultDisplay: e.target.checked }))}
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
-                      </label>
-                    </div>
+
                     {addFieldError && <div className="text-red-600 font-semibold bg-red-50 p-3 rounded-lg border border-red-200">{addFieldError}</div>}
                     <div className="flex gap-2 pt-2">
                       <button type="submit" className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center gap-2">
@@ -1070,7 +1067,7 @@ export default function RecordInput() {
               className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
             >
               <HiClipboardDocumentList className="w-5 h-5" />
-              項目を選択・追加
+              項目を選択・表示
             </button>
             <button
               type="button"
