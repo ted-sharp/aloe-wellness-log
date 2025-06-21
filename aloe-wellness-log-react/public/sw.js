@@ -1,7 +1,40 @@
 // Service Worker for Aloe Wellness Log PWA
+// 🔐 セキュリティ強化版
+
 const CACHE_NAME = 'aloe-wellness-v1.0.0';
 const STATIC_CACHE_NAME = 'aloe-wellness-static-v1.0.0';
 const DYNAMIC_CACHE_NAME = 'aloe-wellness-dynamic-v1.0.0';
+
+// セキュリティ設定
+const SECURITY_CONFIG = {
+  // キャッシュの最大サイズ（バイト）
+  MAX_CACHE_SIZE: 50 * 1024 * 1024, // 50MB
+  // キャッシュエントリの最大数
+  MAX_CACHE_ENTRIES: 100,
+  // セキュアなオリジンのみ許可
+  ALLOWED_ORIGINS: [
+    self.location.origin,
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+  ],
+  // 許可するリソースタイプ
+  ALLOWED_RESOURCE_TYPES: [
+    'document',
+    'script',
+    'style',
+    'image',
+    'font',
+    'manifest',
+  ],
+  // センシティブなヘッダーを除外
+  SENSITIVE_HEADERS: [
+    'authorization',
+    'cookie',
+    'set-cookie',
+    'x-api-key',
+    'x-auth-token',
+  ],
+};
 
 // キャッシュするファイルのリスト（アプリシェル）
 const STATIC_FILES = [
@@ -22,308 +55,330 @@ const STATIC_FILES = [
 // 重要なルート（オフライン時にフォールバック）
 const IMPORTANT_ROUTES = ['/', '/list', '/graph', '/calendar', '/export'];
 
+// セキュリティチェック関数
+function isSecureRequest(request) {
+  const url = new URL(request.url);
+
+  // HTTPSまたはlocalhostのみ許可
+  if (
+    url.protocol !== 'https:' &&
+    url.hostname !== 'localhost' &&
+    url.hostname !== '127.0.0.1'
+  ) {
+    console.warn('🔒 SW: Insecure request blocked:', request.url);
+    return false;
+  }
+
+  // 許可されたオリジンのみ
+  if (!SECURITY_CONFIG.ALLOWED_ORIGINS.includes(url.origin)) {
+    console.warn('🔒 SW: Origin not allowed:', url.origin);
+    return false;
+  }
+
+  return true;
+}
+
+// プライバシー保護のためのヘッダークリーニング
+function cleanHeaders(headers) {
+  const cleanedHeaders = new Headers();
+
+  for (const [key, value] of headers.entries()) {
+    // センシティブなヘッダーは除外
+    if (!SECURITY_CONFIG.SENSITIVE_HEADERS.includes(key.toLowerCase())) {
+      cleanedHeaders.append(key, value);
+    }
+  }
+
+  // セキュリティヘッダーを追加
+  cleanedHeaders.append('X-Content-Type-Options', 'nosniff');
+  cleanedHeaders.append('X-Frame-Options', 'DENY');
+  cleanedHeaders.append('X-XSS-Protection', '1; mode=block');
+  cleanedHeaders.append('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  return cleanedHeaders;
+}
+
+// キャッシュサイズ管理
+async function manageCacheSize(cacheName) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+
+  // エントリ数制限
+  if (keys.length > SECURITY_CONFIG.MAX_CACHE_ENTRIES) {
+    const deleteCount = keys.length - SECURITY_CONFIG.MAX_CACHE_ENTRIES;
+    for (let i = 0; i < deleteCount; i++) {
+      await cache.delete(keys[i]);
+    }
+    console.log(`🗑️ SW: Cleaned ${deleteCount} old cache entries`);
+  }
+
+  // サイズ制限（概算）
+  let totalSize = 0;
+  for (const key of keys) {
+    const response = await cache.match(key);
+    if (response) {
+      const size = parseInt(response.headers.get('content-length') || '0');
+      totalSize += size;
+    }
+  }
+
+  if (totalSize > SECURITY_CONFIG.MAX_CACHE_SIZE) {
+    console.warn('⚠️ SW: Cache size exceeded limit, cleaning up...');
+    // 古いエントリから削除
+    const deleteCount = Math.ceil(keys.length * 0.3); // 30%削除
+    for (let i = 0; i < deleteCount; i++) {
+      await cache.delete(keys[i]);
+    }
+  }
+}
+
 // Service Worker インストール
 self.addEventListener('install', event => {
-  console.log('🔧 Service Worker: Installing...');
+  console.log('🔧 Service Worker: Installing with security enhancements...');
 
   event.waitUntil(
     caches
       .open(STATIC_CACHE_NAME)
       .then(cache => {
-        console.log('📦 Service Worker: Caching app shell');
+        console.log('📦 Service Worker: Caching app shell securely');
         return cache.addAll(STATIC_FILES);
       })
       .then(() => {
-        console.log('✅ Service Worker: App shell cached');
+        console.log('✅ Service Worker: Secure app shell cached');
         // 新しいService Workerを即座にアクティブ化
         return self.skipWaiting();
       })
       .catch(error => {
-        console.error('❌ Service Worker: Install failed', error);
+        console.error('❌ Service Worker: Secure install failed', error);
       })
   );
 });
 
 // Service Worker アクティベーション
 self.addEventListener('activate', event => {
-  console.log('🚀 Service Worker: Activating...');
+  console.log('🚀 Service Worker: Activating with security features...');
 
   event.waitUntil(
-    caches
-      .keys()
-      .then(cacheNames => {
+    Promise.all([
+      // 古いキャッシュを削除
+      caches.keys().then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
-            // 古いキャッシュを削除
             if (
+              cacheName !== CACHE_NAME &&
               cacheName !== STATIC_CACHE_NAME &&
-              cacheName !== DYNAMIC_CACHE_NAME &&
-              cacheName !== CACHE_NAME
+              cacheName !== DYNAMIC_CACHE_NAME
             ) {
-              console.log('🗑️ Service Worker: Deleting old cache', cacheName);
+              console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
+      }),
+      // 全クライアントを制御下に置く
+      self.clients.claim(),
+    ])
+  );
+});
+
+// フェッチイベント（セキュリティ強化版）
+self.addEventListener('fetch', event => {
+  const request = event.request;
+
+  // セキュリティチェック
+  if (!isSecureRequest(request)) {
+    return; // ブロック
+  }
+
+  // GETリクエストのみキャッシュ
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    caches
+      .match(request)
+      .then(response => {
+        // キャッシュヒット時はプライバシー保護ヘッダーを追加
+        if (response) {
+          console.log('💾 Service Worker: Cache hit for', request.url);
+
+          // セキュアなレスポンスを作成
+          const secureResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: cleanHeaders(response.headers),
+          });
+
+          return secureResponse;
+        }
+
+        // ネットワークからフェッチ
+        console.log('🌐 Service Worker: Fetching from network', request.url);
+        return fetch(request)
+          .then(networkResponse => {
+            // レスポンスのセキュリティチェック
+            if (!networkResponse || networkResponse.status !== 200) {
+              return networkResponse;
+            }
+
+            // キャッシュ対象かチェック
+            const url = new URL(request.url);
+            const shouldCache =
+              url.origin === self.location.origin ||
+              SECURITY_CONFIG.ALLOWED_ORIGINS.includes(url.origin);
+
+            if (shouldCache) {
+              // レスポンスをクローンしてキャッシュ
+              const responseToCache = networkResponse.clone();
+
+              caches.open(DYNAMIC_CACHE_NAME).then(cache => {
+                cache.put(request, responseToCache);
+                // キャッシュサイズ管理
+                manageCacheSize(DYNAMIC_CACHE_NAME);
+              });
+            }
+
+            // セキュアなレスポンスを返す
+            return new Response(networkResponse.body, {
+              status: networkResponse.status,
+              statusText: networkResponse.statusText,
+              headers: cleanHeaders(networkResponse.headers),
+            });
+          })
+          .catch(error => {
+            console.error('🔥 Service Worker: Network error', error);
+
+            // オフライン時のフォールバック
+            if (IMPORTANT_ROUTES.includes(new URL(request.url).pathname)) {
+              return caches.match('/');
+            }
+
+            throw error;
+          });
       })
-      .then(() => {
-        console.log('✅ Service Worker: Activated');
-        // 既存のタブも即座に制御下に置く
-        return self.clients.claim();
+      .catch(error => {
+        console.error('🔥 Service Worker: Fetch error', error);
+        throw error;
       })
   );
 });
 
-// フェッチイベント（ネットワークリクエストの処理）
-self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+// メッセージハンドリング（設定更新など）
+self.addEventListener('message', event => {
+  const { type, payload } = event.data || {};
 
-  // 同一オリジンのリクエストのみ処理
-  if (url.origin !== location.origin) {
-    return;
-  }
+  switch (type) {
+    case 'SKIP_WAITING':
+      console.log('⏭️ Service Worker: Skip waiting requested');
+      self.skipWaiting();
+      break;
 
-  // ナビゲーションリクエスト（ページ移動）の処理
-  if (request.mode === 'navigate') {
-    event.respondWith(handleNavigationRequest(request));
-    return;
-  }
+    case 'CLEAR_CACHE':
+      console.log('🗑️ Service Worker: Cache clear requested');
+      event.waitUntil(
+        caches.keys().then(cacheNames => {
+          return Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+        })
+      );
+      break;
 
-  // 静的リソースの処理
-  if (
-    request.destination === 'style' ||
-    request.destination === 'script' ||
-    request.destination === 'image' ||
-    request.destination === 'font'
-  ) {
-    event.respondWith(handleStaticResource(request));
-    return;
-  }
+    case 'GET_CACHE_INFO':
+      event.waitUntil(
+        caches.keys().then(async cacheNames => {
+          const cacheInfo = {};
+          for (const cacheName of cacheNames) {
+            const cache = await caches.open(cacheName);
+            const keys = await cache.keys();
+            cacheInfo[cacheName] = keys.length;
+          }
 
-  // その他のリクエスト（API等）
-  event.respondWith(handleOtherRequests(request));
-});
+          // メッセージを送信
+          event.ports[0].postMessage({
+            type: 'CACHE_INFO',
+            payload: cacheInfo,
+          });
+        })
+      );
+      break;
 
-// ナビゲーションリクエストの処理（ページ移動）
-async function handleNavigationRequest(request) {
-  try {
-    // ネットワークを最初に試行
-    const response = await fetch(request);
-
-    // 成功した場合、動的キャッシュに保存
-    if (response.ok) {
-      const cache = await caches.open(DYNAMIC_CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-
-    return response;
-  } catch (error) {
-    console.log('🌐 Service Worker: Network failed, trying cache', request.url);
-
-    // ネットワーク失敗時、キャッシュから取得
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    // キャッシュにもない場合、ルートをチェック
-    for (const route of IMPORTANT_ROUTES) {
-      if (request.url.includes(route)) {
-        const fallbackResponse = await caches.match('/');
-        if (fallbackResponse) {
-          return fallbackResponse;
-        }
-      }
-    }
-
-    // 最終的にオフラインページを返す
-    return createOfflinePage();
-  }
-}
-
-// 静的リソースの処理
-async function handleStaticResource(request) {
-  // Cache First戦略
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
-  try {
-    const response = await fetch(request);
-
-    if (response.ok) {
-      const cache = await caches.open(STATIC_CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-
-    return response;
-  } catch (error) {
-    console.log('🌐 Service Worker: Static resource failed', request.url);
-
-    // 重要でない静的リソースの場合は404を返す
-    return new Response('', { status: 404 });
-  }
-}
-
-// その他のリクエストの処理
-async function handleOtherRequests(request) {
-  // Network First戦略
-  try {
-    const response = await fetch(request);
-    return response;
-  } catch (error) {
-    console.log('🌐 Service Worker: Request failed', request.url);
-
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    return new Response('', { status: 404 });
-  }
-}
-
-// オフラインページの生成
-function createOfflinePage() {
-  const offlineHTML = `
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>オフライン - アロエ健康管理ログ</title>
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          margin: 0;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          color: #374151;
-        }
-        .container {
-          text-align: center;
-          padding: 2rem;
-          background: white;
-          border-radius: 1rem;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-          max-width: 400px;
-        }
-        .icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
-        }
-        h1 {
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-        p {
-          margin-bottom: 1.5rem;
-          line-height: 1.6;
-        }
-        .retry-btn {
-          background: #059669;
-          color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 0.5rem;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: background-color 0.2s;
-        }
-        .retry-btn:hover {
-          background: #047857;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="icon">🌿</div>
-        <h1>オフラインモード</h1>
-        <p>
-          申し訳ございませんが、現在インターネットに接続されておりません。<br>
-          健康記録の閲覧は可能ですが、一部機能が制限される場合がございます。
-        </p>
-        <button class="retry-btn" onclick="window.location.reload()">
-          再接続を試す
-        </button>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return new Response(offlineHTML, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
-  });
-}
-
-// バックグラウンド同期（将来的な拡張用）
-self.addEventListener('sync', event => {
-  if (event.tag === 'health-data-sync') {
-    console.log('🔄 Service Worker: Background sync triggered');
-    event.waitUntil(syncHealthData());
+    default:
+      console.log('❓ Service Worker: Unknown message type', type);
   }
 });
 
-// ヘルスデータの同期（将来的な実装）
-async function syncHealthData() {
-  // IndexedDBからの未同期データを取得して送信
-  // 現在はローカルストレージのみなので、将来的にクラウド同期時に実装
-  console.log('📊 Service Worker: Health data sync completed');
-}
-
-// プッシュ通知（将来的な拡張用）
+// プッシュ通知（セキュリティ配慮）
 self.addEventListener('push', event => {
-  if (event.data) {
-    const data = event.data.json();
-    console.log('📢 Service Worker: Push received', data);
+  // プッシュデータの検証
+  let notificationData;
+  try {
+    notificationData = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.error('🔒 Service Worker: Invalid push data', error);
+    return;
+  }
 
+  // セキュアな通知データのみ処理
+  const { title, body, icon, tag } = notificationData;
+
+  if (title && typeof title === 'string' && title.length <= 100) {
     const options = {
-      body: data.body || '健康記録の時間ですわ',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/badge-72x72.png',
-      tag: 'health-reminder',
+      body: typeof body === 'string' ? body.substring(0, 200) : '',
+      icon: icon || '/aloe-icon.png',
+      tag: typeof tag === 'string' ? tag.substring(0, 50) : 'default',
+      badge: '/aloe-icon.png',
       requireInteraction: false,
-      actions: [
-        {
-          action: 'record',
-          title: '記録する',
-          icon: '/icons/action-record.png',
-        },
-        {
-          action: 'dismiss',
-          title: '後で',
-          icon: '/icons/action-dismiss.png',
-        },
-      ],
+      silent: false,
     };
 
-    event.waitUntil(
-      self.registration.showNotification(
-        data.title || 'アロエ健康管理ログ',
-        options
-      )
-    );
+    event.waitUntil(self.registration.showNotification(title, options));
   }
 });
 
-// 通知クリック処理
+// 通知クリックハンドリング
 self.addEventListener('notificationclick', event => {
+  console.log('🔔 Service Worker: Notification clicked');
+
   event.notification.close();
 
-  if (event.action === 'record') {
-    // 記録画面を開く
-    event.waitUntil(self.clients.openWindow('/'));
-  } else if (event.action === 'dismiss') {
-    // 何もしない（通知を閉じるだけ）
-  } else {
-    // 通知本体クリック時はアプリを開く
-    event.waitUntil(self.clients.openWindow('/'));
-  }
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then(clients => {
+      // 既存のウィンドウがあればフォーカス
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+
+      // 新しいウィンドウを開く
+      if (self.clients.openWindow) {
+        return self.clients.openWindow('/');
+      }
+    })
+  );
 });
 
-console.log('🌿 Service Worker: Loaded successfully');
+// エラーハンドリング
+self.addEventListener('error', event => {
+  console.error('🔥 Service Worker: Global error', event.error);
+});
+
+self.addEventListener('unhandledrejection', event => {
+  console.error('🔥 Service Worker: Unhandled promise rejection', event.reason);
+});
+
+console.log(
+  '🌿 Service Worker: Loaded successfully with security enhancements'
+);
+
+// プライバシー保護のためのデータクリーンアップ（定期実行）
+setInterval(async () => {
+  try {
+    await manageCacheSize(DYNAMIC_CACHE_NAME);
+    console.log('🔒 Service Worker: Periodic privacy cleanup completed');
+  } catch (error) {
+    console.error('🔥 Service Worker: Privacy cleanup failed', error);
+  }
+}, 30 * 60 * 1000); // 30分ごと

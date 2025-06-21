@@ -57,8 +57,47 @@
     <!-- DNS Prefetch for Performance -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
 
-    <!-- Security Headers -->
+    <!-- 🔐 セキュリティヘッダー強化 -->
+
+    <!-- Content Security Policy -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob:;
+        connect-src 'self';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        upgrade-insecure-requests;
+      "
+    />
+
+    <!-- セキュリティヘッダー（meta要素で設定可能なもののみ） -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta
+      http-equiv="Referrer-Policy"
+      content="strict-origin-when-cross-origin"
+    />
+    <meta
+      http-equiv="Permissions-Policy"
+      content="
+      geolocation=(),
+      microphone=(),
+      camera=(),
+      payment=(),
+      usb=(),
+      magnetometer=(),
+      accelerometer=(),
+      gyroscope=(),
+      clipboard-read=(),
+      clipboard-write=(self)
+    "
+    />
 
     <!-- Splash Screen Styles for iOS -->
     <style>
@@ -119,7 +158,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
       <div class="loading-icon">🌿</div>
-      <div class="loading-text">アロエ健康管理ログ</div>
+      <div class="loading-text">アロエ健康ログを読み込み中...</div>
     </div>
 
     <!-- App Root -->
@@ -245,7 +284,7 @@
           if (loadingScreen) {
             loadingScreen.classList.add('hidden');
             setTimeout(() => {
-              loadingScreen.remove();
+              loadingScreen.style.display = 'none';
             }, 300);
           }
         }, 500);

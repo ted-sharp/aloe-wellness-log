@@ -299,7 +299,7 @@ export async function addRecord(record: RecordItem): Promise<void> {
   return executeTransaction(
     RECORDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.put(record);
@@ -315,7 +315,7 @@ export async function getAllRecords(): Promise<RecordItem[]> {
   return executeTransaction(
     RECORDS_STORE,
     'readonly',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<RecordItem[]>((resolve, reject) => {
         const request = objectStore.getAll();
@@ -338,10 +338,10 @@ export async function addField(field: Field): Promise<void> {
   return executeTransaction(
     FIELDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
-        const request = objectStore.add(field);
+        const request = objectStore.put(field); // addをputに変更
         request.onsuccess = () => resolve();
         request.onerror = () => reject(classifyDbError(request.error));
       });
@@ -354,7 +354,7 @@ export async function getAllFields(): Promise<Field[]> {
   return executeTransaction(
     FIELDS_STORE,
     'readonly',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<Field[]>((resolve, reject) => {
         const request = objectStore.getAll();
@@ -377,7 +377,7 @@ export async function updateField(field: Field): Promise<void> {
   return executeTransaction(
     FIELDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.put(field);
@@ -393,7 +393,7 @@ export async function updateRecord(record: RecordItem): Promise<void> {
   return executeTransaction(
     RECORDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.put(record);
@@ -409,7 +409,7 @@ export async function deleteRecord(id: string): Promise<void> {
   return executeTransaction(
     RECORDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.delete(id);
@@ -425,7 +425,7 @@ export async function deleteField(fieldId: string): Promise<void> {
   return executeTransaction(
     FIELDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.delete(fieldId);
@@ -441,7 +441,7 @@ export async function deleteAllRecords(): Promise<void> {
   return executeTransaction(
     RECORDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.clear();
@@ -457,7 +457,7 @@ export async function deleteAllFields(): Promise<void> {
   return executeTransaction(
     FIELDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
       return new Promise<void>((resolve, reject) => {
         const request = objectStore.clear();
@@ -473,7 +473,7 @@ export async function deleteAllData(): Promise<void> {
   return executeTransaction(
     [RECORDS_STORE, FIELDS_STORE],
     'readwrite',
-    async (transaction, stores) => {
+    async (_transaction, stores) => {
       const [recordStore, fieldStore] = stores as IDBObjectStore[];
 
       return new Promise<void>((resolve, reject) => {
@@ -506,7 +506,7 @@ export async function batchUpdateRecords(records: RecordItem[]): Promise<void> {
   return executeTransaction(
     RECORDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
 
       return new Promise<void>((resolve, reject) => {
@@ -540,7 +540,7 @@ export async function batchUpdateFields(fields: Field[]): Promise<void> {
   return executeTransaction(
     FIELDS_STORE,
     'readwrite',
-    async (transaction, store) => {
+    async (_transaction, store) => {
       const objectStore = store as IDBObjectStore;
 
       return new Promise<void>((resolve, reject) => {

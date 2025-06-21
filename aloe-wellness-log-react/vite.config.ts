@@ -10,7 +10,7 @@ import { defineConfig } from 'vite';
 function swAutoUpdate() {
   return {
     name: 'sw-auto-update',
-    generateBundle(options: any, bundle: any) {
+    generateBundle(_options: any, bundle: any) {
       // ビルド後のファイル名を取得
       const jsFiles = Object.keys(bundle).filter(key => key.endsWith('.js'));
       const cssFiles = Object.keys(bundle).filter(key => key.endsWith('.css'));

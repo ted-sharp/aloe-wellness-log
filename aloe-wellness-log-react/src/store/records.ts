@@ -139,7 +139,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   },
 
   loadRecords: async () => {
-    set(state => ({
+    set(_state => ({
       recordsOperation: { loading: true, error: null },
     }));
 
@@ -158,7 +158,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
               'レコード読み込みに失敗しました',
               error
             );
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: dbError },
       }));
       throw dbError;
@@ -167,20 +167,20 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
   addRecord: async (record: RecordItem) => {
     // 楽観的更新：即座にUIに反映
-    set(state => ({
-      records: [...state.records, record],
+    set(_state => ({
+      records: [..._state.records, record],
       recordsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.addRecord(record);
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: null },
       }));
     } catch (error) {
       // エラー時のロールバック
-      set(state => ({
-        records: state.records.filter(r => r.id !== record.id),
+      set(_state => ({
+        records: _state.records.filter(r => r.id !== record.id),
         recordsOperation: {
           loading: false,
           error:
@@ -198,7 +198,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   },
 
   loadFields: async () => {
-    set(state => ({
+    set(_state => ({
       fieldsOperation: { loading: true, error: null },
     }));
 
@@ -258,7 +258,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
               'フィールド読み込みに失敗しました',
               error
             );
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: dbError },
       }));
       throw dbError;
@@ -267,20 +267,20 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
   addField: async (field: Field) => {
     // 楽観的更新
-    set(state => ({
-      fields: [...state.fields, field],
+    set(_state => ({
+      fields: [..._state.fields, field],
       fieldsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.addField(field);
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: null },
       }));
     } catch (error) {
       // ロールバック
-      set(state => ({
-        fields: state.fields.filter(f => f.fieldId !== field.fieldId),
+      set(_state => ({
+        fields: _state.fields.filter(f => f.fieldId !== field.fieldId),
         fieldsOperation: {
           loading: false,
           error:
@@ -309,14 +309,14 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   updateField: async (field: Field) => {
     // 楽観的更新
     const prevFields = get().fields;
-    set(state => ({
-      fields: state.fields.map(f => (f.fieldId === field.fieldId ? field : f)),
+    set(_state => ({
+      fields: _state.fields.map(f => (f.fieldId === field.fieldId ? field : f)),
       fieldsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.updateField(field);
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -342,14 +342,14 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   updateRecord: async (record: RecordItem) => {
     // 楽観的更新
     const prevRecords = get().records;
-    set(state => ({
-      records: state.records.map(r => (r.id === record.id ? record : r)),
+    set(_state => ({
+      records: _state.records.map(r => (r.id === record.id ? record : r)),
       recordsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.updateRecord(record);
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -377,14 +377,14 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
     const prevRecords = get().records;
     const deletedRecord = prevRecords.find(r => r.id === id);
 
-    set(state => ({
-      records: state.records.filter(r => r.id !== id),
+    set(_state => ({
+      records: _state.records.filter(r => r.id !== id),
       recordsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.deleteRecord(id);
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -412,14 +412,14 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
     const prevFields = get().fields;
     const deletedField = prevFields.find(f => f.fieldId === fieldId);
 
-    set(state => ({
-      fields: state.fields.filter(f => f.fieldId !== fieldId),
+    set(_state => ({
+      fields: _state.fields.filter(f => f.fieldId !== fieldId),
       fieldsOperation: { loading: true, error: null },
     }));
 
     try {
       await db.deleteField(fieldId);
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -452,7 +452,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
     try {
       await db.deleteAllRecords();
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -485,7 +485,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
     try {
       await db.deleteAllFields();
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -565,7 +565,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
     try {
       await db.batchUpdateRecords(records);
-      set(state => ({
+      set(_state => ({
         recordsOperation: { loading: false, error: null },
       }));
     } catch (error) {
@@ -605,7 +605,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
 
     try {
       await db.batchUpdateFields(fields);
-      set(state => ({
+      set(_state => ({
         fieldsOperation: { loading: false, error: null },
       }));
     } catch (error) {

@@ -176,8 +176,6 @@ describe.skip('indexedDb', () => {
     });
 
     it('レコード追加時にエラーが発生した場合、rejectする', async () => {
-      const testRecord: RecordItem = mockRecords[0];
-
       mockTransaction.onerror = null;
       mockTransaction.error = new Error('Add record failed');
 
