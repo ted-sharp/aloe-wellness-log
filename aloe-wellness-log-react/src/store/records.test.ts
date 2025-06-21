@@ -15,6 +15,28 @@ vi.mock('../db/indexedDb', () => ({
   deleteAllRecords: vi.fn(),
   deleteAllFields: vi.fn(),
   deleteAllData: vi.fn(),
+  batchUpdateFields: vi.fn(),
+  batchUpdateRecords: vi.fn(),
+  // DbErrorクラスとDbErrorTypeのモック
+  DbError: class DbError extends Error {
+    constructor(
+      public type: string,
+      message: string,
+      public originalError?: unknown,
+      public retryable: boolean = true
+    ) {
+      super(message);
+      this.name = 'DbError';
+    }
+  },
+  DbErrorType: {
+    CONNECTION_FAILED: 'connection_failed',
+    TRANSACTION_FAILED: 'transaction_failed',
+    DATA_CORRUPTED: 'data_corrupted',
+    QUOTA_EXCEEDED: 'quota_exceeded',
+    VERSION_ERROR: 'version_error',
+    UNKNOWN: 'unknown',
+  },
 }));
 
 import * as db from '../db/indexedDb';
@@ -25,7 +47,12 @@ const mockDb = vi.mocked(db);
 describe('useRecordsStore', () => {
   beforeEach(() => {
     // ストアの状態をリセット
-    useRecordsStore.setState({ records: [], fields: [] });
+    useRecordsStore.setState({
+      records: [],
+      fields: [],
+      recordsOperation: { loading: false, error: null },
+      fieldsOperation: { loading: false, error: null },
+    });
 
     // モックをリセット
     vi.clearAllMocks();
@@ -39,13 +66,13 @@ describe('useRecordsStore', () => {
       ];
 
       mockDb.getAllFields.mockResolvedValue(mockFields);
-      mockDb.updateField.mockResolvedValue(undefined);
+      mockDb.batchUpdateFields.mockResolvedValue(undefined);
 
       const { loadFields } = useRecordsStore.getState();
       await loadFields();
 
       expect(mockDb.getAllFields).toHaveBeenCalledTimes(1);
-      expect(mockDb.updateField).toHaveBeenCalledTimes(2); // order属性のマイグレーション
+      expect(mockDb.batchUpdateFields).toHaveBeenCalledTimes(1); // バッチ更新による最適化
 
       const { fields } = useRecordsStore.getState();
       expect(fields).toHaveLength(2);
@@ -70,7 +97,7 @@ describe('useRecordsStore', () => {
       const { loadFields } = useRecordsStore.getState();
       await loadFields();
 
-      expect(mockDb.updateField).not.toHaveBeenCalled();
+      expect(mockDb.batchUpdateFields).not.toHaveBeenCalled();
     });
   });
 
@@ -100,7 +127,7 @@ describe('useRecordsStore', () => {
   });
 
   describe('addRecord', () => {
-    it('レコードを追加してリロードする', async () => {
+    it('楽観的更新でレコードを追加する', async () => {
       const newRecord: RecordItem = {
         id: 'test-1',
         date: '2024-01-01',
@@ -111,21 +138,43 @@ describe('useRecordsStore', () => {
       };
 
       mockDb.addRecord.mockResolvedValue(undefined);
-      mockDb.getAllRecords.mockResolvedValue([newRecord]);
 
       const { addRecord } = useRecordsStore.getState();
       await addRecord(newRecord);
 
       expect(mockDb.addRecord).toHaveBeenCalledWith(newRecord);
-      expect(mockDb.getAllRecords).toHaveBeenCalledTimes(1);
+      // 楽観的更新により、getAllRecordsは呼ばれない
+      expect(mockDb.getAllRecords).not.toHaveBeenCalled();
 
       const { records } = useRecordsStore.getState();
       expect(records).toEqual([newRecord]);
     });
+
+    it('エラー時にロールバックする', async () => {
+      const newRecord: RecordItem = {
+        id: 'test-1',
+        date: '2024-01-01',
+        time: '08:00',
+        datetime: '2024-01-01T08:00:00.000Z',
+        fieldId: 'weight',
+        value: 65.5,
+      };
+
+      const error = new Error('Database error');
+      mockDb.addRecord.mockRejectedValue(error);
+
+      const { addRecord } = useRecordsStore.getState();
+
+      await expect(addRecord(newRecord)).rejects.toThrow('Database error');
+
+      // エラー時のロールバック確認
+      const { records } = useRecordsStore.getState();
+      expect(records).toEqual([]);
+    });
   });
 
   describe('addField', () => {
-    it('フィールドを追加してリロードする', async () => {
+    it('楽観的更新でフィールドを追加する', async () => {
       const newField: Field = {
         fieldId: 'test-field',
         name: 'テストフィールド',
@@ -136,13 +185,13 @@ describe('useRecordsStore', () => {
       };
 
       mockDb.addField.mockResolvedValue(undefined);
-      mockDb.getAllFields.mockResolvedValue([newField]);
 
       const { addField } = useRecordsStore.getState();
       await addField(newField);
 
       expect(mockDb.addField).toHaveBeenCalledWith(newField);
-      expect(mockDb.getAllFields).toHaveBeenCalledTimes(1);
+      // 楽観的更新により、getAllFieldsは呼ばれない
+      expect(mockDb.getAllFields).not.toHaveBeenCalled();
 
       const { fields } = useRecordsStore.getState();
       expect(fields).toEqual([newField]);
@@ -150,39 +199,68 @@ describe('useRecordsStore', () => {
   });
 
   describe('updateRecord', () => {
-    it('レコードを更新してリロードする', async () => {
-      const updatedRecord: RecordItem = {
+    it('楽観的更新でレコードを更新する', async () => {
+      const originalRecord: RecordItem = {
         id: 'test-1',
         date: '2024-01-01',
         time: '08:00',
         datetime: '2024-01-01T08:00:00.000Z',
         fieldId: 'weight',
+        value: 65.5,
+      };
+
+      const updatedRecord: RecordItem = {
+        ...originalRecord,
         value: 66.0,
       };
 
+      // 初期状態を設定
+      useRecordsStore.setState({
+        records: [originalRecord],
+        recordsOperation: { loading: false, error: null },
+        fieldsOperation: { loading: false, error: null },
+      });
+
       mockDb.updateRecord.mockResolvedValue(undefined);
-      mockDb.getAllRecords.mockResolvedValue([updatedRecord]);
 
       const { updateRecord } = useRecordsStore.getState();
       await updateRecord(updatedRecord);
 
       expect(mockDb.updateRecord).toHaveBeenCalledWith(updatedRecord);
-      expect(mockDb.getAllRecords).toHaveBeenCalledTimes(1);
+      // 楽観的更新により、getAllRecordsは呼ばれない
+      expect(mockDb.getAllRecords).not.toHaveBeenCalled();
+
+      const { records } = useRecordsStore.getState();
+      expect(records[0].value).toBe(66.0);
     });
   });
 
   describe('deleteRecord', () => {
-    it('レコードを削除してリロードする', async () => {
-      const recordId = 'test-1';
+    it('楽観的更新でレコードを削除する', async () => {
+      const recordToDelete: RecordItem = {
+        id: 'test-1',
+        date: '2024-01-01',
+        time: '08:00',
+        datetime: '2024-01-01T08:00:00.000Z',
+        fieldId: 'weight',
+        value: 65.5,
+      };
+
+      // 初期状態を設定
+      useRecordsStore.setState({
+        records: [recordToDelete],
+        recordsOperation: { loading: false, error: null },
+        fieldsOperation: { loading: false, error: null },
+      });
 
       mockDb.deleteRecord.mockResolvedValue(undefined);
-      mockDb.getAllRecords.mockResolvedValue([]);
 
       const { deleteRecord } = useRecordsStore.getState();
-      await deleteRecord(recordId);
+      await deleteRecord('test-1');
 
-      expect(mockDb.deleteRecord).toHaveBeenCalledWith(recordId);
-      expect(mockDb.getAllRecords).toHaveBeenCalledTimes(1);
+      expect(mockDb.deleteRecord).toHaveBeenCalledWith('test-1');
+      // 楽観的更新により、getAllRecordsは呼ばれない
+      expect(mockDb.getAllRecords).not.toHaveBeenCalled();
 
       const { records } = useRecordsStore.getState();
       expect(records).toEqual([]);
@@ -190,19 +268,21 @@ describe('useRecordsStore', () => {
   });
 
   describe('initializeFields', () => {
-    it('フィールドが空の場合、初期フィールドを追加する', async () => {
+    it('フィールドが空の場合、初期フィールドをバッチ追加する', async () => {
       mockDb.getAllFields.mockResolvedValue([]);
-      mockDb.addField.mockResolvedValue(undefined);
+      mockDb.batchUpdateFields.mockResolvedValue(undefined);
 
       const { initializeFields } = useRecordsStore.getState();
       await initializeFields();
 
-      // 初期フィールドの数だけaddFieldが呼ばれることを確認
-      expect(mockDb.addField).toHaveBeenCalledTimes(10); // initialFieldsの数
+      // バッチ更新が使用されることを確認
+      expect(mockDb.batchUpdateFields).toHaveBeenCalledTimes(1);
+      expect(mockDb.addField).not.toHaveBeenCalled();
 
       // 初期フィールドの内容を確認
-      const addFieldCalls = mockDb.addField.mock.calls;
-      expect(addFieldCalls[0][0]).toEqual(
+      const batchUpdateCall = mockDb.batchUpdateFields.mock.calls[0][0];
+      expect(batchUpdateCall).toHaveLength(10); // initialFieldsの数
+      expect(batchUpdateCall[0]).toEqual(
         expect.objectContaining({
           fieldId: 'weight',
           name: '体重',
@@ -222,12 +302,46 @@ describe('useRecordsStore', () => {
       const { initializeFields } = useRecordsStore.getState();
       await initializeFields();
 
+      expect(mockDb.batchUpdateFields).not.toHaveBeenCalled();
       expect(mockDb.addField).not.toHaveBeenCalled();
     });
   });
 
+  describe('batchUpdateRecords', () => {
+    it('複数のレコードを効率的に更新する', async () => {
+      const records: RecordItem[] = [
+        {
+          id: 'test-1',
+          date: '2024-01-01',
+          time: '08:00',
+          datetime: '2024-01-01T08:00:00.000Z',
+          fieldId: 'weight',
+          value: 65.5,
+        },
+        {
+          id: 'test-2',
+          date: '2024-01-01',
+          time: '09:00',
+          datetime: '2024-01-01T09:00:00.000Z',
+          fieldId: 'exercise',
+          value: true,
+        },
+      ];
+
+      mockDb.batchUpdateRecords.mockResolvedValue(undefined);
+
+      const { batchUpdateRecords } = useRecordsStore.getState();
+      await batchUpdateRecords(records);
+
+      expect(mockDb.batchUpdateRecords).toHaveBeenCalledWith(records);
+
+      const { records: storeRecords } = useRecordsStore.getState();
+      expect(storeRecords).toEqual(records);
+    });
+  });
+
   describe('deleteAllData', () => {
-    it('全データを削除してストアをリセットする', async () => {
+    it('楽観的更新で全データを削除する', async () => {
       // 初期状態でデータがある状態を設定
       useRecordsStore.setState({
         records: [
@@ -241,20 +355,78 @@ describe('useRecordsStore', () => {
           },
         ],
         fields: [{ fieldId: 'weight', name: '体重', type: 'number' }],
+        recordsOperation: { loading: false, error: null },
+        fieldsOperation: { loading: false, error: null },
       });
 
       mockDb.deleteAllData.mockResolvedValue(undefined);
-      mockDb.getAllRecords.mockResolvedValue([]);
-      mockDb.getAllFields.mockResolvedValue([]);
 
       const { deleteAllData } = useRecordsStore.getState();
       await deleteAllData();
 
       expect(mockDb.deleteAllData).toHaveBeenCalledTimes(1);
+      // 楽観的更新により、getAllRecords, getAllFieldsは呼ばれない
+      expect(mockDb.getAllRecords).not.toHaveBeenCalled();
+      expect(mockDb.getAllFields).not.toHaveBeenCalled();
 
       const { records, fields } = useRecordsStore.getState();
       expect(records).toEqual([]);
       expect(fields).toEqual([]);
+    });
+  });
+
+  describe('操作状態管理', () => {
+    it('レコード操作中のloading状態を管理する', async () => {
+      const newRecord: RecordItem = {
+        id: 'test-1',
+        date: '2024-01-01',
+        time: '08:00',
+        datetime: '2024-01-01T08:00:00.000Z',
+        fieldId: 'weight',
+        value: 65.5,
+      };
+
+      let resolveAddRecord: () => void;
+      const addRecordPromise = new Promise<void>(resolve => {
+        resolveAddRecord = resolve;
+      });
+      mockDb.addRecord.mockReturnValue(addRecordPromise);
+
+      const { addRecord } = useRecordsStore.getState();
+      const operationPromise = addRecord(newRecord);
+
+      // 操作中のloading状態を確認
+      const { recordsOperation } = useRecordsStore.getState();
+      expect(recordsOperation.loading).toBe(true);
+      expect(recordsOperation.error).toBe(null);
+
+      // 操作完了
+      resolveAddRecord!();
+      await operationPromise;
+
+      // 完了後の状態を確認
+      const { recordsOperation: finalState } = useRecordsStore.getState();
+      expect(finalState.loading).toBe(false);
+      expect(finalState.error).toBe(null);
+    });
+
+    it('エラー状態をクリアする', () => {
+      const error = {
+        type: 'unknown',
+        message: 'Test error',
+        retryable: true,
+      } as any;
+
+      // エラー状態を設定
+      useRecordsStore.setState({
+        recordsOperation: { loading: false, error },
+      });
+
+      const { clearRecordsError } = useRecordsStore.getState();
+      clearRecordsError();
+
+      const { recordsOperation } = useRecordsStore.getState();
+      expect(recordsOperation.error).toBe(null);
     });
   });
 });

@@ -291,15 +291,21 @@ describe('RecordInput', () => {
     });
   });
 
-  it('空の値での記録送信は正常に処理される', async () => {
+  it('空の値での記録送信は何も記録せずに正常に処理される', async () => {
     const user = userEvent.setup();
     render(<RecordInput />);
 
     const submitButton = screen.getByRole('button', { name: '記録する' });
     await user.click(submitButton);
 
+    // 空の値の場合はaddRecordが呼ばれないことを確認
     await waitFor(() => {
-      expect(mockAddRecord).toHaveBeenCalled();
+      expect(mockAddRecord).not.toHaveBeenCalled();
+    });
+
+    // 成功メッセージが表示されることを確認（空でも処理は成功扱い）
+    await waitFor(() => {
+      expect(mockShowSuccess).toHaveBeenCalledWith('記録を保存いたしましたわ');
     });
   });
 

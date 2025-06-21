@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as db from '../db/indexedDb';
+import { DbError, DbErrorType } from '../db/indexedDb';
 import type { Field, RecordItem } from '../types/record';
 
 const initialFields: Field[] = [
@@ -80,9 +81,21 @@ const initialFields: Field[] = [
   },
 ];
 
+// 操作状態の定義
+interface OperationState {
+  loading: boolean;
+  error: DbError | null;
+}
+
 type RecordsState = {
   records: RecordItem[];
   fields: Field[];
+
+  // 操作状態
+  recordsOperation: OperationState;
+  fieldsOperation: OperationState;
+
+  // 基本操作
   loadRecords: () => Promise<void>;
   addRecord: (record: RecordItem) => Promise<void>;
   loadFields: () => Promise<void>;
@@ -96,115 +109,522 @@ type RecordsState = {
   deleteAllFields: () => Promise<void>;
   deleteAllData: () => Promise<void>;
 
-  // 今後、fieldsの追加・取得もここに追加できますわ
+  // バッチ操作
+  batchUpdateRecords: (records: RecordItem[]) => Promise<void>;
+  batchUpdateFields: (fields: Field[]) => Promise<void>;
+
+  // エラー状態クリア
+  clearRecordsError: () => void;
+  clearFieldsError: () => void;
 };
 
-export const useRecordsStore = create<RecordsState>(set => ({
+export const useRecordsStore = create<RecordsState>((set, get) => ({
   records: [],
   fields: [],
+
+  recordsOperation: { loading: false, error: null },
+  fieldsOperation: { loading: false, error: null },
+
+  // エラー状態クリア
+  clearRecordsError: () => {
+    set(state => ({
+      recordsOperation: { ...state.recordsOperation, error: null },
+    }));
+  },
+
+  clearFieldsError: () => {
+    set(state => ({
+      fieldsOperation: { ...state.fieldsOperation, error: null },
+    }));
+  },
+
   loadRecords: async () => {
-    const records = await db.getAllRecords();
-    set({ records });
-  },
-  addRecord: async record => {
-    await db.addRecord(record);
-    const records = await db.getAllRecords();
-    set({ records });
-  },
-  loadFields: async () => {
-    let fields = await db.getAllFields();
+    set(state => ({
+      recordsOperation: { loading: true, error: null },
+    }));
 
-    // order属性とdefaultDisplay属性のマイグレーションを実行
-    // ただし、orderが既に設定済みの場合は変更しない（並び替え機能との競合を防ぐ）
-    let needsUpdate = false;
-    const orderMapping: Record<string, number> = {
-      weight: 1,
-      systolic_bp: 2,
-      diastolic_bp: 3,
-      heart_rate: 4,
-      body_temperature: 5,
-      exercise: 6,
-      meal: 7,
-      sleep: 8,
-      smoke: 9,
-      alcohol: 10,
-    };
-
-    const updatedFields = fields.map(field => {
-      const updatedField = { ...field };
-
-      // order属性のマイグレーション（未設定の場合のみ）
-      if (field.order === undefined) {
-        const expectedOrder = orderMapping[field.fieldId];
-        needsUpdate = true;
-        updatedField.order = expectedOrder || 999;
-      }
-
-      // defaultDisplay属性のマイグレーション（既存フィールドはデフォルトで表示）
-      if (field.defaultDisplay === undefined) {
-        needsUpdate = true;
-        updatedField.defaultDisplay = true;
-      }
-
-      return updatedField;
-    });
-
-    if (needsUpdate) {
-      for (const field of updatedFields) {
-        await db.updateField(field);
-      }
-      fields = updatedFields;
+    try {
+      const records = await db.getAllRecords();
+      set({
+        records,
+        recordsOperation: { loading: false, error: null },
+      });
+    } catch (error) {
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'レコード読み込みに失敗しました',
+              error
+            );
+      set(state => ({
+        recordsOperation: { loading: false, error: dbError },
+      }));
+      throw dbError;
     }
+  },
 
-    set({ fields });
+  addRecord: async (record: RecordItem) => {
+    // 楽観的更新：即座にUIに反映
+    set(state => ({
+      records: [...state.records, record],
+      recordsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.addRecord(record);
+      set(state => ({
+        recordsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // エラー時のロールバック
+      set(state => ({
+        records: state.records.filter(r => r.id !== record.id),
+        recordsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'レコード追加に失敗しました',
+                  error
+                ),
+        },
+      }));
+      throw error;
+    }
   },
-  addField: async field => {
-    await db.addField(field);
-    const fields = await db.getAllFields();
-    set({ fields });
+
+  loadFields: async () => {
+    set(state => ({
+      fieldsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      let fields = await db.getAllFields();
+
+      // order属性とdefaultDisplay属性のマイグレーションを実行
+      let needsUpdate = false;
+      const orderMapping: Record<string, number> = {
+        weight: 1,
+        systolic_bp: 2,
+        diastolic_bp: 3,
+        heart_rate: 4,
+        body_temperature: 5,
+        exercise: 6,
+        meal: 7,
+        sleep: 8,
+        smoke: 9,
+        alcohol: 10,
+      };
+
+      const updatedFields = fields.map(field => {
+        const updatedField = { ...field };
+
+        // order属性のマイグレーション（未設定の場合のみ）
+        if (field.order === undefined) {
+          const expectedOrder = orderMapping[field.fieldId];
+          needsUpdate = true;
+          updatedField.order = expectedOrder || 999;
+        }
+
+        // defaultDisplay属性のマイグレーション（既存フィールドはデフォルトで表示）
+        if (field.defaultDisplay === undefined) {
+          needsUpdate = true;
+          updatedField.defaultDisplay = true;
+        }
+
+        return updatedField;
+      });
+
+      if (needsUpdate) {
+        // バッチ更新を使用してパフォーマンス向上
+        await db.batchUpdateFields(updatedFields);
+        fields = updatedFields;
+      }
+
+      set({
+        fields,
+        fieldsOperation: { loading: false, error: null },
+      });
+    } catch (error) {
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'フィールド読み込みに失敗しました',
+              error
+            );
+      set(state => ({
+        fieldsOperation: { loading: false, error: dbError },
+      }));
+      throw dbError;
+    }
   },
+
+  addField: async (field: Field) => {
+    // 楽観的更新
+    set(state => ({
+      fields: [...state.fields, field],
+      fieldsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.addField(field);
+      set(state => ({
+        fieldsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set(state => ({
+        fields: state.fields.filter(f => f.fieldId !== field.fieldId),
+        fieldsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'フィールド追加に失敗しました',
+                  error
+                ),
+        },
+      }));
+      throw error;
+    }
+  },
+
   initializeFields: async () => {
     const fields = await db.getAllFields();
     if (fields.length === 0) {
-      for (const field of initialFields) {
-        await db.addField(field);
-      }
+      // バッチ操作で初期フィールドを追加
+      await db.batchUpdateFields(initialFields);
+      set({ fields: initialFields });
     }
   },
-  updateField: async field => {
-    await db.updateField(field);
-    const fields = await db.getAllFields();
-    set({ fields });
+
+  updateField: async (field: Field) => {
+    // 楽観的更新
+    const prevFields = get().fields;
+    set(state => ({
+      fields: state.fields.map(f => (f.fieldId === field.fieldId ? field : f)),
+      fieldsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.updateField(field);
+      set(state => ({
+        fieldsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        fields: prevFields,
+        fieldsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'フィールド更新に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
-  updateRecord: async record => {
-    await db.updateRecord(record);
-    const records = await db.getAllRecords();
-    set({ records });
+
+  updateRecord: async (record: RecordItem) => {
+    // 楽観的更新
+    const prevRecords = get().records;
+    set(state => ({
+      records: state.records.map(r => (r.id === record.id ? record : r)),
+      recordsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.updateRecord(record);
+      set(state => ({
+        recordsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        records: prevRecords,
+        recordsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'レコード更新に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
-  deleteRecord: async id => {
-    await db.deleteRecord(id);
-    const records = await db.getAllRecords();
-    set({ records });
+
+  deleteRecord: async (id: string) => {
+    // 楽観的更新
+    const prevRecords = get().records;
+    const deletedRecord = prevRecords.find(r => r.id === id);
+
+    set(state => ({
+      records: state.records.filter(r => r.id !== id),
+      recordsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.deleteRecord(id);
+      set(state => ({
+        recordsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        records: deletedRecord ? [...prevRecords] : prevRecords,
+        recordsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'レコード削除に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
-  deleteField: async fieldId => {
-    await db.deleteField(fieldId);
-    const fields = await db.getAllFields();
-    set({ fields });
+
+  deleteField: async (fieldId: string) => {
+    // 楽観的更新
+    const prevFields = get().fields;
+    const deletedField = prevFields.find(f => f.fieldId === fieldId);
+
+    set(state => ({
+      fields: state.fields.filter(f => f.fieldId !== fieldId),
+      fieldsOperation: { loading: true, error: null },
+    }));
+
+    try {
+      await db.deleteField(fieldId);
+      set(state => ({
+        fieldsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        fields: deletedField ? [...prevFields] : prevFields,
+        fieldsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'フィールド削除に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
+
   deleteAllRecords: async () => {
-    await db.deleteAllRecords();
-    const records = await db.getAllRecords();
-    set({ records });
+    // 楽観的更新
+    const prevRecords = get().records;
+    set({
+      records: [],
+      recordsOperation: { loading: true, error: null },
+    });
+
+    try {
+      await db.deleteAllRecords();
+      set(state => ({
+        recordsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        records: prevRecords,
+        recordsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  '全レコード削除に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
+
   deleteAllFields: async () => {
-    await db.deleteAllFields();
-    const fields = await db.getAllFields();
-    set({ fields });
+    // 楽観的更新
+    const prevFields = get().fields;
+    set({
+      fields: [],
+      fieldsOperation: { loading: true, error: null },
+    });
+
+    try {
+      await db.deleteAllFields();
+      set(state => ({
+        fieldsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        fields: prevFields,
+        fieldsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  '全フィールド削除に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
+
   deleteAllData: async () => {
-    await db.deleteAllData();
-    const records = await db.getAllRecords();
-    const fields = await db.getAllFields();
-    set({ records, fields });
+    // 楽観的更新
+    const prevRecords = get().records;
+    const prevFields = get().fields;
+
+    set({
+      records: [],
+      fields: [],
+      recordsOperation: { loading: true, error: null },
+      fieldsOperation: { loading: true, error: null },
+    });
+
+    try {
+      await db.deleteAllData();
+      set({
+        recordsOperation: { loading: false, error: null },
+        fieldsOperation: { loading: false, error: null },
+      });
+    } catch (error) {
+      // ロールバック
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              '全データ削除に失敗しました',
+              error
+            );
+
+      set({
+        records: prevRecords,
+        fields: prevFields,
+        recordsOperation: { loading: false, error: dbError },
+        fieldsOperation: { loading: false, error: dbError },
+      });
+      throw error;
+    }
+  },
+
+  // バッチ操作
+  batchUpdateRecords: async (records: RecordItem[]) => {
+    // 楽観的更新
+    const prevRecords = get().records;
+    const recordMap = new Map(prevRecords.map(r => [r.id, r]));
+
+    // 新しいレコードまたは更新されたレコードをマージ
+    records.forEach(record => {
+      recordMap.set(record.id, record);
+    });
+
+    set({
+      records: Array.from(recordMap.values()),
+      recordsOperation: { loading: true, error: null },
+    });
+
+    try {
+      await db.batchUpdateRecords(records);
+      set(state => ({
+        recordsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        records: prevRecords,
+        recordsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'バッチレコード更新に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
+  },
+
+  batchUpdateFields: async (fields: Field[]) => {
+    // 楽観的更新
+    const prevFields = get().fields;
+    const fieldMap = new Map(prevFields.map(f => [f.fieldId, f]));
+
+    // 新しいフィールドまたは更新されたフィールドをマージ
+    fields.forEach(field => {
+      fieldMap.set(field.fieldId, field);
+    });
+
+    set({
+      fields: Array.from(fieldMap.values()),
+      fieldsOperation: { loading: true, error: null },
+    });
+
+    try {
+      await db.batchUpdateFields(fields);
+      set(state => ({
+        fieldsOperation: { loading: false, error: null },
+      }));
+    } catch (error) {
+      // ロールバック
+      set({
+        fields: prevFields,
+        fieldsOperation: {
+          loading: false,
+          error:
+            error instanceof DbError
+              ? error
+              : new DbError(
+                  DbErrorType.UNKNOWN,
+                  'バッチフィールド更新に失敗しました',
+                  error
+                ),
+        },
+      });
+      throw error;
+    }
   },
 }));
