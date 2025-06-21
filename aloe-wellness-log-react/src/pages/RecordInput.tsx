@@ -425,13 +425,19 @@ export default function RecordInput() {
                     />
                   </div>
                   <div className="pl-2">
-                    <input
-                      type="text"
-                      value={editField.unit ?? ''}
-                      onChange={e => setEditField(f => ({ ...f, unit: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                      placeholder="単位（例: kg）"
-                    />
+                    {field.type === 'boolean' ? (
+                      // boolean型の項目は右側を空白地帯に
+                      <div className="h-full"></div>
+                    ) : (
+                      // boolean型以外は単位入力
+                      <input
+                        type="text"
+                        value={editField.unit ?? ''}
+                        onChange={e => setEditField(f => ({ ...f, unit: e.target.value }))}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                        placeholder="単位（例: kg）"
+                      />
+                    )}
                   </div>
                 </div>
 
