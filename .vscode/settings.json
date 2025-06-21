@@ -1,19 +1,91 @@
 {
-    "files.encoding": "utf8",
-    "files.eol": "\r\n",
-    "editor.renderWhitespace": "all",
-    "editor.rulers": [
-        80,
-        120
-    ],
-    "editor.formatOnSave": false,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [80, 120],
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+
+  // TypeScript設定
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  // エディタ設定
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+
+  // テスト設定
+  "vitest.enable": true,
+  "vitest.commandLine": "cd aloe-wellness-log-react && yarn test",
+  "testing.automaticallyOpenPeekView": "never",
+
+  // Playwright設定
+  "playwright.reuseBrowser": false,
+  "playwright.showTrace": false,
+
+  // ファイル設定
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/test-results": true,
+    "**/playwright-report": true,
+    "**/.cache": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/yarn.lock": true,
+    "**/package-lock.json": true,
+    "**/test-results": true,
+    "**/playwright-report": true
+  },
+
+  // フォーマッター設定
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit"
-    },
-    "[csharp]": {
-        "editor.defaultFormatter": "ms-dotnettools.csharp"
-    },
-    "csharp.format.enable": true,
-    "omnisharp.enableRoslynAnalyzers": true,
-    "omnisharp.enableEditorConfigSupport": true
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on"
+  },
+
+  // Git設定
+  "git.autofetch": true,
+  "git.confirmSync": false,
+
+  // Emmet設定
+  "emmet.includeLanguages": {
+    "typescript": "typescriptreact"
+  },
+
+  // ターミナル設定
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
 }

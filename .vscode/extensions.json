@@ -1,9 +1,50 @@
 {
-    "recommendations": [
-        "ms-dotnettools.vscode-dotnet-runtime",
-        "k--kato.docomment",
-        "formulahendry.dotnet-test-explorer",
-        "visualstudioexptteam.vscodeintellicode",
-        "editorconfig.editorconfig"
-    ]
+  "recommendations": [
+    // テスト関連
+    "vitest.explorer",
+    "ms-playwright.playwright",
+
+    // コード品質・フォーマット
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "usernamehw.errorlens",
+    "editorconfig.editorconfig",
+
+    // React・TypeScript開発
+    "dsznajder.es7-react-js-snippets",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "ms-vscode.vscode-react-refactor",
+
+    // 開発効率向上
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "bradlc.vscode-tailwindcss",
+    "aaron-bond.better-comments",
+    "mechatroner.rainbow-csv",
+
+    // Git関連
+    "eamodio.gitlens",
+    "donjayamanne.githistory",
+
+    // ユーティリティ
+    "ms-vscode.live-server",
+    "ritwickdey.liveserver",
+    "streetsidesoftware.code-spell-checker",
+    "gruntfuggly.todo-tree",
+
+    // マークダウン
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+
+    // Zustand開発サポート
+    "pmndrs.pmndrs"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-json",
+    "redhat.java",
+    "ms-python.python",
+    "ms-dotnettools.csharp"
+  ]
 }

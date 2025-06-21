@@ -1,0 +1,150 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🧪 ユニットテスト実行",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["test"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 カバレッジテスト実行",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["test:coverage"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🎭 E2Eテスト実行",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["test:e2e"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🎭 E2Eテスト(UI)",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["test:e2e:ui"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 開発サーバー起動",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["dev"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "🔧 リンター実行",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["lint"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "📦 ビルド実行",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["build"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "🧹 依存関係更新",
+      "type": "shell",
+      "command": "yarn",
+      "args": ["install"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/aloe-wellness-log-react"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,15 +1,86 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:5173",
-            "webRoot": "${workspaceFolder}"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🌐 Chrome でアプリを起動",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/aloe-wellness-log-react/src",
+      "sourceMaps": true,
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-profile",
+      "runtimeArgs": ["--disable-web-security"]
+    },
+    {
+      "name": "🧪 Vitestテストをデバッグ",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/aloe-wellness-log-react/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--no-coverage"],
+      "cwd": "${workspaceFolder}/aloe-wellness-log-react",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
+    {
+      "name": "🧪 現在のテストファイルをデバッグ",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/aloe-wellness-log-react/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}", "--no-coverage"],
+      "cwd": "${workspaceFolder}/aloe-wellness-log-react",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    },
+    {
+      "name": "🎭 Playwrightテストをデバッグ",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/aloe-wellness-log-react/node_modules/@playwright/test/cli.js",
+      "args": ["test", "--debug"],
+      "cwd": "${workspaceFolder}/aloe-wellness-log-react",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test",
+        "PWDEBUG": "1"
+      }
+    },
+    {
+      "name": "🔗 Chrome に接続",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/aloe-wellness-log-react/src",
+      "url": "http://localhost:5173/*"
+    },
+    {
+      "name": "🎯 Vitest Watch モード",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/aloe-wellness-log-react/node_modules/vitest/vitest.mjs",
+      "args": ["--watch"],
+      "cwd": "${workspaceFolder}/aloe-wellness-log-react",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 フル開発環境",
+      "configurations": ["🌐 Chrome でアプリを起動", "🎯 Vitest Watch モード"],
+      "stopAll": true
+    }
+  ]
 }
