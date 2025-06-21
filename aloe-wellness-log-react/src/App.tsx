@@ -1,13 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
-import RecordInput from './pages/RecordInput';
-import RecordList from './pages/RecordList';
-import RecordGraph from './pages/RecordGraph';
+import { useEffect, useState } from 'react';
+import {
+  Link,
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
+import './App.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import ToastContainer from './components/ToastContainer';
 import RecordCalendar from './pages/RecordCalendar';
 import RecordExport from './pages/RecordExport';
-import ToastContainer from './components/ToastContainer';
+import RecordGraph from './pages/RecordGraph';
+import RecordInput from './pages/RecordInput';
+import RecordList from './pages/RecordList';
 import { useRecordsStore } from './store/records';
-import './App.css'
 
 // ナビゲーションコンポーネント
 function Navigation() {
@@ -62,14 +70,16 @@ function Navigation() {
         role="navigation"
         aria-label="メインナビゲーション"
       >
-        {navItems.map((item) => (
+        {navItems.map(item => (
           <Link
             key={item.path}
             to={item.path}
             className={`${
-              item.color === 'green' ? 'bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700' :
-              item.color === 'purple' ? 'bg-purple-600 border-purple-600 hover:bg-purple-700 hover:border-purple-700' :
-              'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
+              item.color === 'green'
+                ? 'bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700'
+                : item.color === 'purple'
+                ? 'bg-purple-600 border-purple-600 hover:bg-purple-700 hover:border-purple-700'
+                : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
             } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
             aria-current={isCurrentPage(item.path) ? 'page' : undefined}
             aria-label={`${item.label}ページに移動`}
@@ -92,9 +102,21 @@ function Navigation() {
           aria-controls="mobile-menu"
         >
           <div className="w-6 h-6 flex flex-col justify-center space-y-1">
-            <div className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-            <div className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></div>
-            <div className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+            <div
+              className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                isMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+              }`}
+            ></div>
+            <div
+              className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                isMenuOpen ? 'opacity-0' : ''
+              }`}
+            ></div>
+            <div
+              className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
+              }`}
+            ></div>
           </div>
         </button>
       </div>
@@ -116,11 +138,15 @@ function Navigation() {
                   to={item.path}
                   onClick={closeMenu}
                   className={`px-4 py-3 font-medium text-base hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                    index < navItems.length - 1 ? 'border-b border-gray-100' : ''
+                    index < navItems.length - 1
+                      ? 'border-b border-gray-100'
+                      : ''
                   } ${
-                    item.color === 'green' ? '!text-green-600 hover:bg-green-50 focus:bg-green-50 hover:!text-green-600 visited:!text-green-600 active:!text-green-600' :
-                    item.color === 'purple' ? '!text-purple-600 hover:bg-purple-50 focus:bg-purple-50 hover:!text-purple-600 visited:!text-purple-600 active:!text-purple-600' :
-                    '!text-blue-500 hover:bg-blue-50 focus:bg-blue-50 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500'
+                    item.color === 'green'
+                      ? '!text-green-600 hover:bg-green-50 focus:bg-green-50 hover:!text-green-600 visited:!text-green-600 active:!text-green-600'
+                      : item.color === 'purple'
+                      ? '!text-purple-600 hover:bg-purple-50 focus:bg-purple-50 hover:!text-purple-600 visited:!text-purple-600 active:!text-purple-600'
+                      : '!text-blue-500 hover:bg-blue-50 focus:bg-blue-50 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500'
                   }`}
                   aria-current={isCurrentPage(item.path) ? 'page' : undefined}
                   aria-label={`${item.label}ページに移動`}
@@ -157,30 +183,27 @@ function App() {
   }, [initializeFields]);
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <ToastContainer />
-      <Router>
-        <header role="banner">
-          <Navigation />
-        </header>
+    <ErrorBoundary>
+      <div className="bg-gray-50 min-h-screen">
+        <ToastContainer />
+        <Router>
+          <header role="banner">
+            <Navigation />
+          </header>
 
-        <main
-          id="main-content"
-          role="main"
-          className="px-4"
-          tabIndex={-1}
-        >
-          <Routes>
-            <Route path="/" element={<RecordInput />} />
-            <Route path="/list" element={<RecordList />} />
-            <Route path="/graph" element={<RecordGraph />} />
-            <Route path="/calendar" element={<RecordCalendar />} />
-            <Route path="/export" element={<RecordExport />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </Router>
-    </div>
+          <main id="main-content" role="main" className="px-4" tabIndex={-1}>
+            <Routes>
+              <Route path="/" element={<RecordInput />} />
+              <Route path="/list" element={<RecordList />} />
+              <Route path="/graph" element={<RecordGraph />} />
+              <Route path="/calendar" element={<RecordCalendar />} />
+              <Route path="/export" element={<RecordExport />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </Router>
+      </div>
+    </ErrorBoundary>
   );
 }
 

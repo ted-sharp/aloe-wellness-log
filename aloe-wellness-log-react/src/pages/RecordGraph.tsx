@@ -1,6 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useRecordsStore } from '../store/records';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const PERIOD_OPTIONS = [
   { label: '1週間', value: 7 },
@@ -36,7 +45,7 @@ export default function RecordGraph() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto bg-gray-50 min-h-screen">
-              <h1 className="text-3xl font-bold text-gray-800 mb-12">グラフ</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">グラフ</h1>
       <div className="flex gap-4 mb-4 items-center">
         <label>
           項目：
@@ -46,7 +55,9 @@ export default function RecordGraph() {
             className="border rounded px-2 py-1 ml-2"
           >
             {numberFields.map(f => (
-              <option key={f.fieldId} value={f.fieldId}>{f.name}</option>
+              <option key={f.fieldId} value={f.fieldId}>
+                {f.name}
+              </option>
             ))}
           </select>
         </label>
@@ -58,20 +69,30 @@ export default function RecordGraph() {
             className="border rounded px-2 py-1 ml-2"
           >
             {PERIOD_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </label>
       </div>
       <div className="bg-white rounded shadow p-4">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={filteredData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <LineChart
+            data={filteredData}
+            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="value" stroke="#8884d8" name={numberFields.find(f => f.fieldId === selectedFieldId)?.name} />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#8884d8"
+              name={numberFields.find(f => f.fieldId === selectedFieldId)?.name}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

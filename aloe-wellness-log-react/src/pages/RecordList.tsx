@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useMemo, useCallback, memo } from 'react';
-import { useRecordsStore } from '../store/records';
-import RecordItem from '../components/RecordItem';
-import type { RecordItem as RecordItemType, Field } from '../types/record';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   HiCalendarDays,
+  HiChevronDoubleLeft,
+  HiChevronDoubleRight,
   HiChevronLeft,
   HiChevronRight,
-  HiChevronDoubleLeft,
-  HiChevronDoubleRight
 } from 'react-icons/hi2';
+import RecordItem from '../components/RecordItem';
+import { useRecordsStore } from '../store/records';
+import type { Field, RecordItem as RecordItemType } from '../types/record';
 
 // メモ化されたレコードグループコンポーネント
 const RecordGroup = memo<{
@@ -27,55 +27,64 @@ const RecordGroup = memo<{
   onEditValueChange: (value: string | number | boolean) => void;
   onToggleTextExpansion: (recordId: string) => void;
   onToggleButtons: (recordId: string) => void;
-}>(({
-  datetime,
-  records,
-  getField,
-  sortRecordsByFieldOrder,
-  editId,
-  editValue,
-  expandedTexts,
-  showButtons,
-  onEdit,
-  onEditSave,
-  onEditCancel,
-  onDelete,
-  onEditValueChange,
-  onToggleTextExpansion,
-  onToggleButtons
-}) => (
-  <div className="bg-white rounded-2xl shadow-md p-6">
-    <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
-      <HiCalendarDays className="w-6 h-6 text-blue-600" />
-      {datetime}
+}>(
+  ({
+    datetime,
+    records,
+    getField,
+    sortRecordsByFieldOrder,
+    editId,
+    editValue,
+    expandedTexts,
+    showButtons,
+    onEdit,
+    onEditSave,
+    onEditCancel,
+    onDelete,
+    onEditValueChange,
+    onToggleTextExpansion,
+    onToggleButtons,
+  }) => (
+    <div className="bg-white rounded-2xl shadow-md p-6">
+      <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
+        <HiCalendarDays className="w-6 h-6 text-blue-600" />
+        {datetime}
+      </div>
+      <ul className="space-y-4">
+        {sortRecordsByFieldOrder(records).map(record => (
+          <RecordItem
+            key={record.id}
+            record={record}
+            field={getField(record.fieldId)}
+            editId={editId}
+            editValue={editValue}
+            expandedTexts={expandedTexts}
+            showButtons={showButtons}
+            onEdit={onEdit}
+            onEditSave={onEditSave}
+            onEditCancel={onEditCancel}
+            onDelete={onDelete}
+            onEditValueChange={onEditValueChange}
+            onToggleTextExpansion={onToggleTextExpansion}
+            onToggleButtons={onToggleButtons}
+          />
+        ))}
+      </ul>
     </div>
-    <ul className="space-y-4">
-      {sortRecordsByFieldOrder(records).map((record) => (
-        <RecordItem
-          key={record.id}
-          record={record}
-          field={getField(record.fieldId)}
-          editId={editId}
-          editValue={editValue}
-          expandedTexts={expandedTexts}
-          showButtons={showButtons}
-          onEdit={onEdit}
-          onEditSave={onEditSave}
-          onEditCancel={onEditCancel}
-          onDelete={onDelete}
-          onEditValueChange={onEditValueChange}
-          onToggleTextExpansion={onToggleTextExpansion}
-          onToggleButtons={onToggleButtons}
-        />
-      ))}
-    </ul>
-  </div>
-));
+  )
+);
 
 RecordGroup.displayName = 'RecordGroup';
 
 export default function RecordList() {
-  const { records, fields, loadRecords, loadFields, updateRecord, deleteRecord } = useRecordsStore();
+  const {
+    records,
+    fields,
+    loadRecords,
+    loadFields,
+    updateRecord,
+    deleteRecord,
+  } = useRecordsStore();
   const [editId, setEditId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string | number | boolean>('');
   const [expandedTexts, setExpandedTexts] = useState<Set<string>>(new Set());
@@ -91,35 +100,46 @@ export default function RecordList() {
   }, [loadFields, loadRecords]);
 
   // fieldIdから項目名・型を取得（メモ化）
-  const getField = useCallback((fieldId: string): Field | undefined => {
-    if (fieldId === 'notes') {
-      return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
-    }
+  const getField = useCallback(
+    (fieldId: string): Field | undefined => {
+      if (fieldId === 'notes') {
+        return {
+          fieldId: 'notes',
+          name: '備考',
+          type: 'string' as const,
+          order: 0,
+        };
+      }
 
-    // 優先順位1: fieldIdで検索
-    let field = fields.find(f => f.fieldId === fieldId);
+      // 優先順位1: fieldIdで検索
+      let field = fields.find(f => f.fieldId === fieldId);
 
-    // 優先順位2: nameで検索（fieldIdで見つからない場合）
-    if (!field) {
-      field = fields.find(f => f.name === fieldId);
-    }
+      // 優先順位2: nameで検索（fieldIdで見つからない場合）
+      if (!field) {
+        field = fields.find(f => f.name === fieldId);
+      }
 
-    return field;
-  }, [fields]);
+      return field;
+    },
+    [fields]
+  );
 
   // 項目の順序を制御する関数（メモ化）
-  const sortRecordsByFieldOrder = useCallback((records: RecordItemType[]) => {
-    return [...records].sort((a, b) => {
-      const fieldA = getField(a.fieldId);
-      const fieldB = getField(b.fieldId);
+  const sortRecordsByFieldOrder = useCallback(
+    (records: RecordItemType[]) => {
+      return [...records].sort((a, b) => {
+        const fieldA = getField(a.fieldId);
+        const fieldB = getField(b.fieldId);
 
-      // order属性で並び替え（小さいほど上に表示）
-      const orderA = fieldA?.order ?? 999;
-      const orderB = fieldB?.order ?? 999;
+        // order属性で並び替え（小さいほど上に表示）
+        const orderA = fieldA?.order ?? 999;
+        const orderB = fieldB?.order ?? 999;
 
-      return orderA - orderB;
-    });
-  }, [getField]);
+        return orderA - orderB;
+      });
+    },
+    [getField]
+  );
 
   // 日付・時刻で降順ソート（新しい順）
   const sortedRecords = useMemo(() => {
@@ -160,14 +180,17 @@ export default function RecordList() {
       groups: Object.fromEntries(paginatedEntries),
       totalGroups,
       totalPages,
-      currentPage: Math.min(currentPage, totalPages)
+      currentPage: Math.min(currentPage, totalPages),
     };
   }, [grouped, currentPage, pageSize]);
 
   // ページ変更（メモ化）
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, paginatedGroups.totalPages)));
-  }, [paginatedGroups.totalPages]);
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(Math.max(1, Math.min(page, paginatedGroups.totalPages)));
+    },
+    [paginatedGroups.totalPages]
+  );
 
   // 編集関連のハンドラー（メモ化）
   const handleEdit = useCallback((rec: RecordItemType) => {
@@ -175,17 +198,20 @@ export default function RecordList() {
     setEditValue(rec.value);
   }, []);
 
-  const handleEditSave = useCallback(async (rec: RecordItemType) => {
-    await updateRecord({ ...rec, value: editValue });
-    setEditId(null);
-    setEditValue('');
-    // ボタン表示状態もクリア
-    setShowButtons(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(rec.id);
-      return newSet;
-    });
-  }, [editValue, updateRecord]);
+  const handleEditSave = useCallback(
+    async (rec: RecordItemType) => {
+      await updateRecord({ ...rec, value: editValue });
+      setEditId(null);
+      setEditValue('');
+      // ボタン表示状態もクリア
+      setShowButtons(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(rec.id);
+        return newSet;
+      });
+    },
+    [editValue, updateRecord]
+  );
 
   const handleEditCancel = useCallback((recordId: string) => {
     setEditId(null);
@@ -198,21 +224,27 @@ export default function RecordList() {
     });
   }, []);
 
-  const handleDelete = useCallback(async (rec: RecordItemType) => {
-    if (window.confirm('本当に削除してよろしいですか？')) {
-      await deleteRecord(rec.id);
-      // ボタン表示状態もクリア
-      setShowButtons(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(rec.id);
-        return newSet;
-      });
-    }
-  }, [deleteRecord]);
+  const handleDelete = useCallback(
+    async (rec: RecordItemType) => {
+      if (window.confirm('本当に削除してよろしいですか？')) {
+        await deleteRecord(rec.id);
+        // ボタン表示状態もクリア
+        setShowButtons(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(rec.id);
+          return newSet;
+        });
+      }
+    },
+    [deleteRecord]
+  );
 
-  const handleEditValueChange = useCallback((value: string | number | boolean) => {
-    setEditValue(value);
-  }, []);
+  const handleEditValueChange = useCallback(
+    (value: string | number | boolean) => {
+      setEditValue(value);
+    },
+    []
+  );
 
   const handleToggleTextExpansion = useCallback((recordId: string) => {
     setExpandedTexts(prev => {
@@ -257,7 +289,7 @@ export default function RecordList() {
             <span className="text-gray-600">表示件数:</span>
             <select
               value={pageSize}
-              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              onChange={e => handlePageSizeChange(Number(e.target.value))}
               className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <option value={10}>10件</option>
@@ -291,20 +323,25 @@ export default function RecordList() {
             </div>
 
             <span className="text-gray-600">
-              {paginatedGroups.currentPage} / {paginatedGroups.totalPages} ページ
+              {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
+              ページ
             </span>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
-                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                disabled={
+                  paginatedGroups.currentPage === paginatedGroups.totalPages
+                }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 <HiChevronRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.totalPages)}
-                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                disabled={
+                  paginatedGroups.currentPage === paginatedGroups.totalPages
+                }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 <HiChevronDoubleRight className="w-4 h-4" />
@@ -366,20 +403,25 @@ export default function RecordList() {
             </div>
 
             <span className="text-gray-600">
-              {paginatedGroups.currentPage} / {paginatedGroups.totalPages} ページ
+              {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
+              ページ
             </span>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
-                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                disabled={
+                  paginatedGroups.currentPage === paginatedGroups.totalPages
+                }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 <HiChevronRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.totalPages)}
-                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                disabled={
+                  paginatedGroups.currentPage === paginatedGroups.totalPages
+                }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 <HiChevronDoubleRight className="w-4 h-4" />

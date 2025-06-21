@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { HiCheckCircle, HiClock, HiXCircle } from 'react-icons/hi2';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
-import {
-  HiClock,
-  HiCheckCircle,
-  HiXCircle
-} from 'react-icons/hi2';
 
 export default function RecordCalendar() {
   const { records, fields, loadRecords, loadFields } = useRecordsStore();
@@ -19,10 +15,15 @@ export default function RecordCalendar() {
     loadRecords();
   }, [loadFields, loadRecords]);
 
-    // fieldIdから項目名・型を取得（RecordListと同じ関数）
+  // fieldIdから項目名・型を取得（RecordListと同じ関数）
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
-      return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
+      return {
+        fieldId: 'notes',
+        name: '備考',
+        type: 'string' as const,
+        order: 0,
+      };
     }
 
     // 優先順位1: fieldIdで検索
@@ -112,7 +113,6 @@ export default function RecordCalendar() {
 
   return (
     <div className="max-w-md mx-auto">
-
       <h1 className="text-3xl font-bold text-gray-800 mb-12">カレンダー</h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
@@ -164,7 +164,12 @@ export default function RecordCalendar() {
               const day = String(date.getDate()).padStart(2, '0');
               const dateStr = `${year}-${month}-${day}`;
               if (recordDates.has(dateStr)) {
-                return <span className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-600 align-middle" title="記録あり"></span>;
+                return (
+                  <span
+                    className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-600 align-middle"
+                    title="記録あり"
+                  ></span>
+                );
               }
             }
             return null;
@@ -174,80 +179,100 @@ export default function RecordCalendar() {
 
       {selectedDate && (
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-8">{selectedDate.toLocaleDateString()} の記録</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-8">
+            {selectedDate.toLocaleDateString()} の記録
+          </h2>
           {selectedRecords.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
               <p className="text-lg">この日の記録はありませんわ。</p>
             </div>
           ) : (
             <div className="space-y-8">
-              {Object.entries(groupedSelectedRecords).map(([datetime, recs]) => (
-                <div key={datetime} className="bg-white rounded-2xl shadow-md p-6">
-                  <div className="text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4 flex items-center gap-2">
-                    <HiClock className="w-6 h-6 text-blue-600" />
-                    {recs[0].time}
-                  </div>
-                  <ul className="space-y-4">
-                    {sortRecordsByFieldOrder(recs).map((rec) => {
-                      const field = getField(rec.fieldId);
-                      return (
-                        <li key={rec.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
-                          {field?.fieldId === 'notes' ? (
-                            // 備考は縦棒区切りの左寄せレイアウト
-                            <div className="flex items-stretch gap-2">
-                              <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
-                                {field ? field.name : rec.fieldId}
-                              </div>
-                              <div className="text-lg text-gray-800 font-semibold pl-2 flex-1 min-w-0">
-                                {typeof rec.value === 'string' && rec.value.length > 30 ? (
-                                  <button
-                                    onClick={() => toggleTextExpansion(rec.id)}
-                                    className="text-left hover:text-blue-600 transition-colors break-words w-full"
-                                    title="クリックして全文表示"
-                                  >
-                                    {isTextExpanded(rec.id) ? rec.value : truncateText(rec.value)}
-                                  </button>
-                                ) : (
-                                  <span className="break-words">{rec.value}</span>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
-                            <div className="grid grid-cols-2 gap-2 items-stretch">
-                              <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
-                                {field ? field.name : rec.fieldId}
-                              </div>
-                              <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
-                                {typeof rec.value === 'boolean' ? (
-                                  rec.value ? (
-                                    <span className="inline-flex items-center gap-2 text-green-600">
-                                      <HiCheckCircle className="w-6 h-6" />
-                                      あり
-                                    </span>
+              {Object.entries(groupedSelectedRecords).map(
+                ([datetime, recs]) => (
+                  <div
+                    key={datetime}
+                    className="bg-white rounded-2xl shadow-md p-6"
+                  >
+                    <div className="text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4 flex items-center gap-2">
+                      <HiClock className="w-6 h-6 text-blue-600" />
+                      {recs[0].time}
+                    </div>
+                    <ul className="space-y-4">
+                      {sortRecordsByFieldOrder(recs).map(rec => {
+                        const field = getField(rec.fieldId);
+                        return (
+                          <li
+                            key={rec.id}
+                            className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
+                          >
+                            {field?.fieldId === 'notes' ? (
+                              // 備考は縦棒区切りの左寄せレイアウト
+                              <div className="flex items-stretch gap-2">
+                                <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
+                                  {field ? field.name : rec.fieldId}
+                                </div>
+                                <div className="text-lg text-gray-800 font-semibold pl-2 flex-1 min-w-0">
+                                  {typeof rec.value === 'string' &&
+                                  rec.value.length > 30 ? (
+                                    <button
+                                      onClick={() =>
+                                        toggleTextExpansion(rec.id)
+                                      }
+                                      className="text-left hover:text-blue-600 transition-colors break-words w-full"
+                                      title="クリックして全文表示"
+                                    >
+                                      {isTextExpanded(rec.id)
+                                        ? rec.value
+                                        : truncateText(rec.value)}
+                                    </button>
                                   ) : (
-                                    <span className="inline-flex items-center gap-2 text-red-600">
-                                      <HiXCircle className="w-6 h-6" />
-                                      なし
+                                    <span className="break-words">
+                                      {rec.value}
                                     </span>
-                                  )
-                                ) : (
-                                  <span className="break-words">
-                                    {rec.value}
-                                    {field?.unit && typeof rec.value !== 'boolean' && (
-                                      <span className="text-gray-600 ml-1">{field.unit}</span>
-                                    )}
-                                  </span>
-                                )}
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+                            ) : (
+                              // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
+                              <div className="grid grid-cols-2 gap-2 items-stretch">
+                                <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                                  {field ? field.name : rec.fieldId}
+                                </div>
+                                <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                                  {typeof rec.value === 'boolean' ? (
+                                    rec.value ? (
+                                      <span className="inline-flex items-center gap-2 text-green-600">
+                                        <HiCheckCircle className="w-6 h-6" />
+                                        あり
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-2 text-red-600">
+                                        <HiXCircle className="w-6 h-6" />
+                                        なし
+                                      </span>
+                                    )
+                                  ) : (
+                                    <span className="break-words">
+                                      {rec.value}
+                                      {field?.unit &&
+                                        typeof rec.value !== 'boolean' && (
+                                          <span className="text-gray-600 ml-1">
+                                            {field.unit}
+                                          </span>
+                                        )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>
