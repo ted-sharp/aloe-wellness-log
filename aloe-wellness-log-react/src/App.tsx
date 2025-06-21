@@ -68,7 +68,8 @@ function App() {
           {/* オーバーレイ（メニューが開いている時） */}
           {isMenuOpen && (
             <div
-              className="md:hidden fixed inset-0 bg-gray-500 bg-opacity-10 z-40"
+              className="md:hidden fixed inset-0 z-40"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
               onClick={closeMenu}
             ></div>
           )}
