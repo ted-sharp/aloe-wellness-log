@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRecordsStore } from '../store/records';
 import type { Field } from '../types/record';
-import * as db from '../db/indexedDb';
 import {
   HiArrowLeft,
   HiCalendarDays,
@@ -492,12 +491,8 @@ export default function RecordInput() {
 
     // 並び替えモーダルを開く
   const handleOpenSortModal = () => {
-    console.log('🔧 並び替えモーダルを開く');
-    console.log('📋 現在のフィールド:', fields.map(f => ({ name: f.name, order: f.order })));
-
     // 全フィールドを表示順序でソートして設定
     const sortedFields = [...fields].sort((a, b) => (a.order || 999) - (b.order || 999));
-    console.log('📊 ソート後のフィールド:', sortedFields.map(f => ({ name: f.name, order: f.order })));
 
     setSortableFields(sortedFields);
     sortableFieldsRef.current = sortedFields; // refも同期
@@ -509,24 +504,10 @@ export default function RecordInput() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      console.log('🎯 ドラッグ終了:', { activeId: active.id, overId: over.id });
-
       const oldIndex = sortableFields.findIndex((item) => item.fieldId === active.id);
       const newIndex = sortableFields.findIndex((item) => item.fieldId === over.id);
 
-      console.log('📍 移動詳細:', {
-        activeItem: sortableFields[oldIndex]?.name,
-        oldIndex,
-        newIndex,
-        oldOrder: sortableFields[oldIndex]?.order,
-      });
-
-            const newItems = arrayMove(sortableFields, oldIndex, newIndex);
-      console.log('🔄 新しい順序:', newItems.map((item, index) => ({
-        name: item.name,
-        originalOrder: item.order,
-        newPosition: index + 1
-      })));
+      const newItems = arrayMove(sortableFields, oldIndex, newIndex);
 
       setSortableFields(newItems);
       sortableFieldsRef.current = newItems; // refも同期更新
@@ -536,9 +517,7 @@ export default function RecordInput() {
           // 並び替えを保存
   const handleSaveSortOrder = async () => {
     try {
-      console.log('🔄 並び替え保存開始');
       const currentFields = sortableFieldsRef.current; // 最新の状態を使用
-      console.log('📋 保存対象フィールド:', currentFields.map((f, i) => ({ name: f.name, oldOrder: f.order, newOrder: i + 1 })));
 
       // すべての更新を並列実行してから完了を待つ
       const updatePromises = currentFields.map((field, index) => {
@@ -546,27 +525,15 @@ export default function RecordInput() {
           ...field,
           order: index + 1,
         };
-        console.log(`💾 更新: ${field.name} (${field.order} → ${index + 1})`);
         return updateField(updatedField);
       });
 
       // すべての更新完了を待つ
       await Promise.all(updatePromises);
-      console.log('✅ 全更新完了');
 
-                  // 少し待ってからフィールド一覧を再読み込み
+      // 少し待ってからフィールド一覧を再読み込み
       await new Promise(resolve => setTimeout(resolve, 50));
       await loadFields();
-      console.log('📝 フィールド再読み込み完了');
-
-      // IndexedDBから直接取得して確認
-      const freshFields = await db.getAllFields();
-      console.log('🔍 IndexedDBから直接取得したフィールド状態:', freshFields.map(f => ({ name: f.name, order: f.order })));
-
-      // Reactステートの状態も確認（参考用）
-      setTimeout(() => {
-        console.log('🔍 Reactステートのフィールド状態:', fields.map(f => ({ name: f.name, order: f.order })));
-      }, 100);
 
       setShowSortModal(false);
       setToast('並び順を保存しましたわ');
@@ -605,8 +572,6 @@ export default function RecordInput() {
 
     // 並び替えモーダル内で表示状態をトグルする関数
   const handleToggleDisplayInModal = async (fieldId: string) => {
-    console.log('🔄 モーダル内で表示状態をトグル:', fieldId);
-
     // 現在のフィールドを取得
     const currentField = sortableFields.find(f => f.fieldId === fieldId);
     if (!currentField) return;
@@ -616,8 +581,6 @@ export default function RecordInput() {
       ...currentField,
       defaultDisplay: !currentField.defaultDisplay,
     };
-
-    console.log(`💾 ${currentField.name}: ${currentField.defaultDisplay} → ${updatedField.defaultDisplay}`);
 
     try {
       // IndexedDBに保存
@@ -1154,10 +1117,7 @@ export default function RecordInput() {
                     <button
                       type="button"
                       className="bg-purple-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 transition-colors duration-200 font-medium flex items-center gap-2"
-                      onClick={() => {
-                        console.log('🟦 保存ボタンがクリックされました');
-                        handleSaveSortOrder();
-                      }}
+                      onClick={handleSaveSortOrder}
                     >
                       <HiCheckCircle className="w-4 h-4" />
                       保存

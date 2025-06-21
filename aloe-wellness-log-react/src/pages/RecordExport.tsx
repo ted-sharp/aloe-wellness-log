@@ -116,7 +116,6 @@ export default function RecordExport() {
     };
 
     const header = parseCSVLine(lines[0]);
-    console.log('CSV Header:', header);
 
     const expectedHeader = ['id', 'date', 'time', 'datetime', 'fieldId', 'fieldName', 'value'];
 
@@ -133,7 +132,6 @@ export default function RecordExport() {
         if (!lines[i].trim()) continue;
 
         const values = parseCSVLine(lines[i]);
-        console.log(`Row ${i}:`, values);
 
         // 列数チェック
         if (values.length !== header.length) {
@@ -172,7 +170,6 @@ export default function RecordExport() {
       }
     }
 
-    console.log('Parsed records:', records.length);
     return records;
   };
 
