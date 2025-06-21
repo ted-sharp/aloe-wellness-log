@@ -268,6 +268,7 @@ export default function RecordInput() {
                         onClick={() => {
                           fieldManagement.setEditFieldId(null);
                           fieldManagement.setEditField({});
+                          fieldManagement.clearButtons(); // ボタン表示をクリア
                         }}
                         className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2"
                       >
@@ -504,6 +505,7 @@ export default function RecordInput() {
                                     fieldManagement.setEditingExistingFieldId(
                                       null
                                     );
+                                    fieldManagement.clearSelectButtons(); // 選択ボタン表示をクリア
                                   }}
                                   className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2"
                                 >
