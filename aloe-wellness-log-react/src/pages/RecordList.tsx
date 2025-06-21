@@ -9,8 +9,13 @@ import {
 import RecordItem from '../components/RecordItem';
 import { useRecordsStore } from '../store/records';
 import type { Field, RecordItem as RecordItemType } from '../types/record';
+import { isDev } from '../utils/devTools';
+import {
+  performanceMonitor,
+  trackDatabaseOperation,
+} from '../utils/performanceMonitor';
 
-// メモ化されたレコードグループコンポーネント
+// メモ化されたレコードグループコンポーネント（パフォーマンス監視付き）
 const RecordGroup = memo<{
   datetime: string;
   records: RecordItemType[];
@@ -44,34 +49,44 @@ const RecordGroup = memo<{
     onEditValueChange,
     onToggleTextExpansion,
     onToggleButtons,
-  }) => (
-    <div className="bg-white rounded-2xl shadow-md p-6">
-      <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
-        <HiCalendarDays className="w-6 h-6 text-blue-600" />
-        {datetime}
+  }) => {
+    // レンダリング監視
+    useEffect(() => {
+      performanceMonitor.trackRender.start(`RecordGroup-${datetime}`);
+      return () => {
+        performanceMonitor.trackRender.end(`RecordGroup-${datetime}`);
+      };
+    });
+
+    return (
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
+          <HiCalendarDays className="w-6 h-6 text-blue-600" />
+          {datetime}
+        </div>
+        <ul className="space-y-4">
+          {sortRecordsByFieldOrder(records).map(record => (
+            <RecordItem
+              key={record.id}
+              record={record}
+              field={getField(record.fieldId)}
+              editId={editId}
+              editValue={editValue}
+              expandedTexts={expandedTexts}
+              showButtons={showButtons}
+              onEdit={onEdit}
+              onEditSave={onEditSave}
+              onEditCancel={onEditCancel}
+              onDelete={onDelete}
+              onEditValueChange={onEditValueChange}
+              onToggleTextExpansion={onToggleTextExpansion}
+              onToggleButtons={onToggleButtons}
+            />
+          ))}
+        </ul>
       </div>
-      <ul className="space-y-4">
-        {sortRecordsByFieldOrder(records).map(record => (
-          <RecordItem
-            key={record.id}
-            record={record}
-            field={getField(record.fieldId)}
-            editId={editId}
-            editValue={editValue}
-            expandedTexts={expandedTexts}
-            showButtons={showButtons}
-            onEdit={onEdit}
-            onEditSave={onEditSave}
-            onEditCancel={onEditCancel}
-            onDelete={onDelete}
-            onEditValueChange={onEditValueChange}
-            onToggleTextExpansion={onToggleTextExpansion}
-            onToggleButtons={onToggleButtons}
-          />
-        ))}
-      </ul>
-    </div>
-  )
+    );
+  }
 );
 
 RecordGroup.displayName = 'RecordGroup';
@@ -94,12 +109,38 @@ export default function RecordList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  // パフォーマンス監視の初期化
   useEffect(() => {
-    loadFields();
-    loadRecords();
-  }, [loadFields, loadRecords]);
+    performanceMonitor.trackRender.start('RecordList');
+    return () => {
+      performanceMonitor.trackRender.end('RecordList');
+    };
+  });
 
-  // fieldIdから項目名・型を取得（メモ化）
+  // データ読み込み（パフォーマンス監視付き）
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await trackDatabaseOperation('load-fields', async () => {
+          await loadFields();
+        });
+
+        await trackDatabaseOperation(
+          'load-records',
+          async () => {
+            await loadRecords();
+          },
+          records.length
+        );
+      } catch (error) {
+        console.error('Data loading error:', error);
+      }
+    };
+
+    loadData();
+  }, [loadFields, loadRecords, records.length]);
+
+  // fieldIdから項目名・型を取得（メモ化、最適化済み）
   const getField = useCallback(
     (fieldId: string): Field | undefined => {
       if (fieldId === 'notes') {
@@ -124,10 +165,11 @@ export default function RecordList() {
     [fields]
   );
 
-  // 項目の順序を制御する関数（メモ化）
+  // 項目の順序を制御する関数（メモ化、最適化済み）
   const sortRecordsByFieldOrder = useCallback(
     (records: RecordItemType[]) => {
-      return [...records].sort((a, b) => {
+      const startTime = performance.now();
+      const result = [...records].sort((a, b) => {
         const fieldA = getField(a.fieldId);
         const fieldB = getField(b.fieldId);
 
@@ -137,32 +179,68 @@ export default function RecordList() {
 
         return orderA - orderB;
       });
+
+      const duration = performance.now() - startTime;
+      if (isDev && duration > 10) {
+        console.warn(
+          `🐌 Slow sort operation: ${duration.toFixed(2)}ms for ${
+            records.length
+          } records`
+        );
+      }
+
+      return result;
     },
     [getField]
   );
 
-  // 日付・時刻で降順ソート（新しい順）
+  // 日付・時刻で降順ソート（新しい順）（最適化済み）
   const sortedRecords = useMemo(() => {
-    return [...records].sort((a, b) => {
+    const startTime = performance.now();
+    const result = [...records].sort((a, b) => {
       const aKey = `${a.date} ${a.time}`;
       const bKey = `${b.date} ${b.time}`;
       return bKey.localeCompare(aKey);
     });
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow record sorting: ${duration.toFixed(2)}ms for ${
+          records.length
+        } records`
+      );
+    }
+
+    return result;
   }, [records]);
 
-  // 日付・時刻ごとにグループ化
+  // 日付・時刻ごとにグループ化（最適化済み）
   const grouped = useMemo(() => {
+    const startTime = performance.now();
     const groupMap: Record<string, RecordItemType[]> = {};
-    return sortedRecords.reduce((acc, rec) => {
+    const result = sortedRecords.reduce((acc, rec) => {
       const key = `${rec.date} ${rec.time}`;
       if (!acc[key]) acc[key] = [];
       acc[key].push(rec);
       return acc;
     }, groupMap);
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow grouping: ${duration.toFixed(2)}ms for ${
+          sortedRecords.length
+        } records`
+      );
+    }
+
+    return result;
   }, [sortedRecords]);
 
-  // ページング処理
+  // ページング処理（最適化済み）
   const paginatedGroups = useMemo(() => {
+    const startTime = performance.now();
     const groupEntries = Object.entries(grouped);
     const totalGroups = groupEntries.length;
     const totalPages = Math.max(1, Math.ceil(totalGroups / pageSize));
@@ -176,44 +254,76 @@ export default function RecordList() {
     const endIndex = startIndex + pageSize;
     const paginatedEntries = groupEntries.slice(startIndex, endIndex);
 
-    return {
+    const result = {
       groups: Object.fromEntries(paginatedEntries),
       totalGroups,
       totalPages,
       currentPage: Math.min(currentPage, totalPages),
     };
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 5) {
+      console.warn(
+        `🐌 Slow pagination: ${duration.toFixed(2)}ms for ${totalGroups} groups`
+      );
+    }
+
+    return result;
   }, [grouped, currentPage, pageSize]);
 
-  // ページ変更（メモ化）
+  // ページ変更（メモ化、パフォーマンス監視付き）
   const goToPage = useCallback(
     (page: number) => {
+      const interactionId =
+        performanceMonitor.trackInteraction.start('page-change');
       setCurrentPage(Math.max(1, Math.min(page, paginatedGroups.totalPages)));
+      performanceMonitor.trackInteraction.end(interactionId, 'page-change');
     },
     [paginatedGroups.totalPages]
   );
 
-  // 編集関連のハンドラー（メモ化）
+  // 編集関連のハンドラー（メモ化、パフォーマンス監視付き）
   const handleEdit = useCallback((rec: RecordItemType) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('edit-start');
     setEditId(rec.id);
     setEditValue(rec.value);
+    performanceMonitor.trackInteraction.end(interactionId, 'edit-start');
   }, []);
 
   const handleEditSave = useCallback(
     async (rec: RecordItemType) => {
-      await updateRecord({ ...rec, value: editValue });
-      setEditId(null);
-      setEditValue('');
-      // ボタン表示状態もクリア
-      setShowButtons(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(rec.id);
-        return newSet;
-      });
+      const interactionId =
+        performanceMonitor.trackInteraction.start('edit-save');
+      try {
+        await trackDatabaseOperation(
+          'update-record',
+          async () => {
+            await updateRecord({ ...rec, value: editValue });
+          },
+          1
+        );
+
+        setEditId(null);
+        setEditValue('');
+        // ボタン表示状態もクリア
+        setShowButtons(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(rec.id);
+          return newSet;
+        });
+      } catch (error) {
+        console.error('Edit save error:', error);
+      } finally {
+        performanceMonitor.trackInteraction.end(interactionId, 'edit-save');
+      }
     },
     [editValue, updateRecord]
   );
 
   const handleEditCancel = useCallback((recordId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('edit-cancel');
     setEditId(null);
     setEditValue('');
     // ボタン表示状態もクリア
@@ -222,18 +332,34 @@ export default function RecordList() {
       newSet.delete(recordId);
       return newSet;
     });
+    performanceMonitor.trackInteraction.end(interactionId, 'edit-cancel');
   }, []);
 
   const handleDelete = useCallback(
     async (rec: RecordItemType) => {
-      if (window.confirm('本当に削除してよろしいですか？')) {
-        await deleteRecord(rec.id);
-        // ボタン表示状態もクリア
-        setShowButtons(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(rec.id);
-          return newSet;
-        });
+      const interactionId =
+        performanceMonitor.trackInteraction.start('delete-record');
+      try {
+        if (window.confirm('本当に削除してよろしいですか？')) {
+          await trackDatabaseOperation(
+            'delete-record',
+            async () => {
+              await deleteRecord(rec.id);
+            },
+            1
+          );
+
+          // ボタン表示状態もクリア
+          setShowButtons(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(rec.id);
+            return newSet;
+          });
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+      } finally {
+        performanceMonitor.trackInteraction.end(interactionId, 'delete-record');
       }
     },
     [deleteRecord]
@@ -247,6 +373,8 @@ export default function RecordList() {
   );
 
   const handleToggleTextExpansion = useCallback((recordId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('toggle-text');
     setExpandedTexts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(recordId)) {
@@ -256,9 +384,12 @@ export default function RecordList() {
       }
       return newSet;
     });
+    performanceMonitor.trackInteraction.end(interactionId, 'toggle-text');
   }, []);
 
   const handleToggleButtons = useCallback((recordId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('toggle-buttons');
     setShowButtons(prev => {
       const newSet = new Set(prev);
       if (newSet.has(recordId)) {
@@ -268,12 +399,41 @@ export default function RecordList() {
       }
       return newSet;
     });
+    performanceMonitor.trackInteraction.end(interactionId, 'toggle-buttons');
   }, []);
 
   const handlePageSizeChange = useCallback((newPageSize: number) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('page-size-change');
     setPageSize(newPageSize);
     setCurrentPage(1);
+    performanceMonitor.trackInteraction.end(interactionId, 'page-size-change');
   }, []);
+
+  // 開発環境でのパフォーマンス情報表示
+  useEffect(() => {
+    if (!isDev) return;
+
+    const logPerformanceInfo = () => {
+      console.group('🔍 RecordList Performance Info');
+      console.log(`📊 Total Records: ${records.length}`);
+      console.log(`📊 Total Groups: ${paginatedGroups.totalGroups}`);
+      console.log(
+        `📊 Current Page: ${paginatedGroups.currentPage}/${paginatedGroups.totalPages}`
+      );
+      console.log(`📊 Page Size: ${pageSize}`);
+      console.groupEnd();
+    };
+
+    const timeout = setTimeout(logPerformanceInfo, 2000);
+    return () => clearTimeout(timeout);
+  }, [
+    records.length,
+    paginatedGroups.totalGroups,
+    paginatedGroups.currentPage,
+    paginatedGroups.totalPages,
+    pageSize,
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto">

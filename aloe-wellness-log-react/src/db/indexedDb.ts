@@ -1,4 +1,6 @@
 import type { Field, RecordItem } from '../types/record';
+import { isDev } from '../utils/devTools';
+import { performanceMonitor } from '../utils/performanceMonitor';
 
 const DB_NAME = 'aloe-wellness-log';
 const DB_VERSION = 1;
@@ -27,6 +29,59 @@ export class DbError extends Error {
   ) {
     super(message);
     this.name = 'DbError';
+  }
+}
+
+// パフォーマンス監視付きの操作実行ヘルパー
+async function trackDbOperation<T>(
+  operationName: string,
+  operation: () => Promise<T>,
+  recordCount?: number
+): Promise<T> {
+  const operationId = `${operationName}-${Date.now()}-${Math.random()
+    .toString(36)
+    .substr(2, 9)}`;
+
+  performanceMonitor.trackDatabase.start(operationId, operationName);
+
+  try {
+    const result = await operation();
+    const duration = performanceMonitor.trackDatabase.end(
+      operationId,
+      operationName,
+      recordCount
+    );
+
+    // 開発環境での詳細ログ
+    if (isDev) {
+      const formattedDuration = duration.toFixed(2);
+      const recordInfo = recordCount ? ` (${recordCount} records)` : '';
+      console.log(
+        `💾 DB ${operationName}: ${formattedDuration}ms${recordInfo}`
+      );
+
+      // 遅い操作の警告
+      if (duration > 100) {
+        console.warn(
+          `🐌 Slow DB operation: ${operationName} took ${formattedDuration}ms${recordInfo}`
+        );
+      }
+    }
+
+    return result;
+  } catch (error) {
+    performanceMonitor.trackDatabase.end(
+      operationId,
+      operationName,
+      recordCount
+    );
+
+    // エラー統計の更新
+    if (isDev) {
+      console.error(`❌ DB ${operationName} failed:`, error);
+    }
+
+    throw error;
   }
 }
 
@@ -296,275 +351,335 @@ async function executeTransaction<T>(
 
 // 記録データの追加（既存の場合は更新）
 export async function addRecord(record: RecordItem): Promise<void> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.put(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'add-record',
+    async () => {
+      return executeTransaction(
+        RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // 記録データの全件取得
 export async function getAllRecords(): Promise<RecordItem[]> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readonly',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<RecordItem[]>((resolve, reject) => {
-        const request = objectStore.getAll();
-        request.onsuccess = () => {
-          const data = request.result;
-          if (Array.isArray(data)) {
-            resolve(validateRecords(data));
-          } else {
-            resolve([]);
-          }
-        };
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
-  );
+  return trackDbOperation('get-all-records', async () => {
+    return executeTransaction(
+      RECORDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<RecordItem[]>((resolve, reject) => {
+          const request = objectStore.getAll();
+          request.onsuccess = () => {
+            const data = request.result;
+            if (Array.isArray(data)) {
+              const validRecords = validateRecords(data);
+              resolve(validRecords);
+            } else {
+              resolve([]);
+            }
+          };
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
 }
 
 // 記録項目の追加
 export async function addField(field: Field): Promise<void> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.put(field); // addをputに変更
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'add-field',
+    async () => {
+      return executeTransaction(
+        FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(field); // addをputに変更
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // 記録項目の全件取得
 export async function getAllFields(): Promise<Field[]> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readonly',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<Field[]>((resolve, reject) => {
-        const request = objectStore.getAll();
-        request.onsuccess = () => {
-          const data = request.result;
-          if (Array.isArray(data)) {
-            resolve(validateFields(data));
-          } else {
-            resolve([]);
-          }
-        };
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
-  );
+  return trackDbOperation('get-all-fields', async () => {
+    return executeTransaction(
+      FIELDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<Field[]>((resolve, reject) => {
+          const request = objectStore.getAll();
+          request.onsuccess = () => {
+            const data = request.result;
+            if (Array.isArray(data)) {
+              const validFields = validateFields(data);
+              resolve(validFields);
+            } else {
+              resolve([]);
+            }
+          };
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
 }
 
 // 記録項目の更新
 export async function updateField(field: Field): Promise<void> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.put(field);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'update-field',
+    async () => {
+      return executeTransaction(
+        FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(field);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // 記録データの更新
 export async function updateRecord(record: RecordItem): Promise<void> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.put(record);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'update-record',
+    async () => {
+      return executeTransaction(
+        RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // 記録データの削除
 export async function deleteRecord(id: string): Promise<void> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.delete(id);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'delete-record',
+    async () => {
+      return executeTransaction(
+        RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // フィールド（項目）の削除
 export async function deleteField(fieldId: string): Promise<void> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.delete(fieldId);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
+  return trackDbOperation(
+    'delete-field',
+    async () => {
+      return executeTransaction(
+        FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(fieldId);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
   );
 }
 
 // 全記録データの削除
 export async function deleteAllRecords(): Promise<void> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.clear();
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
-  );
+  return trackDbOperation('delete-all-records', async () => {
+    return executeTransaction(
+      RECORDS_STORE,
+      'readwrite',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<void>((resolve, reject) => {
+          const request = objectStore.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
 }
 
 // 全項目データの削除
 export async function deleteAllFields(): Promise<void> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
-      return new Promise<void>((resolve, reject) => {
-        const request = objectStore.clear();
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(classifyDbError(request.error));
-      });
-    }
-  );
+  return trackDbOperation('delete-all-fields', async () => {
+    return executeTransaction(
+      FIELDS_STORE,
+      'readwrite',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<void>((resolve, reject) => {
+          const request = objectStore.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
 }
 
 // 全データ削除（記録と項目の両方）
 export async function deleteAllData(): Promise<void> {
-  return executeTransaction(
-    [RECORDS_STORE, FIELDS_STORE],
-    'readwrite',
-    async (_transaction, stores) => {
-      const [recordStore, fieldStore] = stores as IDBObjectStore[];
+  return trackDbOperation('delete-all-data', async () => {
+    return executeTransaction(
+      [RECORDS_STORE, FIELDS_STORE],
+      'readwrite',
+      async (_transaction, stores) => {
+        const [recordStore, fieldStore] = stores as IDBObjectStore[];
 
-      return new Promise<void>((resolve, reject) => {
-        let completedOperations = 0;
-        const totalOperations = 2;
+        return new Promise<void>((resolve, reject) => {
+          let completedOperations = 0;
+          const totalOperations = 2;
 
-        const checkCompletion = () => {
-          completedOperations++;
-          if (completedOperations === totalOperations) {
-            resolve();
-          }
-        };
+          const checkCompletion = () => {
+            completedOperations++;
+            if (completedOperations === totalOperations) {
+              resolve();
+            }
+          };
 
-        const recordRequest = recordStore.clear();
-        recordRequest.onsuccess = checkCompletion;
-        recordRequest.onerror = () =>
-          reject(classifyDbError(recordRequest.error));
+          const recordRequest = recordStore.clear();
+          recordRequest.onsuccess = checkCompletion;
+          recordRequest.onerror = () =>
+            reject(classifyDbError(recordRequest.error));
 
-        const fieldRequest = fieldStore.clear();
-        fieldRequest.onsuccess = checkCompletion;
-        fieldRequest.onerror = () =>
-          reject(classifyDbError(fieldRequest.error));
-      });
-    }
-  );
+          const fieldRequest = fieldStore.clear();
+          fieldRequest.onsuccess = checkCompletion;
+          fieldRequest.onerror = () =>
+            reject(classifyDbError(fieldRequest.error));
+        });
+      }
+    );
+  });
 }
 
 // バッチ操作：複数のレコードを一度に追加/更新
 export async function batchUpdateRecords(records: RecordItem[]): Promise<void> {
-  return executeTransaction(
-    RECORDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
+  return trackDbOperation(
+    'batch-update-records',
+    async () => {
+      return executeTransaction(
+        RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
 
-      return new Promise<void>((resolve, reject) => {
-        let completedOperations = 0;
-        const totalOperations = records.length;
+          return new Promise<void>((resolve, reject) => {
+            let completedOperations = 0;
+            const totalOperations = records.length;
 
-        if (totalOperations === 0) {
-          resolve();
-          return;
+            if (totalOperations === 0) {
+              resolve();
+              return;
+            }
+
+            const checkCompletion = () => {
+              completedOperations++;
+              if (completedOperations === totalOperations) {
+                resolve();
+              }
+            };
+
+            for (const record of records) {
+              const request = objectStore.put(record);
+              request.onsuccess = checkCompletion;
+              request.onerror = () => reject(classifyDbError(request.error));
+            }
+          });
         }
-
-        const checkCompletion = () => {
-          completedOperations++;
-          if (completedOperations === totalOperations) {
-            resolve();
-          }
-        };
-
-        for (const record of records) {
-          const request = objectStore.put(record);
-          request.onsuccess = checkCompletion;
-          request.onerror = () => reject(classifyDbError(request.error));
-        }
-      });
-    }
+      );
+    },
+    records.length
   );
 }
 
 // バッチ操作：複数のフィールドを一度に追加/更新
 export async function batchUpdateFields(fields: Field[]): Promise<void> {
-  return executeTransaction(
-    FIELDS_STORE,
-    'readwrite',
-    async (_transaction, store) => {
-      const objectStore = store as IDBObjectStore;
+  return trackDbOperation(
+    'batch-update-fields',
+    async () => {
+      return executeTransaction(
+        FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
 
-      return new Promise<void>((resolve, reject) => {
-        let completedOperations = 0;
-        const totalOperations = fields.length;
+          return new Promise<void>((resolve, reject) => {
+            let completedOperations = 0;
+            const totalOperations = fields.length;
 
-        if (totalOperations === 0) {
-          resolve();
-          return;
+            if (totalOperations === 0) {
+              resolve();
+              return;
+            }
+
+            const checkCompletion = () => {
+              completedOperations++;
+              if (completedOperations === totalOperations) {
+                resolve();
+              }
+            };
+
+            for (const field of fields) {
+              const request = objectStore.put(field);
+              request.onsuccess = checkCompletion;
+              request.onerror = () => reject(classifyDbError(request.error));
+            }
+          });
         }
-
-        const checkCompletion = () => {
-          completedOperations++;
-          if (completedOperations === totalOperations) {
-            resolve();
-          }
-        };
-
-        for (const field of fields) {
-          const request = objectStore.put(field);
-          request.onsuccess = checkCompletion;
-          request.onerror = () => reject(classifyDbError(request.error));
-        }
-      });
-    }
+      );
+    },
+    fields.length
   );
 }
