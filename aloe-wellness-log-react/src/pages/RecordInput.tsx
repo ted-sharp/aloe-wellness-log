@@ -49,6 +49,9 @@ export default function RecordInput() {
   // ボタン表示状態を管理（一覧画面と同様）
   const [showButtons, setShowButtons] = useState<Set<string>>(new Set());
 
+  // 項目選択画面でのボタン表示状態を管理
+  const [showSelectButtons, setShowSelectButtons] = useState<Set<string>>(new Set());
+
   // 日時管理用のstate（デフォルトは現在時刻）
   const [recordDate, setRecordDate] = useState(() => {
     const now = new Date();
@@ -244,6 +247,7 @@ export default function RecordInput() {
       // 一時表示リストに追加（defaultDisplayは変更しない）
       setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
       setShowSelectField(false);
+      setShowSelectButtons(new Set()); // ボタン表示状態をクリア
       setToast('項目を一時表示に追加しましたわ');
       setTimeout(() => setToast(null), 2000);
     }
@@ -265,12 +269,14 @@ export default function RecordInput() {
       order: field.order,
       defaultDisplay: field.defaultDisplay
     });
+    setShowSelectButtons(new Set()); // ボタン表示状態をクリア
   };
 
   const handleEditExistingFieldSave = async () => {
     if (!editingExistingFieldId || !editingExistingField.name?.trim()) {
       setEditingExistingFieldId(null);
       setEditingExistingField({});
+      setShowSelectButtons(new Set()); // ボタン表示状態をクリア
       return;
     }
     const original = fields.find(f => f.fieldId === editingExistingFieldId);
@@ -288,6 +294,7 @@ export default function RecordInput() {
     }
     setEditingExistingFieldId(null);
     setEditingExistingField({});
+    setShowSelectButtons(new Set()); // ボタン表示状態をクリア
   };
 
   // 既存項目の削除機能
@@ -300,6 +307,7 @@ export default function RecordInput() {
       try {
         await deleteField(field.fieldId);
         await loadFields();
+        setShowSelectButtons(new Set()); // ボタン表示状態をクリア
         setToast('項目を削除しましたわ');
         setTimeout(() => setToast(null), 2000);
       } catch (error) {
@@ -325,6 +333,23 @@ export default function RecordInput() {
 
   const areButtonsShown = (fieldId: string) => {
     return showButtons.has(fieldId);
+  };
+
+  // 項目選択画面でのボタン表示/非表示の切り替え
+  const toggleSelectButtons = (fieldId: string) => {
+    setShowSelectButtons(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fieldId)) {
+        newSet.delete(fieldId);
+      } else {
+        newSet.add(fieldId);
+      }
+      return newSet;
+    });
+  };
+
+  const areSelectButtonsShown = (fieldId: string) => {
+    return showSelectButtons.has(fieldId);
   };
 
   // 項目を非表示にする関数
@@ -572,9 +597,9 @@ export default function RecordInput() {
                       <div key={field.fieldId} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         {editingExistingFieldId === field.fieldId ? (
                           <div className="space-y-4">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                              <div className="flex-1">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">項目名</label>
+                            {/* 編集モード：左右分割レイアウト */}
+                            <div className="grid grid-cols-2 gap-2 items-stretch">
+                              <div className="text-right pr-2 border-r border-gray-200">
                                 <input
                                   type="text"
                                   value={editingExistingField.name ?? ''}
@@ -583,82 +608,95 @@ export default function RecordInput() {
                                   placeholder="項目名"
                                 />
                               </div>
-                              <div className="w-full sm:w-32">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">単位（任意）</label>
+                              <div className="pl-2">
                                 <input
                                   type="text"
                                   value={editingExistingField.unit ?? ''}
                                   onChange={e => setEditingExistingField(f => ({ ...f, unit: e.target.value }))}
                                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                                  placeholder="例: kg"
+                                  placeholder="単位（例: kg）"
                                 />
                               </div>
-                              <div className="w-full sm:w-20">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">表示順序</label>
+                            </div>
+                            {/* 下段：表示順序とチェックボックス */}
+                            <div className="grid grid-cols-2 gap-2 items-center">
+                              <div className="text-right pr-2 border-r border-gray-200">
                                 <input
                                   type="number"
                                   value={editingExistingField.order || ''}
                                   onChange={e => setEditingExistingField(f => ({ ...f, order: parseInt(e.target.value) || 1 }))}
                                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                                  placeholder="1"
+                                  placeholder="表示順序"
                                   min="1"
                                 />
                               </div>
+                              <div className="pl-2">
+                                <label className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={editingExistingField.defaultDisplay !== false}
+                                    onChange={e => setEditingExistingField(f => ({ ...f, defaultDisplay: e.target.checked }))}
+                                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
+                                </label>
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  checked={editingExistingField.defaultDisplay !== false}
-                                  onChange={e => setEditingExistingField(f => ({ ...f, defaultDisplay: e.target.checked }))}
-                                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
-                              </label>
-                            </div>
-                            <div className="flex gap-2 pt-2">
+                            <div className="flex gap-2 justify-center pt-2 border-t border-gray-200">
                               <button type="button" onClick={handleEditExistingFieldSave} className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2">
                                 <HiCheckCircle className="w-4 h-4" />
                                 保存
                               </button>
-                              <button type="button" onClick={() => setEditingExistingFieldId(null)} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
+                              <button type="button" onClick={() => {
+                                setEditingExistingFieldId(null);
+                                setShowSelectButtons(new Set());
+                              }} className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2">
                                 <HiXMark className="w-4 h-4" />
                                 キャンセル
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <span className="text-lg font-medium text-gray-800">{field.name}</span>
-                              {field.unit && <span className="text-gray-600 ml-2">({field.unit})</span>}
+                          <div>
+                            {/* 通常表示：左右分割レイアウト */}
+                            <div className="grid grid-cols-2 gap-2 items-stretch cursor-pointer" onClick={() => toggleSelectButtons(field.fieldId)}>
+                              <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                                {field.name}
+                              </div>
+                              <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                                {field.unit ? `(${field.unit})` : ''}
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleShowExistingField(field.fieldId)}
-                                className="bg-teal-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center gap-2"
-                              >
-                                <HiPlus className="w-4 h-4" />
-                                追加
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleEditExistingField(field)}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
-                              >
-                                <HiPencil className="w-4 h-4" />
-                                編集
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteExistingField(field)}
-                                className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
-                              >
-                                <HiTrash className="w-4 h-4" />
-                                削除
-                              </button>
-                            </div>
+
+                            {/* 追加・編集・削除ボタン（クリックで表示/非表示） */}
+                            {areSelectButtonsShown(field.fieldId) && (
+                              <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                                <button
+                                  type="button"
+                                  onClick={() => handleShowExistingField(field.fieldId)}
+                                  className="bg-teal-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                                >
+                                  <HiPlus className="w-4 h-4" />
+                                  追加
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditExistingField(field)}
+                                  className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                                >
+                                  <HiPencil className="w-4 h-4" />
+                                  編集
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteExistingField(field)}
+                                  className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
+                                >
+                                  <HiTrash className="w-4 h-4" />
+                                  削除
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
