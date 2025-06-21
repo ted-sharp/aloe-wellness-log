@@ -163,7 +163,7 @@ describe('ErrorBoundary', () => {
     });
 
     it('カスタムフォールバックのリセット機能が動作する', () => {
-      const customFallback = (error: Error, resetError: () => void) => (
+      const customFallback = (_error: Error, resetError: () => void) => (
         <div>
           <h1>カスタムエラー画面</h1>
           <button onClick={resetError}>リセット</button>
