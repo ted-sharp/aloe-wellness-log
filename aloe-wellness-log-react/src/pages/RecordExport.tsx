@@ -8,7 +8,8 @@ import {
   HiDocument,
   HiExclamationTriangle,
   HiTrash,
-  HiArrowDownTray
+  HiArrowDownTray,
+  HiSparkles
 } from 'react-icons/hi2';
 
 function formatDateForFilename(date: Date) {
@@ -35,6 +36,7 @@ function toCSV(records: RecordItem[], fields: { fieldId: string; name: string }[
 export default function RecordExport() {
   const { records, fields, loadRecords, loadFields, deleteAllData, initializeFields, addRecord } = useRecordsStore();
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [testDataStatus, setTestDataStatus] = useState<string | null>(null);
 
   useEffect(() => {
     loadFields();
@@ -268,6 +270,123 @@ export default function RecordExport() {
     }
   };
 
+  // テストデータ生成関数
+  const generateTestData = async () => {
+    setTestDataStatus('テストデータを生成中...');
+
+    try {
+      await loadFields(); // 最新の項目を取得
+
+      if (fields.length === 0) {
+        throw new Error('項目が存在しません。先に項目を初期化してください。');
+      }
+
+      const dataCount = 100; // 生成するデータ数
+      const daysBack = 30; // 過去30日分
+      let createdCount = 0;
+
+      for (let i = 0; i < dataCount; i++) {
+        // ランダムな日付を生成（過去30日以内）
+        const randomDaysAgo = Math.floor(Math.random() * daysBack);
+        const date = new Date();
+        date.setDate(date.getDate() - randomDaysAgo);
+        const dateStr = date.toISOString().split('T')[0];
+
+        // ランダムな時刻を生成
+        const hours = Math.floor(Math.random() * 24);
+        const minutes = Math.floor(Math.random() * 60);
+        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        const datetimeStr = `${dateStr} ${timeStr}`;
+
+        // ランダムな項目を選択
+        const randomField = fields[Math.floor(Math.random() * fields.length)];
+
+        // 項目の型に応じてランダムな値を生成
+        let value: string | number | boolean;
+
+        if (randomField.type === 'boolean') {
+          value = Math.random() > 0.5;
+        } else if (randomField.type === 'number') {
+          // 項目に応じて適切な数値範囲を設定
+          if (randomField.fieldId === 'weight') {
+            value = Math.round((50 + Math.random() * 50) * 10) / 10; // 50-100kg
+          } else if (randomField.fieldId === 'systolic_bp') {
+            value = Math.round(90 + Math.random() * 60); // 90-150mmHg
+          } else if (randomField.fieldId === 'diastolic_bp') {
+            value = Math.round(60 + Math.random() * 40); // 60-100mmHg
+          } else if (randomField.fieldId === 'heart_rate') {
+            value = Math.round(60 + Math.random() * 60); // 60-120bpm
+          } else if (randomField.fieldId === 'body_temperature') {
+            value = Math.round((35.5 + Math.random() * 2) * 10) / 10; // 35.5-37.5℃
+          } else {
+            value = Math.round(Math.random() * 100 * 10) / 10; // デフォルト: 0-100
+          }
+        } else {
+          // string型の場合
+          if (randomField.fieldId === 'notes') {
+            const sampleNotes = [
+              '今日は調子が良い',
+              '少し疲れている',
+              '運動後でスッキリ',
+              '食事が美味しかった',
+              '早めに寝たい',
+              '天気が良くて気分爽快',
+              '仕事が忙しかった',
+              '久しぶりの休日',
+              ''
+            ];
+            value = sampleNotes[Math.floor(Math.random() * sampleNotes.length)];
+          } else {
+            value = `テスト値${Math.floor(Math.random() * 1000)}`;
+          }
+        }
+
+        // 一意なIDを生成
+        const uniqueId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        const testRecord = {
+          id: uniqueId,
+          date: dateStr,
+          time: timeStr,
+          datetime: datetimeStr,
+          fieldId: randomField.fieldId,
+          value: value
+        };
+
+        try {
+          await addRecord(testRecord);
+          createdCount++;
+        } catch (error) {
+          console.warn('テストレコードの追加をスキップ:', testRecord.id, error);
+        }
+
+        // 進捗を表示（10件ごと）
+        if ((i + 1) % 10 === 0) {
+          setTestDataStatus(`テストデータを生成中... ${i + 1}/${dataCount}`);
+        }
+      }
+
+      await loadRecords();
+      setTestDataStatus(`✅ ${createdCount}件のテストデータを生成しました`);
+      setTimeout(() => setTestDataStatus(null), 3000);
+
+    } catch (error) {
+      console.error('テストデータ生成エラー:', error);
+      setTestDataStatus(`❌ テストデータの生成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      setTimeout(() => setTestDataStatus(null), 5000);
+    }
+  };
+
+  const handleGenerateTestData = () => {
+    const isConfirmed = window.confirm(
+      '🧪 テストデータを生成しますか？\n\n過去30日分のランダムなデータを約100件作成します。\n既存のデータに追加されます。'
+    );
+
+    if (isConfirmed) {
+      generateTestData();
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-12">管理</h1>
@@ -289,6 +408,36 @@ export default function RecordExport() {
             <HiClipboardDocumentList className="w-5 h-5 text-blue-600" />
             <strong className="text-gray-800">対象項目:</strong> すべての健康記録項目
           </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">テスト用データ</h2>
+
+        {testDataStatus && (
+          <div className={`mb-6 p-4 rounded-lg border ${
+            testDataStatus.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' :
+            testDataStatus.includes('❌') ? 'bg-red-50 border-red-200 text-red-700' :
+            'bg-blue-50 border-blue-200 text-blue-700'
+          }`}>
+            {testDataStatus}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 mb-6">
+          <button
+            onClick={handleGenerateTestData}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
+          >
+            <HiSparkles className="w-5 h-5" />
+            テストデータを生成（約100件）
+          </button>
+        </div>
+
+        <div className="text-sm text-gray-600 space-y-1 text-left">
+          <p>• 過去30日分のランダムなデータを約100件作成します。</p>
+          <p>• 各項目について適切な値の範囲でランダム生成されます。</p>
+          <p>• 既存のデータに追加されます。</p>
         </div>
       </div>
 

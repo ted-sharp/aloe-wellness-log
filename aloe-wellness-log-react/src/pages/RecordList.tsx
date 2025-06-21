@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 import {
@@ -7,7 +7,11 @@ import {
   HiXMark,
   HiXCircle,
   HiPencil,
-  HiTrash
+  HiTrash,
+  HiChevronLeft,
+  HiChevronRight,
+  HiChevronDoubleLeft,
+  HiChevronDoubleRight
 } from 'react-icons/hi2';
 
 export default function RecordList() {
@@ -17,12 +21,16 @@ export default function RecordList() {
   const [expandedTexts, setExpandedTexts] = useState<Set<string>>(new Set());
   const [showButtons, setShowButtons] = useState<Set<string>>(new Set());
 
+  // ページング関連の状態
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   useEffect(() => {
     loadFields();
     loadRecords();
   }, [loadFields, loadRecords]);
 
-    // fieldIdから項目名・型を取得
+  // fieldIdから項目名・型を取得
   const getField = (fieldId: string) => {
     if (fieldId === 'notes') {
       return { fieldId: 'notes', name: '備考', type: 'string' as const, order: 0 };
@@ -39,8 +47,6 @@ export default function RecordList() {
     return field;
   };
 
-
-
   // 項目の順序を制御する関数
   const sortRecordsByFieldOrder = (records: RecordItem[]) => {
     return [...records].sort((a, b) => {
@@ -56,19 +62,51 @@ export default function RecordList() {
   };
 
   // 日付・時刻で降順ソート（新しい順）
-  const sortedRecords = [...records].sort((a, b) => {
-    const aKey = `${a.date} ${a.time}`;
-    const bKey = `${b.date} ${b.time}`;
-    return bKey.localeCompare(aKey);
-  });
+  const sortedRecords = useMemo(() => {
+    return [...records].sort((a, b) => {
+      const aKey = `${a.date} ${a.time}`;
+      const bKey = `${b.date} ${b.time}`;
+      return bKey.localeCompare(aKey);
+    });
+  }, [records]);
 
   // 日付・時刻ごとにグループ化
-  const grouped = sortedRecords.reduce((acc, rec) => {
-    const key = `${rec.date} ${rec.time}`;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(rec);
-    return acc;
-  }, {} as Record<string, RecordItem[]>);
+  const grouped = useMemo(() => {
+    return sortedRecords.reduce((acc, rec) => {
+      const key = `${rec.date} ${rec.time}`;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(rec);
+      return acc;
+    }, {} as Record<string, RecordItem[]>);
+  }, [sortedRecords]);
+
+  // ページング処理
+  const paginatedGroups = useMemo(() => {
+    const groupEntries = Object.entries(grouped);
+    const totalGroups = groupEntries.length;
+    const totalPages = Math.max(1, Math.ceil(totalGroups / pageSize));
+
+    // 現在のページが範囲外の場合は1ページに戻す
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedEntries = groupEntries.slice(startIndex, endIndex);
+
+    return {
+      groups: Object.fromEntries(paginatedEntries),
+      totalGroups,
+      totalPages,
+      currentPage: Math.min(currentPage, totalPages)
+    };
+  }, [grouped, currentPage, pageSize]);
+
+  // ページ変更
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, paginatedGroups.totalPages)));
+  };
 
   const handleEdit = (rec: RecordItem) => {
     setEditId(rec.id);
@@ -139,16 +177,87 @@ export default function RecordList() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">一覧</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">一覧</h1>
 
-      {Object.entries(grouped).length === 0 && (
+      {/* 表示件数選択 */}
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-medium text-gray-800">
+            {paginatedGroups.totalGroups}件の記録グループ
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600">表示件数:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            >
+              <option value={10}>10件</option>
+              <option value={20}>20件</option>
+              <option value={50}>50件</option>
+              <option value={100}>100件</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ページネーション（上部） */}
+      {paginatedGroups.totalPages > 1 && (
+        <div className="bg-white rounded-2xl shadow-md p-4 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(1)}
+                disabled={paginatedGroups.currentPage === 1}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronDoubleLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => goToPage(paginatedGroups.currentPage - 1)}
+                disabled={paginatedGroups.currentPage === 1}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+
+            <span className="text-gray-600">
+              {paginatedGroups.currentPage} / {paginatedGroups.totalPages} ページ
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(paginatedGroups.currentPage + 1)}
+                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => goToPage(paginatedGroups.totalPages)}
+                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronDoubleRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 記録一覧 */}
+      {Object.entries(paginatedGroups.groups).length === 0 && (
         <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
           <p className="text-lg">記録がありませんわ。</p>
         </div>
       )}
 
       <div className="space-y-8">
-        {Object.entries(grouped).map(([datetime, recs]) => (
+        {Object.entries(paginatedGroups.groups).map(([datetime, recs]) => (
           <div key={datetime} className="bg-white rounded-2xl shadow-md p-6">
             <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
               <HiCalendarDays className="w-6 h-6 text-blue-600" />
@@ -298,6 +407,51 @@ export default function RecordList() {
           </div>
         ))}
       </div>
+
+      {/* ページネーション（下部） */}
+      {paginatedGroups.totalPages > 1 && (
+        <div className="bg-white rounded-2xl shadow-md p-4 mt-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(1)}
+                disabled={paginatedGroups.currentPage === 1}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronDoubleLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => goToPage(paginatedGroups.currentPage - 1)}
+                disabled={paginatedGroups.currentPage === 1}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+
+            <span className="text-gray-600">
+              {paginatedGroups.currentPage} / {paginatedGroups.totalPages} ページ
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => goToPage(paginatedGroups.currentPage + 1)}
+                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => goToPage(paginatedGroups.totalPages)}
+                disabled={paginatedGroups.currentPage === paginatedGroups.totalPages}
+                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                <HiChevronDoubleRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
