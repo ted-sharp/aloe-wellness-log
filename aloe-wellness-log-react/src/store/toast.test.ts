@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { useToastStore, ToastType } from './toast';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastType, useToastStore } from './toast';
 
 describe('toast store', () => {
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe('toast store', () => {
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
+    vi.clearAllTimers();
     vi.useRealTimers();
   });
 
@@ -36,7 +36,7 @@ describe('toast store', () => {
       expect(toasts[0].id).toBeDefined();
     });
 
-        it('2秒後に自動的に削除される', () => {
+    it('2秒後に自動的に削除される', () => {
       const { showSuccess } = useToastStore.getState();
 
       showSuccess('自動削除テスト');
@@ -64,7 +64,7 @@ describe('toast store', () => {
       });
     });
 
-        it('エラーは5秒後に自動削除される', () => {
+    it('エラーは5秒後に自動削除される', () => {
       const { showError } = useToastStore.getState();
 
       showError('長時間表示エラー');
@@ -142,9 +142,10 @@ describe('toast store', () => {
     });
   });
 
-    describe('clearAll', () => {
+  describe('clearAll', () => {
     it('全てのtoastを削除する', () => {
-      const { showSuccess, showError, showWarning, clearAll } = useToastStore.getState();
+      const { showSuccess, showError, showWarning, clearAll } =
+        useToastStore.getState();
 
       showSuccess('成功1');
       showError('エラー1');
@@ -160,7 +161,8 @@ describe('toast store', () => {
 
   describe('複数toast管理', () => {
     it('複数のtoastを同時に管理できる', () => {
-      const { showSuccess, showError, showWarning, showInfo } = useToastStore.getState();
+      const { showSuccess, showError, showWarning, showInfo } =
+        useToastStore.getState();
 
       showSuccess('成功メッセージ');
       showError('エラーメッセージ');
@@ -177,22 +179,23 @@ describe('toast store', () => {
       expect(toasts.some(t => t.type === ToastType.INFO)).toBe(true);
     });
 
-        it('古いtoastから順番に自動削除される', () => {
+    it('古いtoastから順番に自動削除される', () => {
       const { showSuccess } = useToastStore.getState();
 
       showSuccess('1番目');
+      expect(useToastStore.getState().toasts).toHaveLength(1);
 
-      // 1秒後に2番目追加
-      vi.advanceTimersByTime(1000);
+      // 500ms後に2番目追加
+      vi.advanceTimersByTime(500);
       showSuccess('2番目');
+      expect(useToastStore.getState().toasts).toHaveLength(2);
 
-      // さらに1秒後に3番目追加（合計2秒経過）
-      vi.advanceTimersByTime(1000);
+      // さらに500ms後に3番目追加（合計1秒経過）
+      vi.advanceTimersByTime(500);
       showSuccess('3番目');
-
       expect(useToastStore.getState().toasts).toHaveLength(3);
 
-      // さらに1秒経過（1番目が2秒に到達）
+      // さらに1秒経過（1番目が2秒に到達して削除される）
       vi.advanceTimersByTime(1000);
 
       const remainingToasts = useToastStore.getState().toasts;
