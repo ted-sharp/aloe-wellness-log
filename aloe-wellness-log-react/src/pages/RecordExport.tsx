@@ -1,23 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { useRecordsStore } from '../store/records';
-import type { RecordItem } from '../types/record';
 import {
-  HiChartBarSquare,
+  HiArrowDownTray,
   HiCalendarDays,
+  HiChartBarSquare,
   HiClipboardDocumentList,
   HiDocument,
   HiExclamationTriangle,
+  HiSparkles,
   HiTrash,
-  HiArrowDownTray,
-  HiSparkles
 } from 'react-icons/hi2';
+import Button from '../components/Button';
+import ProgressBar from '../components/ProgressBar';
+import {
+  ErrorMessage,
+  InfoMessage,
+  SuccessMessage,
+} from '../components/StatusMessage';
+import { useRecordsStore } from '../store/records';
+import type { RecordItem } from '../types/record';
 
 function formatDateForFilename(date: Date) {
   return date.toISOString().replace(/[-:T]/g, '').slice(0, 15);
 }
 
-function toCSV(records: RecordItem[], fields: { fieldId: string; name: string }[]) {
-  const header = ['id', 'date', 'time', 'datetime', 'fieldId', 'fieldName', 'value'];
+function toCSV(
+  records: RecordItem[],
+  fields: { fieldId: string; name: string }[]
+) {
+  const header = [
+    'id',
+    'date',
+    'time',
+    'datetime',
+    'fieldId',
+    'fieldName',
+    'value',
+  ];
   const rows = records.map(rec => {
     const field = fields.find(f => f.fieldId === rec.fieldId);
     return [
@@ -27,16 +45,38 @@ function toCSV(records: RecordItem[], fields: { fieldId: string; name: string }[
       rec.datetime,
       rec.fieldId,
       field ? field.name : '',
-      typeof rec.value === 'boolean' ? (rec.value ? 'あり' : 'なし') : rec.value
+      typeof rec.value === 'boolean'
+        ? rec.value
+          ? 'あり'
+          : 'なし'
+        : rec.value,
     ];
   });
-  return [header, ...rows].map(row => row.map(String).map(s => `"${s.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  return [header, ...rows]
+    .map(row =>
+      row
+        .map(String)
+        .map(s => `"${s.replace(/"/g, '""')}"`)
+        .join(',')
+    )
+    .join('\r\n');
 }
 
 export default function RecordExport() {
-  const { records, fields, loadRecords, loadFields, deleteAllData, initializeFields, addRecord } = useRecordsStore();
+  const {
+    records,
+    fields,
+    loadRecords,
+    loadFields,
+    deleteAllData,
+    initializeFields,
+    addRecord,
+  } = useRecordsStore();
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [testDataStatus, setTestDataStatus] = useState<string | null>(null);
+  const [testDataProgress, setTestDataProgress] = useState<number>(0);
+  const [isGeneratingTestData, setIsGeneratingTestData] =
+    useState<boolean>(false);
 
   useEffect(() => {
     loadFields();
@@ -78,7 +118,8 @@ export default function RecordExport() {
     const normalizedText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const lines = normalizedText.trim().split('\n');
 
-    if (lines.length < 2) throw new Error('CSVファイルが空または形式が正しくありません');
+    if (lines.length < 2)
+      throw new Error('CSVファイルが空または形式が正しくありません');
 
     // CSVの行をパースする関数（カンマ区切りだがダブルクォート内のカンマは無視）
     const parseCSVLine = (line: string): string[] => {
@@ -117,12 +158,24 @@ export default function RecordExport() {
 
     const header = parseCSVLine(lines[0]);
 
-    const expectedHeader = ['id', 'date', 'time', 'datetime', 'fieldId', 'fieldName', 'value'];
+    const expectedHeader = [
+      'id',
+      'date',
+      'time',
+      'datetime',
+      'fieldId',
+      'fieldName',
+      'value',
+    ];
 
     if (!expectedHeader.every(col => header.includes(col))) {
       console.error('Expected headers:', expectedHeader);
       console.error('Actual headers:', header);
-      throw new Error(`CSVファイルの形式が正しくありません。必要な列: ${expectedHeader.join(', ')}`);
+      throw new Error(
+        `CSVファイルの形式が正しくありません。必要な列: ${expectedHeader.join(
+          ', '
+        )}`
+      );
     }
 
     const records: RecordItem[] = [];
@@ -135,7 +188,9 @@ export default function RecordExport() {
 
         // 列数チェック
         if (values.length !== header.length) {
-          console.warn(`Row ${i}: 列数が一致しません (expected: ${header.length}, actual: ${values.length})`);
+          console.warn(
+            `Row ${i}: 列数が一致しません (expected: ${header.length}, actual: ${values.length})`
+          );
           continue;
         }
 
@@ -145,7 +200,7 @@ export default function RecordExport() {
           time: values[header.indexOf('time')],
           datetime: values[header.indexOf('datetime')],
           fieldId: values[header.indexOf('fieldId')],
-          value: values[header.indexOf('value')]
+          value: values[header.indexOf('value')],
         };
 
         // 必須フィールドのチェック
@@ -166,7 +221,11 @@ export default function RecordExport() {
         records.push(record);
       } catch (error) {
         console.error(`Row ${i} parsing error:`, error);
-        throw new Error(`${i}行目の処理でエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+        throw new Error(
+          `${i}行目の処理でエラーが発生しました: ${
+            error instanceof Error ? error.message : '不明なエラー'
+          }`
+        );
       }
     }
 
@@ -211,10 +270,12 @@ export default function RecordExport() {
       await loadRecords();
       setImportStatus(`✅ ${importCount}件のレコードをインポートしました`);
       setTimeout(() => setImportStatus(null), 3000);
-
     } catch (error) {
-      console.error('インポートエラー:', error);
-      setImportStatus(`❌ インポートに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      const errorInstance =
+        error instanceof Error ? error : new Error('不明なエラー');
+      console.error('インポートエラー:', errorInstance);
+
+      setImportStatus(`❌ インポートに失敗しました: ${errorInstance.message}`);
       setTimeout(() => setImportStatus(null), 5000);
     }
   };
@@ -231,7 +292,9 @@ export default function RecordExport() {
       } else if (fileName.endsWith('.json')) {
         format = 'json';
       } else {
-        setImportStatus('❌ サポートされていないファイル形式です（.csv または .json のみ）');
+        setImportStatus(
+          '❌ サポートされていないファイル形式です（.csv または .json のみ）'
+        );
         setTimeout(() => setImportStatus(null), 3000);
         event.target.value = '';
         return;
@@ -270,6 +333,8 @@ export default function RecordExport() {
   // テストデータ生成関数
   const generateTestData = async () => {
     setTestDataStatus('テストデータを生成中...');
+    setIsGeneratingTestData(true);
+    setTestDataProgress(0);
 
     try {
       await loadFields(); // 最新の項目を取得
@@ -292,7 +357,9 @@ export default function RecordExport() {
         // ランダムな時刻を生成
         const hours = Math.floor(Math.random() * 24);
         const minutes = Math.floor(Math.random() * 60);
-        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}`;
         const datetimeStr = `${dateStr} ${timeStr}`;
 
         // ランダムな項目を選択
@@ -330,7 +397,7 @@ export default function RecordExport() {
               '天気が良くて気分爽快',
               '仕事が忙しかった',
               '久しぶりの休日',
-              ''
+              '',
             ];
             value = sampleNotes[Math.floor(Math.random() * sampleNotes.length)];
           } else {
@@ -339,7 +406,9 @@ export default function RecordExport() {
         }
 
         // 一意なIDを生成
-        const uniqueId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const uniqueId = `test_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
 
         const testRecord = {
           id: uniqueId,
@@ -347,7 +416,7 @@ export default function RecordExport() {
           time: timeStr,
           datetime: datetimeStr,
           fieldId: randomField.fieldId,
-          value: value
+          value: value,
         };
 
         try {
@@ -357,6 +426,10 @@ export default function RecordExport() {
           console.warn('テストレコードの追加をスキップ:', testRecord.id, error);
         }
 
+        // 進捗を更新
+        const progress = ((i + 1) / dataCount) * 100;
+        setTestDataProgress(progress);
+
         // 進捗を表示（10件ごと）
         if ((i + 1) % 10 === 0) {
           setTestDataStatus(`テストデータを生成中... ${i + 1}/${dataCount}`);
@@ -365,12 +438,23 @@ export default function RecordExport() {
 
       await loadRecords();
       setTestDataStatus(`✅ ${createdCount}件のテストデータを生成しました`);
-      setTimeout(() => setTestDataStatus(null), 3000);
-
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 3000);
     } catch (error) {
       console.error('テストデータ生成エラー:', error);
-      setTestDataStatus(`❌ テストデータの生成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
-      setTimeout(() => setTestDataStatus(null), 5000);
+      setTestDataStatus(
+        `❌ テストデータの生成に失敗しました: ${
+          error instanceof Error ? error.message : '不明なエラー'
+        }`
+      );
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 5000);
+    } finally {
+      setIsGeneratingTestData(false);
     }
   };
 
@@ -389,46 +473,76 @@ export default function RecordExport() {
       <h1 className="text-3xl font-bold text-gray-800 mb-12">管理</h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">データ詳細</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          データ詳細
+        </h2>
         <div className="text-base text-gray-600 space-y-3">
           <p className="flex items-center gap-2">
             <HiChartBarSquare className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">対象レコード数:</strong> {sortedRecords.length}件
+            <strong className="text-gray-800">対象レコード数:</strong>{' '}
+            {sortedRecords.length}件
           </p>
           <p className="flex items-center gap-2">
             <HiCalendarDays className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">期間:</strong> {sortedRecords.length > 0
-              ? `${sortedRecords[sortedRecords.length - 1]?.date} 〜 ${sortedRecords[0]?.date}`
+            <strong className="text-gray-800">期間:</strong>{' '}
+            {sortedRecords.length > 0
+              ? `${sortedRecords[sortedRecords.length - 1]?.date} 〜 ${
+                  sortedRecords[0]?.date
+                }`
               : 'データなし'}
           </p>
           <p className="flex items-center gap-2">
             <HiClipboardDocumentList className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">対象項目:</strong> すべての健康記録項目
+            <strong className="text-gray-800">対象項目:</strong>{' '}
+            すべての健康記録項目
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">テスト用データ</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          テスト用データ
+        </h2>
 
         {testDataStatus && (
-          <div className={`mb-6 p-4 rounded-lg border ${
-            testDataStatus.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' :
-            testDataStatus.includes('❌') ? 'bg-red-50 border-red-200 text-red-700' :
-            'bg-blue-50 border-blue-200 text-blue-700'
-          }`}>
-            {testDataStatus}
+          <div className="mb-6">
+            {testDataStatus.includes('✅') && (
+              <SuccessMessage message={testDataStatus.replace('✅ ', '')} />
+            )}
+            {testDataStatus.includes('❌') && (
+              <ErrorMessage message={testDataStatus.replace('❌ ', '')} />
+            )}
+            {!testDataStatus.includes('✅') &&
+              !testDataStatus.includes('❌') && (
+                <InfoMessage message={testDataStatus} />
+              )}
+          </div>
+        )}
+
+        {isGeneratingTestData && (
+          <div className="mb-6">
+            <ProgressBar
+              value={testDataProgress}
+              label="テストデータ生成進捗"
+              showPercentage={true}
+              variant="primary"
+              size="md"
+            />
           </div>
         )}
 
         <div className="flex flex-col gap-4 mb-6">
-          <button
+          <Button
+            variant="purple"
+            size="lg"
+            icon={HiSparkles}
             onClick={handleGenerateTestData}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
+            fullWidth={false}
+            disabled={isGeneratingTestData}
+            loading={isGeneratingTestData}
           >
-            <HiSparkles className="w-5 h-5" />
             テストデータを生成（約100件）
-          </button>
+          </Button>
         </div>
 
         <div className="text-sm text-gray-600 space-y-1 text-left">
@@ -439,22 +553,28 @@ export default function RecordExport() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">データエクスポート</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          データエクスポート
+        </h2>
         <div className="flex flex-col gap-4 mb-6">
-          <button
+          <Button
+            variant="purple"
+            size="lg"
+            icon={HiDocument}
             onClick={handleExportCSV}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
+            fullWidth={false}
           >
-            <HiDocument className="w-5 h-5" />
             CSV形式でダウンロード
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="purple"
+            size="lg"
+            icon={HiDocument}
             onClick={handleExportJSON}
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
+            fullWidth={false}
           >
-            <HiDocument className="w-5 h-5" />
             JSON形式でダウンロード
-          </button>
+          </Button>
         </div>
 
         <div className="text-sm text-gray-600 space-y-1 text-left">
@@ -464,15 +584,21 @@ export default function RecordExport() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">データインポート</h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          データインポート
+        </h2>
 
         {importStatus && (
-          <div className={`mb-6 p-4 rounded-lg border ${
-            importStatus.includes('✅') ? 'bg-green-50 border-green-200 text-green-700' :
-            importStatus.includes('❌') ? 'bg-red-50 border-red-200 text-red-700' :
-            'bg-blue-50 border-blue-200 text-blue-700'
-          }`}>
-            {importStatus}
+          <div className="mb-6">
+            {importStatus.includes('✅') && (
+              <SuccessMessage message={importStatus.replace('✅ ', '')} />
+            )}
+            {importStatus.includes('❌') && (
+              <ErrorMessage message={importStatus.replace('❌ ', '')} />
+            )}
+            {!importStatus.includes('✅') && !importStatus.includes('❌') && (
+              <InfoMessage message={importStatus} />
+            )}
           </div>
         )}
 
@@ -510,13 +636,15 @@ export default function RecordExport() {
             <strong>全データ削除:</strong> 記録データが完全に削除されます。
           </p>
         </div>
-        <button
+        <Button
+          variant="danger"
+          size="lg"
+          icon={HiTrash}
           onClick={handleDeleteAllData}
-          className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-red-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto"
+          fullWidth={false}
         >
-          <HiTrash className="w-5 h-5" />
           全データを削除
-        </button>
+        </Button>
       </div>
     </div>
   );
