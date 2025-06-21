@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRecordsStore } from '../store/records';
 import type { Field } from '../types/record';
+import * as db from '../db/indexedDb';
 import {
   HiArrowLeft,
   HiCalendarDays,
@@ -12,14 +13,109 @@ import {
   HiClipboardDocumentList,
   HiPlus,
   HiTrash,
-  HiEyeSlash
+  HiEyeSlash,
+  HiBars3,
+  HiArrowsUpDown
 } from 'react-icons/hi2';
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import {
+  CSS,
+} from '@dnd-kit/utilities';
 
-const FIELD_TYPES = [
-  { value: 'number', label: '数値' },
-  { value: 'string', label: '文字列' },
-  { value: 'boolean', label: '成否' },
-] as const;
+  const FIELD_TYPES = [
+    { value: 'number', label: '数値' },
+    { value: 'string', label: '文字列' },
+    { value: 'boolean', label: '成否' },
+  ] as const;
+
+// ソート可能なアイテムコンポーネント
+function SortableItem({ field, onToggleDisplay }: { field: Field; onToggleDisplay: (fieldId: string) => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.fieldId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  // 表示状態をトグルする関数
+  const handleToggleDisplay = (e: React.MouseEvent) => {
+    e.stopPropagation(); // ドラッグイベントとの競合を防ぐ
+    e.preventDefault(); // デフォルトの動作も防ぐ
+    onToggleDisplay(field.fieldId);
+  };
+
+    return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all duration-200 hover:border-purple-300"
+      {...attributes}
+    >
+      <div className="grid gap-3 items-center" style={{ gridTemplateColumns: 'auto 1fr 1fr auto' }}>
+        {/* 左端：表示/非表示状態（クリック可能） */}
+        <div className="text-center border-r border-gray-200 pr-3">
+          {field.defaultDisplay ? (
+            <div
+              onClick={handleToggleDisplay}
+              className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 transition-colors duration-150"
+              title="クリックで非表示にする"
+            >
+              表示中
+            </div>
+          ) : (
+            <div
+              onClick={handleToggleDisplay}
+              className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 transition-colors duration-150"
+              title="クリックで表示にする"
+            >
+              非表示
+            </div>
+          )}
+        </div>
+
+                {/* 項目名 */}
+        <div className="text-lg font-medium text-gray-700 border-r border-gray-200 pr-3 text-right">
+          {field.name}
+        </div>
+
+        {/* 単位 */}
+        <div className="text-gray-600 border-r border-gray-200 pr-3 text-left">
+          {field.unit ? `(${field.unit})` : '―'}
+        </div>
+
+        {/* 右端：上下アイコン（ドラッグハンドル） */}
+        <div className="flex justify-center cursor-move" {...listeners}>
+          <HiArrowsUpDown className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors duration-150" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type NewField = {
   name: string;
@@ -51,6 +147,11 @@ export default function RecordInput() {
 
   // 項目選択画面でのボタン表示状態を管理
   const [showSelectButtons, setShowSelectButtons] = useState<Set<string>>(new Set());
+
+  // 並び替えモーダルの状態管理
+  const [showSortModal, setShowSortModal] = useState(false);
+  const [sortableFields, setSortableFields] = useState<Field[]>([]);
+  const sortableFieldsRef = useRef<Field[]>([]);
 
   // 日時管理用のstate（デフォルトは現在時刻）
   const [recordDate, setRecordDate] = useState(() => {
@@ -352,6 +453,102 @@ export default function RecordInput() {
     return showSelectButtons.has(fieldId);
   };
 
+  // ドラッグ&ドロップセンサーの設定
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+    // 並び替えモーダルを開く
+  const handleOpenSortModal = () => {
+    console.log('🔧 並び替えモーダルを開く');
+    console.log('📋 現在のフィールド:', fields.map(f => ({ name: f.name, order: f.order })));
+
+    // 全フィールドを表示順序でソートして設定
+    const sortedFields = [...fields].sort((a, b) => (a.order || 999) - (b.order || 999));
+    console.log('📊 ソート後のフィールド:', sortedFields.map(f => ({ name: f.name, order: f.order })));
+
+    setSortableFields(sortedFields);
+    sortableFieldsRef.current = sortedFields; // refも同期
+    setShowSortModal(true);
+  };
+
+      // ドラッグ終了時の処理
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      console.log('🎯 ドラッグ終了:', { activeId: active.id, overId: over.id });
+
+      const oldIndex = sortableFields.findIndex((item) => item.fieldId === active.id);
+      const newIndex = sortableFields.findIndex((item) => item.fieldId === over.id);
+
+      console.log('📍 移動詳細:', {
+        activeItem: sortableFields[oldIndex]?.name,
+        oldIndex,
+        newIndex,
+        oldOrder: sortableFields[oldIndex]?.order,
+      });
+
+            const newItems = arrayMove(sortableFields, oldIndex, newIndex);
+      console.log('🔄 新しい順序:', newItems.map((item, index) => ({
+        name: item.name,
+        originalOrder: item.order,
+        newPosition: index + 1
+      })));
+
+      setSortableFields(newItems);
+      sortableFieldsRef.current = newItems; // refも同期更新
+    }
+  };
+
+          // 並び替えを保存
+  const handleSaveSortOrder = async () => {
+    try {
+      console.log('🔄 並び替え保存開始');
+      const currentFields = sortableFieldsRef.current; // 最新の状態を使用
+      console.log('📋 保存対象フィールド:', currentFields.map((f, i) => ({ name: f.name, oldOrder: f.order, newOrder: i + 1 })));
+
+      // すべての更新を並列実行してから完了を待つ
+      const updatePromises = currentFields.map((field, index) => {
+        const updatedField = {
+          ...field,
+          order: index + 1,
+        };
+        console.log(`💾 更新: ${field.name} (${field.order} → ${index + 1})`);
+        return updateField(updatedField);
+      });
+
+      // すべての更新完了を待つ
+      await Promise.all(updatePromises);
+      console.log('✅ 全更新完了');
+
+                  // 少し待ってからフィールド一覧を再読み込み
+      await new Promise(resolve => setTimeout(resolve, 50));
+      await loadFields();
+      console.log('📝 フィールド再読み込み完了');
+
+      // IndexedDBから直接取得して確認
+      const freshFields = await db.getAllFields();
+      console.log('🔍 IndexedDBから直接取得したフィールド状態:', freshFields.map(f => ({ name: f.name, order: f.order })));
+
+      // Reactステートの状態も確認（参考用）
+      setTimeout(() => {
+        console.log('🔍 Reactステートのフィールド状態:', fields.map(f => ({ name: f.name, order: f.order })));
+      }, 100);
+
+      setShowSortModal(false);
+      setToast('並び順を保存しましたわ');
+      setTimeout(() => setToast(null), 2000);
+    } catch (error) {
+      console.error('❌ 並び順保存エラー:', error);
+      setToast('並び順の保存に失敗しました');
+      setTimeout(() => setToast(null), 2000);
+    }
+  };
+
   // 項目を非表示にする関数
   const handleHideField = async (field: Field) => {
     // defaultDisplay: false に設定
@@ -375,6 +572,70 @@ export default function RecordInput() {
 
     setToast('項目を非表示にしましたわ');
     setTimeout(() => setToast(null), 2000);
+  };
+
+    // 並び替えモーダル内で表示状態をトグルする関数
+  const handleToggleDisplayInModal = async (fieldId: string) => {
+    console.log('🔄 モーダル内で表示状態をトグル:', fieldId);
+
+    // 現在のフィールドを取得
+    const currentField = sortableFields.find(f => f.fieldId === fieldId);
+    if (!currentField) return;
+
+    // defaultDisplayを反転
+    const updatedField = {
+      ...currentField,
+      defaultDisplay: !currentField.defaultDisplay,
+    };
+
+    console.log(`💾 ${currentField.name}: ${currentField.defaultDisplay} → ${updatedField.defaultDisplay}`);
+
+    try {
+      // IndexedDBに保存
+      await updateField(updatedField);
+
+      // sortableFields状態を更新
+      const updatedSortableFields = sortableFields.map(f =>
+        f.fieldId === fieldId ? updatedField : f
+      );
+      setSortableFields(updatedSortableFields);
+      sortableFieldsRef.current = updatedSortableFields;
+
+      // メイン画面のfields状態も直接更新（loadFields()を呼ばずにちらつきを防ぐ）
+      const updatedMainFields = fields.map(f =>
+        f.fieldId === fieldId ? updatedField : f
+      );
+      // Zustandの状態を直接更新
+      useRecordsStore.setState({ fields: updatedMainFields });
+
+      // 一時表示フィールドの管理
+      if (updatedField.defaultDisplay) {
+        // 表示に変更された場合、一時表示リストから削除
+        setTemporaryDisplayFields(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldId);
+          return newSet;
+        });
+      } else {
+        // 非表示に変更された場合で、現在表示されている場合は一時表示リストに追加
+        const isCurrentlyShown = fields.some(f =>
+          f.fieldId === fieldId && (f.defaultDisplay || temporaryDisplayFields.has(fieldId))
+        );
+        if (isCurrentlyShown) {
+          setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
+        }
+      }
+
+      // トーストメッセージは控えめに（必要に応じてコメントアウト可能）
+      // const statusText = updatedField.defaultDisplay ? '表示' : '非表示';
+      // setToast(`${currentField.name}を${statusText}に変更しましたわ`);
+      // setTimeout(() => setToast(null), 1500);
+
+    } catch (error) {
+      console.error('❌ 表示状態の更新エラー:', error);
+      setToast('表示状態の変更に失敗しました');
+      setTimeout(() => setToast(null), 2000);
+    }
   };
 
   return (
@@ -802,16 +1063,115 @@ export default function RecordInput() {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setShowSelectField(true)}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
-          >
-            <HiClipboardDocumentList className="w-5 h-5" />
-            項目を選択・追加
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowSelectField(true)}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+            >
+              <HiClipboardDocumentList className="w-5 h-5" />
+              項目を選択・追加
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenSortModal}
+              className="bg-purple-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-purple-600 transition-colors duration-200 font-medium flex items-center gap-2"
+            >
+              <HiBars3 className="w-5 h-5" />
+              並び替え
+            </button>
+          </div>
         )}
       </div>
+
+      {/* 並び替えモーダル */}
+      <Transition appear show={showSortModal} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setShowSortModal(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div
+              className="fixed inset-0"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+            />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-auto min-w-[500px] max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-2xl font-bold leading-6 text-gray-900 mb-6 flex items-center gap-2"
+                  >
+                    <HiBars3 className="w-6 h-6 text-purple-600" />
+                    項目の並び替え
+                  </Dialog.Title>
+
+                  <div className="mb-4">
+                    <p className="text-gray-600 text-sm">
+                      ドラッグ&ドロップで項目の表示順序を変更できます。右端のハンドルをドラッグしてください。
+                    </p>
+                  </div>
+
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={sortableFields.map(field => field.fieldId)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+                        {sortableFields.map((field) => (
+                          <SortableItem key={field.fieldId} field={field} onToggleDisplay={handleToggleDisplayInModal} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+
+                  <div className="mt-6 flex gap-3 justify-end">
+                    <button
+                      type="button"
+                      className="bg-gray-400 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                      onClick={() => setShowSortModal(false)}
+                    >
+                      <HiXMark className="w-4 h-4" />
+                      キャンセル
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-purple-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 transition-colors duration-200 font-medium flex items-center gap-2"
+                      onClick={() => {
+                        console.log('🟦 保存ボタンがクリックされました');
+                        handleSaveSortOrder();
+                      }}
+                    >
+                      <HiCheckCircle className="w-4 h-4" />
+                      保存
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 }

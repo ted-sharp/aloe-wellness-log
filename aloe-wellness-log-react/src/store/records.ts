@@ -54,6 +54,7 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     let fields = await db.getAllFields();
 
     // order属性とdefaultDisplay属性のマイグレーションを実行
+    // ただし、orderが既に設定済みの場合は変更しない（並び替え機能との競合を防ぐ）
     let needsUpdate = false;
     const orderMapping: Record<string, number> = {
       'weight': 1,
@@ -71,9 +72,9 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     const updatedFields = fields.map((field) => {
       const updatedField = { ...field };
 
-      // order属性のマイグレーション
-      const expectedOrder = orderMapping[field.fieldId];
-      if (field.order === undefined || (expectedOrder && field.order !== expectedOrder)) {
+      // order属性のマイグレーション（未設定の場合のみ）
+      if (field.order === undefined) {
+        const expectedOrder = orderMapping[field.fieldId];
         needsUpdate = true;
         updatedField.order = expectedOrder || 999;
       }
