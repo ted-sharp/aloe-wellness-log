@@ -11,7 +11,8 @@ import {
   HiPencil,
   HiClipboardDocumentList,
   HiPlus,
-  HiTrash
+  HiTrash,
+  HiEyeSlash
 } from 'react-icons/hi2';
 
 const FIELD_TYPES = [
@@ -194,8 +195,7 @@ export default function RecordInput() {
     setEditFieldId(field.fieldId);
     setEditField({
       name: field.name,
-      unit: field.unit,
-      defaultDisplay: field.defaultDisplay
+      unit: field.unit
     });
   };
 
@@ -213,7 +213,6 @@ export default function RecordInput() {
         ...original,
         name: editField.name.trim(),
         unit: editField.unit?.trim() || undefined,
-        defaultDisplay: editField.defaultDisplay !== false,
       });
       await loadFields();
       setToast('項目を編集しましたわ');
@@ -326,6 +325,31 @@ export default function RecordInput() {
 
   const areButtonsShown = (fieldId: string) => {
     return showButtons.has(fieldId);
+  };
+
+  // 項目を非表示にする関数
+  const handleHideField = async (field: Field) => {
+    // defaultDisplay: false に設定
+    await updateField({
+      ...field,
+      defaultDisplay: false,
+    });
+
+    // 一時表示リストからも削除
+    setTemporaryDisplayFields(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(field.fieldId);
+      return newSet;
+    });
+
+    // ボタン表示状態もクリア
+    setShowButtons(new Set());
+
+    // フィールド一覧を再読み込み
+    await loadFields();
+
+    setToast('項目を非表示にしましたわ');
+    setTimeout(() => setToast(null), 2000);
   };
 
   return (
@@ -441,18 +465,7 @@ export default function RecordInput() {
                   </div>
                 </div>
 
-                {/* デフォルト表示チェックボックス（中央寄せ） */}
-                <div className="flex justify-center mb-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={editField.defaultDisplay !== false}
-                      onChange={e => setEditField(f => ({ ...f, defaultDisplay: e.target.checked }))}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-base font-medium text-gray-700">デフォルトで記録入力画面に表示する</span>
-                  </label>
-                </div>
+
 
                 {/* 保存・キャンセルボタン（中央寄せ） */}
                 <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
@@ -501,9 +514,17 @@ export default function RecordInput() {
                   </div>
                 </div>
 
-                {/* 編集・前回値ボタン（クリックで表示/非表示） */}
+                {/* 前回値・編集・非表示ボタン（クリックで表示/非表示） */}
                 {areButtonsShown(field.fieldId) && (
                   <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                      onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
+                    >
+                      <HiClipboardDocumentList className="w-4 h-4" />
+                      前回値
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleEditField(field)}
@@ -514,11 +535,11 @@ export default function RecordInput() {
                     </button>
                     <button
                       type="button"
-                      className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
-                      onClick={() => setValues(v => ({ ...v, [field.fieldId]: getLastValue(field.fieldId) }))}
+                      onClick={() => handleHideField(field)}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
                     >
-                      <HiClipboardDocumentList className="w-4 h-4" />
-                      前回値
+                      <HiEyeSlash className="w-4 h-4" />
+                      非表示
                     </button>
                   </div>
                 )}
