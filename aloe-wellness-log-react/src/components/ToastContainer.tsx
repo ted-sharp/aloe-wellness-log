@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useToastStore, ToastType } from '../store/toast';
-import type { Toast } from '../store/toast';
 import {
   HiCheckCircle,
   HiXCircle,
@@ -9,97 +8,104 @@ import {
   HiXMark
 } from 'react-icons/hi2';
 
-const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
-  const { removeToast } = useToastStore();
+const ToastContainer: React.FC = () => {
+  const { toasts, removeToast } = useToastStore();
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const getToastStyles = (type: ToastType): string => {
-    switch (type) {
-      case ToastType.SUCCESS:
-        return 'bg-green-500 text-white border-green-600';
-      case ToastType.ERROR:
-        return 'bg-red-500 text-white border-red-600';
-      case ToastType.WARNING:
-        return 'bg-orange-500 text-white border-orange-600';
-      case ToastType.INFO:
-        return 'bg-blue-500 text-white border-blue-600';
-      default:
-        return 'bg-gray-500 text-white border-gray-600';
+  // 新しいトーストが追加された時のフォーカス管理
+  useEffect(() => {
+    if (toasts.length > 0) {
+      const latestToast = toasts[toasts.length - 1];
+      // エラーや警告の場合はフォーカスを当てる
+      if (latestToast.type === 'error' || latestToast.type === 'warning') {
+        const toastElement = document.querySelector(`[data-toast-id="${latestToast.id}"]`) as HTMLElement;
+        if (toastElement) {
+          toastElement.focus();
+        }
+      }
     }
-  };
+  }, [toasts]);
 
   const getIcon = (type: ToastType) => {
-    const iconClass = "w-5 h-5 flex-shrink-0";
     switch (type) {
-      case ToastType.SUCCESS:
-        return <HiCheckCircle className={iconClass} />;
-      case ToastType.ERROR:
-        return <HiXCircle className={iconClass} />;
-      case ToastType.WARNING:
-        return <HiExclamationTriangle className={iconClass} />;
-      case ToastType.INFO:
-        return <HiInformationCircle className={iconClass} />;
-      default:
-        return <HiInformationCircle className={iconClass} />;
+      case 'success':
+        return <HiCheckCircle className="w-5 h-5 text-green-600" aria-hidden="true" />;
+      case 'error':
+        return <HiXCircle className="w-5 h-5 text-red-600" aria-hidden="true" />;
+      case 'warning':
+        return <HiExclamationTriangle className="w-5 h-5 text-yellow-600" aria-hidden="true" />;
+      case 'info':
+        return <HiInformationCircle className="w-5 h-5 text-blue-600" aria-hidden="true" />;
     }
   };
 
-  return (
-    <div
-      className={`
-        flex items-center gap-3 p-4 rounded-lg shadow-lg border-l-4 min-w-80 max-w-md
-        transform transition-all duration-300 ease-in-out
-        animate-slide-in-right
-        ${getToastStyles(toast.type)}
-      `}
-    >
-      {getIcon(toast.type)}
-      <div className="flex-1 text-sm font-medium break-words">
-        {toast.message}
-      </div>
-      <button
-        onClick={() => removeToast(toast.id)}
-        className="flex-shrink-0 p-1 rounded-full hover:bg-black hover:bg-opacity-20 transition-colors duration-200"
-        aria-label="閉じる"
-      >
-        <HiXMark className="w-4 h-4" />
-      </button>
-    </div>
-  );
-};
+  const getColorClasses = (type: ToastType) => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-50 border-green-200 text-green-800';
+      case 'error':
+        return 'bg-red-50 border-red-200 text-red-800';
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+      case 'info':
+        return 'bg-blue-50 border-blue-200 text-blue-800';
+    }
+  };
 
-const ToastContainer: React.FC = () => {
-  const { toasts } = useToastStore();
+  const getTypeLabel = (type: ToastType) => {
+    switch (type) {
+      case 'success':
+        return '成功';
+      case 'error':
+        return 'エラー';
+      case 'warning':
+        return '警告';
+      case 'info':
+        return '情報';
+    }
+  };
 
   if (toasts.length === 0) return null;
 
   return (
-    <>
-      {/* カスタムアニメーション用のCSS */}
-      <style>{`
-        @keyframes slide-in-right {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-slide-in-right {
-          animation: slide-in-right 0.3s ease-out;
-        }
-      `}</style>
-
-      <div className="fixed top-4 right-4 z-50 space-y-3 pointer-events-none">
-        <div className="space-y-3 pointer-events-auto">
-          {toasts.map((toast) => (
-            <ToastItem key={toast.id} toast={toast} />
-          ))}
+    <div
+      ref={containerRef}
+      className="fixed top-4 right-4 z-50 space-y-2"
+      role="region"
+      aria-label="通知メッセージ"
+      aria-live="polite"
+      aria-atomic="false"
+    >
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          data-toast-id={toast.id}
+          className={`${getColorClasses(toast.type)} border rounded-lg p-4 shadow-lg max-w-sm transform transition-all duration-300 ease-in-out animate-in slide-in-from-right-5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+          role={toast.type === 'error' || toast.type === 'warning' ? 'alert' : 'status'}
+          aria-label={`${getTypeLabel(toast.type)}: ${toast.message}`}
+          tabIndex={toast.type === 'error' || toast.type === 'warning' ? 0 : -1}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              {getIcon(toast.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium leading-5">
+                <span className="sr-only">{getTypeLabel(toast.type)}: </span>
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-full p-1"
+              aria-label={`${getTypeLabel(toast.type)}通知を閉じる`}
+            >
+              <HiXMark className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
-      </div>
-    </>
+      ))}
+    </div>
   );
 };
 
