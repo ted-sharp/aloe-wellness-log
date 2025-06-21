@@ -72,12 +72,13 @@ export default function RecordList() {
 
   // 日付・時刻ごとにグループ化
   const grouped = useMemo(() => {
+    const groupMap: Record<string, RecordItem[]> = {};
     return sortedRecords.reduce((acc, rec) => {
       const key = `${rec.date} ${rec.time}`;
       if (!acc[key]) acc[key] = [];
       acc[key].push(rec);
       return acc;
-    }, {} as Record<string, RecordItem[]>);
+    }, groupMap);
   }, [sortedRecords]);
 
   // ページング処理

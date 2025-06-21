@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRecordsStore } from '../store/records';
+import { useToastStore } from '../store/toast';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import type { Field } from '../types/record';
 import {
   HiArrowLeft,
@@ -124,6 +126,9 @@ type NewField = {
 
 export default function RecordInput() {
   const { fields, loadFields, addRecord, addField, loadRecords, updateField, records, deleteField } = useRecordsStore();
+  const { showSuccess } = useToastStore();
+  const { handleAsyncError } = useErrorHandler();
+
   const [values, setValues] = useState<Record<string, string | number | boolean>>({});
   const [showSelectField, setShowSelectField] = useState(false);
   const [showAddField, setShowAddField] = useState(false);
@@ -207,7 +212,7 @@ export default function RecordInput() {
       return;
     }
 
-    try {
+    const result = await handleAsyncError(async () => {
       // 選択された日時を使用
       const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
       // より一意性を保つために現在のタイムスタンプを追加
@@ -242,8 +247,15 @@ export default function RecordInput() {
         });
       }
 
-      setToast('記録を保存いたしましたわ');
-      setTimeout(() => setToast(null), 2000);
+      return true;
+    }, {
+      context: '記録保存',
+      fallbackMessage: '保存に失敗いたしましたわ。もう一度お試しくださいませ。'
+    });
+
+    // 保存が成功した場合のみクリアと成功メッセージ
+    if (result) {
+      showSuccess('記録を保存いたしましたわ');
 
       // 全ての入力値をクリア（記録後は毎回空の状態にする）
       setValues({});
@@ -253,9 +265,6 @@ export default function RecordInput() {
 
       // 備考もクリア
       setRecordNotes('');
-    } catch (error) {
-      console.error('保存エラー:', error);
-      setFormError('保存に失敗いたしましたわ。もう一度お試しくださいませ。');
     }
   };
 
@@ -433,16 +442,18 @@ export default function RecordInput() {
     );
 
     if (isConfirmed) {
-      try {
+      const result = await handleAsyncError(async () => {
         await deleteField(field.fieldId);
         await loadFields();
         setShowSelectButtons(new Set()); // ボタン表示状態をクリア
-        setToast('項目を削除しましたわ');
-        setTimeout(() => setToast(null), 2000);
-      } catch (error) {
-        console.error('削除エラー:', error);
-        setToast('項目の削除に失敗しました');
-        setTimeout(() => setToast(null), 2000);
+        return true;
+      }, {
+        context: '項目削除',
+        fallbackMessage: '項目の削除に失敗しました'
+      });
+
+      if (result) {
+        showSuccess('項目を削除しましたわ');
       }
     }
   };

@@ -101,12 +101,13 @@ export default function RecordCalendar() {
     });
 
     // 日付・時刻ごとにグループ化
+    const groupMap: Record<string, RecordItem[]> = {};
     return sortedRecords.reduce((acc, rec) => {
       const key = `${rec.date} ${rec.time}`;
       if (!acc[key]) acc[key] = [];
       acc[key].push(rec);
       return acc;
-    }, {} as Record<string, RecordItem[]>);
+    }, groupMap);
   }, [selectedRecords]);
 
   return (

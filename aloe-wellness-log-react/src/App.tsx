@@ -5,6 +5,7 @@ import RecordList from './pages/RecordList';
 import RecordGraph from './pages/RecordGraph';
 import RecordCalendar from './pages/RecordCalendar';
 import RecordExport from './pages/RecordExport';
+import ToastContainer from './components/ToastContainer';
 import { useRecordsStore } from './store/records';
 import './App.css'
 
@@ -26,6 +27,7 @@ function App() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <ToastContainer />
       <Router>
         <div className="relative">
           {/* デスクトップ用ナビゲーション */}

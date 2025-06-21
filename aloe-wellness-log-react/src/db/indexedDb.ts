@@ -5,6 +5,54 @@ const DB_VERSION = 1;
 const RECORDS_STORE = 'records';
 const FIELDS_STORE = 'fields';
 
+// 型ガード関数
+function isRecordItem(obj: unknown): obj is RecordItem {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj as RecordItem).id === 'string' &&
+    typeof (obj as RecordItem).date === 'string' &&
+    typeof (obj as RecordItem).time === 'string' &&
+    typeof (obj as RecordItem).datetime === 'string' &&
+    typeof (obj as RecordItem).fieldId === 'string' &&
+    ((obj as RecordItem).value !== undefined)
+  );
+}
+
+function isField(obj: unknown): obj is Field {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof (obj as Field).fieldId === 'string' &&
+    typeof (obj as Field).name === 'string' &&
+    ['number', 'string', 'boolean'].includes((obj as Field).type)
+  );
+}
+
+function validateRecords(data: unknown[]): RecordItem[] {
+  const validRecords: RecordItem[] = [];
+  for (const item of data) {
+    if (isRecordItem(item)) {
+      validRecords.push(item);
+    } else {
+      console.warn('Invalid record item found:', item);
+    }
+  }
+  return validRecords;
+}
+
+function validateFields(data: unknown[]): Field[] {
+  const validFields: Field[] = [];
+  for (const item of data) {
+    if (isField(item)) {
+      validFields.push(item);
+    } else {
+      console.warn('Invalid field item found:', item);
+    }
+  }
+  return validFields;
+}
+
 export function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -41,7 +89,14 @@ export async function getAllRecords(): Promise<RecordItem[]> {
   const store = tx.objectStore(RECORDS_STORE);
   return new Promise((resolve, reject) => {
     const request = store.getAll();
-    request.onsuccess = () => resolve(request.result as RecordItem[]);
+    request.onsuccess = () => {
+      const data = request.result;
+      if (Array.isArray(data)) {
+        resolve(validateRecords(data));
+      } else {
+        resolve([]);
+      }
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -65,7 +120,14 @@ export async function getAllFields(): Promise<Field[]> {
   const store = tx.objectStore(FIELDS_STORE);
   return new Promise((resolve, reject) => {
     const request = store.getAll();
-    request.onsuccess = () => resolve(request.result as Field[]);
+    request.onsuccess = () => {
+      const data = request.result;
+      if (Array.isArray(data)) {
+        resolve(validateFields(data));
+      } else {
+        resolve([]);
+      }
+    };
     request.onerror = () => reject(request.error);
   });
 }
