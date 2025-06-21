@@ -25,20 +25,32 @@ export const debugError = (...args: unknown[]) => {
 
 // パフォーマンス測定
 export const perfStart = (label: string) => {
-  if (isDev && performance.mark) {
-    performance.mark(`${label}-start`);
+  if (isDev) {
+    try {
+      if (performance && performance.mark) {
+        performance.mark(`${label}-start`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Performance start failed:', error);
+    }
   }
 };
 
 export const perfEnd = (label: string) => {
-  if (isDev && performance.mark && performance.measure) {
-    performance.mark(`${label}-end`);
-    performance.measure(label, `${label}-start`, `${label}-end`);
+  if (isDev) {
+    try {
+      if (performance && performance.mark && performance.measure) {
+        performance.mark(`${label}-end`);
+        performance.measure(label, `${label}-start`, `${label}-end`);
 
-    const entries = performance.getEntriesByName(label);
-    const lastEntry = entries[entries.length - 1];
-    if (lastEntry) {
-      debugLog(`⏱️ ${label}: ${lastEntry.duration.toFixed(2)}ms`);
+        const entries = performance.getEntriesByName(label);
+        const lastEntry = entries[entries.length - 1];
+        if (lastEntry) {
+          debugLog(`⏱️ ${label}: ${lastEntry.duration.toFixed(2)}ms`);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Performance end failed:', error);
     }
   }
 };
@@ -96,14 +108,20 @@ export const debugRender = (
 
 // メモリ使用量の確認
 export const debugMemory = () => {
-  if (isDev && 'memory' in performance) {
-    const memInfo = (performance as PerformanceLike).memory;
-    if (memInfo) {
-      debugLog('🧠 Memory Usage:', {
-        used: `${(memInfo.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        total: `${(memInfo.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-        limit: `${(memInfo.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
-      });
+  if (isDev) {
+    try {
+      if (typeof performance !== 'undefined' && 'memory' in performance) {
+        const memInfo = (performance as PerformanceLike).memory;
+        if (memInfo) {
+          debugLog('🧠 Memory Usage:', {
+            used: `${(memInfo.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+            total: `${(memInfo.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+            limit: `${(memInfo.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Memory debug failed:', error);
     }
   }
 };
@@ -120,38 +138,54 @@ interface PerformanceLike extends Performance {
 // 開発用のグローバルヘルパー
 export const exposeDevTools = () => {
   if (isDev && typeof window !== 'undefined') {
-    (window as WindowWithDevTools).__ALOE_DEV__ = {
-      debugLog,
-      debugWarn,
-      debugError,
-      debugStore,
-      debugAPI,
-      debugDB,
-      debugMemory,
-      perfStart,
-      perfEnd,
-      // RecordsStore の直接操作（開発用）
-      getRecords: () => {
-        const event = new CustomEvent('__GET_RECORDS__');
-        window.dispatchEvent(event);
-      },
-      clearRecords: () => {
-        const event = new CustomEvent('__CLEAR_RECORDS__');
-        window.dispatchEvent(event);
-      },
-      // テストデータ生成
-      generateTestData: (count: number = 10) => {
-        const event = new CustomEvent('__GENERATE_TEST_DATA__', {
-          detail: { count },
-        });
-        window.dispatchEvent(event);
-      },
-    };
+    try {
+      (window as WindowWithDevTools).__ALOE_DEV__ = {
+        debugLog,
+        debugWarn,
+        debugError,
+        debugStore,
+        debugAPI,
+        debugDB,
+        debugMemory,
+        perfStart,
+        perfEnd,
+        // RecordsStore の直接操作（開発用）
+        getRecords: () => {
+          try {
+            const event = new CustomEvent('__GET_RECORDS__');
+            window.dispatchEvent(event);
+          } catch (error) {
+            console.warn('⚠️ Get records failed:', error);
+          }
+        },
+        clearRecords: () => {
+          try {
+            const event = new CustomEvent('__CLEAR_RECORDS__');
+            window.dispatchEvent(event);
+          } catch (error) {
+            console.warn('⚠️ Clear records failed:', error);
+          }
+        },
+        // テストデータ生成
+        generateTestData: (count: number = 10) => {
+          try {
+            const event = new CustomEvent('__GENERATE_TEST_DATA__', {
+              detail: { count },
+            });
+            window.dispatchEvent(event);
+          } catch (error) {
+            console.warn('⚠️ Generate test data failed:', error);
+          }
+        },
+      };
 
-    debugLog('🛠️ Development tools exposed to window.__ALOE_DEV__');
-    const devTools = (window as WindowWithDevTools).__ALOE_DEV__;
-    if (devTools) {
-      debugLog('Available commands:', Object.keys(devTools));
+      debugLog('🛠️ Development tools exposed to window.__ALOE_DEV__');
+      const devTools = (window as WindowWithDevTools).__ALOE_DEV__;
+      if (devTools) {
+        debugLog('Available commands:', Object.keys(devTools));
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to expose development tools:', error);
     }
   }
 };
@@ -178,14 +212,18 @@ interface WindowWithDevTools extends Window {
 // React DevTools検出
 export const detectReactDevTools = () => {
   if (isDev && typeof window !== 'undefined') {
-    const hasReactDevTools = !!(window as WindowWithDevTools)
-      .__REACT_DEVTOOLS_GLOBAL_HOOK__;
-    if (hasReactDevTools) {
-      debugLog('⚛️ React DevTools detected');
-    } else {
-      debugWarn(
-        '⚛️ React DevTools not found. Install React DevTools extension for better debugging.'
-      );
+    try {
+      const hasReactDevTools = !!(window as WindowWithDevTools)
+        .__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      if (hasReactDevTools) {
+        debugLog('⚛️ React DevTools detected');
+      } else {
+        debugWarn(
+          '⚛️ React DevTools not found. Install React DevTools extension for better debugging.'
+        );
+      }
+    } catch (error) {
+      console.warn('⚠️ React DevTools detection failed:', error);
     }
   }
 };
@@ -193,15 +231,19 @@ export const detectReactDevTools = () => {
 // 開発環境での警告表示
 export const showDevWarnings = () => {
   if (isDev) {
-    debugLog('🚧 Development Mode Active');
-    debugLog('📝 Debug logs are enabled');
-    debugLog('🔍 Performance monitoring is active');
+    try {
+      debugLog('🚧 Development Mode Active');
+      debugLog('📝 Debug logs are enabled');
+      debugLog('🔍 Performance monitoring is active');
 
-    // Service Worker の警告
-    if ('serviceWorker' in navigator) {
-      debugWarn(
-        '🔧 Service Worker is active in development. Clear cache if needed.'
-      );
+      // Service Worker の警告
+      if ('serviceWorker' in navigator) {
+        debugWarn(
+          '🔧 Service Worker is active in development. Clear cache if needed.'
+        );
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to show development warnings:', error);
     }
   }
 };

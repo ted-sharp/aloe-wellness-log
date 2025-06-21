@@ -25,42 +25,153 @@ import {
 // 動的インポート（Lazy Loading）でページコンポーネントを読み込み
 const RecordInput = lazy(() => {
   perfStart('RecordInput-load');
-  return import('./pages/RecordInput').then(module => {
-    perfEnd('RecordInput-load');
-    return module;
-  });
+  return import('./pages/RecordInput')
+    .then(module => {
+      perfEnd('RecordInput-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordInput:', error);
+      // フォールバック用の最小限コンポーネント
+      return {
+        default: () => (
+          <div className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              読み込みエラー
+            </h2>
+            <p className="text-gray-600 mb-4">
+              記録入力画面の読み込みに失敗いたしました。
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        ),
+      };
+    });
 });
 
 const RecordList = lazy(() => {
   perfStart('RecordList-load');
-  return import('./pages/RecordList').then(module => {
-    perfEnd('RecordList-load');
-    return module;
-  });
+  return import('./pages/RecordList')
+    .then(module => {
+      perfEnd('RecordList-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordList:', error);
+      return {
+        default: () => (
+          <div className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              読み込みエラー
+            </h2>
+            <p className="text-gray-600 mb-4">
+              記録一覧画面の読み込みに失敗いたしました。
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        ),
+      };
+    });
 });
 
 const RecordGraph = lazy(() => {
   perfStart('RecordGraph-load');
-  return import('./pages/RecordGraph').then(module => {
-    perfEnd('RecordGraph-load');
-    return module;
-  });
+  return import('./pages/RecordGraph')
+    .then(module => {
+      perfEnd('RecordGraph-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordGraph:', error);
+      return {
+        default: () => (
+          <div className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              読み込みエラー
+            </h2>
+            <p className="text-gray-600 mb-4">
+              グラフ画面の読み込みに失敗いたしました。
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        ),
+      };
+    });
 });
 
 const RecordCalendar = lazy(() => {
   perfStart('RecordCalendar-load');
-  return import('./pages/RecordCalendar').then(module => {
-    perfEnd('RecordCalendar-load');
-    return module;
-  });
+  return import('./pages/RecordCalendar')
+    .then(module => {
+      perfEnd('RecordCalendar-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordCalendar:', error);
+      return {
+        default: () => (
+          <div className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              読み込みエラー
+            </h2>
+            <p className="text-gray-600 mb-4">
+              カレンダー画面の読み込みに失敗いたしました。
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        ),
+      };
+    });
 });
 
 const RecordExport = lazy(() => {
   perfStart('RecordExport-load');
-  return import('./pages/RecordExport').then(module => {
-    perfEnd('RecordExport-load');
-    return module;
-  });
+  return import('./pages/RecordExport')
+    .then(module => {
+      perfEnd('RecordExport-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordExport:', error);
+      return {
+        default: () => (
+          <div className="p-8 text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              読み込みエラー
+            </h2>
+            <p className="text-gray-600 mb-4">
+              管理画面の読み込みに失敗いたしました。
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        ),
+      };
+    });
 });
 
 // ローディング用コンポーネント
@@ -256,24 +367,38 @@ function App() {
   const { initializeFields } = useRecordsStore();
 
   useEffect(() => {
-    if (isDev) {
-      perfStart('App-initialization');
-      debugLog('🚀 App initialization started');
-    }
+    try {
+      if (isDev) {
+        perfStart('App-initialization');
+        debugLog('🚀 App initialization started');
+      }
 
-    // 開発ツールの初期化
-    if (isDev) {
-      exposeDevTools();
-      detectReactDevTools();
-      showDevWarnings();
-    }
+      // 開発ツールの初期化（エラーが発生しても続行）
+      if (isDev) {
+        try {
+          exposeDevTools();
+          detectReactDevTools();
+          showDevWarnings();
+        } catch (devError) {
+          console.warn('⚠️ Development tools initialization failed:', devError);
+        }
+      }
 
-    // フィールド初期化
-    initializeFields();
+      // フィールド初期化
+      initializeFields();
 
-    if (isDev) {
-      perfEnd('App-initialization');
-      debugLog('✅ App initialization completed');
+      if (isDev) {
+        perfEnd('App-initialization');
+        debugLog('✅ App initialization completed');
+      }
+    } catch (error) {
+      console.error('❌ App initialization failed:', error);
+      // エラーが発生してもアプリは動作させる
+      try {
+        initializeFields();
+      } catch (fallbackError) {
+        console.error('❌ Fallback initialization also failed:', fallbackError);
+      }
     }
   }, [initializeFields]);
 
