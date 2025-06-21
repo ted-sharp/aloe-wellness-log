@@ -31,15 +31,39 @@ const mockFields = [
   },
   {
     fieldId: 'systolic_bp',
-    name: '収縮期血圧',
+    name: '最高血圧',
     unit: 'mmHg',
     type: 'number' as const,
     order: 2,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'diastolic_bp',
+    name: '最低血圧',
+    unit: 'mmHg',
+    type: 'number' as const,
+    order: 3,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'heart_rate',
+    name: '心拍数',
+    unit: 'bpm',
+    type: 'number' as const,
+    order: 4,
+    defaultDisplay: false,
+  },
+  {
+    fieldId: 'body_temperature',
+    name: '体温',
+    unit: '℃',
+    type: 'number' as const,
+    order: 5,
     defaultDisplay: false,
   },
   {
     fieldId: 'exercise',
-    name: '運動有無(早歩き)',
+    name: '運動(早歩き)',
     type: 'boolean' as const,
     order: 6,
     defaultDisplay: true,
@@ -108,9 +132,11 @@ describe('useFieldManagement', () => {
 
     const hiddenFields = result.current.getHiddenFields();
 
-    expect(hiddenFields).toHaveLength(1);
-    expect(hiddenFields[0].fieldId).toBe('systolic_bp');
-    expect(hiddenFields[0].defaultDisplay).toBe(false);
+    expect(hiddenFields).toHaveLength(2); // heart_rate と body_temperature
+    expect(hiddenFields.find(f => f.fieldId === 'heart_rate')).toBeTruthy();
+    expect(
+      hiddenFields.find(f => f.fieldId === 'body_temperature')
+    ).toBeTruthy();
   });
 
   it('setShowSelectField が状態を更新する', () => {
@@ -161,10 +187,10 @@ describe('useFieldManagement', () => {
     const { result } = renderHook(() => useFieldManagement());
 
     act(() => {
-      result.current.handleShowExistingField('systolic_bp');
+      result.current.handleShowExistingField('heart_rate');
     });
 
-    expect(result.current.temporaryDisplayFields.has('systolic_bp')).toBe(true);
+    expect(result.current.temporaryDisplayFields.has('heart_rate')).toBe(true);
     expect(mockShowSuccess).toHaveBeenCalledWith(
       '項目を一時表示に追加しましたわ'
     );
@@ -220,12 +246,14 @@ describe('useFieldManagement', () => {
     const { result } = renderHook(() => useFieldManagement());
 
     act(() => {
-      result.current.handleShowExistingField('systolic_bp');
       result.current.handleShowExistingField('heart_rate');
+      result.current.handleShowExistingField('body_temperature');
     });
 
-    expect(result.current.temporaryDisplayFields.has('systolic_bp')).toBe(true);
     expect(result.current.temporaryDisplayFields.has('heart_rate')).toBe(true);
+    expect(result.current.temporaryDisplayFields.has('body_temperature')).toBe(
+      true
+    );
     expect(result.current.temporaryDisplayFields.size).toBe(2);
   });
 
@@ -280,16 +308,16 @@ describe('useFieldManagement', () => {
   it('handleEditExistingField が既存フィールドの編集状態を設定する', () => {
     const { result } = renderHook(() => useFieldManagement());
 
-    const fieldToEdit = mockFields[1]; // systolic_bp
+    const fieldToEdit = mockFields.find(f => f.fieldId === 'heart_rate')!; // heart_rate
 
     act(() => {
       result.current.handleEditExistingField(fieldToEdit);
     });
 
-    expect(result.current.editingExistingFieldId).toBe('systolic_bp');
+    expect(result.current.editingExistingFieldId).toBe('heart_rate');
     expect(result.current.editingExistingField).toEqual({
-      name: '収縮期血圧',
-      unit: 'mmHg',
+      name: '心拍数',
+      unit: 'bpm',
     });
   });
 
