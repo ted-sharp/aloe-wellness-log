@@ -72,37 +72,105 @@ export default function RecordExport() {
 
   // CSVパース関数
   const parseCSV = (csvText: string): RecordItem[] => {
-    const lines = csvText.trim().split('\n');
+    // 改行文字を統一（\r\n や \r を \n に統一）
+    const normalizedText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = normalizedText.trim().split('\n');
+
     if (lines.length < 2) throw new Error('CSVファイルが空または形式が正しくありません');
 
-    const header = lines[0].split(',').map(col => col.replace(/"/g, ''));
+    // CSVの行をパースする関数（カンマ区切りだがダブルクォート内のカンマは無視）
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      let i = 0;
+
+      while (i < line.length) {
+        const char = line[i];
+
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            // エスケープされたダブルクォート
+            current += '"';
+            i += 2;
+          } else {
+            // クォートの開始または終了
+            inQuotes = !inQuotes;
+            i++;
+          }
+        } else if (char === ',' && !inQuotes) {
+          // カンマ区切り（クォート外）
+          result.push(current);
+          current = '';
+          i++;
+        } else {
+          current += char;
+          i++;
+        }
+      }
+
+      result.push(current);
+      return result;
+    };
+
+    const header = parseCSVLine(lines[0]);
+    console.log('CSV Header:', header);
+
     const expectedHeader = ['id', 'date', 'time', 'datetime', 'fieldId', 'fieldName', 'value'];
 
     if (!expectedHeader.every(col => header.includes(col))) {
-      throw new Error('CSVファイルの形式が正しくありません');
+      console.error('Expected headers:', expectedHeader);
+      console.error('Actual headers:', header);
+      throw new Error(`CSVファイルの形式が正しくありません。必要な列: ${expectedHeader.join(', ')}`);
     }
 
     const records: RecordItem[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(val => val.replace(/^"|"$/g, '').replace(/""/g, '"'));
-      const record: RecordItem = {
-        id: values[header.indexOf('id')],
-        date: values[header.indexOf('date')],
-        time: values[header.indexOf('time')],
-        datetime: values[header.indexOf('datetime')],
-        fieldId: values[header.indexOf('fieldId')],
-        value: values[header.indexOf('value')]
-      };
+      try {
+        // 空行をスキップ
+        if (!lines[i].trim()) continue;
 
-      // boolean値の変換
-      if (record.value === 'あり') record.value = true;
-      else if (record.value === 'なし') record.value = false;
-      else if (!isNaN(Number(record.value)) && record.value !== '') {
-        record.value = Number(record.value);
+        const values = parseCSVLine(lines[i]);
+        console.log(`Row ${i}:`, values);
+
+        // 列数チェック
+        if (values.length !== header.length) {
+          console.warn(`Row ${i}: 列数が一致しません (expected: ${header.length}, actual: ${values.length})`);
+          continue;
+        }
+
+        const record: RecordItem = {
+          id: values[header.indexOf('id')],
+          date: values[header.indexOf('date')],
+          time: values[header.indexOf('time')],
+          datetime: values[header.indexOf('datetime')],
+          fieldId: values[header.indexOf('fieldId')],
+          value: values[header.indexOf('value')]
+        };
+
+        // 必須フィールドのチェック
+        if (!record.id || !record.date || !record.time || !record.fieldId) {
+          console.warn(`Row ${i}: 必須項目が不足`, record);
+          continue;
+        }
+
+        // boolean値の変換
+        if (record.value === 'あり') {
+          record.value = true;
+        } else if (record.value === 'なし') {
+          record.value = false;
+        } else if (!isNaN(Number(record.value)) && record.value !== '') {
+          record.value = Number(record.value);
+        }
+
+        records.push(record);
+      } catch (error) {
+        console.error(`Row ${i} parsing error:`, error);
+        throw new Error(`${i}行目の処理でエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
       }
-
-      records.push(record);
     }
+
+    console.log('Parsed records:', records.length);
     return records;
   };
 
