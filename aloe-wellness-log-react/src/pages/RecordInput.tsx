@@ -68,14 +68,15 @@ export default function RecordInput() {
     field: Field,
     value: string | number | boolean | undefined
   ): boolean => {
-    if (field.type === 'number') {
-      return value !== undefined && value !== '' && !isNaN(Number(value));
-    } else if (field.type === 'string') {
-      return value !== undefined && value !== '' && String(value).trim() !== '';
-    } else if (field.type === 'boolean') {
-      return value === true; // チェックされている場合のみ
+    if (value === undefined || value === null) return false;
+    if (field.type === 'boolean') {
+      // boolean型の場合は、trueまたはfalseが明示的に設定されていれば有効
+      return value === true || value === false;
     }
-    return false;
+    if (field.type === 'number') {
+      return typeof value === 'number' && !isNaN(value);
+    }
+    return typeof value === 'string' && value.trim().length > 0;
   };
 
   const validate = () => {
@@ -291,26 +292,74 @@ export default function RecordInput() {
                       </div>
                       <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                         <div className="flex items-center gap-3">
-                          <input
-                            type={
-                              field.type === 'number'
-                                ? 'number'
-                                : field.type === 'boolean'
-                                ? 'checkbox'
-                                : 'text'
-                            }
-                            onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
-                            className={
-                              field.type === 'boolean'
-                                ? 'w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 block'
-                                : 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600'
-                            }
-                            aria-label={
-                              field.type === 'boolean'
-                                ? `${field.name}をチェックする`
-                                : `${field.name}を入力`
-                            }
-                          />
+                          {field.type === 'boolean' ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleChange(field.fieldId, true);
+                                }}
+                                className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                                  values[field.fieldId] === true
+                                    ? 'bg-green-100 border-green-500 text-green-700'
+                                    : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                aria-label={`${field.name}をありに設定`}
+                              >
+                                あり
+                              </button>
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleChange(field.fieldId, false);
+                                }}
+                                className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                                  values[field.fieldId] === false
+                                    ? 'bg-red-100 border-red-500 text-red-700'
+                                    : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                aria-label={`${field.name}をなしに設定`}
+                              >
+                                なし
+                              </button>
+                              {values[field.fieldId] !== undefined && (
+                                <button
+                                  type="button"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setValues(prev => {
+                                      const newValues = { ...prev };
+                                      delete newValues[field.fieldId];
+                                      return newValues;
+                                    });
+                                  }}
+                                  className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
+                                  aria-label={`${field.name}の選択をクリア`}
+                                  title="選択をクリア"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <input
+                              type={field.type === 'number' ? 'number' : 'text'}
+                              value={String(values[field.fieldId] || '')}
+                              onChange={e =>
+                                handleChange(
+                                  field.fieldId,
+                                  field.type === 'number'
+                                    ? Number(e.target.value) || ''
+                                    : e.target.value
+                                )
+                              }
+                              onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
+                              className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                              aria-label={`${field.name}を入力`}
+                            />
+                          )}
                           <div className="w-full sm:w-32">
                             {field.unit && (
                               <span className="text-gray-600 font-medium">
