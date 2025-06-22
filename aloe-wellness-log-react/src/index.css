@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 
+/* モバイルファーストのベース設定 */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,6 +14,38 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* モバイルファースト: デフォルトでモバイル用のフォントサイズ */
+  font-size: 14px;
+}
+
+/* デスクトップ用のフォントサイズ */
+@media (min-width: 640px) {
+  :root {
+    font-size: 16px;
+  }
+}
+
+/* モバイルファーストのベースレイアウト */
+* {
+  box-sizing: border-box;
+}
+
+/* モバイルでのタッチ操作最適化 */
+@media (max-width: 639px) {
+  /* モバイルでのタッチ要素サイズを最適化 */
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px; /* iOS推奨タッチサイズ */
+    font-size: 16px; /* iOSでのズーム防止 */
+  }
+
+  /* モバイルでのスクロール最適化 */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 a {
@@ -33,8 +66,31 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  /* モバイルファースト: デフォルトで小さめ */
+  font-size: 2em;
   line-height: 1.1;
+}
+
+/* デスクトップ用のh1サイズ */
+@media (min-width: 640px) {
+  h1 {
+    font-size: 3.2em;
+  }
+}
+
+/* カスタムレスポンシブヘルパークラス */
+.mobile-first-container {
+  width: 100%;
+  max-width: 100vw;
+  padding: 0.5rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .mobile-first-container {
+    max-width: 1280px;
+    padding: 2rem;
+  }
 }
 
 /* デフォルトボタンスタイルをTailwind CSSのクラスがない場合のみ適用 */
@@ -48,6 +104,8 @@ button:not([class*='bg-']) {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  /* モバイルでのタッチ最適化 */
+  min-height: 44px;
 }
 button:not([class*='bg-']):hover {
   border-color: #646cff;
