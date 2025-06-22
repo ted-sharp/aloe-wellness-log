@@ -32,45 +32,7 @@ if (import.meta.env.MODE === 'development') {
   });
 }
 
-// Service Workerの登録（開発環境でも有効）
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swPath = import.meta.env.PROD ? '/aloe-wellness-log/sw.js' : '/sw.js';
-    navigator.serviceWorker
-      .register(swPath)
-      .then(registration => {
-        console.log('🎯 SW registered successfully:', registration.scope);
-
-        // 更新があった場合の処理
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (
-                newWorker.state === 'installed' &&
-                navigator.serviceWorker.controller
-              ) {
-                // 新しいバージョンが利用可能
-                console.log('🔄 New version available! Please refresh.');
-
-                // ユーザーに更新を通知
-                if (
-                  confirm(
-                    'アプリの新しいバージョンが利用可能です。更新しますか？'
-                  )
-                ) {
-                  window.location.reload();
-                }
-              }
-            });
-          }
-        });
-      })
-      .catch(registrationError => {
-        console.error('❌ SW registration failed:', registrationError);
-      });
-  });
-}
+// Service Worker登録はindex.htmlで実行
 
 // PWA インストールプロンプト
 // NOTE: PWAInstallButtonコンポーネントで処理するため、main.tsxでの処理はコメントアウト

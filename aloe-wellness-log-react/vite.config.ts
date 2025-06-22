@@ -7,7 +7,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 
 // Service Worker自動更新プラグイン
-function swAutoUpdate() {
+function swAutoUpdate(basePath: string) {
   return {
     name: 'sw-auto-update',
     generateBundle(
@@ -25,8 +25,8 @@ function swAutoUpdate() {
 
         // ビルドファイルリストを動的に更新
         const buildFiles = [
-          ...jsFiles.map(file => `/assets/${file}`),
-          ...cssFiles.map(file => `/assets/${file}`),
+          ...jsFiles.map(file => `${basePath}assets/${file}`),
+          ...cssFiles.map(file => `${basePath}assets/${file}`),
         ];
 
         // バージョンを更新（現在の日時ベース）
@@ -58,8 +58,12 @@ function swAutoUpdate() {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const isProduction = mode === 'production';
+
+  // GitHub Pages用のベースパス設定
+  const base =
+    isProduction && command === 'build' ? '/aloe-wellness-log/' : '/';
 
   const plugins = [
     react(),
@@ -76,11 +80,12 @@ export default defineConfig(({ mode }) => {
         ]
       : []),
     // Service Worker自動更新
-    ...(isProduction ? [swAutoUpdate()] : []),
+    ...(isProduction ? [swAutoUpdate(base)] : []),
   ];
 
   return {
     plugins,
+    base,
 
     // パフォーマンス最適化設定
     build: {

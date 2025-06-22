@@ -141,7 +141,73 @@ navigator.serviceWorker.register(swPath);
 - リポジトリ: https://github.com/ted-sharp/aloe-wellness-log
 - ベースパス: `/aloe-wellness-log/`
 
-## 今後の課題
+## 最終的な解決策（正しいアプローチ）
 
-- Vite 設定の見直し（不要な .tsx ファイルの生成を防ぐ）
-- ビルドプロセスでの自動的なパス修正の仕組み構築
+### 根本原因の解決
+
+**問題**: Vite のビルドプロセスで、アセット参照が正しく変換されていない
+
+**解決策**: Vite 設定で環境に応じた `base` パスの動的設定
+
+### 修正された設定
+
+#### 1. vite.config.ts の改善
+
+```javascript
+export default defineConfig(({ mode, command }) => {
+  const isProduction = mode === "production";
+
+  // GitHub Pages用のベースパス設定
+  const base =
+    isProduction && command === "build" ? "/aloe-wellness-log/" : "/";
+
+  return {
+    plugins,
+    base, // 動的ベースパス設定
+    // ... 他の設定
+  };
+});
+```
+
+#### 2. Service Worker 自動更新プラグインの改善
+
+```javascript
+function swAutoUpdate(basePath: string) {
+  // ベースパスを考慮したファイルパス生成
+  const buildFiles = [
+    ...jsFiles.map((file) => `${basePath}assets/${file}`),
+    ...cssFiles.map((file) => `${basePath}assets/${file}`),
+  ];
+}
+```
+
+#### 3. HTML での動的 Service Worker パス設定
+
+```javascript
+// ベースパスを動的に取得（GitHub Pages対応）
+const pathname = window.location.pathname;
+const basePath =
+  pathname === "/"
+    ? "/"
+    : pathname.startsWith("/aloe-wellness-log/")
+    ? "/aloe-wellness-log/"
+    : "/";
+```
+
+#### 4. preload 問題の解決
+
+- HTML から手動の preload 設定を削除
+- Vite が自動的に最適な preload を生成
+
+### 結果
+
+✅ **完全自動化**: ファイル名のハッシュが変更されても自動対応
+✅ **環境対応**: 開発環境と本番環境で自動切り替え
+✅ **保守性向上**: 手動でのファイル名指定が不要
+✅ **正しいビルド**: `.tsx` ファイルの誤った出力を解消
+
+## 学んだ教訓
+
+- ビルドツールの設定は根本から正しく行うべき
+- 手動でのファイル名指定は保守性を損なう
+- 環境に応じた動的設定が重要

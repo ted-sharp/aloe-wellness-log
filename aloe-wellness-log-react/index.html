@@ -52,7 +52,7 @@
     <meta property="twitter:image" content="/aloe-icon.png" />
 
     <!-- Preload Critical Resources -->
-    <link rel="preload" href="/src/main.tsx" as="script" crossorigin />
+    <!-- メインスクリプトのpreloadはViteが自動的に処理 -->
 
     <!-- DNS Prefetch for Performance -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -182,10 +182,23 @@
       if ('serviceWorker' in navigator && isProduction && !isDevelopment) {
         window.addEventListener('load', async () => {
           try {
+            // ベースパスを動的に取得（GitHub Pages対応）
+            const pathname = window.location.pathname;
+            const basePath =
+              pathname === '/'
+                ? '/'
+                : pathname.startsWith('/aloe-wellness-log/')
+                ? '/aloe-wellness-log/'
+                : '/';
+            const swPath = basePath.endsWith('/')
+              ? `${basePath}sw.js`
+              : `${basePath}/sw.js`;
+            const scope = basePath;
+
             const registration = await navigator.serviceWorker.register(
-              '/sw.js',
+              swPath,
               {
-                scope: '/',
+                scope: scope,
               }
             );
 
