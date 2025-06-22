@@ -49,8 +49,8 @@ function toCSV(
       field ? field.name : '',
       typeof rec.value === 'boolean'
         ? rec.value
-          ? t('fields.values.yes')
-          : t('fields.values.no')
+          ? t('fields.yes')
+          : t('fields.no')
         : rec.value,
     ];
   });
@@ -213,15 +213,9 @@ export default function RecordExport() {
         }
 
         // boolean値の変換
-        if (
-          record.value === t('fields.values.yes') ||
-          record.value === 'あり'
-        ) {
+        if (record.value === t('fields.yes') || record.value === 'あり') {
           record.value = true;
-        } else if (
-          record.value === t('fields.values.no') ||
-          record.value === 'なし'
-        ) {
+        } else if (record.value === t('fields.no') || record.value === 'なし') {
           record.value = false;
         } else if (!isNaN(Number(record.value)) && record.value !== '') {
           record.value = Number(record.value);

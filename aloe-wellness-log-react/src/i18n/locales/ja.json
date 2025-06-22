@@ -130,6 +130,9 @@
       "testDataSuccess": "件のテストデータを生成しました",
       "testDataError": "❌ テストデータの生成に失敗しました:",
       "testDataOf": "/"
+    },
+    "management": {
+      "title": "管理"
     }
   },
   "fields": {

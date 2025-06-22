@@ -263,12 +263,12 @@ export default function RecordCalendar() {
                                     rec.value ? (
                                       <span className="inline-flex items-center gap-2 text-green-600">
                                         <HiCheckCircle className="w-6 h-6" />
-                                        {t('fields.values.yes')}
+                                        {t('fields.yes')}
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center gap-2 text-red-600">
                                         <HiXCircle className="w-6 h-6" />
-                                        {t('fields.values.no')}
+                                        {t('fields.no')}
                                       </span>
                                     )
                                   ) : (
