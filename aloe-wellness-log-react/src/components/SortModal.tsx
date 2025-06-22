@@ -14,8 +14,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Dialog, Transition } from '@headlessui/react';
-import React, { Fragment, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   HiArrowsUpDown,
   HiBars3,
@@ -324,167 +324,156 @@ const SortModal: React.FC<SortModalProps> = ({
     }
   }, [isOpen, announcePolite, t]);
 
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
+  // HeadlessUIの自動body制御を無効化（モバイル表示問題の修正）
+  useEffect(() => {
+    if (isOpen) {
+      // シンプルなoverflow制御のみ（スクロールバー幅計算なし）
+      document.body.style.overflow = 'hidden';
+      // HeadlessUIによる意図しないpadding-rightを防ぐ
+      document.body.style.paddingRight = '0px';
+    }
+
+    return () => {
+      // 確実に復元
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 overflow-y-auto" {...modalProps}>
+      {/* オーバーレイ */}
+      <div
+        className="fixed inset-0 backdrop-blur-sm"
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+        onClick={onClose}
+      />
+
+      {/* モーダルコンテンツ */}
+      <div className="flex min-h-full items-center justify-center p-4 text-center">
+        <div
+          className="relative w-full max-w-sm sm:max-w-xl transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all"
+          onKeyDown={handleKeyDown}
+          onClick={e => e.stopPropagation()}
         >
-          <div
-            className="fixed inset-0 backdrop-blur-sm"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-          />
-        </Transition.Child>
+          <h3
+            className="text-xl sm:text-2xl font-bold leading-6 text-gray-900 mb-4 sm:mb-6 flex items-center gap-2"
+            id="sort-modal-title"
+          >
+            <HiBars3
+              className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
+              aria-hidden="true"
+            />
+            {t('dialogs.sortModal.title')}
+          </h3>
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+          <div className="mb-4" id="sort-modal-description">
+            <p className="text-gray-600 text-xs sm:text-sm">
+              {t('dialogs.sortModal.description')}
+            </p>
+          </div>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            accessibility={{
+              announcements: {
+                onDragStart: ({ active }) => {
+                  const field = fields.find(f => f.fieldId === active.id);
+                  return `${field?.name || 'アイテム'}${t(
+                    'dialogs.sortModal.dragStartAnnouncement'
+                  )}`;
+                },
+                onDragOver: ({ active, over }) => {
+                  const activeField = fields.find(f => f.fieldId === active.id);
+                  const overField = fields.find(f => f.fieldId === over?.id);
+                  if (activeField && overField) {
+                    return `${activeField.name}${t(
+                      'dialogs.sortModal.dragOverAnnouncement',
+                      { target: overField.name }
+                    )}`;
+                  }
+                  return '';
+                },
+                onDragEnd: ({ active, over }) => {
+                  const activeField = fields.find(f => f.fieldId === active.id);
+                  const overField = fields.find(f => f.fieldId === over?.id);
+                  if (active.id === over?.id) {
+                    return `${activeField?.name || 'アイテム'}${t(
+                      'dialogs.sortModal.dragReturnAnnouncement'
+                    )}`;
+                  }
+                  if (activeField && overField) {
+                    return `${activeField.name}${t(
+                      'dialogs.sortModal.dragEndAnnouncement',
+                      { target: overField.name }
+                    )}`;
+                  }
+                  return `${activeField?.name || 'アイテム'}${t(
+                    'dialogs.sortModal.dragCompleteAnnouncement'
+                  )}`;
+                },
+                onDragCancel: ({ active }) => {
+                  const field = fields.find(f => f.fieldId === active.id);
+                  return `${field?.name || 'アイテム'}${t(
+                    'dialogs.sortModal.dragCancelAnnouncement'
+                  )}`;
+                },
+              },
+            }}
+          >
+            <SortableContext
+              items={fields.map(field => field.fieldId)}
+              strategy={verticalListSortingStrategy}
             >
-              <Dialog.Panel
-                className="relative w-full max-w-sm sm:max-w-xl transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all"
-                onKeyDown={handleKeyDown}
-                {...modalProps}
+              <div
+                className="space-y-2 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"
+                role="list"
+                aria-label={t('dialogs.sortModal.listLabel')}
+                aria-describedby="sort-modal-description"
               >
-                <Dialog.Title
-                  as="h3"
-                  className="text-xl sm:text-2xl font-bold leading-6 text-gray-900 mb-4 sm:mb-6 flex items-center gap-2"
-                  id="sort-modal-title"
-                >
-                  <HiBars3
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
-                    aria-hidden="true"
+                {fields.map(field => (
+                  <SortableItem
+                    key={field.fieldId}
+                    field={field}
+                    onToggleDisplay={onToggleDisplay}
                   />
-                  {t('dialogs.sortModal.title')}
-                </Dialog.Title>
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
 
-                <div className="mb-4" id="sort-modal-description">
-                  <p className="text-gray-600 text-xs sm:text-sm">
-                    {t('dialogs.sortModal.description')}
-                  </p>
-                </div>
-
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                  accessibility={{
-                    announcements: {
-                      onDragStart: ({ active }) => {
-                        const field = fields.find(f => f.fieldId === active.id);
-                        return `${field?.name || 'アイテム'}${t(
-                          'dialogs.sortModal.dragStartAnnouncement'
-                        )}`;
-                      },
-                      onDragOver: ({ active, over }) => {
-                        const activeField = fields.find(
-                          f => f.fieldId === active.id
-                        );
-                        const overField = fields.find(
-                          f => f.fieldId === over?.id
-                        );
-                        if (activeField && overField) {
-                          return `${activeField.name}${t(
-                            'dialogs.sortModal.dragOverAnnouncement',
-                            { target: overField.name }
-                          )}`;
-                        }
-                        return '';
-                      },
-                      onDragEnd: ({ active, over }) => {
-                        const activeField = fields.find(
-                          f => f.fieldId === active.id
-                        );
-                        const overField = fields.find(
-                          f => f.fieldId === over?.id
-                        );
-                        if (active.id === over?.id) {
-                          return `${activeField?.name || 'アイテム'}${t(
-                            'dialogs.sortModal.dragReturnAnnouncement'
-                          )}`;
-                        }
-                        if (activeField && overField) {
-                          return `${activeField.name}${t(
-                            'dialogs.sortModal.dragEndAnnouncement',
-                            { target: overField.name }
-                          )}`;
-                        }
-                        return `${activeField?.name || 'アイテム'}${t(
-                          'dialogs.sortModal.dragCompleteAnnouncement'
-                        )}`;
-                      },
-                      onDragCancel: ({ active }) => {
-                        const field = fields.find(f => f.fieldId === active.id);
-                        return `${field?.name || 'アイテム'}${t(
-                          'dialogs.sortModal.dragCancelAnnouncement'
-                        )}`;
-                      },
-                    },
-                  }}
-                >
-                  <SortableContext
-                    items={fields.map(field => field.fieldId)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div
-                      className="space-y-2 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"
-                      role="list"
-                      aria-label={t('dialogs.sortModal.listLabel')}
-                      aria-describedby="sort-modal-description"
-                    >
-                      {fields.map(field => (
-                        <SortableItem
-                          key={field.fieldId}
-                          field={field}
-                          onToggleDisplay={onToggleDisplay}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-
-                <div
-                  className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end"
-                  role="group"
-                  aria-label={t('dialogs.sortModal.buttonsLabel')}
-                >
-                  <button
-                    type="button"
-                    className="bg-gray-400 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
-                    onClick={onClose}
-                    aria-label={t('dialogs.sortModal.cancelLabel')}
-                  >
-                    <HiXMark className="w-4 h-4" aria-hidden="true" />
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
-                    onClick={handleSave}
-                    aria-label={t('dialogs.sortModal.saveLabel')}
-                  >
-                    <HiCheckCircle className="w-4 h-4" aria-hidden="true" />
-                    {t('common.save')}
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+          <div
+            className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end"
+            role="group"
+            aria-label={t('dialogs.sortModal.buttonsLabel')}
+          >
+            <button
+              type="button"
+              className="bg-gray-400 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+              onClick={onClose}
+              aria-label={t('dialogs.sortModal.cancelLabel')}
+            >
+              <HiXMark className="w-4 h-4" aria-hidden="true" />
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+              onClick={handleSave}
+              aria-label={t('dialogs.sortModal.saveLabel')}
+            >
+              <HiCheckCircle className="w-4 h-4" aria-hidden="true" />
+              {t('common.save')}
+            </button>
           </div>
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    </div>,
+    document.body
   );
 };
 
