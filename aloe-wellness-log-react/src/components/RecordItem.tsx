@@ -6,6 +6,7 @@ import {
   HiXCircle,
   HiXMark,
 } from 'react-icons/hi2';
+import { useI18n } from '../hooks/useI18n';
 import type { Field, RecordItem as RecordItemType } from '../types/record';
 
 interface RecordItemProps {
@@ -46,6 +47,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
     onToggleTextExpansion,
     onToggleButtons,
   }) => {
+    const { t, getAriaLabel } = useI18n();
     const isEditing = editId === record.id;
     const isTextExpanded = expandedTexts.has(record.id);
     const areButtonsShown = showButtons.has(record.id);
@@ -114,9 +116,11 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                             ? 'bg-green-100 border-green-500 text-green-700'
                             : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                         }`}
-                        aria-label={`${field.name}をありに設定`}
+                        aria-label={getAriaLabel('setToYes', {
+                          fieldName: field.name,
+                        })}
                       >
-                        あり
+                        {t('fields.yes')}
                       </button>
                       <button
                         type="button"
@@ -126,17 +130,21 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                             ? 'bg-red-100 border-red-500 text-red-700'
                             : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                         }`}
-                        aria-label={`${field.name}をなしに設定`}
+                        aria-label={getAriaLabel('setToNo', {
+                          fieldName: field.name,
+                        })}
                       >
-                        なし
+                        {t('fields.no')}
                       </button>
                       {editValue !== undefined && editValue !== '' && (
                         <button
                           type="button"
                           onClick={() => handleBooleanChange(undefined)}
                           className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
-                          aria-label={`${field.name}の選択をクリア`}
-                          title="選択をクリア"
+                          aria-label={getAriaLabel('clearSelection', {
+                            fieldName: field.name,
+                          })}
+                          title={t('fields.clearSelection')}
                         >
                           ×
                         </button>
@@ -168,9 +176,11 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                             ? 'bg-green-100 border-green-500 text-green-700'
                             : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                         }`}
-                        aria-label={`${field.name}をありに設定`}
+                        aria-label={getAriaLabel('setToYes', {
+                          fieldName: field.name,
+                        })}
                       >
-                        あり
+                        {t('fields.yes')}
                       </button>
                       <button
                         type="button"
@@ -180,17 +190,21 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                             ? 'bg-red-100 border-red-500 text-red-700'
                             : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                         }`}
-                        aria-label={`${field.name}をなしに設定`}
+                        aria-label={getAriaLabel('setToNo', {
+                          fieldName: field.name,
+                        })}
                       >
-                        なし
+                        {t('fields.no')}
                       </button>
                       {editValue !== undefined && editValue !== '' && (
                         <button
                           type="button"
                           onClick={() => handleBooleanChange(undefined)}
                           className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
-                          aria-label={`${field.name}の選択をクリア`}
-                          title="選択をクリア"
+                          aria-label={getAriaLabel('clearSelection', {
+                            fieldName: field.name,
+                          })}
+                          title={t('fields.clearSelection')}
                         >
                           ×
                         </button>
@@ -213,14 +227,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 className="bg-green-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
               >
                 <HiCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                保存
+                {t('actions.save')}
               </button>
               <button
                 onClick={handleEditCancel}
                 className="bg-gray-400 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
               >
                 <HiXMark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                キャンセル
+                {t('actions.cancel')}
               </button>
             </div>
           </div>
@@ -242,7 +256,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     <button
                       onClick={handleToggleExpansion}
                       className="text-left hover:text-blue-600 transition-colors break-words w-full"
-                      title="クリックして全文表示"
+                      title={t('common.clickToExpand')}
                     >
                       {isTextExpanded
                         ? record.value
@@ -267,12 +281,12 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     record.value ? (
                       <span className="inline-flex items-center gap-2 text-green-600">
                         <HiCheckCircle className="w-6 h-6" />
-                        あり
+                        {t('fields.yes')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-2 text-red-600">
                         <HiXCircle className="w-6 h-6" />
-                        なし
+                        {t('fields.no')}
                       </span>
                     )
                   ) : (
@@ -295,14 +309,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                   className="bg-blue-500 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
                 >
                   <HiPencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  編集
+                  {t('actions.edit')}
                 </button>
                 <button
                   onClick={handleDelete}
                   className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
                 >
                   <HiTrash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  削除
+                  {t('actions.delete')}
                 </button>
               </div>
             )}

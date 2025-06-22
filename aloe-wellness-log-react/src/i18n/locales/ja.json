@@ -78,7 +78,8 @@
       "items50": "50件",
       "items100": "100件",
       "page": "ページ",
-      "confirmDelete": "本当に削除してよろしいですか？"
+      "confirmDelete": "本当に削除してよろしいですか？",
+      "noRecords": "記録がありませんわ。"
     },
     "graph": {
       "title": "グラフ",

@@ -78,7 +78,8 @@
       "items50": "50 items",
       "items100": "100 items",
       "page": "Page",
-      "confirmDelete": "Are you sure you want to delete this record?"
+      "confirmDelete": "Are you sure you want to delete this record?",
+      "noRecords": "No records available."
     },
     "graph": {
       "title": "Graph",

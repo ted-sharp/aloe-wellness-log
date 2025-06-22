@@ -525,7 +525,7 @@ export default function RecordList() {
       {/* 記録一覧 */}
       {Object.entries(paginatedGroups.groups).length === 0 && (
         <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 text-center text-gray-500">
-          <p className="text-base sm:text-lg">記録がありませんわ。</p>
+          <p className="text-base sm:text-lg">{t('pages.list.noRecords')}</p>
         </div>
       )}
 
