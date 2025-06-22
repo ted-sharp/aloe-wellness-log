@@ -1,7 +1,7 @@
 # 🌿 アロエ健康管理ログ
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Deployed-brightgreen)](https://yourusername.github.io/aloe-wellness-log/)
-[![React](https://img.shields.io/badge/React-19.1.0-blue)](https://reactjs.org/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Deployed-brightgreen)](https://ted-sharp.github.io/aloe-wellness-log/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue)](https://www.typescriptlang.org/)
 [![PWA](https://img.shields.io/badge/PWA-Ready-purple)](https://web.dev/progressive-web-apps/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
@@ -37,7 +37,7 @@ _スマートフォンで QR コードをスキャンしてアプリにアクセ
 
 ### フロントエンド
 
-- **React 19.1.0** - UI フレームワーク
+- **React 18.3.1** - UI フレームワーク
 - **TypeScript 5.8.3** - 型安全性
 - **Vite 6.3.5** - ビルドツール
 - **Tailwind CSS 4.1.10** - スタイリング
