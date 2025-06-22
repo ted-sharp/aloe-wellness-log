@@ -541,7 +541,7 @@ export default function RecordExport() {
             disabled={isGeneratingTestData}
             loading={isGeneratingTestData}
           >
-            テストデータを生成（約100件）
+            テストデータを生成
           </Button>
         </div>
 
@@ -616,12 +616,13 @@ export default function RecordExport() {
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto cursor-pointer"
             >
               <HiArrowDownTray className="w-5 h-5" />
-              データをインポート（CSV・JSON）
+              データをインポート
             </label>
           </div>
         </div>
 
         <div className="text-sm text-gray-600 space-y-1 text-left">
+          <p>• CSV・JSON形式のファイルをインポートできます。</p>
           <p>• 既存のデータに追加されます。（重複IDは上書き）</p>
         </div>
       </div>
