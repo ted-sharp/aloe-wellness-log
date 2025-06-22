@@ -1,8 +1,37 @@
 {
   "name": "aloe-wellness-log-react",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "体重、血圧、運動記録などを日々記録できる健康管理Progressive Web App（PWA）",
+  "keywords": [
+    "health",
+    "wellness",
+    "pwa",
+    "react",
+    "typescript",
+    "healthcare",
+    "tracking",
+    "weight",
+    "blood-pressure",
+    "exercise",
+    "vite",
+    "tailwindcss"
+  ],
+  "homepage": "https://yourusername.github.io/aloe-wellness-log/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/aloe-wellness-log.git",
+    "directory": "aloe-wellness-log-react"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/aloe-wellness-log/issues"
+  },
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
