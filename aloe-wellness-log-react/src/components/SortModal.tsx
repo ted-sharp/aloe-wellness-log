@@ -180,7 +180,7 @@ const SortModal: React.FC<SortModalProps> = ({
           leaveTo="opacity-0"
         >
           <div
-            className="fixed inset-0"
+            className="fixed inset-0 backdrop-blur-sm"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
           />
         </Transition.Child>
