@@ -23,6 +23,16 @@
 
 **[アロエ健康管理ログを試す](https://ted-sharp.github.io/aloe-wellness-log/)**
 
+### 📱 QR コードでアクセス
+
+<div align="center">
+
+![QRコード](https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://ted-sharp.github.io/aloe-wellness-log/)
+
+_スマートフォンで QR コードをスキャンしてアプリにアクセス_
+
+</div>
+
 ## 🛠️ 技術スタック
 
 ### フロントエンド

@@ -10,6 +10,7 @@ import {
 import './App.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import QRCodeDisplay from './components/QRCodeDisplay';
 import ToastContainer from './components/ToastContainer';
 import { useRecordsStore } from './store/records';
 import {
@@ -267,8 +268,12 @@ function Navigation() {
           ))}
         </div>
 
-        {/* PWAインストールボタン（デスクトップ用） */}
-        <PWAInstallButton className="ml-4" />
+        <div className="flex items-center gap-2">
+          {/* QRコードボタン（デスクトップ用） */}
+          <QRCodeDisplay />
+          {/* PWAインストールボタン（デスクトップ用） */}
+          <PWAInstallButton className="ml-2" />
+        </div>
       </nav>
 
       {/* モバイル用ヘッダー */}
@@ -278,6 +283,8 @@ function Navigation() {
         </h1>
 
         <div className="flex items-center gap-2">
+          {/* QRコードボタン（モバイル用・小さめ） */}
+          <QRCodeDisplay className="text-xs px-2 py-1.5" />
           {/* PWAインストールボタン（モバイル用・小さめ） */}
           <PWAInstallButton className="text-xs px-3 py-1.5" />
 
