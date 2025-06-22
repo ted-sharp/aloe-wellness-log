@@ -20,7 +20,20 @@
   "pages": {
     "input": {
       "title": "Record Input",
+      "description": "Record your health data to track your daily health status",
       "subtitle": "Record your health data",
+      "recordDateTime": "Record Date & Time",
+      "date": "Date",
+      "time": "Time",
+      "setCurrentDateTime": "Set Current Date & Time",
+      "dateDescription": "Select the date for recording",
+      "timeDescription": "Select the time for recording",
+      "currentTimeDescription": "Automatically set the current date and time",
+      "notes": "Notes & Memo",
+      "notesPlaceholder": "Feel free to note your daily condition, observations, or anything noteworthy",
+      "notesDescription": "You can enter up to {{maxLength}} characters",
+      "characterCount": "{{count}}/{{max}} characters",
+      "record": "Record",
       "editingField": "Editing field:",
       "fieldName": "Field Name",
       "fieldUnit": "Unit",
@@ -42,8 +55,19 @@
         "alwaysShow": "Always Show",
         "hide": "Hide",
         "noAvailableFields": "No available fields",
-        "noHiddenFields": "No hidden fields"
-      }
+        "noHiddenFields": "No hidden fields",
+        "selectFieldsTitle": "Select & Manage Fields",
+        "existingFields": "Existing Fields",
+        "addNewField": "Add New Field",
+        "fieldName": "Field Name",
+        "fieldNamePlaceholder": "Enter field name",
+        "fieldNameRequired": "Field Name (Required)",
+        "unitPlaceholder": "Unit (e.g. kg, mmHg)",
+        "dataTypeRequired": "Data Type (Required)",
+        "unitOptional": "Unit (Optional)"
+      },
+      "selectFields": "Select Fields",
+      "sortFields": "Sort Fields"
     },
     "list": {
       "title": "List",

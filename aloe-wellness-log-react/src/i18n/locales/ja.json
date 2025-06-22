@@ -20,7 +20,20 @@
   "pages": {
     "input": {
       "title": "記録入力",
+      "description": "健康データを記録して、日々の健康状態を管理しましょう",
       "subtitle": "健康データを記録します",
+      "recordDateTime": "記録日時",
+      "date": "日付",
+      "time": "時刻",
+      "setCurrentDateTime": "現在の日時を設定",
+      "dateDescription": "記録する日付を選択してください",
+      "timeDescription": "記録する時刻を選択してください",
+      "currentTimeDescription": "現在の日時を自動的に設定します",
+      "notes": "備考・メモ",
+      "notesPlaceholder": "その日の体調や気になったことなど、自由にメモできます",
+      "notesDescription": "最大{{maxLength}}文字まで入力できます",
+      "characterCount": "{{count}}/{{max}}文字",
+      "record": "記録する",
       "editingField": "項目を編集中:",
       "fieldName": "項目名",
       "fieldUnit": "単位",
@@ -42,8 +55,19 @@
         "alwaysShow": "常に表示",
         "hide": "非表示",
         "noAvailableFields": "利用可能な項目がありません",
-        "noHiddenFields": "非表示の項目がありません"
-      }
+        "noHiddenFields": "非表示の項目がありません",
+        "selectFieldsTitle": "項目の選択・管理",
+        "existingFields": "既存の項目",
+        "addNewField": "新規項目の追加",
+        "fieldName": "項目名",
+        "fieldNamePlaceholder": "項目名を入力してください",
+        "fieldNameRequired": "項目名（必須）",
+        "unitPlaceholder": "単位（例: kg, mmHg）",
+        "dataTypeRequired": "データ型（必須）",
+        "unitOptional": "単位（任意）"
+      },
+      "selectFields": "項目選択",
+      "sortFields": "項目並び替え"
     },
     "list": {
       "title": "一覧",
