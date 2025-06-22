@@ -309,18 +309,11 @@ function Navigation() {
 
       {/* モバイル用ヘッダー */}
       <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
-        <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap">
+        <h1 className="text-base font-bold text-gray-800 whitespace-nowrap">
           {t('app.title')}
         </h1>
 
-        <div className="flex items-center gap-2">
-          {/* 言語切り替えボタン（モバイル用・小さめ） */}
-          <LanguageSwitcher compact />
-          {/* QRコードボタン（モバイル用・小さめ） */}
-          <QRCodeDisplay className="text-xs px-2 py-1.5" />
-          {/* PWAインストールボタン（モバイル用・小さめ） */}
-          <PWAInstallButton className="text-xs px-3 py-1.5" />
-
+        <div className="flex items-center">
           <button
             onClick={toggleMenu}
             className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
@@ -355,7 +348,7 @@ function Navigation() {
       {isMenuOpen && (
         <div
           id="mobile-menu"
-          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4"
+          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4 w-[calc(100vw-2rem)] max-w-sm mx-auto"
           role="dialog"
           aria-modal="true"
           aria-label={t('navigation.mobileNavigation')}
@@ -370,11 +363,7 @@ function Navigation() {
                   key={item.path}
                   to={item.path}
                   onClick={closeMenu}
-                  className={`px-4 py-3 font-medium text-base hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                    index < navItems.length - 1
-                      ? 'border-b border-gray-100'
-                      : ''
-                  } ${
+                  className={`px-4 py-3 font-medium text-base hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 border-b border-gray-100 ${
                     item.color === 'green'
                       ? '!text-green-600 hover:bg-green-50 focus:bg-green-50 hover:!text-green-600 visited:!text-green-600 active:!text-green-600'
                       : item.color === 'purple'
@@ -392,6 +381,20 @@ function Navigation() {
                   )}
                 </Link>
               ))}
+
+              {/* 区切り線 */}
+              <div className="border-t border-gray-200 my-2"></div>
+
+              {/* 言語切り替え */}
+              <div className="flex justify-center px-4 py-2">
+                <LanguageSwitcher compact />
+              </div>
+
+              {/* QRコードとPWAボタン */}
+              <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100">
+                <QRCodeDisplay className="text-sm px-3 py-2" />
+                <PWAInstallButton className="text-sm px-3 py-2" />
+              </div>
             </div>
           </nav>
         </div>
