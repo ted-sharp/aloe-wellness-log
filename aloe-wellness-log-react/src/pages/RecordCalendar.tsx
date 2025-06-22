@@ -7,10 +7,13 @@ import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 
 export default function RecordCalendar() {
-  const { t, translateFieldName } = useI18n();
+  const { t, translateFieldName, currentLanguage, formatDate } = useI18n();
   const { records, fields, loadRecords, loadFields } = useRecordsStore();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [expandedTexts, setExpandedTexts] = useState<Set<string>>(new Set());
+
+  // 現在の言語からlocaleを決定
+  const currentLocale = currentLanguage === 'ja' ? 'ja-JP' : 'en-US';
 
   useEffect(() => {
     loadFields();
@@ -168,6 +171,7 @@ export default function RecordCalendar() {
         <Calendar
           onChange={date => setSelectedDate(date as Date)}
           value={selectedDate}
+          locale={currentLocale}
           tileContent={({ date, view }) => {
             if (view === 'month') {
               // タイムゾーンを考慮した日付文字列を作成
@@ -189,7 +193,13 @@ export default function RecordCalendar() {
       {selectedDate && (
         <div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-8">
-            {selectedDate.toLocaleDateString()} {t('pages.calendar.recordsFor')}
+            {formatDate(selectedDate, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              weekday: 'long',
+            })}{' '}
+            {t('pages.calendar.recordsFor')}
           </h2>
           {selectedRecords.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
@@ -229,7 +239,7 @@ export default function RecordCalendar() {
                                         toggleTextExpansion(rec.id)
                                       }
                                       className="text-left hover:text-blue-600 transition-colors break-words w-full"
-                                      title="クリックして全文表示"
+                                      title={t('common.clickToExpand')}
                                     >
                                       {isTextExpanded(rec.id)
                                         ? rec.value
