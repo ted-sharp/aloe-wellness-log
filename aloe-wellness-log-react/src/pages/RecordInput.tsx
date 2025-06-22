@@ -14,6 +14,7 @@ import {
 import DateTimeSelector from '../components/DateTimeSelector';
 import NotesInput from '../components/NotesInput';
 import SortModal from '../components/SortModal';
+import { useFormAccessibility, useLiveRegion } from '../hooks/useAccessibility';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { useFieldManagement } from '../hooks/useFieldManagement';
 import { useRecordsStore } from '../store/records';
@@ -36,6 +37,10 @@ export default function RecordInput() {
     useRecordsStore();
   const { showSuccess } = useToastStore();
   const { handleAsyncError } = useErrorHandler();
+
+  // アクセシビリティフック
+  const { announcePolite } = useLiveRegion();
+  const { getFieldProps } = useFormAccessibility();
 
   // カスタムフックからフィールド管理機能を取得
   const fieldManagement = useFieldManagement();
@@ -66,6 +71,12 @@ export default function RecordInput() {
 
   const handleChange = (fieldId: string, value: string | number | boolean) => {
     setValues(prev => ({ ...prev, [fieldId]: value }));
+
+    // 値が変更されたことをアナウンス（但し過度にならないよう、boolean型のみ）
+    const field = fields.find(f => f.fieldId === fieldId);
+    if (field?.type === 'boolean' && typeof value === 'boolean') {
+      announcePolite(`${field.name}を${value ? 'あり' : 'なし'}に設定しました`);
+    }
   };
 
   // 項目が入力されているかどうかを判定する関数
@@ -124,6 +135,7 @@ export default function RecordInput() {
     const error = validate();
     if (error) {
       setFormError(error);
+      announcePolite(`入力エラー: ${error}`);
       return;
     }
 
@@ -133,6 +145,9 @@ export default function RecordInput() {
         const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
         // より一意性を保つために現在のタイムスタンプを追加
         const uniqueTimestamp = Date.now();
+
+        // 入力された項目数をカウント
+        let recordedCount = 0;
 
         // 入力された項目のみ保存
         for (const field of fields) {
@@ -150,6 +165,7 @@ export default function RecordInput() {
               fieldId: field.fieldId,
               value: value,
             });
+            recordedCount++;
           }
         }
 
@@ -163,7 +179,11 @@ export default function RecordInput() {
             fieldId: 'notes',
             value: recordNotes.trim(),
           });
+          recordedCount++;
         }
+
+        // 記録成功をアナウンス
+        announcePolite(`${recordedCount}件の項目を記録しました`);
 
         return true;
       },
@@ -195,11 +215,23 @@ export default function RecordInput() {
     return rec ? rec.value : '';
   };
 
+  // 前回値設定時のアナウンス付きハンドラー
+  const handleSetLastValue = (fieldId: string) => {
+    const lastValue = getLastValue(fieldId);
+    const field = fields.find(f => f.fieldId === fieldId);
+    setValues(v => ({ ...v, [fieldId]: lastValue }));
+
+    if (field && lastValue !== '') {
+      announcePolite(`${field.name}に前回値を設定しました`);
+    }
+  };
+
   // 日時リセット
   const handleSetCurrentDateTime = () => {
     const now = new Date();
     setRecordDate(now.toISOString().slice(0, 10));
     setRecordTime(now.toTimeString().slice(0, 5));
+    announcePolite('現在の日時を設定しました');
   };
 
   return (
@@ -402,31 +434,38 @@ export default function RecordInput() {
                       <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-200">
                         <button
                           type="button"
-                          className="bg-sky-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                          onClick={() =>
-                            setValues(v => ({
-                              ...v,
-                              [field.fieldId]: getLastValue(field.fieldId),
-                            }))
-                          }
+                          className="bg-sky-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                          onClick={() => handleSetLastValue(field.fieldId)}
+                          aria-label={`${field.name}に前回の記録値を設定`}
                         >
-                          <HiClipboardDocumentList className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <HiClipboardDocumentList
+                            className="w-3 h-3 sm:w-4 sm:h-4"
+                            aria-hidden="true"
+                          />
                           前回値
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleEditField(field)}
-                          className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                          className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                          aria-label={`${field.name}項目を編集`}
                         >
-                          <HiPencil className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <HiPencil
+                            className="w-3 h-3 sm:w-4 sm:h-4"
+                            aria-hidden="true"
+                          />
                           編集
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleHideField(field)}
-                          className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                          className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                          aria-label={`${field.name}項目を非表示にする`}
                         >
-                          <HiEyeSlash className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <HiEyeSlash
+                            className="w-3 h-3 sm:w-4 sm:h-4"
+                            aria-hidden="true"
+                          />
                           非表示
                         </button>
                       </div>
@@ -805,17 +844,22 @@ export default function RecordInput() {
               <button
                 type="button"
                 onClick={() => fieldManagement.setShowSelectField(true)}
-                className="bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                className="bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                aria-label="記録項目の選択と表示設定を開く"
               >
-                <HiClipboardDocumentList className="w-4 h-4 sm:w-5 sm:h-5" />
+                <HiClipboardDocumentList
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  aria-hidden="true"
+                />
                 項目を選択・表示
               </button>
               <button
                 type="button"
                 onClick={fieldManagement.handleOpenSortModal}
-                className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-purple-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                aria-label="記録項目の並び替えを開く"
               >
-                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                 並び替え
               </button>
             </div>
