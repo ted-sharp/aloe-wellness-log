@@ -3,6 +3,76 @@ import * as db from '../db/indexedDb';
 import { DbError, DbErrorType } from '../db/indexedDb';
 import type { Field, RecordItem } from '../types/record';
 
+// フィールドIDと基本構造の定義（翻訳なし）
+const baseFieldStructure = [
+  {
+    fieldId: 'weight',
+    unit: 'kg',
+    type: 'number' as const,
+    order: 1,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'systolic_bp',
+    unit: 'mmHg',
+    type: 'number' as const,
+    order: 2,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'diastolic_bp',
+    unit: 'mmHg',
+    type: 'number' as const,
+    order: 3,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'heart_rate',
+    unit: 'bpm',
+    type: 'number' as const,
+    order: 4,
+    defaultDisplay: false,
+  },
+  {
+    fieldId: 'body_temperature',
+    unit: '℃',
+    type: 'number' as const,
+    order: 5,
+    defaultDisplay: false,
+  },
+  {
+    fieldId: 'exercise',
+    type: 'boolean' as const,
+    order: 6,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'meal',
+    type: 'boolean' as const,
+    order: 7,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'sleep',
+    type: 'boolean' as const,
+    order: 8,
+    defaultDisplay: true,
+  },
+  {
+    fieldId: 'smoke',
+    type: 'boolean' as const,
+    order: 9,
+    defaultDisplay: false,
+  },
+  {
+    fieldId: 'alcohol',
+    type: 'boolean' as const,
+    order: 10,
+    defaultDisplay: false,
+  },
+];
+
+// 後方互換性のための既存のinitialFields（廃止予定）
 const initialFields: Field[] = [
   {
     fieldId: 'weight',
@@ -81,6 +151,9 @@ const initialFields: Field[] = [
   },
 ];
 
+// 翻訳関数の型定義
+type TranslateFn = (fieldId: string) => string;
+
 // 操作状態の定義
 interface OperationState {
   loading: boolean;
@@ -101,6 +174,9 @@ type RecordsState = {
   loadFields: () => Promise<void>;
   addField: (field: Field) => Promise<void>;
   initializeFields: () => Promise<void>;
+  initializeFieldsWithTranslation: (
+    translateFieldName: TranslateFn
+  ) => Promise<void>;
   updateField: (field: Field) => Promise<void>;
   updateRecord: (record: RecordItem) => Promise<void>;
   deleteRecord: (id: string) => Promise<void>;
@@ -303,6 +379,25 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
       // バッチ操作で初期フィールドを追加
       await db.batchUpdateFields(initialFields);
       set({ fields: initialFields });
+    }
+  },
+
+  initializeFieldsWithTranslation: async (translateFieldName: TranslateFn) => {
+    const fields = await db.getAllFields();
+    if (fields.length === 0) {
+      // バッチ操作で初期フィールドを追加
+      await db.batchUpdateFields(
+        baseFieldStructure.map(field => ({
+          ...field,
+          name: translateFieldName(field.fieldId),
+        }))
+      );
+      set({
+        fields: baseFieldStructure.map(field => ({
+          ...field,
+          name: translateFieldName(field.fieldId),
+        })),
+      });
     }
   },
 

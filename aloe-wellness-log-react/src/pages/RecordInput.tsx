@@ -17,30 +17,39 @@ import SortModal from '../components/SortModal';
 import { useFormAccessibility, useLiveRegion } from '../hooks/useAccessibility';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { useFieldManagement } from '../hooks/useFieldManagement';
+import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import { useToastStore } from '../store/toast';
-import type { Field } from '../types/record';
+import type { Field, RecordItem } from '../types/record';
 import {
   validateDateString,
   validateFieldValue,
   validateTimeString,
 } from '../utils/validation';
 
-const FIELD_TYPES = [
-  { value: 'number', label: '数値' },
-  { value: 'string', label: '文字列' },
-  { value: 'boolean', label: '成否' },
-] as const;
+// データ型オプションは動的に生成
 
 export default function RecordInput() {
-  const { fields, loadFields, addRecord, loadRecords, records } =
-    useRecordsStore();
-  const { showSuccess } = useToastStore();
-  const { handleAsyncError } = useErrorHandler();
+  // 国際化フック
+  const {
+    t,
+    translateFieldName,
+    translateError,
+    getAriaLabel,
+    getAnnouncement,
+  } = useI18n();
 
   // アクセシビリティフック
   const { announcePolite } = useLiveRegion();
   const { getFieldProps } = useFormAccessibility();
+
+  // エラーハンドリングフック
+  const { handleAsyncError } = useErrorHandler();
+
+  // ストア
+  const { fields, loadFields, addRecord, loadRecords, records } =
+    useRecordsStore();
+  const { showSuccess, showError } = useToastStore();
 
   // カスタムフックからフィールド管理機能を取得
   const fieldManagement = useFieldManagement();
@@ -64,6 +73,9 @@ export default function RecordInput() {
   // 備考管理用のstate
   const [recordNotes, setRecordNotes] = useState<string>('');
 
+  // 並び替えモーダルの表示状態
+  const [showSortModal, setShowSortModal] = useState(false);
+
   useEffect(() => {
     loadFields();
     loadRecords();
@@ -71,6 +83,7 @@ export default function RecordInput() {
 
   const handleChange = (fieldId: string, value: string | number | boolean) => {
     setValues(prev => ({ ...prev, [fieldId]: value }));
+    setFormError(null); // エラーをクリア
 
     // 値が変更されたことをアナウンス（但し過度にならないよう、boolean型のみ）
     const field = fields.find(f => f.fieldId === fieldId);
@@ -126,112 +139,132 @@ export default function RecordInput() {
       return '備考は500文字以内で入力してください';
     }
 
+    // 記録する項目が1つもない場合はエラー
+    const hasAnyRecord =
+      recordNotes.trim() !== '' ||
+      fields.some(field => hasValue(field, values[field.fieldId]));
+
+    if (!hasAnyRecord) {
+      return t('validation.required');
+    }
+
     return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError(null);
+
+    // バリデーション
     const error = validate();
     if (error) {
       setFormError(error);
-      announcePolite(`入力エラー: ${error}`);
+      announcePolite(t('errors.inputError', { message: error }));
       return;
     }
 
-    const result = await handleAsyncError(
-      async () => {
-        // 選択された日時を使用
-        const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
-        // より一意性を保つために現在のタイムスタンプを追加
-        const uniqueTimestamp = Date.now();
+    try {
+      // 入力された項目数をカウント
+      let recordedCount = 0;
 
-        // 入力された項目数をカウント
-        let recordedCount = 0;
+      // 入力された項目のみ保存
+      const recordsToAdd: RecordItem[] = [];
 
-        // 入力された項目のみ保存
-        for (const field of fields) {
-          const value = values[field.fieldId];
-
-          // 入力されている項目のみ記録
-          if (hasValue(field, value)) {
-            await addRecord({
-              id: `${selectedDateTime.toISOString()}-${
-                field.fieldId
-              }-${uniqueTimestamp}`,
-              date: recordDate,
-              time: recordTime,
-              datetime: selectedDateTime.toISOString(),
-              fieldId: field.fieldId,
-              value: value,
-            });
-            recordedCount++;
-          }
-        }
-
-        // 備考が入力されている場合、備考も保存
-        if (recordNotes.trim()) {
-          await addRecord({
-            id: `${selectedDateTime.toISOString()}-notes-${uniqueTimestamp}`,
+      // 入力されている項目のみ記録
+      for (const field of fields) {
+        const value = values[field.fieldId];
+        if (hasValue(field, value)) {
+          const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
+          recordsToAdd.push({
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            fieldId: field.fieldId,
+            value: value,
             date: recordDate,
             time: recordTime,
             datetime: selectedDateTime.toISOString(),
-            fieldId: 'notes',
-            value: recordNotes.trim(),
           });
           recordedCount++;
         }
-
-        // 記録成功をアナウンス
-        announcePolite(`${recordedCount}件の項目を記録しました`);
-
-        return true;
-      },
-      {
-        context: '記録保存',
-        fallbackMessage:
-          '保存に失敗いたしましたわ。もう一度お試しくださいませ。',
       }
-    );
 
-    // 保存が成功した場合のみクリアと成功メッセージ
-    if (result) {
-      showSuccess('記録を保存いたしましたわ');
+      // 備考が入力されている場合、備考も保存
+      if (recordNotes.trim() !== '') {
+        const selectedDateTime = new Date(`${recordDate}T${recordTime}:00`);
+        recordsToAdd.push({
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          fieldId: 'notes',
+          value: recordNotes.trim(),
+          date: recordDate,
+          time: recordTime,
+          datetime: selectedDateTime.toISOString(),
+        });
+        recordedCount++;
+      }
+
+      // レコードを一括で追加
+      for (const record of recordsToAdd) {
+        await addRecord(record);
+      }
+
+      // 記録成功をアナウンス
+      announcePolite(getAnnouncement('recordSaved', { count: recordedCount }));
+
+      // 記録成功の処理
+
+      // 保存が成功した場合のみクリアと成功メッセージ
+      setValues({});
+      showSuccess(t('pages.input.recordSuccess'));
 
       // 全ての入力値をクリア（記録後は毎回空の状態にする）
-      setValues({});
-
-      // 一時表示項目をクリア（defaultDisplay: false の項目を非表示に戻す）
-      fieldManagement.temporaryDisplayFields.clear();
-
-      // 備考もクリア
       setRecordNotes('');
+
+      // 現在時刻に更新
+      const now = new Date();
+      setRecordDate(now.toISOString().slice(0, 10));
+      setRecordTime(now.toTimeString().slice(0, 5));
+    } catch (error) {
+      console.error('Save error:', error);
+      const errorMessage = translateError(
+        'database',
+        t('pages.input.recordError')
+      );
+      setFormError(errorMessage);
+      showError(errorMessage);
     }
   };
 
   // 前回値を取得する関数
   const getLastValue = (fieldId: string): string | number | boolean => {
-    const rec = [...records].reverse().find(r => r.fieldId === fieldId);
-    return rec ? rec.value : '';
+    const lastRecord = [...records]
+      .filter(record => record.fieldId === fieldId)
+      .sort(
+        (a, b) =>
+          new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
+      )[0];
+    return lastRecord?.value ?? '';
   };
 
-  // 前回値設定時のアナウンス付きハンドラー
+  // 前回値を設定するハンドラー
   const handleSetLastValue = (fieldId: string) => {
     const lastValue = getLastValue(fieldId);
-    const field = fields.find(f => f.fieldId === fieldId);
-    setValues(v => ({ ...v, [fieldId]: lastValue }));
-
-    if (field && lastValue !== '') {
-      announcePolite(`${field.name}に前回値を設定しました`);
+    if (lastValue !== '') {
+      handleChange(fieldId, lastValue);
+      const field = fields.find(f => f.fieldId === fieldId);
+      if (field) {
+        announcePolite(
+          getAnnouncement('previousValueSet', {
+            fieldName: translateFieldName(field.fieldId),
+          })
+        );
+      }
     }
   };
 
-  // 日時リセット
+  // 現在の日時を設定する関数
   const handleSetCurrentDateTime = () => {
     const now = new Date();
     setRecordDate(now.toISOString().slice(0, 10));
     setRecordTime(now.toTimeString().slice(0, 5));
-    announcePolite('現在の日時を設定しました');
+    announcePolite(getAnnouncement('currentTimeSet'));
   };
 
   return (
@@ -239,10 +272,10 @@ export default function RecordInput() {
       <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 whitespace-nowrap">
-            健康記録入力
+            {t('pages.input.title')}
           </h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            項目をクリックすると操作ボタンが表示されます
+            {t('pages.input.description')}
           </p>
         </div>
 
@@ -287,7 +320,9 @@ export default function RecordInput() {
                             }))
                           }
                           className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                          placeholder="項目名"
+                          placeholder={t(
+                            'pages.input.fieldManagement.fieldName'
+                          )}
                         />
                       </div>
                       <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
@@ -306,7 +341,9 @@ export default function RecordInput() {
                               }))
                             }
                             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                            placeholder="単位（例: kg）"
+                            placeholder={t(
+                              'pages.input.fieldManagement.unitPlaceholder'
+                            )}
                           />
                         )}
                       </div>
@@ -320,7 +357,7 @@ export default function RecordInput() {
                         className="bg-green-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
                       >
                         <HiCheckCircle className="w-4 h-4" />
-                        保存
+                        {t('actions.save')}
                       </button>
                       <button
                         type="button"
@@ -332,7 +369,7 @@ export default function RecordInput() {
                         className="bg-gray-400 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
                       >
                         <HiXMark className="w-4 h-4" />
-                        キャンセル
+                        {t('actions.cancel')}
                       </button>
                     </div>
                   </div>
@@ -363,9 +400,11 @@ export default function RecordInput() {
                                     ? 'bg-green-100 border-green-500 text-green-700'
                                     : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                                 }`}
-                                aria-label={`${field.name}をありに設定`}
+                                aria-label={getAriaLabel('setToYes', {
+                                  fieldName: translateFieldName(field.fieldId),
+                                })}
                               >
-                                あり
+                                {t('fields.yes')}
                               </button>
                               <button
                                 type="button"
@@ -378,9 +417,11 @@ export default function RecordInput() {
                                     ? 'bg-red-100 border-red-500 text-red-700'
                                     : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                                 }`}
-                                aria-label={`${field.name}をなしに設定`}
+                                aria-label={getAriaLabel('setToNo', {
+                                  fieldName: translateFieldName(field.fieldId),
+                                })}
                               >
-                                なし
+                                {t('fields.no')}
                               </button>
                               {values[field.fieldId] !== undefined && (
                                 <button
@@ -394,8 +435,12 @@ export default function RecordInput() {
                                     });
                                   }}
                                   className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
-                                  aria-label={`${field.name}の選択をクリア`}
-                                  title="選択をクリア"
+                                  aria-label={getAriaLabel('clearSelection', {
+                                    fieldName: translateFieldName(
+                                      field.fieldId
+                                    ),
+                                  })}
+                                  title={t('fields.clearSelection')}
                                 >
                                   ×
                                 </button>
@@ -415,7 +460,9 @@ export default function RecordInput() {
                               }
                               onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
                               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                              aria-label={`${field.name}を入力`}
+                              aria-label={getAriaLabel('inputField', {
+                                fieldName: translateFieldName(field.fieldId),
+                              })}
                             />
                           )}
                           <div className="w-full sm:w-32">
@@ -436,37 +483,43 @@ export default function RecordInput() {
                           type="button"
                           className="bg-sky-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           onClick={() => handleSetLastValue(field.fieldId)}
-                          aria-label={`${field.name}に前回の記録値を設定`}
+                          aria-label={getAriaLabel('setPreviousValue', {
+                            fieldName: translateFieldName(field.fieldId),
+                          })}
                         >
                           <HiClipboardDocumentList
                             className="w-3 h-3 sm:w-4 sm:h-4"
                             aria-hidden="true"
                           />
-                          前回値
+                          {t('actions.lastValue')}
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleEditField(field)}
                           className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                          aria-label={`${field.name}項目を編集`}
+                          aria-label={getAriaLabel('editField', {
+                            fieldName: translateFieldName(field.fieldId),
+                          })}
                         >
                           <HiPencil
                             className="w-3 h-3 sm:w-4 sm:h-4"
                             aria-hidden="true"
                           />
-                          編集
+                          {t('actions.edit')}
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleHideField(field)}
                           className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                          aria-label={`${field.name}項目を非表示にする`}
+                          aria-label={getAriaLabel('hideField', {
+                            fieldName: translateFieldName(field.fieldId),
+                          })}
                         >
                           <HiEyeSlash
                             className="w-3 h-3 sm:w-4 sm:h-4"
                             aria-hidden="true"
                           />
-                          非表示
+                          {t('actions.hide')}
                         </button>
                       </div>
                     )}
@@ -482,7 +535,7 @@ export default function RecordInput() {
               role="alert"
               aria-live="polite"
             >
-              <span className="sr-only">エラー: </span>
+              <span className="sr-only">{t('aria.formError')}</span>
               {formError}
             </div>
           )}
@@ -496,7 +549,7 @@ export default function RecordInput() {
               className="w-5 h-5 sm:w-6 sm:h-6"
               aria-hidden="true"
             />
-            記録する
+            {t('pages.input.record')}
           </button>
         </form>
 
@@ -506,13 +559,13 @@ export default function RecordInput() {
             <div className="bg-white p-6 rounded-2xl shadow-md">
               <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <HiClipboardDocumentList className="w-6 h-6 text-blue-600" />
-                項目を選択・表示
+                {t('pages.input.fieldManagement.selectFieldsTitle')}
               </h3>
               <div className="space-y-4">
                 {fieldManagement.getHiddenFields().length > 0 && (
                   <>
                     <h4 className="text-xl font-medium text-gray-700 text-left">
-                      既存の項目から選択:
+                      {t('pages.input.fieldManagement.existingFields')}
                     </h4>
                     <div className="space-y-3">
                       {fieldManagement.getHiddenFields().map(field => (
@@ -538,7 +591,9 @@ export default function RecordInput() {
                                       )
                                     }
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                                    placeholder="項目名"
+                                    placeholder={t(
+                                      'pages.input.fieldManagement.fieldName'
+                                    )}
                                   />
                                 </div>
                                 <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
@@ -554,7 +609,9 @@ export default function RecordInput() {
                                       )
                                     }
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                                    placeholder="単位（例: kg）"
+                                    placeholder={t(
+                                      'pages.input.fieldManagement.unitPlaceholder'
+                                    )}
                                   />
                                 </div>
                               </div>
@@ -568,7 +625,7 @@ export default function RecordInput() {
                                   className="bg-green-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
                                 >
                                   <HiCheckCircle className="w-4 h-4" />
-                                  保存
+                                  {t('actions.save')}
                                 </button>
                                 <button
                                   type="button"
@@ -581,7 +638,7 @@ export default function RecordInput() {
                                   className="bg-gray-400 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
                                 >
                                   <HiXMark className="w-4 h-4" />
-                                  キャンセル
+                                  {t('actions.cancel')}
                                 </button>
                               </div>
                             </div>
@@ -619,7 +676,7 @@ export default function RecordInput() {
                                     className="bg-green-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
                                     <HiCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    表示
+                                    {t('actions.display')}
                                   </button>
                                   <button
                                     type="button"
@@ -631,7 +688,7 @@ export default function RecordInput() {
                                     className="bg-teal-400 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
                                     <HiPlus className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    追加
+                                    {t('actions.add')}
                                   </button>
                                   <button
                                     type="button"
@@ -643,7 +700,7 @@ export default function RecordInput() {
                                     className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
                                     <HiPencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    編集
+                                    {t('actions.edit')}
                                   </button>
                                   <button
                                     type="button"
@@ -655,7 +712,7 @@ export default function RecordInput() {
                                     className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
                                     <HiTrash className="w-3 h-3 sm:w-4 sm:h-4" />
-                                    削除
+                                    {t('actions.delete')}
                                   </button>
                                 </div>
                               )}
@@ -676,18 +733,23 @@ export default function RecordInput() {
                         className="w-6 h-6 text-green-600"
                         aria-hidden="true"
                       />
-                      新しい項目を追加
+                      {t('pages.input.fieldManagement.addNewField')}
                     </h4>
                     <fieldset className="space-y-4">
-                      <legend className="sr-only">新規項目の詳細情報</legend>
+                      <legend className="sr-only">
+                        {t('aria.newFieldDetails')}
+                      </legend>
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1">
                           <label
                             htmlFor="new-field-name"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            項目名{' '}
-                            <span className="text-red-600" aria-label="必須">
+                            {t('pages.input.fieldManagement.fieldNameRequired')}{' '}
+                            <span
+                              className="text-red-600"
+                              aria-label={t('fields.required')}
+                            >
                               *
                             </span>
                           </label>
@@ -702,19 +764,23 @@ export default function RecordInput() {
                               }))
                             }
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
-                            placeholder="例: 体重"
+                            placeholder={t(
+                              'pages.input.fieldManagement.fieldNamePlaceholder'
+                            )}
                             required
                             aria-required="true"
                             aria-describedby="new-field-name-desc"
                             aria-invalid={
                               fieldManagement.addFieldError &&
-                              fieldManagement.addFieldError.includes('項目名')
+                              fieldManagement.addFieldError.includes(
+                                t('validation.fieldNameRequired')
+                              )
                                 ? 'true'
                                 : 'false'
                             }
                           />
                           <div id="new-field-name-desc" className="sr-only">
-                            記録したい項目の名前を入力してください
+                            {t('aria.fieldNameDescription')}
                           </div>
                         </div>
                         <div className="w-full sm:w-32">
@@ -722,8 +788,11 @@ export default function RecordInput() {
                             htmlFor="new-field-type"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            データ型{' '}
-                            <span className="text-red-600" aria-label="必須">
+                            {t('pages.input.fieldManagement.dataTypeRequired')}{' '}
+                            <span
+                              className="text-red-600"
+                              aria-label={t('fields.required')}
+                            >
                               *
                             </span>
                           </label>
@@ -744,14 +813,18 @@ export default function RecordInput() {
                             aria-required="true"
                             aria-describedby="new-field-type-desc"
                           >
-                            {FIELD_TYPES.map(type => (
-                              <option key={type.value} value={type.value}>
-                                {type.label}
-                              </option>
-                            ))}
+                            <option value="number">
+                              {t('fields.types.number')}
+                            </option>
+                            <option value="string">
+                              {t('fields.types.string')}
+                            </option>
+                            <option value="boolean">
+                              {t('fields.types.boolean')}
+                            </option>
                           </select>
                           <div id="new-field-type-desc" className="sr-only">
-                            項目に入力するデータの種類を選択してください
+                            {t('aria.dataTypeDescription')}
                           </div>
                         </div>
                         <div className="w-full sm:w-32">
@@ -759,7 +832,7 @@ export default function RecordInput() {
                             htmlFor="new-field-unit"
                             className="block text-sm font-medium text-gray-700 mb-1"
                           >
-                            単位（任意）
+                            {t('pages.input.fieldManagement.unitOptional')}
                           </label>
                           <input
                             id="new-field-unit"
@@ -776,7 +849,7 @@ export default function RecordInput() {
                             aria-describedby="new-field-unit-desc"
                           />
                           <div id="new-field-unit-desc" className="sr-only">
-                            項目の単位を入力してください（例: kg、mmHg）
+                            {t('aria.unitFieldDescription')}
                           </div>
                         </div>
                       </div>
@@ -788,7 +861,7 @@ export default function RecordInput() {
                           role="alert"
                           aria-live="polite"
                         >
-                          <span className="sr-only">エラー: </span>
+                          <span className="sr-only">{t('aria.formError')}</span>
                           {fieldManagement.addFieldError}
                         </div>
                       )}
@@ -803,7 +876,7 @@ export default function RecordInput() {
                           }
                         >
                           <HiPlus className="w-4 h-4" aria-hidden="true" />
-                          追加
+                          {t('actions.add')}
                         </button>
                         <button
                           type="button"
@@ -811,7 +884,7 @@ export default function RecordInput() {
                           className="bg-gray-400 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 text-sm sm:text-base flex-1 sm:min-w-[120px]"
                         >
                           <HiXMark className="w-4 h-4" aria-hidden="true" />
-                          キャンセル
+                          {t('actions.cancel')}
                         </button>
                       </div>
                     </fieldset>
@@ -825,7 +898,7 @@ export default function RecordInput() {
                       className="bg-teal-500 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
                     >
                       <HiPlus className="w-4 h-4" />
-                      新しい項目を追加
+                      {t('pages.input.fieldManagement.addNewField')}
                     </button>
                   )}
                   <button
@@ -834,7 +907,7 @@ export default function RecordInput() {
                     className="bg-gray-500 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
                     <HiArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    戻る
+                    {t('actions.back')}
                   </button>
                 </div>
               </div>
@@ -845,22 +918,26 @@ export default function RecordInput() {
                 type="button"
                 onClick={() => fieldManagement.setShowSelectField(true)}
                 className="bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
-                aria-label="記録項目の選択と表示設定を開く"
+                aria-label={getAriaLabel('showField', {
+                  fieldName: t('pages.input.selectFields'),
+                })}
               >
                 <HiClipboardDocumentList
                   className="w-4 h-4 sm:w-5 sm:h-5"
                   aria-hidden="true"
                 />
-                項目を選択・表示
+                {t('pages.input.selectFields')}
               </button>
               <button
                 type="button"
                 onClick={fieldManagement.handleOpenSortModal}
                 className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
-                aria-label="記録項目の並び替えを開く"
+                aria-label={getAriaLabel('sort', {
+                  fieldName: t('pages.input.sortFields'),
+                })}
               >
                 <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-                並び替え
+                {t('pages.input.sortFields')}
               </button>
             </div>
           )}

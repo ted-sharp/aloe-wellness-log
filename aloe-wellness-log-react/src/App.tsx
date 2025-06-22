@@ -186,12 +186,12 @@ const PageLoader = ({ pageName }: { pageName?: string }) => {
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
         <p className="text-gray-600 font-medium">
-          {pageName ? `${pageName}を読み込み中...` : 'ページを読み込み中...'}
+          {pageName
+            ? t('loading.pageWithName', { pageName })
+            : t('loading.page')}
         </p>
         {isDev && (
-          <p className="text-xs text-gray-400">
-            Development: パフォーマンス測定中
-          </p>
+          <p className="text-xs text-gray-400">{t('loading.performance')}</p>
         )}
       </div>
     </div>
@@ -386,7 +386,9 @@ function Navigation() {
 }
 
 function App() {
-  const { initializeFields } = useRecordsStore();
+  const { initializeFields, initializeFieldsWithTranslation } =
+    useRecordsStore();
+  const { t, translateFieldName } = useI18n();
 
   useEffect(() => {
     try {
@@ -406,8 +408,8 @@ function App() {
         }
       }
 
-      // フィールド初期化
-      initializeFields();
+      // フィールド初期化（国際化対応）
+      initializeFieldsWithTranslation(translateFieldName);
 
       if (isDev) {
         perfEnd('App-initialization');
@@ -417,12 +419,13 @@ function App() {
       console.error('❌ App initialization failed:', error);
       // エラーが発生してもアプリは動作させる
       try {
+        // フォールバックとして既存の初期化を使用
         initializeFields();
       } catch (fallbackError) {
         console.error('❌ Fallback initialization also failed:', fallbackError);
       }
     }
-  }, [initializeFields]);
+  }, [initializeFields, initializeFieldsWithTranslation, translateFieldName]);
 
   return (
     <ErrorBoundary>
@@ -439,7 +442,11 @@ function App() {
                 <Route
                   path="/"
                   element={
-                    <Suspense fallback={<PageLoader pageName="記録入力画面" />}>
+                    <Suspense
+                      fallback={
+                        <PageLoader pageName={t('pages.input.title')} />
+                      }
+                    >
                       <RecordInput />
                     </Suspense>
                   }
@@ -447,7 +454,9 @@ function App() {
                 <Route
                   path="/list"
                   element={
-                    <Suspense fallback={<PageLoader pageName="記録一覧画面" />}>
+                    <Suspense
+                      fallback={<PageLoader pageName={t('pages.list.title')} />}
+                    >
                       <RecordList />
                     </Suspense>
                   }
@@ -455,7 +464,11 @@ function App() {
                 <Route
                   path="/graph"
                   element={
-                    <Suspense fallback={<PageLoader pageName="グラフ画面" />}>
+                    <Suspense
+                      fallback={
+                        <PageLoader pageName={t('pages.graph.title')} />
+                      }
+                    >
                       <RecordGraph />
                     </Suspense>
                   }
@@ -464,7 +477,9 @@ function App() {
                   path="/calendar"
                   element={
                     <Suspense
-                      fallback={<PageLoader pageName="カレンダー画面" />}
+                      fallback={
+                        <PageLoader pageName={t('pages.calendar.title')} />
+                      }
                     >
                       <RecordCalendar />
                     </Suspense>
@@ -473,7 +488,11 @@ function App() {
                 <Route
                   path="/export"
                   element={
-                    <Suspense fallback={<PageLoader pageName="管理画面" />}>
+                    <Suspense
+                      fallback={
+                        <PageLoader pageName={t('pages.management.title')} />
+                      }
+                    >
                       <RecordExport />
                     </Suspense>
                   }

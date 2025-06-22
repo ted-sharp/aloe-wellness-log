@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { HiDocumentText } from 'react-icons/hi2';
+import { useI18n } from '../hooks/useI18n';
 
 interface NotesInputProps {
   value: string;
@@ -10,12 +11,9 @@ interface NotesInputProps {
 
 // メモ化されたNotesInputコンポーネント
 const NotesInput: React.FC<NotesInputProps> = memo(
-  ({
-    value,
-    onChange,
-    maxLength = 500,
-    placeholder = 'その時の体調、気づき、特記事項など（任意）',
-  }) => {
+  ({ value, onChange, maxLength = 500, placeholder }) => {
+    const { t } = useI18n();
+
     // 入力ハンドラーをメモ化
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -26,7 +24,12 @@ const NotesInput: React.FC<NotesInputProps> = memo(
 
     // 文字数計算をメモ化
     const charCount = value.length;
+    const remaining = maxLength - charCount;
     const isNearLimit = charCount > maxLength * 0.8; // 80%を超えた場合
+
+    // プレースホルダーのデフォルト値を翻訳
+    const effectivePlaceholder =
+      placeholder || t('pages.input.notesPlaceholder');
 
     return (
       <div className="bg-white p-6 rounded-2xl shadow-md">
@@ -39,22 +42,21 @@ const NotesInput: React.FC<NotesInputProps> = memo(
               className="w-6 h-6 text-blue-600"
               aria-hidden="true"
             />
-            備考・メモ
+            {t('pages.input.notes')}
           </label>
           <div>
             <textarea
               id="notes-input"
               value={value}
               onChange={handleChange}
-              placeholder={placeholder}
+              placeholder={effectivePlaceholder}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 resize-none"
               maxLength={maxLength}
               aria-describedby="notes-char-count notes-description"
-              aria-label="備考・メモを入力"
+              aria-label={t('pages.input.notesPlaceholder')}
             />
             <div id="notes-description" className="sr-only">
-              体調や状況についてのメモを自由に入力できます。最大{maxLength}
-              文字まで入力可能です。
+              {t('pages.input.notesDescription', { maxLength })}
             </div>
             <div
               id="notes-char-count"
@@ -62,14 +64,18 @@ const NotesInput: React.FC<NotesInputProps> = memo(
                 isNearLimit ? 'text-orange-600 font-medium' : 'text-gray-600'
               }`}
               aria-live="polite"
-              aria-label={`${charCount}文字入力済み、残り${
-                maxLength - charCount
-              }文字`}
+              aria-label={t('aria.charactersEntered', {
+                count: charCount,
+                remaining,
+              })}
             >
-              {charCount}/{maxLength}文字
+              {t('pages.input.characterCount', {
+                count: charCount,
+                max: maxLength,
+              })}
               {isNearLimit && (
                 <span className="ml-2 text-orange-600">
-                  (残り{maxLength - charCount}文字)
+                  (残り{remaining}文字)
                 </span>
               )}
             </div>

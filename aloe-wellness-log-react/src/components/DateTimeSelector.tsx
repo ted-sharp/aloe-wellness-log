@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { HiCalendarDays, HiClock } from 'react-icons/hi2';
+import { useI18n } from '../hooks/useI18n';
 
 interface DateTimeSelectorProps {
   recordDate: string;
@@ -18,6 +19,8 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
     onTimeChange,
     onSetCurrentDateTime,
   }) => {
+    const { t } = useI18n();
+
     return (
       <div className="bg-white p-6 rounded-2xl shadow-md">
         <fieldset className="space-y-4">
@@ -26,7 +29,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
               className="w-6 h-6 text-blue-600"
               aria-hidden="true"
             />
-            記録日時
+            {t('pages.input.recordDateTime')}
           </legend>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -34,7 +37,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
                 htmlFor="record-date"
                 className="block text-base font-medium text-gray-700 mb-2"
               >
-                日付
+                {t('pages.input.date')}
               </label>
               <input
                 id="record-date"
@@ -47,7 +50,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
                 aria-required="true"
               />
               <div id="record-date-desc" className="sr-only">
-                記録する日付を選択してください
+                {t('pages.input.dateDescription')}
               </div>
             </div>
             <div className="flex-1">
@@ -55,7 +58,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
                 htmlFor="record-time"
                 className="block text-base font-medium text-gray-700 mb-2"
               >
-                時刻
+                {t('pages.input.time')}
               </label>
               <input
                 id="record-time"
@@ -68,7 +71,7 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
                 aria-required="true"
               />
               <div id="record-time-desc" className="sr-only">
-                記録する時刻を選択してください
+                {t('pages.input.timeDescription')}
               </div>
             </div>
             <div className="flex items-end">
@@ -76,14 +79,14 @@ const DateTimeSelector: React.FC<DateTimeSelectorProps> = memo(
                 type="button"
                 onClick={onSetCurrentDateTime}
                 className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                aria-label="現在の日時を設定"
+                aria-label={t('pages.input.setCurrentDateTime')}
                 aria-describedby="current-time-desc"
               >
                 <HiClock className="w-5 h-5" aria-hidden="true" />
-                現在時刻
+                {t('pages.input.setCurrentDateTime')}
               </button>
               <div id="current-time-desc" className="sr-only">
-                クリックすると現在の日付と時刻が自動的に設定されます
+                {t('pages.input.currentTimeDescription')}
               </div>
             </div>
           </div>

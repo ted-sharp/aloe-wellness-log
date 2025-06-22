@@ -25,6 +25,7 @@
       "timeDescription": "Select the time for this record",
       "setCurrentDateTime": "Set current date & time",
       "currentTimeDescription": "Click to automatically set the current date and time",
+      "currentTimeSet": "Set current date and time",
       "notes": "Notes & Memo",
       "notesPlaceholder": "Enter notes and memo",
       "notesDescription": "You can freely enter notes about your condition and situation. Up to {{maxLength}} characters allowed.",
@@ -33,13 +34,36 @@
       "recordSuccess": "Record saved successfully",
       "recordError": "Failed to save record. Please try again.",
       "selectFields": "Select & Display Items",
-      "sortFields": "Sort Items"
+      "sortFields": "Sort Items",
+      "fieldManagement": {
+        "selectFieldsTitle": "Select & Display Items",
+        "existingFields": "Select from existing items:",
+        "addNewField": "Add New Item",
+        "fieldName": "Item Name",
+        "fieldNameRequired": "Item Name (Required)",
+        "dataType": "Data Type",
+        "dataTypeRequired": "Data Type (Required)",
+        "unit": "Unit",
+        "unitPlaceholder": "Unit (e.g. kg)",
+        "unitOptional": "Unit (Optional)",
+        "fieldNamePlaceholder": "e.g. Weight",
+        "fieldTypeDescription": "Select the type of data for this item",
+        "unitDescription": "Enter the unit for this item (e.g. kg, mmHg)",
+        "addFieldError": "Error occurred while adding item",
+        "editingInstructions": "You can edit the item name and unit",
+        "addFieldSuccess": "Item added successfully",
+        "updateFieldSuccess": "Item updated successfully",
+        "deleteFieldConfirm": "Are you sure you want to delete this item?",
+        "deleteFieldSuccess": "Item deleted successfully"
+      }
     },
     "list": {
       "title": "List",
       "recordGroups": "{{count}} record groups",
       "noRecords": "No records found.",
-      "confirmDelete": "Are you sure you want to delete this record?"
+      "confirmDelete": "Are you sure you want to delete this record?",
+      "displayCount": "Display count:",
+      "itemsPerPage": "{{count}} items"
     },
     "graph": {
       "title": "Graph"
@@ -74,6 +98,7 @@
     "yes": "Yes",
     "no": "No",
     "clear": "Clear selection",
+    "clearSelection": "Clear selection",
     "required": "Required",
     "optional": "Optional",
     "unit": "Unit",
@@ -101,7 +126,11 @@
     "reset": "Reset",
     "confirm": "Confirm",
     "lastValue": "Last Value",
-    "sort": "Sort"
+    "sort": "Sort",
+    "select": "Select",
+    "display": "Display",
+    "temporarily": "Temporarily",
+    "permanently": "Permanently"
   },
   "modals": {
     "sort": {
@@ -123,7 +152,10 @@
     "maxLength": "{{field}} must be {{max}} characters or less",
     "minValue": "{{field}} must be {{min}} or greater",
     "maxValue": "{{field}} must be {{max}} or less",
-    "invalidValue": "Invalid value for {{field}}"
+    "invalidValue": "Invalid value for {{field}}",
+    "notesMaxLength": "Notes must be {{max}} characters or less",
+    "fieldNameRequired": "Item name is required",
+    "dataTypeRequired": "Data type is required"
   },
   "aria": {
     "inputField": "Enter {{fieldName}}",
@@ -134,9 +166,17 @@
     "editField": "Edit {{fieldName}} item",
     "hideField": "Hide {{fieldName}} item",
     "showField": "Show {{fieldName}} item",
+    "showFieldPermanently": "Show {{fieldName}} item permanently",
+    "showFieldTemporarily": "Show {{fieldName}} item temporarily",
+    "deleteField": "Delete {{fieldName}} item",
     "dragToSort": "Drag {{fieldName}} to sort",
     "charactersEntered": "{{count}} characters entered, {{remaining}} remaining",
-    "unitDescription": "Unit: {{unit}}"
+    "unitDescription": "Unit: {{unit}}",
+    "fieldNameDescription": "Enter the name of the item you want to record",
+    "dataTypeDescription": "Select the type of data for this item",
+    "unitFieldDescription": "Enter the unit for this item (e.g. kg, mmHg)",
+    "formError": "Error: ",
+    "newFieldDetails": "New item details"
   },
   "errors": {
     "general": "An unexpected error occurred. Please try again if you continue to experience issues.",
@@ -162,7 +202,10 @@
       "fieldDisplayChanged": "Changed {{fieldName}} to {{state}}",
       "dragStarted": "Started dragging {{fieldName}}",
       "dragCompleted": "Moved {{fieldName}} to {{targetName}} position",
-      "dragCancelled": "Cancelled dragging {{fieldName}}"
+      "dragCancelled": "Cancelled dragging {{fieldName}}",
+      "fieldAdded": "Added item {{fieldName}}",
+      "fieldUpdated": "Updated item {{fieldName}}",
+      "fieldDeleted": "Deleted item {{fieldName}}"
     }
   },
   "language": {
@@ -170,5 +213,10 @@
     "switchTo": "Switch to {{language}}",
     "japanese": "Japanese",
     "english": "English"
+  },
+  "loading": {
+    "page": "Loading page...",
+    "pageWithName": "Loading {{pageName}}...",
+    "performance": "Development: Performance monitoring"
   }
 }
