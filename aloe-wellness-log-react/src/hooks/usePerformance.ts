@@ -76,21 +76,25 @@ export function useOptimizedMemo<T>(
   deps: React.DependencyList,
   debugName?: string
 ): T {
+  // factoryとdebugNameをuseCallbackでメモ化
+  const memoizedFactory = useCallback(factory, deps);
+  const memoizedDebugName = debugName;
+
   return useMemo(() => {
     const startTime = performance.now();
-    const result = factory();
+    const result = memoizedFactory();
     const duration = performance.now() - startTime;
 
     if (isDev && duration > 10) {
       console.warn(
         `🐌 Slow memo computation: ${
-          debugName || 'Anonymous'
+          memoizedDebugName || 'Anonymous'
         } took ${duration.toFixed(2)}ms`
       );
     }
 
     return result;
-  }, deps);
+  }, [memoizedFactory, memoizedDebugName]);
 }
 
 // 大量データの仮想化支援フック
@@ -296,7 +300,7 @@ export function usePerformanceDetector(componentName: string) {
     }
 
     lastRenderTime.current = now;
-  });
+  }, [componentName]);
 
   // 改善提案を生成
   const suggestions = useOptimizedMemo(

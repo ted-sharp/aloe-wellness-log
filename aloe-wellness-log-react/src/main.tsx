@@ -83,7 +83,7 @@ window.showInstallPrompt = async () => {
 document.addEventListener('contextmenu', _e => {
   // 本番環境では右クリックメニューを無効化（必要に応じて）
   if (import.meta.env.PROD) {
-    // _e.preventDefault();
+    // _e.preventDefault(); // 必要に応じてコメントアウト解除
   }
 });
 

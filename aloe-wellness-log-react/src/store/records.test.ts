@@ -411,11 +411,12 @@ describe('useRecordsStore', () => {
     });
 
     it('エラー状態をクリアする', () => {
-      const error = {
-        type: 'unknown',
-        message: 'Test error',
-        retryable: true,
-      } as any;
+      const error = new mockDb.DbError(
+        mockDb.DbErrorType.UNKNOWN,
+        'Test error',
+        undefined,
+        true
+      );
 
       // エラー状態を設定
       useRecordsStore.setState({
