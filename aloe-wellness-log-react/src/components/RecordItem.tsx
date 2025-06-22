@@ -133,25 +133,27 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     className={
                       field?.type === 'boolean'
                         ? 'w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block'
-                        : 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full'
+                        : field?.type === 'number'
+                        ? 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-32'
+                        : 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-48'
                     }
                   />
                 </div>
               </div>
             )}
-            <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+            <div className="flex gap-2 justify-center mt-4 pt-4 border-t border-gray-200">
               <button
                 onClick={handleEditSave}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2"
+                className="bg-green-600 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
               >
-                <HiCheckCircle className="w-4 h-4" />
+                <HiCheckCircle className="w-3.5 h-3.5" />
                 保存
               </button>
               <button
                 onClick={handleEditCancel}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2"
+                className="bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
               >
-                <HiXMark className="w-4 h-4" />
+                <HiXMark className="w-3.5 h-3.5" />
                 キャンセル
               </button>
             </div>
@@ -221,19 +223,19 @@ const RecordItem: React.FC<RecordItemProps> = memo(
 
             {/* 編集・削除ボタン（クリックで表示/非表示） */}
             {areButtonsShown && (
-              <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+              <div className="flex gap-2 justify-center mt-4 pt-4 border-t border-gray-200">
                 <button
                   onClick={handleEdit}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                  className="bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
                 >
-                  <HiPencil className="w-4 h-4" />
+                  <HiPencil className="w-3.5 h-3.5" />
                   編集
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
+                  className="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
                 >
-                  <HiTrash className="w-4 h-4" />
+                  <HiTrash className="w-3.5 h-3.5" />
                   削除
                 </button>
               </div>
