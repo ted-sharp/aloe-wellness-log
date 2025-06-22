@@ -80,13 +80,16 @@ const RecordItem: React.FC<RecordItemProps> = memo(
 
     const handleInputChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        if (field?.type === 'boolean') {
-          onEditValueChange((e.target as HTMLInputElement).checked);
-        } else {
-          onEditValueChange(e.target.value);
-        }
+        onEditValueChange(e.target.value);
       },
-      [field?.type, onEditValueChange]
+      [onEditValueChange]
+    );
+
+    const handleBooleanChange = useCallback(
+      (value: boolean | undefined) => {
+        onEditValueChange(value ?? '');
+      },
+      [onEditValueChange]
     );
 
     return (
@@ -101,11 +104,51 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                   {field ? field.name : record.fieldId}
                 </div>
                 <div className="pl-0 sm:pl-2 flex-1 min-w-0 pt-2 sm:pt-0">
-                  <textarea
-                    value={String(editValue)}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full h-24 resize-none"
-                  />
+                  {field?.type === 'boolean' ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleBooleanChange(true)}
+                        className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                          editValue === true
+                            ? 'bg-green-100 border-green-500 text-green-700'
+                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        aria-label={`${field.name}をありに設定`}
+                      >
+                        あり
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBooleanChange(false)}
+                        className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                          editValue === false
+                            ? 'bg-red-100 border-red-500 text-red-700'
+                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        aria-label={`${field.name}をなしに設定`}
+                      >
+                        なし
+                      </button>
+                      {editValue !== undefined && editValue !== '' && (
+                        <button
+                          type="button"
+                          onClick={() => handleBooleanChange(undefined)}
+                          className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
+                          aria-label={`${field.name}の選択をクリア`}
+                          title="選択をクリア"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={String(editValue)}
+                      onChange={handleInputChange}
+                      className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full h-24 resize-none"
+                    />
+                  )}
                 </div>
               </div>
             ) : (
@@ -115,29 +158,56 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                   {field ? field.name : record.fieldId}
                 </div>
                 <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
-                  <input
-                    type={
-                      field?.type === 'number'
-                        ? 'number'
-                        : field?.type === 'boolean'
-                        ? 'checkbox'
-                        : 'text'
-                    }
-                    value={
-                      field?.type === 'boolean' ? undefined : String(editValue)
-                    }
-                    checked={
-                      field?.type === 'boolean' ? !!editValue : undefined
-                    }
-                    onChange={handleInputChange}
-                    className={
-                      field?.type === 'boolean'
-                        ? 'w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 block'
-                        : field?.type === 'number'
-                        ? 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-32'
-                        : 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-48'
-                    }
-                  />
+                  {field?.type === 'boolean' ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleBooleanChange(true)}
+                        className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                          editValue === true
+                            ? 'bg-green-100 border-green-500 text-green-700'
+                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        aria-label={`${field.name}をありに設定`}
+                      >
+                        あり
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBooleanChange(false)}
+                        className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                          editValue === false
+                            ? 'bg-red-100 border-red-500 text-red-700'
+                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        aria-label={`${field.name}をなしに設定`}
+                      >
+                        なし
+                      </button>
+                      {editValue !== undefined && editValue !== '' && (
+                        <button
+                          type="button"
+                          onClick={() => handleBooleanChange(undefined)}
+                          className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
+                          aria-label={`${field.name}の選択をクリア`}
+                          title="選択をクリア"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type={field?.type === 'number' ? 'number' : 'text'}
+                      value={String(editValue)}
+                      onChange={handleInputChange}
+                      className={
+                        field?.type === 'number'
+                          ? 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-32'
+                          : 'border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full max-w-48'
+                      }
+                    />
+                  )}
                 </div>
               </div>
             )}
