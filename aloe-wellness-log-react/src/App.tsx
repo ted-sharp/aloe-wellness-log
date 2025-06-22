@@ -235,6 +235,19 @@ function Navigation() {
     };
   }, [isMenuOpen]);
 
+  // モバイルメニューのbody overflow制御（SortModalとの競合を防ぐ）
+  useEffect(() => {
+    if (isMenuOpen) {
+      // メニューが開いている時のみbody scrollを制御
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isMenuOpen]);
+
   const navItems = [
     { path: '/', label: t('navigation.input'), color: 'green' },
     { path: '/list', label: t('navigation.list'), color: 'blue' },
@@ -342,7 +355,7 @@ function Navigation() {
       {isMenuOpen && (
         <div
           id="mobile-menu"
-          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-50 mb-4"
+          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4"
           role="dialog"
           aria-modal="true"
           aria-label={t('navigation.mobileNavigation')}
@@ -387,7 +400,7 @@ function Navigation() {
       {/* オーバーレイ（メニューが開いている時） */}
       {isMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-30 backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
           onClick={closeMenu}
           aria-hidden="true"

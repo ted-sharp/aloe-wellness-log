@@ -354,7 +354,7 @@ const SortModal: React.FC<SortModalProps> = ({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel
-                className="w-full max-w-[95vw] sm:max-w-lg md:max-w-2xl transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all mx-2 sm:mx-0"
+                className="relative w-full max-w-sm sm:max-w-xl transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all"
                 onKeyDown={handleKeyDown}
                 {...modalProps}
               >
