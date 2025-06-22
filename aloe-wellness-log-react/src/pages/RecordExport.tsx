@@ -16,6 +16,7 @@ import {
   InfoMessage,
   SuccessMessage,
 } from '../components/StatusMessage';
+import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 
@@ -25,7 +26,8 @@ function formatDateForFilename(date: Date) {
 
 function toCSV(
   records: RecordItem[],
-  fields: { fieldId: string; name: string }[]
+  fields: { fieldId: string; name: string }[],
+  t: (key: string) => string
 ) {
   const header = [
     'id',
@@ -47,8 +49,8 @@ function toCSV(
       field ? field.name : '',
       typeof rec.value === 'boolean'
         ? rec.value
-          ? 'あり'
-          : 'なし'
+          ? t('fields.values.yes')
+          : t('fields.values.no')
         : rec.value,
     ];
   });
@@ -63,6 +65,7 @@ function toCSV(
 }
 
 export default function RecordExport() {
+  const { t } = useI18n();
   const {
     records,
     fields,
@@ -91,7 +94,7 @@ export default function RecordExport() {
   });
 
   const handleExportCSV = () => {
-    const csv = toCSV(sortedRecords, fields);
+    const csv = toCSV(sortedRecords, fields, t);
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -172,7 +175,7 @@ export default function RecordExport() {
       console.error('Expected headers:', expectedHeader);
       console.error('Actual headers:', header);
       throw new Error(
-        `CSVファイルの形式が正しくありません。必要な列: ${expectedHeader.join(
+        `CSV file format is incorrect. Required columns: ${expectedHeader.join(
           ', '
         )}`
       );
@@ -210,9 +213,15 @@ export default function RecordExport() {
         }
 
         // boolean値の変換
-        if (record.value === 'あり') {
+        if (
+          record.value === t('fields.values.yes') ||
+          record.value === 'あり'
+        ) {
           record.value = true;
-        } else if (record.value === 'なし') {
+        } else if (
+          record.value === t('fields.values.no') ||
+          record.value === 'なし'
+        ) {
           record.value = false;
         } else if (!isNaN(Number(record.value)) && record.value !== '') {
           record.value = Number(record.value);
@@ -234,7 +243,7 @@ export default function RecordExport() {
 
   // インポート処理
   const handleImport = async (file: File, format: 'csv' | 'json') => {
-    setImportStatus('インポート中...');
+    setImportStatus(t('pages.export.importing'));
 
     try {
       const text = await file.text();
@@ -243,7 +252,7 @@ export default function RecordExport() {
       if (format === 'json') {
         records = JSON.parse(text);
         if (!Array.isArray(records)) {
-          throw new Error('JSONファイルの形式が正しくありません');
+          throw new Error('JSON file format is incorrect');
         }
       } else {
         records = parseCSV(text);
@@ -252,7 +261,7 @@ export default function RecordExport() {
       // データ検証
       for (const record of records) {
         if (!record.id || !record.date || !record.time || !record.fieldId) {
-          throw new Error('データに必須項目が不足しています');
+          throw new Error('Data is missing required fields');
         }
       }
 
@@ -263,19 +272,21 @@ export default function RecordExport() {
           await addRecord(record);
           importCount++;
         } catch (error) {
-          console.warn('レコードの追加をスキップ:', record.id, error);
+          console.warn('Skipping record addition:', record.id, error);
         }
       }
 
       await loadRecords();
-      setImportStatus(`✅ ${importCount}件のレコードをインポートしました`);
+      setImportStatus(`✅ ${importCount}${t('pages.export.importSuccess')}`);
       setTimeout(() => setImportStatus(null), 3000);
     } catch (error) {
       const errorInstance =
-        error instanceof Error ? error : new Error('不明なエラー');
-      console.error('インポートエラー:', errorInstance);
+        error instanceof Error ? error : new Error('Unknown error');
+      console.error('Import error:', errorInstance);
 
-      setImportStatus(`❌ インポートに失敗しました: ${errorInstance.message}`);
+      setImportStatus(
+        `${t('pages.export.importError')} ${errorInstance.message}`
+      );
       setTimeout(() => setImportStatus(null), 5000);
     }
   };
@@ -292,9 +303,7 @@ export default function RecordExport() {
       } else if (fileName.endsWith('.json')) {
         format = 'json';
       } else {
-        setImportStatus(
-          '❌ サポートされていないファイル形式です（.csv または .json のみ）'
-        );
+        setImportStatus(t('pages.export.unsupportedFileFormat'));
         setTimeout(() => setImportStatus(null), 3000);
         event.target.value = '';
         return;
@@ -307,13 +316,11 @@ export default function RecordExport() {
   };
 
   const handleDeleteAllData = async () => {
-    const isConfirmed = window.confirm(
-      '⚠️ 警告: すべてのデータ（記録・項目）が完全に削除されます。\n\nこの操作は取り消すことができません。\n\n本当にすべてのデータを削除してもよろしいですか？'
-    );
+    const isConfirmed = window.confirm(t('pages.export.confirmDeleteAll'));
 
     if (isConfirmed) {
       const doubleConfirm = window.confirm(
-        '🚨 最終確認: 本当にすべてのデータを削除しますか？\n\nデータのバックアップを取ることをお勧めします。'
+        t('pages.export.confirmDeleteAllFinal')
       );
 
       if (doubleConfirm) {
@@ -321,10 +328,10 @@ export default function RecordExport() {
           await deleteAllData();
           // 初期項目を再度作成
           await initializeFields();
-          alert('✅ すべてのデータが削除され、初期項目が復元されました。');
+          alert(t('pages.export.deleteAllSuccess'));
         } catch (error) {
-          console.error('削除エラー:', error);
-          alert('❌ データの削除に失敗しました。');
+          console.error('Delete error:', error);
+          alert(t('pages.export.deleteAllError'));
         }
       }
     }
@@ -332,7 +339,7 @@ export default function RecordExport() {
 
   // テストデータ生成関数
   const generateTestData = async () => {
-    setTestDataStatus('テストデータを生成中...');
+    setTestDataStatus(t('pages.export.generatingTestData'));
     setIsGeneratingTestData(true);
     setTestDataProgress(0);
 
@@ -340,7 +347,7 @@ export default function RecordExport() {
       await loadFields(); // 最新の項目を取得
 
       if (fields.length === 0) {
-        throw new Error('項目が存在しません。先に項目を初期化してください。');
+        throw new Error('No fields exist. Please initialize fields first.');
       }
 
       const dataCount = 100; // 生成するデータ数
@@ -389,19 +396,19 @@ export default function RecordExport() {
           // string型の場合
           if (randomField.fieldId === 'notes') {
             const sampleNotes = [
-              '今日は調子が良い',
-              '少し疲れている',
-              '運動後でスッキリ',
-              '食事が美味しかった',
-              '早めに寝たい',
-              '天気が良くて気分爽快',
-              '仕事が忙しかった',
-              '久しぶりの休日',
+              'Feeling good today',
+              'A bit tired',
+              'Refreshed after exercise',
+              'Food was delicious',
+              'Want to sleep early',
+              'Great weather, feeling refreshed',
+              'Busy day at work',
+              'Nice weekend break',
               '',
             ];
             value = sampleNotes[Math.floor(Math.random() * sampleNotes.length)];
           } else {
-            value = `テスト値${Math.floor(Math.random() * 1000)}`;
+            value = `Test value ${Math.floor(Math.random() * 1000)}`;
           }
         }
 
@@ -432,21 +439,27 @@ export default function RecordExport() {
 
         // 進捗を表示（10件ごと）
         if ((i + 1) % 10 === 0) {
-          setTestDataStatus(`テストデータを生成中... ${i + 1}/${dataCount}`);
+          setTestDataStatus(
+            `${t('pages.export.generatingTestData')}... ${i + 1}${t(
+              'pages.export.testDataOf'
+            )}${dataCount}`
+          );
         }
       }
 
       await loadRecords();
-      setTestDataStatus(`✅ ${createdCount}件のテストデータを生成しました`);
+      setTestDataStatus(
+        `✅ ${createdCount}${t('pages.export.testDataSuccess')}`
+      );
       setTimeout(() => {
         setTestDataStatus(null);
         setTestDataProgress(0);
       }, 3000);
     } catch (error) {
-      console.error('テストデータ生成エラー:', error);
+      console.error('Test data generation error:', error);
       setTestDataStatus(
-        `❌ テストデータの生成に失敗しました: ${
-          error instanceof Error ? error.message : '不明なエラー'
+        `${t('pages.export.testDataError')} ${
+          error instanceof Error ? error.message : 'Unknown error'
         }`
       );
       setTimeout(() => {
@@ -460,7 +473,7 @@ export default function RecordExport() {
 
   const handleGenerateTestData = () => {
     const isConfirmed = window.confirm(
-      '🧪 テストデータを生成しますか？\n\n過去30日分のランダムなデータを約100件作成します。\n既存のデータに追加されます。'
+      t('pages.export.confirmGenerateTestData')
     );
 
     if (isConfirmed) {
@@ -470,39 +483,50 @@ export default function RecordExport() {
 
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">管理</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+        {t('pages.export.title')}
+      </h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          データ詳細
+          {t('pages.export.dataDetails')}
         </h2>
         <div className="text-base text-gray-600 space-y-3">
           <p className="flex items-center gap-2">
             <HiChartBarSquare className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">対象レコード数:</strong>{' '}
-            {sortedRecords.length}件
+            <strong className="text-gray-800">
+              {t('pages.export.totalRecords')}
+            </strong>{' '}
+            {sortedRecords.length}
           </p>
           <p className="flex items-center gap-2">
             <HiCalendarDays className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">期間:</strong>{' '}
+            <strong className="text-gray-800">
+              {t('pages.export.period')}
+            </strong>{' '}
             {sortedRecords.length > 0
               ? `${sortedRecords[sortedRecords.length - 1]?.date} 〜 ${
                   sortedRecords[0]?.date
                 }`
-              : 'データなし'}
+              : t('pages.export.noData')}
           </p>
           <p className="flex items-center gap-2">
             <HiClipboardDocumentList className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">対象項目:</strong>{' '}
-            すべての健康記録項目
+            <strong className="text-gray-800">
+              {t('pages.export.fields')}
+            </strong>{' '}
+            {t('pages.export.allHealthFields')}
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          データエクスポート
+          {t('pages.export.exportData')}
         </h2>
+        <div className="text-sm text-gray-600 mb-6">
+          {t('pages.export.exportDescription')}
+        </div>
         <div className="flex flex-col gap-4 mb-6">
           <Button
             variant="purple"
@@ -511,7 +535,7 @@ export default function RecordExport() {
             onClick={handleExportCSV}
             fullWidth={false}
           >
-            CSV形式でダウンロード
+            {t('pages.export.exportCSV')}
           </Button>
           <Button
             variant="purple"
@@ -520,20 +544,18 @@ export default function RecordExport() {
             onClick={handleExportJSON}
             fullWidth={false}
           >
-            JSON形式でダウンロード
+            {t('pages.export.exportJSON')}
           </Button>
-        </div>
-
-        <div className="text-sm text-gray-600 space-y-1 text-left">
-          <p>• CSV形式: Excel等での分析に適しています。</p>
-          <p>• JSON形式: プログラムでの処理やバックアップに適しています。</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          データインポート
+          {t('pages.export.importData')}
         </h2>
+        <div className="text-sm text-gray-600 mb-6">
+          {t('pages.export.importDescription')}
+        </div>
 
         {importStatus && (
           <div className="mb-6">
@@ -563,21 +585,19 @@ export default function RecordExport() {
               className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium shadow-md hover:bg-purple-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 w-auto cursor-pointer"
             >
               <HiArrowDownTray className="w-5 h-5" />
-              データをインポート
+              {t('pages.export.selectFile')}
             </label>
           </div>
-        </div>
-
-        <div className="text-sm text-gray-600 space-y-1 text-left">
-          <p>• CSV・JSON形式のファイルをインポートできます。</p>
-          <p>• 既存のデータに追加されます。（重複IDは上書き）</p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          テスト用データ
+          {t('pages.export.testData')}
         </h2>
+        <div className="text-sm text-gray-600 mb-6">
+          {t('pages.export.testDataDescription')}
+        </div>
 
         {testDataStatus && (
           <div className="mb-6">
@@ -598,7 +618,7 @@ export default function RecordExport() {
           <div className="mb-6">
             <ProgressBar
               value={testDataProgress}
-              label="テストデータ生成進捗"
+              label={t('pages.export.generatingTestData')}
               showPercentage={true}
               variant="primary"
               size="md"
@@ -616,25 +636,19 @@ export default function RecordExport() {
             disabled={isGeneratingTestData}
             loading={isGeneratingTestData}
           >
-            テストデータを生成
+            {t('pages.export.generateTestData')}
           </Button>
-        </div>
-
-        <div className="text-sm text-gray-600 space-y-1 text-left">
-          <p>• 過去30日分のランダムなデータを約100件作成します。</p>
-          <p>• 各項目について適切な値の範囲でランダム生成されます。</p>
-          <p>• 既存のデータに追加されます。</p>
         </div>
       </div>
 
       <div className="bg-red-50 border border-red-200 rounded-2xl shadow-md p-6">
         <h2 className="text-2xl font-semibold text-red-800 mb-6 flex items-center gap-2">
           <HiExclamationTriangle className="w-6 h-6 text-red-600" />
-          危険な操作
+          {t('pages.export.dangerZone')}
         </h2>
         <div className="mb-6 text-left">
           <p className="text-base text-red-700 mb-3">
-            <strong>全データ削除:</strong> 記録データが完全に削除されます。
+            {t('pages.export.dangerZoneDescription')}
           </p>
         </div>
         <Button
@@ -644,7 +658,7 @@ export default function RecordExport() {
           onClick={handleDeleteAllData}
           fullWidth={false}
         >
-          全データを削除
+          {t('pages.export.deleteAllData')}
         </Button>
       </div>
     </div>

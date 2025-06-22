@@ -9,16 +9,20 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 
-const PERIOD_OPTIONS = [
-  { label: '1週間', value: 7 },
-  { label: '1ヶ月', value: 30 },
-  { label: '全期間', value: 0 },
-];
-
 export default function RecordGraph() {
+  const { t } = useI18n();
   const { records, fields } = useRecordsStore();
+
+  // 期間選択オプション
+  const PERIOD_OPTIONS = [
+    { label: t('pages.graph.periods.week'), value: 7 },
+    { label: t('pages.graph.periods.month'), value: 30 },
+    { label: t('pages.graph.periods.all'), value: 0 },
+  ];
+
   // 数値・文字列型のフィールドをorder順でソート
   const numberFields = fields
     .filter(f => f.type === 'number' || f.type === 'string')
@@ -45,10 +49,12 @@ export default function RecordGraph() {
 
   return (
     <div className="p-2 sm:p-4 max-w-full sm:max-w-2xl mx-auto bg-gray-50 min-h-screen px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">グラフ</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+        {t('pages.graph.title')}
+      </h1>
       <div className="flex gap-4 mb-4 items-center">
         <label>
-          項目：
+          {t('pages.graph.field')}
           <select
             value={selectedFieldId}
             onChange={e => setSelectedFieldId(e.target.value)}
@@ -62,7 +68,7 @@ export default function RecordGraph() {
           </select>
         </label>
         <label>
-          期間：
+          {t('pages.graph.period')}
           <select
             value={period}
             onChange={e => setPeriod(Number(e.target.value))}

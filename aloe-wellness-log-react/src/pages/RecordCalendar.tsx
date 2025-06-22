@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { HiCheckCircle, HiClock, HiXCircle } from 'react-icons/hi2';
+import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 
 export default function RecordCalendar() {
+  const { t, translateFieldName } = useI18n();
   const { records, fields, loadRecords, loadFields } = useRecordsStore();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [expandedTexts, setExpandedTexts] = useState<Set<string>>(new Set());
@@ -20,7 +22,7 @@ export default function RecordCalendar() {
     if (fieldId === 'notes') {
       return {
         fieldId: 'notes',
-        name: '備考',
+        name: translateFieldName('notes'),
         type: 'string' as const,
         order: 0,
       };
@@ -113,7 +115,9 @@ export default function RecordCalendar() {
 
   return (
     <div className="max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">カレンダー</h1>
+      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+        {t('pages.calendar.title')}
+      </h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <style>{`
@@ -185,11 +189,11 @@ export default function RecordCalendar() {
       {selectedDate && (
         <div>
           <h2 className="text-2xl font-semibold text-gray-800 mb-8">
-            {selectedDate.toLocaleDateString()} の記録
+            {selectedDate.toLocaleDateString()} {t('pages.calendar.recordsFor')}
           </h2>
           {selectedRecords.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
-              <p className="text-lg">この日の記録はありませんわ。</p>
+              <p className="text-lg">{t('pages.calendar.noRecords')}</p>
             </div>
           ) : (
             <div className="space-y-8">
@@ -249,12 +253,12 @@ export default function RecordCalendar() {
                                     rec.value ? (
                                       <span className="inline-flex items-center gap-2 text-green-600">
                                         <HiCheckCircle className="w-6 h-6" />
-                                        あり
+                                        {t('fields.values.yes')}
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center gap-2 text-red-600">
                                         <HiXCircle className="w-6 h-6" />
-                                        なし
+                                        {t('fields.values.no')}
                                       </span>
                                     )
                                   ) : (

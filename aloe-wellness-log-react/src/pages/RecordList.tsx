@@ -7,6 +7,7 @@ import {
   HiChevronRight,
 } from 'react-icons/hi2';
 import RecordItem from '../components/RecordItem';
+import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { Field, RecordItem as RecordItemType } from '../types/record';
 import { isDev } from '../utils/devTools';
@@ -92,6 +93,7 @@ const RecordGroup = memo<{
 RecordGroup.displayName = 'RecordGroup';
 
 export default function RecordList() {
+  const { t, translateFieldName } = useI18n();
   const {
     records,
     fields,
@@ -146,7 +148,7 @@ export default function RecordList() {
       if (fieldId === 'notes') {
         return {
           fieldId: 'notes',
-          name: '備考',
+          name: translateFieldName('notes'),
           type: 'string' as const,
           order: 0,
         };
@@ -162,7 +164,7 @@ export default function RecordList() {
 
       return field;
     },
-    [fields]
+    [fields, translateFieldName]
   );
 
   // 項目の順序を制御する関数（メモ化、最適化済み）
@@ -340,7 +342,7 @@ export default function RecordList() {
       const interactionId =
         performanceMonitor.trackInteraction.start('delete-record');
       try {
-        if (window.confirm('本当に削除してよろしいですか？')) {
+        if (window.confirm(t('pages.list.confirmDelete'))) {
           await trackDatabaseOperation(
             'delete-record',
             async () => {
@@ -362,7 +364,7 @@ export default function RecordList() {
         performanceMonitor.trackInteraction.end(interactionId, 'delete-record');
       }
     },
-    [deleteRecord]
+    [deleteRecord, t]
   );
 
   const handleEditValueChange = useCallback(
@@ -438,7 +440,7 @@ export default function RecordList() {
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">
-        一覧
+        {t('pages.list.title')}
       </h1>
 
       {/* 表示件数選択 */}
@@ -449,22 +451,22 @@ export default function RecordList() {
               {paginatedGroups.totalGroups}
             </span>
             <span className="text-sm sm:text-base text-gray-600 ml-1">
-              件の記録グループ
+              {t('pages.list.recordGroups')}
             </span>
           </div>
           <div className="flex items-center justify-center sm:justify-end gap-2">
             <span className="text-sm sm:text-base text-gray-600 whitespace-nowrap">
-              表示件数:
+              {t('pages.list.displayCount')}
             </span>
             <select
               value={pageSize}
               onChange={e => handlePageSizeChange(Number(e.target.value))}
               className="border border-gray-300 rounded-lg px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm sm:text-base min-w-[80px]"
             >
-              <option value={10}>10件</option>
-              <option value={20}>20件</option>
-              <option value={50}>50件</option>
-              <option value={100}>100件</option>
+              <option value={10}>{t('pages.list.items10')}</option>
+              <option value={20}>{t('pages.list.items20')}</option>
+              <option value={50}>{t('pages.list.items50')}</option>
+              <option value={100}>{t('pages.list.items100')}</option>
             </select>
           </div>
         </div>
@@ -493,7 +495,7 @@ export default function RecordList() {
 
             <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
-              ページ
+              {t('pages.list.page')}
             </span>
 
             <div className="flex items-center gap-1 sm:gap-2">
@@ -573,7 +575,7 @@ export default function RecordList() {
 
             <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
-              ページ
+              {t('pages.list.page')}
             </span>
 
             <div className="flex items-center gap-1 sm:gap-2">
