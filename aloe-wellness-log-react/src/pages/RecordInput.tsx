@@ -47,8 +47,14 @@ export default function RecordInput() {
   const { handleAsyncError } = useErrorHandler();
 
   // ストア
-  const { fields, loadFields, addRecord, loadRecords, records } =
-    useRecordsStore();
+  const {
+    fields,
+    loadFields,
+    addRecord,
+    loadRecords,
+    records,
+    fieldsOperation,
+  } = useRecordsStore();
   const { showSuccess, showError } = useToastStore();
 
   // カスタムフックからフィールド管理機能を取得
@@ -931,13 +937,20 @@ export default function RecordInput() {
               <button
                 type="button"
                 onClick={fieldManagement.handleOpenSortModal}
-                className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+                disabled={fieldsOperation.loading || fields.length === 0}
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base ${
+                  fieldsOperation.loading || fields.length === 0
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-purple-500 text-white hover:bg-purple-600'
+                }`}
                 aria-label={getAriaLabel('sort', {
                   fieldName: t('pages.input.sortFields'),
                 })}
               >
                 <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
-                {t('pages.input.sortFields')}
+                {fieldsOperation.loading
+                  ? t('common.loading')
+                  : t('pages.input.sortFields')}
               </button>
             </div>
           )}

@@ -57,8 +57,8 @@ i18n
 
     // 言語検出設定
     detection: {
-      // 検出順序
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      // 検出順序（navigator を最初に、localStorage を後に）
+      order: ['navigator', 'localStorage', 'htmlTag'],
 
       // ローカルストレージのキー
       lookupLocalStorage: 'i18nextLng',

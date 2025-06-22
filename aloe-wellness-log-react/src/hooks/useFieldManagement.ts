@@ -15,7 +15,7 @@ type NewField = {
 export function useFieldManagement() {
   const { fields, loadFields, addField, updateField, deleteField } =
     useRecordsStore();
-  const { showSuccess } = useToastStore();
+  const { showSuccess, showError } = useToastStore();
   const { handleAsyncError } = useErrorHandler();
 
   // 状態管理
@@ -192,31 +192,44 @@ export function useFieldManagement() {
       const field = fields.find(f => f.fieldId === fieldId);
       if (!field) return;
 
-      const result = await handleAsyncError(
-        async () => {
-          await updateField({
-            ...field,
-            defaultDisplay: true,
-          });
+      // 楽観的更新: 即座にReact状態を更新
+      const updatedField = { ...field, defaultDisplay: true };
 
-          setTemporaryDisplayFields(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(fieldId);
-            return newSet;
-          });
-
-          setShowSelectButtons(new Set());
-          await loadFields();
-          return true;
-        },
-        {
-          context: '表示状態変更',
-          fallbackMessage: '表示状態の変更に失敗しました',
-        }
+      // メインのfields配列を即座に更新
+      const updatedFields = fields.map(f =>
+        f.fieldId === fieldId ? updatedField : f
       );
 
-      if (result) {
+      // 楽観的更新を適用
+      useRecordsStore.setState({ fields: updatedFields });
+
+      try {
+        await updateField(updatedField);
+
+        setTemporaryDisplayFields(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fieldId);
+          return newSet;
+        });
+
+        setShowSelectButtons(new Set());
+
+        // 選択画面を閉じてメイン画面に戻る
+        setShowSelectField(false);
+
+        await loadFields();
+
         showSuccess('項目を表示状態に変更しましたわ');
+      } catch (error) {
+        // エラー時のロールバック: 元の状態に戻す
+        useRecordsStore.setState({ fields });
+
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : '表示状態の変更に失敗しました';
+        showError(errorMessage);
+        console.error('表示状態変更エラー:', error);
       }
     },
     [fields, updateField, handleAsyncError, loadFields, showSuccess]
@@ -357,14 +370,36 @@ export function useFieldManagement() {
   }, []);
 
   // 並び替えモーダル関連
-  const handleOpenSortModal = useCallback(() => {
-    const sortedFields = [...fields].sort(
+  const handleOpenSortModal = useCallback(async () => {
+    // フィールドが読み込まれていない場合は再読み込み
+    let currentFields = fields;
+    if (currentFields.length === 0) {
+      try {
+        await loadFields();
+        // ストアから最新のフィールドデータを取得
+        const { fields: latestFields } = useRecordsStore.getState();
+        currentFields = latestFields;
+
+        // 再読み込み後もフィールドがない場合は警告
+        if (currentFields.length === 0) {
+          showError(
+            '項目データが見つかりません。ページをリロードしてください。'
+          );
+          return;
+        }
+      } catch (error) {
+        showError('項目データの読み込みに失敗しました。');
+        return;
+      }
+    }
+
+    const sortedFields = [...currentFields].sort(
       (a, b) => (a.order || 999) - (b.order || 999)
     );
     setSortableFields(sortedFields);
     sortableFieldsRef.current = sortedFields;
     setShowSortModal(true);
-  }, [fields]);
+  }, [fields, loadFields, showError]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {

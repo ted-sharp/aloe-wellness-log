@@ -296,6 +296,20 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
         alcohol: 10,
       };
 
+      // defaultDisplay属性の正しい初期値マッピング
+      const defaultDisplayMapping: Record<string, boolean> = {
+        weight: true,
+        systolic_bp: true,
+        diastolic_bp: true,
+        heart_rate: false,
+        body_temperature: false,
+        exercise: true,
+        meal: true,
+        sleep: true,
+        smoke: false,
+        alcohol: false,
+      };
+
       const updatedFields = fields.map(field => {
         const updatedField = { ...field };
 
@@ -306,10 +320,14 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
           updatedField.order = expectedOrder || 999;
         }
 
-        // defaultDisplay属性のマイグレーション（既存フィールドはデフォルトで表示）
+        // defaultDisplay属性のマイグレーション（正しい初期値を設定）
         if (field.defaultDisplay === undefined) {
           needsUpdate = true;
-          updatedField.defaultDisplay = true;
+          const expectedDefaultDisplay = defaultDisplayMapping[field.fieldId];
+          updatedField.defaultDisplay =
+            expectedDefaultDisplay !== undefined
+              ? expectedDefaultDisplay
+              : true;
         }
 
         return updatedField;
