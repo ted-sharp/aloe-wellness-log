@@ -128,6 +128,11 @@ export default function RecordCalendar() {
             background: transparent;
             border-radius: 8px;
             transition: all 0.2s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
           }
           .react-calendar__tile:enabled:hover,
           .react-calendar__tile:enabled:focus {
@@ -135,7 +140,10 @@ export default function RecordCalendar() {
           }
           .react-calendar__tile--active {
             background: #2563eb !important;
-            color: white;
+            color: white !important;
+          }
+          .react-calendar__tile--active .record-border {
+            border-color: white !important;
           }
           .react-calendar__navigation button {
             color: #374151;
@@ -165,10 +173,7 @@ export default function RecordCalendar() {
               const dateStr = `${year}-${month}-${day}`;
               if (recordDates.has(dateStr)) {
                 return (
-                  <span
-                    className="inline-block ml-1 w-2 h-2 rounded-full bg-blue-600 align-middle"
-                    title="記録あり"
-                  ></span>
+                  <div className="absolute inset-0 border-2 border-blue-600 rounded-lg pointer-events-none record-border" />
                 );
               }
             }
