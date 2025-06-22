@@ -2,13 +2,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PWAInstallButton } from './PWAInstallButton';
 
-// beforeinstallpromptイベントをモック
-const mockBeforeInstallPromptEvent = {
-  preventDefault: vi.fn(),
-  prompt: vi.fn().mockResolvedValue({}),
-  userChoice: Promise.resolve({ outcome: 'accepted' }),
-};
-
 describe('PWAInstallButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,8 +55,7 @@ describe('PWAInstallButton', () => {
   });
 
   test('インストールボタンをクリックしてプロンプトが表示される', async () => {
-    // deferredPromptを設定
-    const component = render(<PWAInstallButton />);
+    render(<PWAInstallButton />);
 
     // beforeinstallpromptイベントオブジェクトを手動で設定
     const beforeInstallPromptEvent = Object.assign(

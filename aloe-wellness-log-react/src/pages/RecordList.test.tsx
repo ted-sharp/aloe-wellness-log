@@ -20,7 +20,7 @@ vi.mock('../utils/performanceMonitor', () => ({
       end: vi.fn(),
     },
   },
-  trackDatabaseOperation: vi.fn((name, fn) => fn()),
+  trackDatabaseOperation: vi.fn((_name, fn) => fn()),
 }));
 
 // devToolsをモック
