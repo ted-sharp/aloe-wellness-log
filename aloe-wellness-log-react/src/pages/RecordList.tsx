@@ -436,7 +436,7 @@ export default function RecordList() {
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">一覧</h1>
 
       {/* 表示件数選択 */}

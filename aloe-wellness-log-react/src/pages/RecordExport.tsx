@@ -469,7 +469,7 @@ export default function RecordExport() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
       <h1 className="text-3xl font-bold text-gray-800 mb-12">管理</h1>
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">

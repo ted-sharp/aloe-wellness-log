@@ -277,11 +277,7 @@ function Navigation() {
       </nav>
 
       {/* モバイル用ヘッダー */}
-      <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
-        <h1 className="text-lg font-semibold text-gray-800">
-          🌿 アロエ健康ログ
-        </h1>
-
+      <div className="md:hidden flex justify-end items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
         <div className="flex items-center gap-2">
           {/* QRコードボタン（モバイル用・小さめ） */}
           <QRCodeDisplay className="text-xs px-2 py-1.5" />

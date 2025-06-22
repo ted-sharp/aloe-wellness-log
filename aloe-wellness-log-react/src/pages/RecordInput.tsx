@@ -176,8 +176,8 @@ export default function RecordInput() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-2 sm:p-4">
+      <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             健康記録入力
@@ -216,8 +216,8 @@ export default function RecordInput() {
                 {fieldManagement.editFieldId === field.fieldId ? (
                   <div>
                     {/* 項目名入力（左）と単位入力（右）のレイアウト */}
-                    <div className="grid grid-cols-2 gap-2 items-stretch mb-4">
-                      <div className="text-right pr-2 border-r border-gray-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch mb-4">
+                      <div className="text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
                         <input
                           type="text"
                           value={fieldManagement.editField.name ?? ''}
@@ -231,7 +231,7 @@ export default function RecordInput() {
                           placeholder="項目名"
                         />
                       </div>
-                      <div className="pl-2">
+                      <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
                         {field.type === 'boolean' ? (
                           // boolean型の項目は右側を空白地帯に
                           <div className="h-full"></div>
@@ -279,36 +279,19 @@ export default function RecordInput() {
                   </div>
                 ) : (
                   <div>
-                    {/* 一覧画面と同じレイアウト：項目名左、入力欄右 */}
-                    <fieldset
-                      className="grid grid-cols-2 gap-2 items-stretch cursor-pointer"
+                    {/* 項目表示（入力・単位のレイアウト） */}
+                    <div
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch cursor-pointer"
                       onClick={() =>
                         fieldManagement.toggleButtons(field.fieldId)
                       }
                     >
-                      <legend className="sr-only">
-                        {field.name}の入力フィールド
-                      </legend>
-                      <label
-                        htmlFor={`field-${field.fieldId}`}
-                        className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200 cursor-pointer"
-                      >
+                      <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
                         {field.name}
-                        {field.type !== 'boolean' &&
-                          formError &&
-                          formError.includes(field.name) && (
-                            <span
-                              className="text-red-600 ml-1"
-                              aria-hidden="true"
-                            >
-                              *
-                            </span>
-                          )}
-                      </label>
-                      <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                      </div>
+                      <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                         <div className="flex items-center gap-3">
                           <input
-                            id={`field-${field.fieldId}`}
                             type={
                               field.type === 'number'
                                 ? 'number'
@@ -316,38 +299,11 @@ export default function RecordInput() {
                                 ? 'checkbox'
                                 : 'text'
                             }
-                            value={
-                              field.type === 'boolean'
-                                ? undefined
-                                : String(values[field.fieldId] ?? '')
-                            }
-                            checked={
-                              field.type === 'boolean'
-                                ? !!values[field.fieldId]
-                                : undefined
-                            }
-                            onChange={e => {
-                              e.stopPropagation(); // 親のクリックイベントを防ぐ
-                              handleChange(
-                                field.fieldId,
-                                field.type === 'boolean'
-                                  ? e.currentTarget.checked
-                                  : e.currentTarget.value
-                              );
-                            }}
                             onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
                             className={
                               field.type === 'boolean'
                                 ? 'w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 block'
-                                : 'border border-gray-300 rounded-lg px-4 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600'
-                            }
-                            aria-invalid={
-                              formError && formError.includes(field.name)
-                                ? 'true'
-                                : 'false'
-                            }
-                            aria-describedby={
-                              field.unit ? `${field.fieldId}-unit` : undefined
+                                : 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600'
                             }
                             aria-label={
                               field.type === 'boolean'
@@ -355,18 +311,16 @@ export default function RecordInput() {
                                 : `${field.name}を入力`
                             }
                           />
-                          {field.unit && (
-                            <span
-                              id={`${field.fieldId}-unit`}
-                              className="text-gray-600 font-medium"
-                              aria-label={`単位: ${field.unit}`}
-                            >
-                              {field.unit}
-                            </span>
-                          )}
+                          <div className="w-full sm:w-32">
+                            {field.unit && (
+                              <span className="text-gray-600 font-medium">
+                                {field.unit}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </fieldset>
+                    </div>
 
                     {/* 前回値・編集・非表示ボタン（クリックで表示/非表示） */}
                     {fieldManagement.areButtonsShown(field.fieldId) && (
@@ -421,10 +375,13 @@ export default function RecordInput() {
 
           <button
             type="submit"
-            className="bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-xl shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2"
+            className="bg-green-600 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-lg sm:text-xl shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 w-full"
             aria-describedby={formError ? 'form-error' : undefined}
           >
-            <HiDocumentText className="w-6 h-6" aria-hidden="true" />
+            <HiDocumentText
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              aria-hidden="true"
+            />
             記録する
           </button>
         </form>
@@ -453,8 +410,8 @@ export default function RecordInput() {
                           field.fieldId ? (
                             <div className="space-y-4">
                               {/* 編集モード：左右分割レイアウト */}
-                              <div className="grid grid-cols-2 gap-2 items-stretch">
-                                <div className="text-right pr-2 border-r border-gray-200">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch">
+                                <div className="text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
                                   <input
                                     type="text"
                                     value={
@@ -470,7 +427,7 @@ export default function RecordInput() {
                                     placeholder="項目名"
                                   />
                                 </div>
-                                <div className="pl-2">
+                                <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
                                   <input
                                     type="text"
                                     value={
@@ -518,17 +475,17 @@ export default function RecordInput() {
                             <div>
                               {/* 通常表示：左右分割レイアウト */}
                               <div
-                                className="grid grid-cols-2 gap-2 items-stretch cursor-pointer"
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch cursor-pointer"
                                 onClick={() =>
                                   fieldManagement.toggleSelectButtons(
                                     field.fieldId
                                   )
                                 }
                               >
-                                <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                                <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
                                   {field.name}
                                 </div>
-                                <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                                <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                                   {field.unit ? `(${field.unit})` : ''}
                                 </div>
                               </div>

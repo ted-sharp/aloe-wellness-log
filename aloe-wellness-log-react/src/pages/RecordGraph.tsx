@@ -44,7 +44,7 @@ export default function RecordGraph() {
   }, [records, selectedFieldId, period]);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto bg-gray-50 min-h-screen">
+    <div className="p-2 sm:p-4 max-w-full sm:max-w-2xl mx-auto bg-gray-50 min-h-screen px-2 sm:px-0">
       <h1 className="text-3xl font-bold text-gray-800 mb-12">グラフ</h1>
       <div className="flex gap-4 mb-4 items-center">
         <label>
