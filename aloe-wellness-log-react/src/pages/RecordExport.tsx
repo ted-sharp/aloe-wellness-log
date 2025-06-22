@@ -501,59 +501,6 @@ export default function RecordExport() {
 
       <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-          テスト用データ
-        </h2>
-
-        {testDataStatus && (
-          <div className="mb-6">
-            {testDataStatus.includes('✅') && (
-              <SuccessMessage message={testDataStatus.replace('✅ ', '')} />
-            )}
-            {testDataStatus.includes('❌') && (
-              <ErrorMessage message={testDataStatus.replace('❌ ', '')} />
-            )}
-            {!testDataStatus.includes('✅') &&
-              !testDataStatus.includes('❌') && (
-                <InfoMessage message={testDataStatus} />
-              )}
-          </div>
-        )}
-
-        {isGeneratingTestData && (
-          <div className="mb-6">
-            <ProgressBar
-              value={testDataProgress}
-              label="テストデータ生成進捗"
-              showPercentage={true}
-              variant="primary"
-              size="md"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-4 mb-6">
-          <Button
-            variant="purple"
-            size="lg"
-            icon={HiSparkles}
-            onClick={handleGenerateTestData}
-            fullWidth={false}
-            disabled={isGeneratingTestData}
-            loading={isGeneratingTestData}
-          >
-            テストデータを生成
-          </Button>
-        </div>
-
-        <div className="text-sm text-gray-600 space-y-1 text-left">
-          <p>• 過去30日分のランダムなデータを約100件作成します。</p>
-          <p>• 各項目について適切な値の範囲でランダム生成されます。</p>
-          <p>• 既存のデータに追加されます。</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
           データエクスポート
         </h2>
         <div className="flex flex-col gap-4 mb-6">
@@ -624,6 +571,59 @@ export default function RecordExport() {
         <div className="text-sm text-gray-600 space-y-1 text-left">
           <p>• CSV・JSON形式のファイルをインポートできます。</p>
           <p>• 既存のデータに追加されます。（重複IDは上書き）</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          テスト用データ
+        </h2>
+
+        {testDataStatus && (
+          <div className="mb-6">
+            {testDataStatus.includes('✅') && (
+              <SuccessMessage message={testDataStatus.replace('✅ ', '')} />
+            )}
+            {testDataStatus.includes('❌') && (
+              <ErrorMessage message={testDataStatus.replace('❌ ', '')} />
+            )}
+            {!testDataStatus.includes('✅') &&
+              !testDataStatus.includes('❌') && (
+                <InfoMessage message={testDataStatus} />
+              )}
+          </div>
+        )}
+
+        {isGeneratingTestData && (
+          <div className="mb-6">
+            <ProgressBar
+              value={testDataProgress}
+              label="テストデータ生成進捗"
+              showPercentage={true}
+              variant="primary"
+              size="md"
+            />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 mb-6">
+          <Button
+            variant="purple"
+            size="lg"
+            icon={HiSparkles}
+            onClick={handleGenerateTestData}
+            fullWidth={false}
+            disabled={isGeneratingTestData}
+            loading={isGeneratingTestData}
+          >
+            テストデータを生成
+          </Button>
+        </div>
+
+        <div className="text-sm text-gray-600 space-y-1 text-left">
+          <p>• 過去30日分のランダムなデータを約100件作成します。</p>
+          <p>• 各項目について適切な値の範囲でランダム生成されます。</p>
+          <p>• 既存のデータに追加されます。</p>
         </div>
       </div>
 
