@@ -11,8 +11,11 @@
     "management": "Settings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "currentPage": " (current page)",
-    "goTo": "Go to {{page}} page"
+    "currentPage": "(Current page)",
+    "goTo": "Go to {{page}}",
+    "mainNavigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation menu",
+    "mobileMainNavigation": "Mobile main navigation"
   },
   "pages": {
     "input": {
@@ -209,17 +212,26 @@
     "newFieldDetails": "New item details"
   },
   "errors": {
-    "general": "An unexpected error occurred. Please try again if you continue to experience issues.",
-    "validation": "There is an issue with the input. {{message}}",
-    "database": "A database error occurred. Please wait a moment and try again.",
-    "network": "There is a network connection issue. Please check your internet connection.",
-    "storage": "Storage capacity is insufficient. Please delete unnecessary data and try again.",
-    "rendering": "A display error occurred. Please reload the page and try again.",
-    "performance": "The system response is slow. Please wait a moment and try again.",
-    "security": "A security issue was detected. Please reload the page and try again.",
-    "authentication": "There is an authentication issue. Please reload the page and try again.",
+    "general": "An error occurred. Please try again.",
+    "network": "Network error occurred. Please check your connection and try again.",
+    "validation": "Input validation error: {{message}}",
+    "database": "Database error occurred. Please try again later.",
+    "notFound": "The requested data was not found.",
+    "timeout": "The operation timed out. Please try again.",
+    "unauthorized": "You are not authorized to perform this operation.",
+    "forbidden": "Access to this resource is forbidden.",
+    "server": "Server error occurred. Please try again later.",
+    "unknown": "An unknown error occurred. Please try again.",
+    "authentication": "Authentication issue. Please reload the page and try again.",
     "permission": "You do not have permission to perform this operation.",
-    "inputError": "Input error: {{message}}"
+    "inputError": "Input error: {{message}}",
+    "loadingError": "Loading Error",
+    "inputPageError": "Failed to load record input page.",
+    "listPageError": "Failed to load record list page.",
+    "graphPageError": "Failed to load graph page.",
+    "calendarPageError": "Failed to load calendar page.",
+    "exportPageError": "Failed to load settings page.",
+    "reloadPage": "Reload Page"
   },
   "accessibility": {
     "announcements": {
@@ -233,10 +245,35 @@
       "dragStarted": "Started dragging {{fieldName}}",
       "dragCompleted": "Moved {{fieldName}} to {{targetName}} position",
       "dragCancelled": "Cancelled dragging {{fieldName}}",
-      "fieldAdded": "Added item {{fieldName}}",
-      "fieldUpdated": "Updated item {{fieldName}}",
-      "fieldDeleted": "Deleted item {{fieldName}}"
-    }
+
+      "recordSaved": "Record has been saved",
+      "recordDeleted": "Record has been deleted",
+      "fieldAdded": "Field has been added",
+      "fieldUpdated": "Field has been updated",
+      "fieldDeleted": "Field has been deleted",
+      "sortOrderChanged": "Sort order has been changed",
+      "languageChanged": "Language changed to {{language}}",
+      "pageLoaded": "{{page}} page has been loaded",
+      "errorOccurred": "An error occurred: {{message}}",
+      "operationCompleted": "Operation completed"
+    },
+    "instructions": {
+      "navigation": "Use arrow keys to navigate, Enter to select",
+      "dragAndDrop": "Drag & drop or press Space to sort",
+      "formControls": "Tab to next item, Shift+Tab to previous item",
+      "modal": "Press Escape to close dialog",
+      "skipToContent": "Skip to main content"
+    },
+    "labels": {
+      "required": "Required field",
+      "optional": "Optional field",
+      "loading": "Loading",
+      "error": "Error",
+      "success": "Success",
+      "warning": "Warning",
+      "information": "Information"
+    },
+    "sortable": "Drag to sort."
   },
   "language": {
     "current": "Current language",
@@ -265,6 +302,44 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
-    "clickToExpand": "Click to show full text"
+    "clickToExpand": "Click to show full text",
+    "item": "field"
+  },
+  "dialogs": {
+    "sortModal": {
+      "title": "Sort Fields",
+      "description": "You can change the display order of fields using drag & drop or keyboard. Drag the handle on the right or focus and press Space to start sorting. You can also toggle the visibility of each field using the buttons.",
+      "visible": "Visible",
+      "hidden": "Hidden",
+      "makeVisible": " to visible",
+      "makeHidden": " to hidden",
+      "dragToSort": " drag to sort",
+      "visibleDescription": "Currently visible. Press Enter to hide.",
+      "hiddenDescription": "Currently hidden. Press Enter to show.",
+      "unit": "Unit",
+      "noUnit": "None",
+      "listLabel": "Sortable field list",
+      "buttonsLabel": "Dialog action buttons",
+      "cancelLabel": "Cancel changes and close dialog",
+      "saveLabel": "Save field order and display settings",
+      "openedAnnouncement": "Sort fields dialog opened. Press Escape to close.",
+      "savedAnnouncement": "Field order saved",
+      "toggledAnnouncement": " changed to {{state}}",
+      "dragStartAnnouncement": " drag started",
+      "dragOverAnnouncement": " moving over {{target}}",
+      "dragEndAnnouncement": " moved to {{target}} position",
+      "dragReturnAnnouncement": " returned to original position",
+      "dragCompleteAnnouncement": " drag completed",
+      "dragCancelAnnouncement": " drag cancelled"
+    },
+    "qrCode": {
+      "show": "Show QR Code",
+      "buttonText": "QR Code",
+      "title": "📱 Access App",
+      "scanText": "Scan QR code with your smartphone",
+      "copyUrl": "📋 Copy URL",
+      "copied": "Copied!",
+      "close": "Close"
+    }
   }
 }

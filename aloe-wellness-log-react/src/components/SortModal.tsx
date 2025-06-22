@@ -27,6 +27,7 @@ import {
   useLiveRegion,
   useModalAccessibility,
 } from '../hooks/useAccessibility';
+import { useI18n } from '../hooks/useI18n';
 import type { Field } from '../types/record';
 
 // ソート可能なアイテムコンポーネント
@@ -37,6 +38,7 @@ function SortableItem({
   field: Field;
   onToggleDisplay: (fieldId: string) => void;
 }) {
+  const { t } = useI18n();
   const {
     attributes,
     listeners,
@@ -64,7 +66,11 @@ function SortableItem({
 
       // スクリーンリーダー用アナウンス
       announcePolite(
-        `${field.name}を${newState ? '表示' : '非表示'}に変更しました`
+        `${field.name}${t('dialogs.sortModal.toggledAnnouncement', {
+          state: newState
+            ? t('dialogs.sortModal.visible')
+            : t('dialogs.sortModal.hidden'),
+        })}`
       );
     },
     [
@@ -73,6 +79,7 @@ function SortableItem({
       field.name,
       onToggleDisplay,
       announcePolite,
+      t,
     ]
   );
 
@@ -83,7 +90,11 @@ function SortableItem({
 
     // スクリーンリーダー用アナウンス
     announcePolite(
-      `${field.name}を${newState ? '表示' : '非表示'}に変更しました`
+      `${field.name}${t('dialogs.sortModal.toggledAnnouncement', {
+        state: newState
+          ? t('dialogs.sortModal.visible')
+          : t('dialogs.sortModal.hidden'),
+      })}`
     );
   }, [
     field.fieldId,
@@ -91,6 +102,7 @@ function SortableItem({
     field.name,
     onToggleDisplay,
     announcePolite,
+    t,
   ]);
 
   const keyboardHandlers = {
@@ -102,8 +114,8 @@ function SortableItem({
 
   // 表示状態の説明文
   const displayStateDescription = field.defaultDisplay
-    ? '表示中です。Enterキーで非表示にできます。'
-    : '非表示です。Enterキーで表示にできます。';
+    ? t('dialogs.sortModal.visibleDescription')
+    : t('dialogs.sortModal.hiddenDescription');
 
   return (
     <div
@@ -112,7 +124,9 @@ function SortableItem({
       className="bg-white border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-purple-300"
       {...attributes}
       role="listitem"
-      aria-label={`${field.name}項目 - ${displayStateDescription} ドラッグして並び替えできます。`}
+      aria-label={`${field.name}${t(
+        'common.item'
+      )} - ${displayStateDescription} ${t('accessibility.sortable')}`}
     >
       <div
         className="flex flex-col sm:grid sm:gap-3 sm:items-center gap-2"
@@ -123,7 +137,9 @@ function SortableItem({
           <div className="text-lg font-medium text-gray-700">{field.name}</div>
           <div
             className="text-sm text-gray-600"
-            aria-label={`単位: ${field.unit || 'なし'}`}
+            aria-label={`${t('dialogs.sortModal.unit')}: ${
+              field.unit || t('dialogs.sortModal.noUnit')
+            }`}
           >
             {field.unit ? `(${field.unit})` : '―'}
           </div>
@@ -137,20 +153,22 @@ function SortableItem({
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}を非表示にする`}
+                aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
                 aria-pressed="true"
               >
-                表示中
+                {t('dialogs.sortModal.visible')}
               </button>
             ) : (
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}を表示にする`}
+                aria-label={`${field.name}${t(
+                  'dialogs.sortModal.makeVisible'
+                )}`}
                 aria-pressed="false"
               >
-                非表示
+                {t('dialogs.sortModal.hidden')}
               </button>
             )}
           </div>
@@ -158,7 +176,7 @@ function SortableItem({
             className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
-            aria-label={`${field.name}をドラッグして並び替え`}
+            aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
             {...listeners}
           >
             <HiArrowsUpDown
@@ -177,20 +195,22 @@ function SortableItem({
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}を非表示にする`}
+                aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
                 aria-pressed="true"
               >
-                表示中
+                {t('dialogs.sortModal.visible')}
               </button>
             ) : (
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}を表示にする`}
+                aria-label={`${field.name}${t(
+                  'dialogs.sortModal.makeVisible'
+                )}`}
                 aria-pressed="false"
               >
-                非表示
+                {t('dialogs.sortModal.hidden')}
               </button>
             )}
           </div>
@@ -203,7 +223,9 @@ function SortableItem({
           {/* 単位 */}
           <div
             className="text-gray-600 border-r border-gray-200 pr-3 text-left"
-            aria-label={`単位: ${field.unit || 'なし'}`}
+            aria-label={`${t('dialogs.sortModal.unit')}: ${
+              field.unit || t('dialogs.sortModal.noUnit')
+            }`}
           >
             {field.unit ? `(${field.unit})` : '―'}
           </div>
@@ -213,7 +235,7 @@ function SortableItem({
             className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
-            aria-label={`${field.name}をドラッグして並び替え`}
+            aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
             {...listeners}
           >
             <HiArrowsUpDown
@@ -244,6 +266,8 @@ const SortModal: React.FC<SortModalProps> = ({
   onSave,
   onToggleDisplay,
 }) => {
+  const { t } = useI18n();
+
   // アクセシビリティ関連フック
   const { modalProps } = useModalAccessibility(isOpen);
   const { announcePolite, announceAssertive } = useLiveRegion();
@@ -277,28 +301,28 @@ const SortModal: React.FC<SortModalProps> = ({
 
         if (activeField && overField) {
           announcePolite(
-            `${activeField.name}を${overField.name}の位置に移動しました`
+            `${activeField.name}${t('dialogs.sortModal.dragEndAnnouncement', {
+              target: overField.name,
+            })}`
           );
         }
       }
     },
-    [onDragEnd, fields, announcePolite]
+    [onDragEnd, fields, announcePolite, t]
   );
 
   // 保存時のアナウンス
   const handleSave = useCallback(() => {
     onSave();
-    announcePolite('項目の順序を保存しました');
-  }, [onSave, announcePolite]);
+    announcePolite(t('dialogs.sortModal.savedAnnouncement'));
+  }, [onSave, announcePolite, t]);
 
   // モーダル開閉時のアナウンス
   useEffect(() => {
     if (isOpen) {
-      announcePolite(
-        '項目並び替えダイアログが開きました。Escapeキーで閉じることができます。'
-      );
+      announcePolite(t('dialogs.sortModal.openedAnnouncement'));
     }
-  }, [isOpen, announcePolite]);
+  }, [isOpen, announcePolite, t]);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -343,12 +367,12 @@ const SortModal: React.FC<SortModalProps> = ({
                     className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
                     aria-hidden="true"
                   />
-                  項目の並び替え
+                  {t('dialogs.sortModal.title')}
                 </Dialog.Title>
 
                 <div className="mb-4" id="sort-modal-description">
                   <p className="text-gray-600 text-xs sm:text-sm">
-                    ドラッグ&ドロップまたはキーボードで項目の表示順序を変更できます。右端のハンドルをドラッグするか、フォーカスしてSpaceキーを押して並び替えを開始してください。各項目の表示/非表示もボタンから切り替えできます。
+                    {t('dialogs.sortModal.description')}
                   </p>
                 </div>
 
@@ -360,9 +384,9 @@ const SortModal: React.FC<SortModalProps> = ({
                     announcements: {
                       onDragStart: ({ active }) => {
                         const field = fields.find(f => f.fieldId === active.id);
-                        return `${
-                          field?.name || 'アイテム'
-                        }のドラッグを開始しました`;
+                        return `${field?.name || 'アイテム'}${t(
+                          'dialogs.sortModal.dragStartAnnouncement'
+                        )}`;
                       },
                       onDragOver: ({ active, over }) => {
                         const activeField = fields.find(
@@ -372,7 +396,10 @@ const SortModal: React.FC<SortModalProps> = ({
                           f => f.fieldId === over?.id
                         );
                         if (activeField && overField) {
-                          return `${activeField.name}を${overField.name}の上に移動中`;
+                          return `${activeField.name}${t(
+                            'dialogs.sortModal.dragOverAnnouncement',
+                            { target: overField.name }
+                          )}`;
                         }
                         return '';
                       },
@@ -384,22 +411,25 @@ const SortModal: React.FC<SortModalProps> = ({
                           f => f.fieldId === over?.id
                         );
                         if (active.id === over?.id) {
-                          return `${
-                            activeField?.name || 'アイテム'
-                          }を元の位置に戻しました`;
+                          return `${activeField?.name || 'アイテム'}${t(
+                            'dialogs.sortModal.dragReturnAnnouncement'
+                          )}`;
                         }
                         if (activeField && overField) {
-                          return `${activeField.name}を${overField.name}の位置に移動しました`;
+                          return `${activeField.name}${t(
+                            'dialogs.sortModal.dragEndAnnouncement',
+                            { target: overField.name }
+                          )}`;
                         }
-                        return `${
-                          activeField?.name || 'アイテム'
-                        }のドラッグが完了しました`;
+                        return `${activeField?.name || 'アイテム'}${t(
+                          'dialogs.sortModal.dragCompleteAnnouncement'
+                        )}`;
                       },
                       onDragCancel: ({ active }) => {
                         const field = fields.find(f => f.fieldId === active.id);
-                        return `${
-                          field?.name || 'アイテム'
-                        }のドラッグをキャンセルしました`;
+                        return `${field?.name || 'アイテム'}${t(
+                          'dialogs.sortModal.dragCancelAnnouncement'
+                        )}`;
                       },
                     },
                   }}
@@ -411,7 +441,7 @@ const SortModal: React.FC<SortModalProps> = ({
                     <div
                       className="space-y-2 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"
                       role="list"
-                      aria-label="並び替え可能な項目一覧"
+                      aria-label={t('dialogs.sortModal.listLabel')}
                       aria-describedby="sort-modal-description"
                     >
                       {fields.map(field => (
@@ -428,25 +458,25 @@ const SortModal: React.FC<SortModalProps> = ({
                 <div
                   className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end"
                   role="group"
-                  aria-label="ダイアログ操作ボタン"
+                  aria-label={t('dialogs.sortModal.buttonsLabel')}
                 >
                   <button
                     type="button"
                     className="bg-gray-400 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                     onClick={onClose}
-                    aria-label="変更をキャンセルしてダイアログを閉じる"
+                    aria-label={t('dialogs.sortModal.cancelLabel')}
                   >
                     <HiXMark className="w-4 h-4" aria-hidden="true" />
-                    キャンセル
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="button"
                     className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                     onClick={handleSave}
-                    aria-label="項目の順序と表示設定を保存"
+                    aria-label={t('dialogs.sortModal.saveLabel')}
                   >
                     <HiCheckCircle className="w-4 h-4" aria-hidden="true" />
-                    保存
+                    {t('common.save')}
                   </button>
                 </div>
               </Dialog.Panel>

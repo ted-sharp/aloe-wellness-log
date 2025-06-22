@@ -9,10 +9,13 @@
     "graph": "グラフ",
     "calendar": "カレンダー",
     "management": "管理",
+    "goTo": "{{page}}に移動",
+    "currentPage": "（現在のページ）",
     "openMenu": "メニューを開く",
     "closeMenu": "メニューを閉じる",
-    "currentPage": "（現在のページ）",
-    "goTo": "{{page}}ページに移動"
+    "mainNavigation": "メインナビゲーション",
+    "mobileNavigation": "モバイルナビゲーションメニュー",
+    "mobileMainNavigation": "モバイルメインナビゲーション"
   },
   "pages": {
     "input": {
@@ -209,24 +212,45 @@
     "security": "セキュリティ上の問題が検出されました。ページを再読み込みしてお試しくださいませ。",
     "authentication": "認証に問題がございます。ページを再読み込みしてお試しくださいませ。",
     "permission": "この操作を実行する権限がございません。",
-    "inputError": "入力エラー: {{message}}"
+    "inputError": "入力エラー: {{message}}",
+    "loadingError": "読み込みエラー",
+    "inputPageError": "記録入力画面の読み込みに失敗いたしました。",
+    "listPageError": "記録一覧画面の読み込みに失敗いたしました。",
+    "graphPageError": "グラフ画面の読み込みに失敗いたしました。",
+    "calendarPageError": "カレンダー画面の読み込みに失敗いたしました。",
+    "exportPageError": "管理画面の読み込みに失敗いたしました。",
+    "reloadPage": "ページを再読み込み"
   },
   "accessibility": {
     "announcements": {
-      "fieldChanged": "{{fieldName}}を{{value}}に設定しました",
-      "recordSaved": "{{count}}件の項目を記録しました",
-      "currentTimeSet": "現在の日時を設定しました",
-      "previousValueSet": "{{fieldName}}に前回値を設定しました",
-      "sortOrderSaved": "項目の順序を保存しました",
-      "dialogOpened": "項目並び替えダイアログが開きました。Escapeキーで閉じることができます。",
-      "fieldDisplayChanged": "{{fieldName}}を{{state}}に変更しました",
-      "dragStarted": "{{fieldName}}のドラッグを開始しました",
-      "dragCompleted": "{{fieldName}}を{{targetName}}の位置に移動しました",
-      "dragCancelled": "{{fieldName}}のドラッグをキャンセルしました",
-      "fieldAdded": "項目{{fieldName}}を追加しました",
-      "fieldUpdated": "項目{{fieldName}}を更新しました",
-      "fieldDeleted": "項目{{fieldName}}を削除しました"
-    }
+      "recordSaved": "記録を保存いたしました",
+      "recordDeleted": "記録を削除いたしました",
+      "fieldAdded": "項目を追加いたしました",
+      "fieldUpdated": "項目を更新いたしました",
+      "fieldDeleted": "項目を削除いたしました",
+      "sortOrderChanged": "並び順を変更いたしました",
+      "languageChanged": "言語を{{language}}に変更いたしました",
+      "pageLoaded": "{{page}}ページが読み込まれました",
+      "errorOccurred": "エラーが発生いたしました: {{message}}",
+      "operationCompleted": "操作が完了いたしました"
+    },
+    "instructions": {
+      "navigation": "矢印キーで移動、Enterキーで選択",
+      "dragAndDrop": "ドラッグ&ドロップまたはSpaceキーで並び替え",
+      "formControls": "Tabキーで次の項目、Shift+Tabで前の項目に移動",
+      "modal": "Escapeキーでダイアログを閉じる",
+      "skipToContent": "メインコンテンツにスキップ"
+    },
+    "labels": {
+      "required": "必須項目",
+      "optional": "任意項目",
+      "loading": "読み込み中",
+      "error": "エラー",
+      "success": "成功",
+      "warning": "警告",
+      "information": "情報"
+    },
+    "sortable": "ドラッグして並び替えできます。"
   },
   "language": {
     "current": "現在の言語",
@@ -255,6 +279,44 @@
     "back": "戻る",
     "next": "次へ",
     "previous": "前へ",
-    "clickToExpand": "クリックして全文表示"
+    "clickToExpand": "クリックして全文表示",
+    "item": "項目"
+  },
+  "dialogs": {
+    "sortModal": {
+      "title": "項目の並び替え",
+      "description": "ドラッグ&ドロップまたはキーボードで項目の表示順序を変更できます。右端のハンドルをドラッグするか、フォーカスしてSpaceキーを押して並び替えを開始してください。各項目の表示/非表示もボタンから切り替えできます。",
+      "visible": "表示中",
+      "hidden": "非表示",
+      "makeVisible": "を表示にする",
+      "makeHidden": "を非表示にする",
+      "dragToSort": "をドラッグして並び替え",
+      "visibleDescription": "表示中です。Enterキーで非表示にできます。",
+      "hiddenDescription": "非表示です。Enterキーで表示にできます。",
+      "unit": "単位",
+      "noUnit": "なし",
+      "listLabel": "並び替え可能な項目一覧",
+      "buttonsLabel": "ダイアログ操作ボタン",
+      "cancelLabel": "変更をキャンセルしてダイアログを閉じる",
+      "saveLabel": "項目の順序と表示設定を保存",
+      "openedAnnouncement": "項目並び替えダイアログが開きました。Escapeキーで閉じることができます。",
+      "savedAnnouncement": "項目の順序を保存しました",
+      "toggledAnnouncement": "を{{state}}に変更しました",
+      "dragStartAnnouncement": "のドラッグを開始しました",
+      "dragOverAnnouncement": "を{{target}}の上に移動中",
+      "dragEndAnnouncement": "を{{target}}の位置に移動しました",
+      "dragReturnAnnouncement": "を元の位置に戻しました",
+      "dragCompleteAnnouncement": "のドラッグが完了しました",
+      "dragCancelAnnouncement": "のドラッグをキャンセルしました"
+    },
+    "qrCode": {
+      "show": "QRコードを表示",
+      "buttonText": "QRコード",
+      "title": "📱 アプリにアクセス",
+      "scanText": "スマートフォンでQRコードをスキャン",
+      "copyUrl": "📋 URLをコピー",
+      "copied": "コピーしました！",
+      "close": "閉じる"
+    }
   }
 }

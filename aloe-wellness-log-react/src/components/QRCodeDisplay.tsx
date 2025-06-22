@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BsQrCode } from 'react-icons/bs';
 import { IoClose } from 'react-icons/io5';
 import QRCode from 'react-qr-code';
+import { useI18n } from '../hooks/useI18n';
 
 interface QRCodeDisplayProps {
   url?: string;
@@ -12,6 +13,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   url = 'https://ted-sharp.github.io/aloe-wellness-log/',
   className = '',
 }) => {
+  const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
@@ -23,10 +25,12 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
       <button
         onClick={openModal}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors ${className}`}
-        title="QRコードを表示"
+        title={t('dialogs.qrCode.show')}
       >
         <BsQrCode className="w-4 h-4" />
-        <span className="hidden sm:inline">QRコード</span>
+        <span className="hidden sm:inline">
+          {t('dialogs.qrCode.buttonText')}
+        </span>
       </button>
 
       {/* QRコード表示モーダル */}
@@ -39,7 +43,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                📱 アプリにアクセス
+                {t('dialogs.qrCode.title')}
               </h3>
               <button
                 onClick={closeModal}
@@ -62,7 +66,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-2">
-                  スマートフォンでQRコードをスキャン
+                  {t('dialogs.qrCode.scanText')}
                 </p>
                 <p className="text-xs text-gray-500 break-all">{url}</p>
               </div>
@@ -74,14 +78,14 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
                   // 簡単なフィードバック
                   const button = document.activeElement as HTMLButtonElement;
                   const originalText = button.textContent;
-                  button.textContent = 'コピーしました！';
+                  button.textContent = t('dialogs.qrCode.copied');
                   setTimeout(() => {
                     button.textContent = originalText;
                   }, 2000);
                 }}
                 className="px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
               >
-                📋 URLをコピー
+                {t('dialogs.qrCode.copyUrl')}
               </button>
             </div>
 
@@ -90,7 +94,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
               onClick={closeModal}
               className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
             >
-              閉じる
+              {t('dialogs.qrCode.close')}
             </button>
           </div>
         </div>

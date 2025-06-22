@@ -37,22 +37,23 @@ const RecordInput = lazy(() => {
       console.error('Failed to load RecordInput:', error);
       // フォールバック用の最小限コンポーネント
       return {
-        default: () => (
-          <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">
-              読み込みエラー
-            </h2>
-            <p className="text-gray-600 mb-4">
-              記録入力画面の読み込みに失敗いたしました。
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ページを再読み込み
-            </button>
-          </div>
-        ),
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 mb-4">{t('errors.inputPageError')}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {t('errors.reloadPage')}
+              </button>
+            </div>
+          );
+        },
       };
     });
 });
@@ -67,22 +68,23 @@ const RecordList = lazy(() => {
     .catch(error => {
       console.error('Failed to load RecordList:', error);
       return {
-        default: () => (
-          <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">
-              読み込みエラー
-            </h2>
-            <p className="text-gray-600 mb-4">
-              記録一覧画面の読み込みに失敗いたしました。
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ページを再読み込み
-            </button>
-          </div>
-        ),
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 mb-4">{t('errors.listPageError')}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {t('errors.reloadPage')}
+              </button>
+            </div>
+          );
+        },
       };
     });
 });
@@ -97,22 +99,23 @@ const RecordGraph = lazy(() => {
     .catch(error => {
       console.error('Failed to load RecordGraph:', error);
       return {
-        default: () => (
-          <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">
-              読み込みエラー
-            </h2>
-            <p className="text-gray-600 mb-4">
-              グラフ画面の読み込みに失敗いたしました。
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ページを再読み込み
-            </button>
-          </div>
-        ),
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 mb-4">{t('errors.graphPageError')}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {t('errors.reloadPage')}
+              </button>
+            </div>
+          );
+        },
       };
     });
 });
@@ -127,22 +130,25 @@ const RecordCalendar = lazy(() => {
     .catch(error => {
       console.error('Failed to load RecordCalendar:', error);
       return {
-        default: () => (
-          <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">
-              読み込みエラー
-            </h2>
-            <p className="text-gray-600 mb-4">
-              カレンダー画面の読み込みに失敗いたしました。
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ページを再読み込み
-            </button>
-          </div>
-        ),
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {t('errors.calendarPageError')}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {t('errors.reloadPage')}
+              </button>
+            </div>
+          );
+        },
       };
     });
 });
@@ -157,22 +163,25 @@ const RecordExport = lazy(() => {
     .catch(error => {
       console.error('Failed to load RecordExport:', error);
       return {
-        default: () => (
-          <div className="p-8 text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">
-              読み込みエラー
-            </h2>
-            <p className="text-gray-600 mb-4">
-              管理画面の読み込みに失敗いたしました。
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              ページを再読み込み
-            </button>
-          </div>
-        ),
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {t('errors.exportPageError')}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {t('errors.reloadPage')}
+              </button>
+            </div>
+          );
+        },
       };
     });
 });
@@ -336,9 +345,12 @@ function Navigation() {
           className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-50 mb-4"
           role="dialog"
           aria-modal="true"
-          aria-label="モバイルナビゲーションメニュー"
+          aria-label={t('navigation.mobileNavigation')}
         >
-          <nav role="navigation" aria-label="モバイルメインナビゲーション">
+          <nav
+            role="navigation"
+            aria-label={t('navigation.mobileMainNavigation')}
+          >
             <div className="flex flex-col">
               {navItems.map((item, index) => (
                 <Link
