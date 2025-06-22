@@ -32,13 +32,13 @@ if (import.meta.env.MODE === 'development') {
   });
 }
 
-// Service Workerの登録
+// Service Workerの登録（開発環境でも有効）
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then(registration => {
-        console.log('SW registered: ', registration);
+        console.log('🎯 SW registered successfully:', registration.scope);
 
         // 更新があった場合の処理
         registration.addEventListener('updatefound', () => {
@@ -50,7 +50,7 @@ if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.controller
               ) {
                 // 新しいバージョンが利用可能
-                console.log('New version available! Please refresh.');
+                console.log('🔄 New version available! Please refresh.');
 
                 // ユーザーに更新を通知
                 if (
@@ -66,12 +66,14 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch(registrationError => {
-        console.log('SW registration failed: ', registrationError);
+        console.error('❌ SW registration failed:', registrationError);
       });
   });
 }
 
 // PWA インストールプロンプト
+// NOTE: PWAInstallButtonコンポーネントで処理するため、main.tsxでの処理はコメントアウト
+/*
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
 window.addEventListener('beforeinstallprompt', (e: Event) => {
@@ -107,6 +109,7 @@ window.showInstallPrompt = async () => {
     console.log('❌ Install prompt not available');
   }
 };
+*/
 
 // セキュリティ強化：コンテンツ保護
 document.addEventListener('contextmenu', _e => {

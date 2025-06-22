@@ -303,7 +303,7 @@ function Navigation() {
           {/* QRコードボタン（デスクトップ用） */}
           <QRCodeDisplay />
           {/* PWAインストールボタン（デスクトップ用） */}
-          <PWAInstallButton className="ml-2" />
+          <PWAInstallButton className="ml-2" debug={import.meta.env.DEV} />
         </div>
       </nav>
 
@@ -393,7 +393,10 @@ function Navigation() {
               {/* QRコードとPWAボタン */}
               <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100">
                 <QRCodeDisplay className="text-sm px-3 py-2" />
-                <PWAInstallButton className="text-sm px-3 py-2" />
+                <PWAInstallButton
+                  className="text-sm px-3 py-2"
+                  debug={import.meta.env.DEV}
+                />
               </div>
             </div>
           </nav>
