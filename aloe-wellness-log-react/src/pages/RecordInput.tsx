@@ -324,10 +324,10 @@ export default function RecordInput() {
 
                     {/* 前回値・編集・非表示ボタン（クリックで表示/非表示） */}
                     {fieldManagement.areButtonsShown(field.fieldId) && (
-                      <div className="flex gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
+                      <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-200">
                         <button
                           type="button"
-                          className="bg-sky-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                          className="bg-sky-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           onClick={() =>
                             setValues(v => ({
                               ...v,
@@ -335,23 +335,23 @@ export default function RecordInput() {
                             }))
                           }
                         >
-                          <HiClipboardDocumentList className="w-4 h-4" />
+                          <HiClipboardDocumentList className="w-3 h-3 sm:w-4 sm:h-4" />
                           前回値
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleEditField(field)}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                          className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                         >
-                          <HiPencil className="w-4 h-4" />
+                          <HiPencil className="w-3 h-3 sm:w-4 sm:h-4" />
                           編集
                         </button>
                         <button
                           type="button"
                           onClick={() => fieldManagement.handleHideField(field)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-2"
+                          className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                         >
-                          <HiEyeSlash className="w-4 h-4" />
+                          <HiEyeSlash className="w-3 h-3 sm:w-4 sm:h-4" />
                           非表示
                         </button>
                       </div>
