@@ -19,6 +19,11 @@ import { useFieldManagement } from '../hooks/useFieldManagement';
 import { useRecordsStore } from '../store/records';
 import { useToastStore } from '../store/toast';
 import type { Field } from '../types/record';
+import {
+  validateDateString,
+  validateFieldValue,
+  validateTimeString,
+} from '../utils/validation';
 
 const FIELD_TYPES = [
   { value: 'number', label: '数値' },
@@ -79,16 +84,37 @@ export default function RecordInput() {
     return typeof value === 'string' && value.trim().length > 0;
   };
 
-  const validate = () => {
-    // 入力された項目のみバリデーション
+  const validate = (): string | null => {
+    // 日付・時刻の基本バリデーション
+    if (!validateDateString(recordDate)) {
+      return '日付の形式が正しくありません (YYYY-MM-DD)';
+    }
+
+    if (!validateTimeString(recordTime)) {
+      return '時刻の形式が正しくありません (HH:mm)';
+    }
+
+    // 入力された項目のバリデーション
     for (const field of fields) {
       const val = values[field.fieldId];
       if (hasValue(field, val)) {
-        if (field.type === 'number' && isNaN(Number(val))) {
-          return `${field.name}は正しい数値で入力してください`;
+        const validationResult = validateFieldValue(val, field.type, {
+          required: false, // 必須ではないが、入力されている場合はバリデーション
+          min: field.type === 'number' ? 0 : undefined, // 数値は0以上
+          max: field.type === 'number' ? 10000 : undefined, // 数値は10000以下
+        });
+
+        if (!validationResult.isValid) {
+          return `${field.name}: ${validationResult.errors.join(', ')}`;
         }
       }
     }
+
+    // 備考の長さバリデーション
+    if (recordNotes.length > 500) {
+      return '備考は500文字以内で入力してください';
+    }
+
     return null;
   };
 

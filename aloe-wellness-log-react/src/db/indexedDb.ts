@@ -1,6 +1,7 @@
 import type { Field, RecordItem } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
+import { validateFieldArray, validateRecordArray } from '../utils/validation';
 
 const DB_NAME = 'aloe-wellness-log';
 const DB_VERSION = 1;
@@ -170,52 +171,81 @@ async function withRetry<T>(
   throw lastError!;
 }
 
-// 型ガード関数
+// 型ガード関数（強化版）
 function isRecordItem(obj: unknown): obj is RecordItem {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  const record = obj as Record<string, unknown>;
+
   return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    typeof (obj as RecordItem).id === 'string' &&
-    typeof (obj as RecordItem).date === 'string' &&
-    typeof (obj as RecordItem).time === 'string' &&
-    typeof (obj as RecordItem).datetime === 'string' &&
-    typeof (obj as RecordItem).fieldId === 'string' &&
-    (obj as RecordItem).value !== undefined
+    typeof record.id === 'string' &&
+    record.id.length > 0 &&
+    typeof record.date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
+    typeof record.time === 'string' &&
+    /^\d{2}:\d{2}$/.test(record.time) &&
+    typeof record.datetime === 'string' &&
+    record.datetime.length > 0 &&
+    typeof record.fieldId === 'string' &&
+    record.fieldId.length > 0 &&
+    record.value !== undefined &&
+    (typeof record.value === 'number' ||
+      typeof record.value === 'string' ||
+      typeof record.value === 'boolean')
   );
 }
 
 function isField(obj: unknown): obj is Field {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  const field = obj as Record<string, unknown>;
+
   return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    typeof (obj as Field).fieldId === 'string' &&
-    typeof (obj as Field).name === 'string' &&
-    ['number', 'string', 'boolean'].includes((obj as Field).type)
+    typeof field.fieldId === 'string' &&
+    field.fieldId.length > 0 &&
+    typeof field.name === 'string' &&
+    field.name.length > 0 &&
+    typeof field.type === 'string' &&
+    ['number', 'string', 'boolean'].includes(field.type) &&
+    (field.unit === undefined || typeof field.unit === 'string') &&
+    (field.order === undefined || typeof field.order === 'number') &&
+    (field.defaultDisplay === undefined ||
+      typeof field.defaultDisplay === 'boolean') &&
+    (field.default === undefined ||
+      (field.type === 'number' && typeof field.default === 'number') ||
+      (field.type === 'string' && typeof field.default === 'string') ||
+      (field.type === 'boolean' && typeof field.default === 'boolean'))
   );
 }
 
 function validateRecords(data: unknown[]): RecordItem[] {
-  const validRecords: RecordItem[] = [];
-  for (const item of data) {
-    if (isRecordItem(item)) {
-      validRecords.push(item);
-    } else {
-      console.warn('Invalid record item found:', item);
-    }
+  const validationResult = validateRecordArray(data);
+
+  if (!validationResult.isValid) {
+    console.warn(
+      'レコードデータのバリデーションエラー:',
+      validationResult.errors
+    );
   }
-  return validRecords;
+
+  return validationResult.data || [];
 }
 
 function validateFields(data: unknown[]): Field[] {
-  const validFields: Field[] = [];
-  for (const item of data) {
-    if (isField(item)) {
-      validFields.push(item);
-    } else {
-      console.warn('Invalid field item found:', item);
-    }
+  const validationResult = validateFieldArray(data);
+
+  if (!validationResult.isValid) {
+    console.warn(
+      'フィールドデータのバリデーションエラー:',
+      validationResult.errors
+    );
   }
-  return validFields;
+
+  return validationResult.data || [];
 }
 
 // データベース接続（リトライ機能付き）
@@ -288,7 +318,7 @@ export function openDb(): Promise<IDBDatabase> {
   });
 }
 
-// トランザクション実行ヘルパー
+// トランザクション実行ヘルパー（型安全性向上）
 async function executeTransaction<T>(
   storeName: string | string[],
   mode: IDBTransactionMode,
@@ -335,8 +365,10 @@ async function executeTransaction<T>(
           );
         };
 
-        // ストア取得
-        const stores = Array.isArray(storeName)
+        // ストア取得（型安全性向上）
+        const stores: IDBObjectStore | IDBObjectStore[] = Array.isArray(
+          storeName
+        )
           ? storeName.map(name => transaction.objectStore(name))
           : transaction.objectStore(storeName);
 
