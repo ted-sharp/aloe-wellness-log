@@ -107,7 +107,7 @@ export default function RecordList() {
 
   // ページング関連の状態
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // パフォーマンス監視の初期化
   useEffect(() => {
@@ -437,20 +437,29 @@ export default function RecordList() {
 
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">一覧</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8 text-center sm:text-left">
+        一覧
+      </h1>
 
       {/* 表示件数選択 */}
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-medium text-gray-800">
-            {paginatedGroups.totalGroups}件の記録グループ
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-600">表示件数:</span>
+      <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="text-center sm:text-left">
+            <span className="text-lg sm:text-xl font-bold text-gray-800">
+              {paginatedGroups.totalGroups}
+            </span>
+            <span className="text-sm sm:text-base text-gray-600 ml-1">
+              件の記録グループ
+            </span>
+          </div>
+          <div className="flex items-center justify-center sm:justify-end gap-2">
+            <span className="text-sm sm:text-base text-gray-600 whitespace-nowrap">
+              表示件数:
+            </span>
             <select
               value={pageSize}
               onChange={e => handlePageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="border border-gray-300 rounded-lg px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm sm:text-base min-w-[80px]"
             >
               <option value={10}>10件</option>
               <option value={20}>20件</option>
@@ -463,31 +472,31 @@ export default function RecordList() {
 
       {/* ページネーション（上部） */}
       {paginatedGroups.totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-md p-4 mb-8">
+        <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 mb-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronDoubleLeft className="w-4 h-4" />
+                <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronLeft className="w-4 h-4" />
+                <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <span className="text-gray-600">
+            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
               ページ
             </span>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
                 disabled={
@@ -495,7 +504,7 @@ export default function RecordList() {
                 }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronRight className="w-4 h-4" />
+                <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.totalPages)}
@@ -504,7 +513,7 @@ export default function RecordList() {
                 }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronDoubleRight className="w-4 h-4" />
+                <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
@@ -513,8 +522,8 @@ export default function RecordList() {
 
       {/* 記録一覧 */}
       {Object.entries(paginatedGroups.groups).length === 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
-          <p className="text-lg">記録がありませんわ。</p>
+        <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 text-center text-gray-500">
+          <p className="text-base sm:text-lg">記録がありませんわ。</p>
         </div>
       )}
 
@@ -543,31 +552,31 @@ export default function RecordList() {
 
       {/* ページネーション（下部） */}
       {paginatedGroups.totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-md p-4 mt-8">
+        <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 mt-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronDoubleLeft className="w-4 h-4" />
+                <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronLeft className="w-4 h-4" />
+                <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <span className="text-gray-600">
+            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
               ページ
             </span>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
                 disabled={
@@ -575,7 +584,7 @@ export default function RecordList() {
                 }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronRight className="w-4 h-4" />
+                <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.totalPages)}
@@ -584,7 +593,7 @@ export default function RecordList() {
                 }
                 className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                <HiChevronDoubleRight className="w-4 h-4" />
+                <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
