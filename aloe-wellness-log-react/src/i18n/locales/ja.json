@@ -1,0 +1,174 @@
+{
+  "app": {
+    "title": "🌿 アロエ健康ログ",
+    "skipToContent": "メインコンテンツにスキップ"
+  },
+  "navigation": {
+    "input": "入力",
+    "list": "一覧",
+    "graph": "グラフ",
+    "calendar": "カレンダー",
+    "management": "管理",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる",
+    "currentPage": "（現在のページ）",
+    "goTo": "{{page}}ページに移動"
+  },
+  "pages": {
+    "input": {
+      "title": "健康記録入力",
+      "description": "項目をクリックすると操作ボタンが表示されます",
+      "recordDateTime": "記録日時",
+      "date": "日付",
+      "time": "時刻",
+      "dateDescription": "記録する日付を選択してください",
+      "timeDescription": "記録する時刻を選択してください",
+      "setCurrentDateTime": "現在の日時を設定",
+      "currentTimeDescription": "クリックすると現在の日付と時刻が自動的に設定されます",
+      "notes": "備考・メモ",
+      "notesPlaceholder": "備考・メモを入力",
+      "notesDescription": "体調や状況についてのメモを自由に入力できます。最大{{maxLength}}文字まで入力可能です。",
+      "characterCount": "{{count}}/{{max}}文字",
+      "record": "記録する",
+      "recordSuccess": "記録を保存いたしましたわ",
+      "recordError": "保存に失敗いたしましたわ。もう一度お試しくださいませ。",
+      "selectFields": "項目を選択・表示",
+      "sortFields": "並び替え"
+    },
+    "list": {
+      "title": "一覧",
+      "recordGroups": "{{count}}件の記録グループ",
+      "noRecords": "記録がありませんわ。",
+      "confirmDelete": "本当に削除してよろしいですか？"
+    },
+    "graph": {
+      "title": "グラフ"
+    },
+    "calendar": {
+      "title": "カレンダー",
+      "recordsFor": "{{date}} の記録",
+      "noRecordsForDate": "この日の記録はありませんわ。"
+    },
+    "management": {
+      "title": "管理",
+      "allHealthRecords": "すべての健康記録項目",
+      "deleteAllData": "全データを削除",
+      "deleteWarning": "全データ削除: 記録データが完全に削除されます。",
+      "deleteConfirmation": "⚠️ 警告: すべてのデータ（記録・項目）が完全に削除されます。\n\nこの操作は取り消すことができません。\n\n本当にすべてのデータを削除してもよろしいですか？",
+      "deleteFinalConfirmation": "🚨 最終確認: 本当にすべてのデータを削除しますか？\n\nデータのバックアップを取ることをお勧めします。",
+      "deleteSuccess": "✅ すべてのデータが削除され、初期項目が復元されました。",
+      "deleteError": "❌ データの削除に失敗しました。"
+    }
+  },
+  "fields": {
+    "weight": "体重",
+    "systolicBp": "最高血圧",
+    "diastolicBp": "最低血圧",
+    "exercise": "運動",
+    "diet": "減食",
+    "sleep": "睡眠",
+    "heartRate": "心拍数",
+    "bodyTemperature": "体温",
+    "smoke": "禁酒",
+    "alcohol": "節酒",
+    "yes": "あり",
+    "no": "なし",
+    "clear": "選択をクリア",
+    "required": "必須",
+    "optional": "任意",
+    "unit": "単位",
+    "inputPlaceholder": "例: {{example}}",
+    "addNew": "新しい項目を追加",
+    "fieldName": "項目名",
+    "dataType": "データ型",
+    "types": {
+      "number": "数値",
+      "string": "文字列",
+      "boolean": "成否"
+    }
+  },
+  "actions": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "edit": "編集",
+    "delete": "削除",
+    "add": "追加",
+    "show": "表示",
+    "hide": "非表示",
+    "back": "戻る",
+    "close": "閉じる",
+    "submit": "送信",
+    "reset": "リセット",
+    "confirm": "確認",
+    "lastValue": "前回値",
+    "sort": "並び替え"
+  },
+  "modals": {
+    "sort": {
+      "title": "項目の並び替え",
+      "description": "ドラッグ&ドロップまたはキーボードで項目の表示順序を変更できます。右端のハンドルをドラッグするか、フォーカスしてSpaceキーを押して並び替えを開始してください。各項目の表示/非表示もボタンから切り替えできます。",
+      "sortableList": "並び替え可能な項目一覧",
+      "dragToSort": "{{fieldName}}をドラッグして並び替え",
+      "toggleDisplay": "{{fieldName}}の表示/非表示を切り替え",
+      "showing": "表示中",
+      "hidden": "非表示",
+      "saveOrder": "項目の順序と表示設定を保存",
+      "cancelChanges": "変更をキャンセルしてダイアログを閉じる"
+    }
+  },
+  "validation": {
+    "required": "この項目は必須です",
+    "invalidDate": "日付の形式が正しくありません (YYYY-MM-DD)",
+    "invalidTime": "時刻の形式が正しくありません (HH:mm)",
+    "maxLength": "{{field}}は{{max}}文字以内で入力してください",
+    "minValue": "{{field}}は{{min}}以上で入力してください",
+    "maxValue": "{{field}}は{{max}}以下で入力してください",
+    "invalidValue": "{{field}}の値が正しくありません"
+  },
+  "aria": {
+    "inputField": "{{fieldName}}を入力",
+    "setToYes": "{{fieldName}}をありに設定",
+    "setToNo": "{{fieldName}}をなしに設定",
+    "clearSelection": "{{fieldName}}の選択をクリア",
+    "setPreviousValue": "{{fieldName}}に前回の記録値を設定",
+    "editField": "{{fieldName}}項目を編集",
+    "hideField": "{{fieldName}}項目を非表示にする",
+    "showField": "{{fieldName}}項目を表示する",
+    "dragToSort": "{{fieldName}}をドラッグして並び替え",
+    "charactersEntered": "{{count}}文字入力済み、残り{{remaining}}文字",
+    "unitDescription": "単位: {{unit}}"
+  },
+  "errors": {
+    "general": "予期しないエラーが発生いたしました。お困りの場合は再度お試しくださいませ。",
+    "validation": "入力内容に問題がございます。{{message}}",
+    "database": "データベース操作でエラーが発生いたしました。しばらく待ってからお試しくださいませ。",
+    "network": "ネットワーク接続に問題がございます。インターネット接続をご確認くださいませ。",
+    "storage": "ストレージ容量が不足しております。不要なデータを削除してからお試しくださいませ。",
+    "rendering": "画面の表示に問題が発生いたしました。ページを再読み込みしてお試しくださいませ。",
+    "performance": "システムの応答が遅くなっております。しばらく待ってからお試しくださいませ。",
+    "security": "セキュリティ上の問題が検出されました。ページを再読み込みしてお試しくださいませ。",
+    "authentication": "認証に問題がございます。ページを再読み込みしてお試しくださいませ。",
+    "permission": "この操作を実行する権限がございません。",
+    "inputError": "入力エラー: {{message}}"
+  },
+  "accessibility": {
+    "announcements": {
+      "fieldChanged": "{{fieldName}}を{{value}}に設定しました",
+      "recordSaved": "{{count}}件の項目を記録しました",
+      "currentTimeSet": "現在の日時を設定しました",
+      "previousValueSet": "{{fieldName}}に前回値を設定しました",
+      "sortOrderSaved": "項目の順序を保存しました",
+      "dialogOpened": "項目並び替えダイアログが開きました。Escapeキーで閉じることができます。",
+      "fieldDisplayChanged": "{{fieldName}}を{{state}}に変更しました",
+      "dragStarted": "{{fieldName}}のドラッグを開始しました",
+      "dragCompleted": "{{fieldName}}を{{targetName}}の位置に移動しました",
+      "dragCancelled": "{{fieldName}}のドラッグをキャンセルしました"
+    }
+  },
+  "language": {
+    "current": "現在の言語",
+    "switchTo": "{{language}}に切り替え",
+    "japanese": "日本語",
+    "english": "English"
+  }
+}

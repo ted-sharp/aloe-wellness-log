@@ -1,0 +1,174 @@
+{
+  "app": {
+    "title": "🌿 Aloe Health Log",
+    "skipToContent": "Skip to main content"
+  },
+  "navigation": {
+    "input": "Input",
+    "list": "List",
+    "graph": "Graph",
+    "calendar": "Calendar",
+    "management": "Settings",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "currentPage": " (current page)",
+    "goTo": "Go to {{page}} page"
+  },
+  "pages": {
+    "input": {
+      "title": "Health Record Input",
+      "description": "Click on items to display action buttons",
+      "recordDateTime": "Record Date & Time",
+      "date": "Date",
+      "time": "Time",
+      "dateDescription": "Select the date for this record",
+      "timeDescription": "Select the time for this record",
+      "setCurrentDateTime": "Set current date & time",
+      "currentTimeDescription": "Click to automatically set the current date and time",
+      "notes": "Notes & Memo",
+      "notesPlaceholder": "Enter notes and memo",
+      "notesDescription": "You can freely enter notes about your condition and situation. Up to {{maxLength}} characters allowed.",
+      "characterCount": "{{count}}/{{max}} characters",
+      "record": "Record",
+      "recordSuccess": "Record saved successfully",
+      "recordError": "Failed to save record. Please try again.",
+      "selectFields": "Select & Display Items",
+      "sortFields": "Sort Items"
+    },
+    "list": {
+      "title": "List",
+      "recordGroups": "{{count}} record groups",
+      "noRecords": "No records found.",
+      "confirmDelete": "Are you sure you want to delete this record?"
+    },
+    "graph": {
+      "title": "Graph"
+    },
+    "calendar": {
+      "title": "Calendar",
+      "recordsFor": "Records for {{date}}",
+      "noRecordsForDate": "No records for this date."
+    },
+    "management": {
+      "title": "Settings",
+      "allHealthRecords": "All Health Record Items",
+      "deleteAllData": "Delete All Data",
+      "deleteWarning": "Delete All Data: All record data will be permanently deleted.",
+      "deleteConfirmation": "⚠️ Warning: All data (records and items) will be permanently deleted.\n\nThis action cannot be undone.\n\nAre you sure you want to delete all data?",
+      "deleteFinalConfirmation": "🚨 Final Confirmation: Are you sure you want to delete all data?\n\nWe recommend backing up your data before proceeding.",
+      "deleteSuccess": "✅ All data has been deleted and initial items have been restored.",
+      "deleteError": "❌ Failed to delete data."
+    }
+  },
+  "fields": {
+    "weight": "Weight",
+    "systolicBp": "Systolic BP",
+    "diastolicBp": "Diastolic BP",
+    "exercise": "Exercise",
+    "diet": "Diet Control",
+    "sleep": "Sleep",
+    "heartRate": "Heart Rate",
+    "bodyTemperature": "Body Temperature",
+    "smoke": "No Smoking",
+    "alcohol": "Alcohol Control",
+    "yes": "Yes",
+    "no": "No",
+    "clear": "Clear selection",
+    "required": "Required",
+    "optional": "Optional",
+    "unit": "Unit",
+    "inputPlaceholder": "e.g. {{example}}",
+    "addNew": "Add New Item",
+    "fieldName": "Item Name",
+    "dataType": "Data Type",
+    "types": {
+      "number": "Number",
+      "string": "Text",
+      "boolean": "Yes/No"
+    }
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "show": "Show",
+    "hide": "Hide",
+    "back": "Back",
+    "close": "Close",
+    "submit": "Submit",
+    "reset": "Reset",
+    "confirm": "Confirm",
+    "lastValue": "Last Value",
+    "sort": "Sort"
+  },
+  "modals": {
+    "sort": {
+      "title": "Sort Items",
+      "description": "You can change the display order of items using drag & drop or keyboard. Drag the handle on the right or focus and press Space key to start sorting. You can also toggle the visibility of each item from the buttons.",
+      "sortableList": "Sortable items list",
+      "dragToSort": "Drag {{fieldName}} to sort",
+      "toggleDisplay": "Toggle {{fieldName}} display",
+      "showing": "Showing",
+      "hidden": "Hidden",
+      "saveOrder": "Save item order and display settings",
+      "cancelChanges": "Cancel changes and close dialog"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidDate": "Invalid date format (YYYY-MM-DD)",
+    "invalidTime": "Invalid time format (HH:mm)",
+    "maxLength": "{{field}} must be {{max}} characters or less",
+    "minValue": "{{field}} must be {{min}} or greater",
+    "maxValue": "{{field}} must be {{max}} or less",
+    "invalidValue": "Invalid value for {{field}}"
+  },
+  "aria": {
+    "inputField": "Enter {{fieldName}}",
+    "setToYes": "Set {{fieldName}} to yes",
+    "setToNo": "Set {{fieldName}} to no",
+    "clearSelection": "Clear {{fieldName}} selection",
+    "setPreviousValue": "Set previous value for {{fieldName}}",
+    "editField": "Edit {{fieldName}} item",
+    "hideField": "Hide {{fieldName}} item",
+    "showField": "Show {{fieldName}} item",
+    "dragToSort": "Drag {{fieldName}} to sort",
+    "charactersEntered": "{{count}} characters entered, {{remaining}} remaining",
+    "unitDescription": "Unit: {{unit}}"
+  },
+  "errors": {
+    "general": "An unexpected error occurred. Please try again if you continue to experience issues.",
+    "validation": "There is an issue with the input. {{message}}",
+    "database": "A database error occurred. Please wait a moment and try again.",
+    "network": "There is a network connection issue. Please check your internet connection.",
+    "storage": "Storage capacity is insufficient. Please delete unnecessary data and try again.",
+    "rendering": "A display error occurred. Please reload the page and try again.",
+    "performance": "The system response is slow. Please wait a moment and try again.",
+    "security": "A security issue was detected. Please reload the page and try again.",
+    "authentication": "There is an authentication issue. Please reload the page and try again.",
+    "permission": "You do not have permission to perform this operation.",
+    "inputError": "Input error: {{message}}"
+  },
+  "accessibility": {
+    "announcements": {
+      "fieldChanged": "Set {{fieldName}} to {{value}}",
+      "recordSaved": "Recorded {{count}} items",
+      "currentTimeSet": "Set current date and time",
+      "previousValueSet": "Set previous value for {{fieldName}}",
+      "sortOrderSaved": "Saved item order",
+      "dialogOpened": "Item sorting dialog opened. You can close it with the Escape key.",
+      "fieldDisplayChanged": "Changed {{fieldName}} to {{state}}",
+      "dragStarted": "Started dragging {{fieldName}}",
+      "dragCompleted": "Moved {{fieldName}} to {{targetName}} position",
+      "dragCancelled": "Cancelled dragging {{fieldName}}"
+    }
+  },
+  "language": {
+    "current": "Current language",
+    "switchTo": "Switch to {{language}}",
+    "japanese": "Japanese",
+    "english": "English"
+  }
+}

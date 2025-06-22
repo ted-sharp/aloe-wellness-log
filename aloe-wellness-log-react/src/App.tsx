@@ -9,9 +9,11 @@ import {
 } from 'react-router-dom';
 import './App.css';
 import ErrorBoundary from './components/ErrorBoundary';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import ToastContainer from './components/ToastContainer';
+import { useI18n } from './hooks/useI18n';
 import { useRecordsStore } from './store/records';
 import {
   debugLog,
@@ -176,26 +178,31 @@ const RecordExport = lazy(() => {
 });
 
 // ローディング用コンポーネント
-const PageLoader = ({ pageName }: { pageName?: string }) => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <div className="flex flex-col items-center space-y-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      <p className="text-gray-600 font-medium">
-        {pageName ? `${pageName}を読み込み中...` : 'ページを読み込み中...'}
-      </p>
-      {isDev && (
-        <p className="text-xs text-gray-400">
-          Development: パフォーマンス測定中
+const PageLoader = ({ pageName }: { pageName?: string }) => {
+  const { t } = useI18n();
+
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <p className="text-gray-600 font-medium">
+          {pageName ? `${pageName}を読み込み中...` : 'ページを読み込み中...'}
         </p>
-      )}
+        {isDev && (
+          <p className="text-xs text-gray-400">
+            Development: パフォーマンス測定中
+          </p>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ナビゲーションコンポーネント
 function Navigation() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useI18n();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -220,11 +227,11 @@ function Navigation() {
   }, [isMenuOpen]);
 
   const navItems = [
-    { path: '/', label: '入力', color: 'green' },
-    { path: '/list', label: '一覧', color: 'blue' },
-    { path: '/graph', label: 'グラフ', color: 'blue' },
-    { path: '/calendar', label: 'カレンダー', color: 'blue' },
-    { path: '/export', label: '管理', color: 'purple' },
+    { path: '/', label: t('navigation.input'), color: 'green' },
+    { path: '/list', label: t('navigation.list'), color: 'blue' },
+    { path: '/graph', label: t('navigation.graph'), color: 'blue' },
+    { path: '/calendar', label: t('navigation.calendar'), color: 'blue' },
+    { path: '/export', label: t('navigation.management'), color: 'purple' },
   ];
 
   const isCurrentPage = (path: string) => location.pathname === path;
@@ -236,14 +243,14 @@ function Navigation() {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-blue-600 text-white px-4 py-2 rounded-lg z-50 font-medium"
       >
-        メインコンテンツにスキップ
+        {t('app.skipToContent')}
       </a>
 
       {/* デスクトップ用ナビゲーション */}
       <nav
         className="hidden md:flex justify-between items-center gap-4 mb-12 p-4 bg-white rounded-lg shadow-lg mx-4 mt-4"
         role="navigation"
-        aria-label="メインナビゲーション"
+        aria-label={t('navigation.goTo', { page: 'メイン' })}
       >
         <div className="flex gap-4">
           {navItems.map(item => (
@@ -258,17 +265,19 @@ function Navigation() {
                   : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
               } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               aria-current={isCurrentPage(item.path) ? 'page' : undefined}
-              aria-label={`${item.label}ページに移動`}
+              aria-label={t('navigation.goTo', { page: item.label })}
             >
               {item.label}
               {isCurrentPage(item.path) && (
-                <span className="sr-only">（現在のページ）</span>
+                <span className="sr-only">{t('navigation.currentPage')}</span>
               )}
             </Link>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 言語切り替えボタン（デスクトップ用） */}
+          <LanguageSwitcher compact className="mr-2" />
           {/* QRコードボタン（デスクトップ用） */}
           <QRCodeDisplay />
           {/* PWAインストールボタン（デスクトップ用） */}
@@ -277,8 +286,14 @@ function Navigation() {
       </nav>
 
       {/* モバイル用ヘッダー */}
-      <div className="md:hidden flex justify-end items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
+      <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
+        <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap">
+          {t('app.title')}
+        </h1>
+
         <div className="flex items-center gap-2">
+          {/* 言語切り替えボタン（モバイル用・小さめ） */}
+          <LanguageSwitcher compact />
           {/* QRコードボタン（モバイル用・小さめ） */}
           <QRCodeDisplay className="text-xs px-2 py-1.5" />
           {/* PWAインストールボタン（モバイル用・小さめ） */}
@@ -287,7 +302,9 @@ function Navigation() {
           <button
             onClick={toggleMenu}
             className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-            aria-label={isMenuOpen ? 'メニューを閉じる' : 'メニューを開く'}
+            aria-label={
+              isMenuOpen ? t('navigation.closeMenu') : t('navigation.openMenu')
+            }
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
           >
@@ -340,11 +357,13 @@ function Navigation() {
                       : '!text-blue-500 hover:bg-blue-50 focus:bg-blue-50 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500'
                   }`}
                   aria-current={isCurrentPage(item.path) ? 'page' : undefined}
-                  aria-label={`${item.label}ページに移動`}
+                  aria-label={t('navigation.goTo', { page: item.label })}
                 >
                   {item.label}
                   {isCurrentPage(item.path) && (
-                    <span className="sr-only">（現在のページ）</span>
+                    <span className="sr-only">
+                      {t('navigation.currentPage')}
+                    </span>
                   )}
                 </Link>
               ))}

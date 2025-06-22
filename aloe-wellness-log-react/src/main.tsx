@@ -1,8 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initializePrivacySettings } from './utils/privacy';
+
+// i18nの初期化
+import './i18n';
 
 // PWA型定義
 declare global {
@@ -23,21 +26,48 @@ declare global {
 // 🔐 プライバシー・セキュリティ機能を初期化
 initializePrivacySettings();
 
-// Service Worker登録（本番環境のみ）
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// パフォーマンス監視を開発環境でのみ有効化
+if (import.meta.env.MODE === 'development') {
+  import('./utils/performanceMonitor').then(({ PerformanceMonitor }) => {
+    new PerformanceMonitor();
+  });
+}
+
+// Service Workerの登録
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then(registration => {
-        console.log('🌿 SW registered:', registration);
+        console.log('SW registered: ', registration);
 
-        // セキュリティ強化：定期的なService Worker更新チェック
-        setInterval(() => {
-          registration.update();
-        }, 60000); // 1分ごと
+        // 更新があった場合の処理
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
+                // 新しいバージョンが利用可能
+                console.log('New version available! Please refresh.');
+
+                // ユーザーに更新を通知
+                if (
+                  confirm(
+                    'アプリの新しいバージョンが利用可能です。更新しますか？'
+                  )
+                ) {
+                  window.location.reload();
+                }
+              }
+            });
+          }
+        });
       })
-      .catch(error => {
-        console.error('🔥 SW registration failed:', error);
+      .catch(registrationError => {
+        console.log('SW registration failed: ', registrationError);
       });
   });
 }
@@ -115,55 +145,91 @@ if (import.meta.env.PROD) {
   setInterval(detectDevTools, 500);
 }
 
-// エラーハンドリング強化
-window.addEventListener('error', event => {
-  console.error('🔥 Global error:', event.error);
+// グローバルエラーハンドリング
+// パフォーマンス追跡用のカスタムイベント
+const sendPerformanceEvent = (
+  eventName: string,
+  data: Record<string, unknown>
+) => {
+  // 開発環境でのみログ出力
+  if (import.meta.env.MODE === 'development') {
+    console.log(`Performance Event: ${eventName}`, data);
+  }
 
-  // セキュリティ関連のエラーを特別に処理
-  if (event.error?.name === 'SecurityError') {
-    console.error(
-      '🔒 Security error detected, additional logging may be required'
+  // 後で使用するためにイベントを保存
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent(`performance:${eventName}`, { detail: data })
     );
   }
-});
+};
 
-window.addEventListener('unhandledrejection', event => {
-  console.error('🔥 Unhandled promise rejection:', event.reason);
+// 初期パフォーマンス計測
+const startTime = performance.now();
 
-  // プライバシー配慮でエラー詳細をマスク
-  if (typeof event.reason === 'object' && event.reason !== null) {
-    const sanitizedReason = { ...event.reason };
-    // 機密情報が含まれる可能性のあるプロパティを削除
-    delete sanitizedReason.stack;
-    delete sanitizedReason.message;
-    console.error('🔒 Sanitized error:', sanitizedReason);
+// エラーハンドリング関数
+const handleGlobalError = (error: ErrorEvent | PromiseRejectionEvent) => {
+  console.error('Global error:', error);
+
+  let errorInfo: Record<string, unknown>;
+
+  if (error instanceof ErrorEvent) {
+    errorInfo = {
+      message: error.message,
+      filename: error.filename,
+      lineno: error.lineno,
+      colno: error.colno,
+      stack: error.error?.stack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+    };
+  } else {
+    // PromiseRejectionEvent
+    errorInfo = {
+      reason: error.reason,
+      promise: String(error.promise),
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+    };
   }
-});
 
-// パフォーマンス監視
-if ('performance' in window && 'getEntriesByType' in window.performance) {
-  window.addEventListener('load', () => {
-    // ページロード時間を計測
-    const perfData = performance.getEntriesByType(
-      'navigation'
-    )[0] as PerformanceNavigationTiming;
-    if (perfData) {
-      const loadTime = perfData.loadEventEnd - perfData.loadEventStart;
-      console.log(`⚡ Page load time: ${loadTime}ms`);
+  // パフォーマンス情報を追加
+  if (typeof performance !== 'undefined') {
+    const perfData = {
+      timing: performance.timing,
+      navigation: performance.navigation,
+      memory: (performance as any).memory,
+    };
 
-      // セキュリティ監視：異常に長いロード時間の検出
-      if (loadTime > 10000) {
-        // 10秒以上
-        console.warn(
-          '⚠️ Unusually long load time detected, potential security issue'
-        );
-      }
-    }
-  });
-}
+    errorInfo.performance = perfData;
+  }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  // 機密情報が含まれる可能性のあるプロパティを削除
+  const sanitizedErrorInfo = {
+    ...errorInfo,
+    // 機密情報を含む可能性のあるフィールドを削除/マスク
+    userAgent: navigator.userAgent.substring(0, 100), // 長すぎる場合は切り詰め
+    url: new URL(window.location.href).pathname, // クエリパラメータを除去
+  };
+
+  // エラー情報をパフォーマンスイベントとして送信
+  sendPerformanceEvent('error', sanitizedErrorInfo);
+};
+
+// グローバルエラーイベントリスナーの設定
+window.addEventListener('error', handleGlobalError);
+window.addEventListener('unhandledrejection', handleGlobalError);
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>
 );
+
+// 初期ロード時間を計測
+window.addEventListener('load', () => {
+  const loadTime = performance.now() - startTime;
+  sendPerformanceEvent('initialLoad', { loadTime });
+});
