@@ -141,19 +141,19 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 </div>
               </div>
             )}
-            <div className="flex gap-2 justify-center mt-4 pt-4 border-t border-gray-200">
+            <div className="flex gap-2 sm:gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
               <button
                 onClick={handleEditSave}
-                className="bg-green-600 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
+                className="bg-green-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
               >
-                <HiCheckCircle className="w-3.5 h-3.5" />
+                <HiCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 保存
               </button>
               <button
                 onClick={handleEditCancel}
-                className="bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
+                className="bg-gray-400 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
               >
-                <HiXMark className="w-3.5 h-3.5" />
+                <HiXMark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 キャンセル
               </button>
             </div>
@@ -223,19 +223,19 @@ const RecordItem: React.FC<RecordItemProps> = memo(
 
             {/* 編集・削除ボタン（クリックで表示/非表示） */}
             {areButtonsShown && (
-              <div className="flex gap-2 justify-center mt-4 pt-4 border-t border-gray-200">
+              <div className="flex gap-2 sm:gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
                 <button
                   onClick={handleEdit}
-                  className="bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
+                  className="bg-blue-500 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
                 >
-                  <HiPencil className="w-3.5 h-3.5" />
+                  <HiPencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   編集
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm"
+                  className="bg-red-600 text-white px-3 sm:px-6 py-1.5 sm:py-3 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center gap-1.5 text-sm sm:text-base flex-1 sm:min-w-[120px] justify-center"
                 >
-                  <HiTrash className="w-3.5 h-3.5" />
+                  <HiTrash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   削除
                 </button>
               </div>
