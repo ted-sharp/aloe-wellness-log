@@ -81,6 +81,9 @@ export default defineConfig(({ mode }) => {
 
     // パフォーマンス最適化設定
     build: {
+      // GitHub Pages (docs フォルダ) 用の出力設定
+      outDir: '../docs',
+      emptyOutDir: true,
       // チャンクサイズの制限を調整
       chunkSizeWarningLimit: 600,
 
