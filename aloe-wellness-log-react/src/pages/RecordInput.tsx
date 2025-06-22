@@ -179,10 +179,10 @@ export default function RecordInput() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-2 sm:p-4">
       <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 whitespace-nowrap">
             健康記録入力
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-sm sm:text-base">
             項目をクリックすると操作ボタンが表示されます
           </p>
         </div>
@@ -678,10 +678,10 @@ export default function RecordInput() {
                           {fieldManagement.addFieldError}
                         </div>
                       )}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
                         <button
                           type="submit"
-                          className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                          className="bg-teal-500 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 text-sm sm:text-base"
                           aria-describedby={
                             fieldManagement.addFieldError
                               ? 'add-field-error'
@@ -694,7 +694,7 @@ export default function RecordInput() {
                         <button
                           type="button"
                           onClick={() => fieldManagement.setShowAddField(false)}
-                          className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                          className="bg-gray-400 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 text-sm sm:text-base"
                         >
                           <HiXMark className="w-4 h-4" aria-hidden="true" />
                           キャンセル
@@ -703,12 +703,12 @@ export default function RecordInput() {
                     </fieldset>
                   </form>
                 )}
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   {!fieldManagement.showAddField && (
                     <button
                       type="button"
                       onClick={() => fieldManagement.setShowAddField(true)}
-                      className="bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                      className="bg-teal-500 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-teal-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base whitespace-nowrap"
                     >
                       <HiPlus className="w-4 h-4" />
                       新しい項目を追加
@@ -717,30 +717,30 @@ export default function RecordInput() {
                   <button
                     type="button"
                     onClick={() => fieldManagement.setShowSelectField(false)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                    className="bg-gray-500 text-white px-3 sm:px-4 py-2 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
-                    <HiArrowLeft className="w-5 h-5" />
+                    <HiArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     戻る
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={() => fieldManagement.setShowSelectField(true)}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                className="bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                <HiClipboardDocumentList className="w-5 h-5" />
+                <HiClipboardDocumentList className="w-4 h-4 sm:w-5 sm:h-5" />
                 項目を選択・表示
               </button>
               <button
                 type="button"
                 onClick={fieldManagement.handleOpenSortModal}
-                className="bg-purple-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-purple-600 transition-colors duration-200 font-medium flex items-center gap-2"
+                className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-purple-600 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                <HiBars3 className="w-5 h-5" />
+                <HiBars3 className="w-4 h-4 sm:w-5 sm:h-5" />
                 並び替え
               </button>
             </div>
