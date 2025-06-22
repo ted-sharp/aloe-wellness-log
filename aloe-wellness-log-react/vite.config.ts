@@ -109,6 +109,12 @@ export default defineConfig(({ mode }) => {
 
             // State management関連を別チャンクに分離
             'state-vendor': ['zustand'],
+
+            // New vendor chunk
+            vendor: ['react', 'react-dom'],
+
+            // New ui chunk
+            ui: ['@headlessui/react', '@heroicons/react'],
           },
         },
       },
@@ -156,6 +162,9 @@ export default defineConfig(({ mode }) => {
       // HMRの最適化
       hmr: {
         overlay: true,
+      },
+      headers: {
+        'Cache-Control': 'no-store',
       },
     },
 

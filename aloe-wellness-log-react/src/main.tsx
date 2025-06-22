@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
@@ -223,9 +222,9 @@ window.addEventListener('error', handleGlobalError);
 window.addEventListener('unhandledrejection', handleGlobalError);
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
+  // <StrictMode>
+  <App />
+  // </StrictMode>
 );
 
 // 初期ロード時間を計測

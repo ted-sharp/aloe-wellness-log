@@ -348,7 +348,7 @@ function Navigation() {
       {isMenuOpen && (
         <div
           id="mobile-menu"
-          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4 w-[calc(100vw-2rem)] max-w-sm mx-auto"
+          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4"
           role="dialog"
           aria-modal="true"
           aria-label={t('navigation.mobileNavigation')}
