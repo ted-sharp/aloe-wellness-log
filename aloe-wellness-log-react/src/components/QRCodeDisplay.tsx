@@ -31,7 +31,10 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
       {/* QRコード表示モーダル */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+        >
           <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full shadow-xl">
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-4">
