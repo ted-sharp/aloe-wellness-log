@@ -35,8 +35,9 @@ if (import.meta.env.MODE === 'development') {
 // Service Workerの登録（開発環境でも有効）
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    const swPath = import.meta.env.PROD ? '/aloe-wellness-log/sw.js' : '/sw.js';
     navigator.serviceWorker
-      .register('/sw.js')
+      .register(swPath)
       .then(registration => {
         console.log('🎯 SW registered successfully:', registration.scope);
 
