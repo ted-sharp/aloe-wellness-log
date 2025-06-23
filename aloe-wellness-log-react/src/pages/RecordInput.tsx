@@ -11,6 +11,7 @@ import {
   HiTrash,
   HiXMark,
 } from 'react-icons/hi2';
+import Button from '../components/Button';
 import DateTimeSelector from '../components/DateTimeSelector';
 import NotesInput from '../components/NotesInput';
 import SortModal from '../components/SortModal';
@@ -386,26 +387,28 @@ export default function RecordInput() {
 
                     {/* 保存・キャンセルボタン（中央寄せ） */}
                     <div className="flex gap-2 sm:gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
-                      <button
-                        type="button"
+                      <Button
+                        variant="success"
+                        size="md"
+                        icon={HiCheckCircle}
                         onClick={fieldManagement.handleEditFieldSave}
-                        className="bg-green-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
+                        className="flex-1 sm:min-w-[120px]"
                       >
-                        <HiCheckCircle className="w-4 h-4" />
                         {t('actions.save')}
-                      </button>
-                      <button
-                        type="button"
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        icon={HiXMark}
                         onClick={() => {
                           fieldManagement.setEditFieldId(null);
                           fieldManagement.setEditField({});
                           fieldManagement.clearButtons(); // ボタン表示をクリア
                         }}
-                        className="bg-gray-400 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
+                        className="flex-1 sm:min-w-[120px]"
                       >
-                        <HiXMark className="w-4 h-4" />
                         {t('actions.cancel')}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -424,43 +427,46 @@ export default function RecordInput() {
                         <div className="flex items-center gap-3">
                           {field.type === 'boolean' ? (
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
+                              <Button
+                                variant="success"
+                                size="sm"
                                 onClick={e => {
                                   e.stopPropagation();
                                   handleChange(field.fieldId, true);
                                 }}
-                                className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                                className={
                                   values[field.fieldId] === true
-                                    ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
-                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }`}
+                                    ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 border-2'
+                                    : ''
+                                }
                                 aria-label={getAriaLabel('setToYes', {
                                   fieldName: translateFieldName(field.fieldId),
                                 })}
                               >
                                 {t('fields.yes')}
-                              </button>
-                              <button
-                                type="button"
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
                                 onClick={e => {
                                   e.stopPropagation();
                                   handleChange(field.fieldId, false);
                                 }}
-                                className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
+                                className={
                                   values[field.fieldId] === false
-                                    ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
-                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }`}
+                                    ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300 border-2'
+                                    : ''
+                                }
                                 aria-label={getAriaLabel('setToNo', {
                                   fieldName: translateFieldName(field.fieldId),
                                 })}
                               >
                                 {t('fields.no')}
-                              </button>
+                              </Button>
                               {values[field.fieldId] !== undefined && (
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   onClick={e => {
                                     e.stopPropagation();
                                     setValues(prev => {
@@ -469,7 +475,6 @@ export default function RecordInput() {
                                       return newValues;
                                     });
                                   }}
-                                  className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
                                   aria-label={getAriaLabel('clearSelection', {
                                     fieldName: translateFieldName(
                                       field.fieldId
@@ -478,7 +483,7 @@ export default function RecordInput() {
                                   title={t('fields.clearSelection')}
                                 >
                                   ×
-                                </button>
+                                </Button>
                               )}
                             </div>
                           ) : (
@@ -514,48 +519,39 @@ export default function RecordInput() {
                     {/* 前回値・編集・非表示ボタン（クリックで表示/非表示） */}
                     {fieldManagement.areButtonsShown(field.fieldId) && (
                       <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-200">
-                        <button
-                          type="button"
-                          className="bg-sky-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                        <Button
+                          variant="sky"
+                          size="sm"
+                          icon={HiClipboardDocumentList}
                           onClick={() => handleSetLastValue(field.fieldId)}
                           aria-label={getAriaLabel('setPreviousValue', {
                             fieldName: translateFieldName(field.fieldId),
                           })}
                         >
-                          <HiClipboardDocumentList
-                            className="w-3 h-3 sm:w-4 sm:h-4"
-                            aria-hidden="true"
-                          />
                           {t('actions.lastValue')}
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          icon={HiPencil}
                           onClick={() => fieldManagement.handleEditField(field)}
-                          className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           aria-label={getAriaLabel('editField', {
                             fieldName: translateFieldName(field.fieldId),
                           })}
                         >
-                          <HiPencil
-                            className="w-3 h-3 sm:w-4 sm:h-4"
-                            aria-hidden="true"
-                          />
                           {t('actions.edit')}
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          icon={HiEyeSlash}
                           onClick={() => fieldManagement.handleHideField(field)}
-                          className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                           aria-label={getAriaLabel('hideField', {
                             fieldName: translateFieldName(field.fieldId),
                           })}
                         >
-                          <HiEyeSlash
-                            className="w-3 h-3 sm:w-4 sm:h-4"
-                            aria-hidden="true"
-                          />
                           {t('actions.hide')}
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -575,17 +571,16 @@ export default function RecordInput() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
-            className="bg-green-600 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-lg sm:text-xl shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 w-full"
+            variant="success"
+            size="lg"
+            icon={HiDocumentText}
+            fullWidth
             aria-describedby={formError ? 'form-error' : undefined}
           >
-            <HiDocumentText
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              aria-hidden="true"
-            />
             {t('pages.input.record')}
-          </button>
+          </Button>
         </form>
 
         {/* 項目選択・管理セクション */}
@@ -652,29 +647,31 @@ export default function RecordInput() {
                               </div>
 
                               <div className="flex gap-2 sm:gap-3 justify-center pt-2 border-t border-gray-200">
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="success"
+                                  size="md"
+                                  icon={HiCheckCircle}
                                   onClick={
                                     fieldManagement.handleEditExistingFieldSave
                                   }
-                                  className="bg-green-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
+                                  className="flex-1 sm:min-w-[120px]"
                                 >
-                                  <HiCheckCircle className="w-4 h-4" />
                                   {t('actions.save')}
-                                </button>
-                                <button
-                                  type="button"
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="md"
+                                  icon={HiXMark}
                                   onClick={() => {
                                     fieldManagement.setEditingExistingFieldId(
                                       null
                                     );
                                     fieldManagement.clearSelectButtons(); // 選択ボタン表示をクリア
                                   }}
-                                  className="bg-gray-400 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md hover:bg-gray-500 transition-colors duration-200 font-medium flex items-center gap-2 flex-1 sm:min-w-[120px] justify-center"
+                                  className="flex-1 sm:min-w-[120px]"
                                 >
-                                  <HiXMark className="w-4 h-4" />
                                   {t('actions.cancel')}
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           ) : (
@@ -701,54 +698,54 @@ export default function RecordInput() {
                                 field.fieldId
                               ) && (
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4 pt-4 border-t border-gray-200">
-                                  <button
-                                    type="button"
+                                  <Button
+                                    variant="success"
+                                    size="sm"
+                                    icon={HiCheckCircle}
                                     onClick={() =>
                                       fieldManagement.handleShowExistingFieldPermanently(
                                         field.fieldId
                                       )
                                     }
-                                    className="bg-green-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
-                                    <HiCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                                     {t('actions.display')}
-                                  </button>
-                                  <button
-                                    type="button"
+                                  </Button>
+                                  <Button
+                                    variant="teal"
+                                    size="sm"
+                                    icon={HiPlus}
                                     onClick={() =>
                                       fieldManagement.handleShowExistingField(
                                         field.fieldId
                                       )
                                     }
-                                    className="bg-teal-400 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-teal-500 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
-                                    <HiPlus className="w-3 h-3 sm:w-4 sm:h-4" />
                                     {t('actions.add')}
-                                  </button>
-                                  <button
-                                    type="button"
+                                  </Button>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    icon={HiPencil}
                                     onClick={() =>
                                       fieldManagement.handleEditExistingField(
                                         field
                                       )
                                     }
-                                    className="bg-blue-500 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
-                                    <HiPencil className="w-3 h-3 sm:w-4 sm:h-4" />
                                     {t('actions.edit')}
-                                  </button>
-                                  <button
-                                    type="button"
+                                  </Button>
+                                  <Button
+                                    variant="danger"
+                                    size="sm"
+                                    icon={HiTrash}
                                     onClick={() =>
                                       fieldManagement.handleDeleteExistingField(
                                         field
                                       )
                                     }
-                                    className="bg-red-600 text-white px-2 sm:px-4 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                                   >
-                                    <HiTrash className="w-3 h-3 sm:w-4 sm:h-4" />
                                     {t('actions.delete')}
-                                  </button>
+                                  </Button>
                                 </div>
                               )}
                             </div>

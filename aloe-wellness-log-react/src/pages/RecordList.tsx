@@ -6,6 +6,7 @@ import {
   HiChevronLeft,
   HiChevronRight,
 } from 'react-icons/hi2';
+import Button from '../components/Button';
 import RecordItem from '../components/RecordItem';
 import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
@@ -477,20 +478,26 @@ export default function RecordList() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-4 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 sm:gap-2">
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronDoubleLeft}
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="最初のページ"
               >
-                <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
-              <button
+                <span className="sr-only">最初のページ</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronLeft}
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="前のページ"
               >
-                <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+                <span className="sr-only">前のページ</span>
+              </Button>
             </div>
 
             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
@@ -499,24 +506,30 @@ export default function RecordList() {
             </span>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronRight}
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="次のページ"
               >
-                <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
-              <button
+                <span className="sr-only">次のページ</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronDoubleRight}
                 onClick={() => goToPage(paginatedGroups.totalPages)}
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="最後のページ"
               >
-                <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+                <span className="sr-only">最後のページ</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -557,20 +570,26 @@ export default function RecordList() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-4 mt-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 sm:gap-2">
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronDoubleLeft}
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="最初のページ"
               >
-                <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
-              <button
+                <span className="sr-only">最初のページ</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronLeft}
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="前のページ"
               >
-                <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+                <span className="sr-only">前のページ</span>
+              </Button>
             </div>
 
             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
@@ -579,24 +598,30 @@ export default function RecordList() {
             </span>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronRight}
                 onClick={() => goToPage(paginatedGroups.currentPage + 1)}
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="次のページ"
               >
-                <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
-              <button
+                <span className="sr-only">次のページ</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={HiChevronDoubleRight}
                 onClick={() => goToPage(paginatedGroups.totalPages)}
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
+                aria-label="最後のページ"
               >
-                <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+                <span className="sr-only">最後のページ</span>
+              </Button>
             </div>
           </div>
         </div>

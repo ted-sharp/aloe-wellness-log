@@ -8,6 +8,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import './App.css';
+import Button from './components/Button';
 import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
@@ -47,12 +48,13 @@ const RecordInput = lazy(() => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.inputPageError')}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('errors.reloadPage')}
-              </button>
+              </Button>
             </div>
           );
         },
@@ -80,12 +82,13 @@ const RecordList = lazy(() => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.listPageError')}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('errors.reloadPage')}
-              </button>
+              </Button>
             </div>
           );
         },
@@ -113,12 +116,13 @@ const RecordGraph = lazy(() => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.graphPageError')}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('errors.reloadPage')}
-              </button>
+              </Button>
             </div>
           );
         },
@@ -146,12 +150,13 @@ const RecordCalendar = lazy(() => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.calendarPageError')}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('errors.reloadPage')}
-              </button>
+              </Button>
             </div>
           );
         },
@@ -179,12 +184,13 @@ const RecordExport = lazy(() => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.exportPageError')}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="md"
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('errors.reloadPage')}
-              </button>
+              </Button>
             </div>
           );
         },
