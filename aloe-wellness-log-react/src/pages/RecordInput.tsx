@@ -274,13 +274,13 @@ export default function RecordInput() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900 p-2 sm:p-4">
       <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
         <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 whitespace-nowrap">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-2 whitespace-nowrap">
             {t('pages.input.title')}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
             {t('pages.input.description')}
           </p>
         </div>
@@ -309,7 +309,7 @@ export default function RecordInput() {
             .map(field => (
               <div
                 key={field.fieldId}
-                className="bg-white p-6 rounded-2xl shadow-md"
+                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md"
               >
                 {fieldManagement.editFieldId === field.fieldId ? (
                   <div>
@@ -388,10 +388,10 @@ export default function RecordInput() {
                         fieldManagement.toggleButtons(field.fieldId)
                       }
                     >
-                      <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
+                      <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
                         {field.name}
                       </div>
-                      <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
+                      <div className="text-lg text-gray-800 dark:text-gray-200 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                         <div className="flex items-center gap-3">
                           {field.type === 'boolean' ? (
                             <div className="flex items-center gap-2">
@@ -403,8 +403,8 @@ export default function RecordInput() {
                                 }}
                                 className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                                   values[field.fieldId] === true
-                                    ? 'bg-green-100 border-green-500 text-green-700'
-                                    : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                                 aria-label={getAriaLabel('setToYes', {
                                   fieldName: translateFieldName(field.fieldId),
@@ -420,8 +420,8 @@ export default function RecordInput() {
                                 }}
                                 className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                                   values[field.fieldId] === false
-                                    ? 'bg-red-100 border-red-500 text-red-700'
-                                    : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }`}
                                 aria-label={getAriaLabel('setToNo', {
                                   fieldName: translateFieldName(field.fieldId),
@@ -465,7 +465,7 @@ export default function RecordInput() {
                                 )
                               }
                               onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
-                              className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                               aria-label={getAriaLabel('inputField', {
                                 fieldName: translateFieldName(field.fieldId),
                               })}
@@ -473,7 +473,7 @@ export default function RecordInput() {
                           )}
                           <div className="w-full sm:w-32">
                             {field.unit && (
-                              <span className="text-gray-600 font-medium">
+                              <span className="text-gray-600 dark:text-gray-400 font-medium">
                                 {field.unit}
                               </span>
                             )}
@@ -537,7 +537,7 @@ export default function RecordInput() {
           {formError && (
             <div
               id="form-error"
-              className="text-red-600 font-semibold bg-red-50 p-4 rounded-lg border border-red-200"
+              className="text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800"
               role="alert"
               aria-live="polite"
             >
@@ -562,22 +562,22 @@ export default function RecordInput() {
         {/* 項目選択・管理セクション */}
         <div className="mb-8">
           {fieldManagement.showSelectField ? (
-            <div className="bg-white p-6 rounded-2xl shadow-md">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <HiClipboardDocumentList className="w-6 h-6 text-blue-600" />
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                <HiClipboardDocumentList className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 {t('pages.input.fieldManagement.selectFieldsTitle')}
               </h3>
               <div className="space-y-4">
                 {fieldManagement.getHiddenFields().length > 0 && (
                   <>
-                    <h4 className="text-xl font-medium text-gray-700 text-left">
+                    <h4 className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left">
                       {t('pages.input.fieldManagement.existingFields')}
                     </h4>
                     <div className="space-y-3">
                       {fieldManagement.getHiddenFields().map(field => (
                         <div
                           key={field.fieldId}
-                          className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                          className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
                         >
                           {fieldManagement.editingExistingFieldId ===
                           field.fieldId ? (
@@ -596,7 +596,7 @@ export default function RecordInput() {
                                         f => ({ ...f, name: e.target.value })
                                       )
                                     }
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                                     placeholder={t(
                                       'pages.input.fieldManagement.fieldName'
                                     )}
@@ -614,7 +614,7 @@ export default function RecordInput() {
                                         f => ({ ...f, unit: e.target.value })
                                       )
                                     }
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                                    className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                                     placeholder={t(
                                       'pages.input.fieldManagement.unitPlaceholder'
                                     )}
@@ -659,10 +659,10 @@ export default function RecordInput() {
                                   )
                                 }
                               >
-                                <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
+                                <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
                                   {field.name}
                                 </div>
-                                <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
+                                <div className="text-lg text-gray-800 dark:text-gray-200 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                                   {field.unit ? `(${field.unit})` : ''}
                                 </div>
                               </div>
@@ -732,11 +732,11 @@ export default function RecordInput() {
                 {fieldManagement.showAddField && (
                   <form
                     onSubmit={fieldManagement.handleAddField}
-                    className="bg-green-50 border border-green-200 rounded-lg p-4"
+                    className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4"
                   >
-                    <h4 className="text-xl font-medium text-gray-700 mb-4 text-left flex items-center gap-2">
+                    <h4 className="text-xl font-medium text-gray-700 dark:text-gray-200 mb-4 text-left flex items-center gap-2">
                       <HiPlus
-                        className="w-6 h-6 text-green-600"
+                        className="w-6 h-6 text-green-600 dark:text-green-400"
                         aria-hidden="true"
                       />
                       {t('pages.input.fieldManagement.addNewField')}
@@ -749,7 +749,7 @@ export default function RecordInput() {
                         <div className="flex-1">
                           <label
                             htmlFor="new-field-name"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
                           >
                             {t('pages.input.fieldManagement.fieldNameRequired')}{' '}
                             <span
@@ -769,7 +769,7 @@ export default function RecordInput() {
                                 name: e.target.value,
                               }))
                             }
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             placeholder={t(
                               'pages.input.fieldManagement.fieldNamePlaceholder'
                             )}
@@ -792,7 +792,7 @@ export default function RecordInput() {
                         <div className="w-full sm:w-32">
                           <label
                             htmlFor="new-field-type"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
                           >
                             {t('pages.input.fieldManagement.dataTypeRequired')}{' '}
                             <span
@@ -814,7 +814,7 @@ export default function RecordInput() {
                                   | 'boolean',
                               }))
                             }
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             required
                             aria-required="true"
                             aria-describedby="new-field-type-desc"
@@ -836,7 +836,7 @@ export default function RecordInput() {
                         <div className="w-full sm:w-32">
                           <label
                             htmlFor="new-field-unit"
-                            className="block text-sm font-medium text-gray-700 mb-1"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
                           >
                             {t('pages.input.fieldManagement.unitOptional')}
                           </label>
@@ -850,7 +850,7 @@ export default function RecordInput() {
                                 unit: e.target.value,
                               }))
                             }
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             placeholder="例: kg"
                             aria-describedby="new-field-unit-desc"
                           />
@@ -863,7 +863,7 @@ export default function RecordInput() {
                       {fieldManagement.addFieldError && (
                         <div
                           id="add-field-error"
-                          className="text-red-600 font-semibold bg-red-50 p-3 rounded-lg border border-red-200"
+                          className="text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800"
                           role="alert"
                           aria-live="polite"
                         >

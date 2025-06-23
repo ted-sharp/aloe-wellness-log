@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* TailwindCSS v4 ダークモード設定 */
+@theme {
+  /* ダークモード対応の強化 */
+  --default-transition-duration: 200ms;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* モバイルファーストのベース設定 */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -7,8 +14,10 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+
+  /* ダークモード時の文字色と背景色を明示的に設定 */
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,10 +28,67 @@
   font-size: 14px;
 }
 
+/* ダークモード時の設定 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+  }
+
+  /* 日付・時間入力フィールドのダークモード対応 */
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    color-scheme: dark;
+    background-color: #374151 !important;
+    color: white !important;
+    border-color: #4b5563 !important;
+  }
+
+  input[type='date']:focus,
+  input[type='time']:focus,
+  input[type='datetime-local']:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3) !important;
+  }
+
+  /* ブラウザ固有のカレンダー/時刻ピッカーアイコン */
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+
+  /* Firefox用 */
+  input[type='date']::-moz-calendar-picker-indicator,
+  input[type='time']::-moz-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+  }
+}
+
 /* デスクトップ用のフォントサイズ */
 @media (min-width: 640px) {
   :root {
     font-size: 16px;
+  }
+}
+
+/* ライトモード時の日付・時間入力フィールド設定 */
+@media (prefers-color-scheme: light) {
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    color-scheme: light;
+    background-color: white;
+    color: #1f2937;
+    border-color: #d1d5db;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    filter: none;
+    cursor: pointer;
   }
 }
 

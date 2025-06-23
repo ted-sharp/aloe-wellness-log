@@ -95,14 +95,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
     );
 
     return (
-      <li className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+      <li className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
         {isEditing ? (
           // 編集モード
           <div>
             {field?.fieldId === 'notes' ? (
               // 備考編集は左寄せレイアウト（通常表示と同じ）
               <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
-                <div className="text-xl font-medium text-gray-700 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 flex-shrink-0 pb-2 sm:pb-0">
+                <div className="text-xl font-medium text-gray-700 dark:text-gray-200 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 flex-shrink-0 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
                 </div>
                 <div className="pl-0 sm:pl-2 flex-1 min-w-0 pt-2 sm:pt-0">
@@ -113,8 +113,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         onClick={() => handleBooleanChange(true)}
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === true
-                            ? 'bg-green-100 border-green-500 text-green-700'
-                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
+                            : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToYes', {
                           fieldName: field.name,
@@ -127,8 +127,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         onClick={() => handleBooleanChange(false)}
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === false
-                            ? 'bg-red-100 border-red-500 text-red-700'
-                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
+                            : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToNo', {
                           fieldName: field.name,
@@ -154,7 +154,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     <textarea
                       value={String(editValue)}
                       onChange={handleInputChange}
-                      className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full h-24 resize-none"
+                      className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400 w-full h-24 resize-none"
                     />
                   )}
                 </div>
@@ -162,7 +162,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
             ) : (
               // 備考以外は二分割グリッドレイアウト
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch mb-4">
-                <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
+                <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
                 </div>
                 <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
@@ -173,8 +173,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         onClick={() => handleBooleanChange(true)}
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === true
-                            ? 'bg-green-100 border-green-500 text-green-700'
-                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
+                            : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToYes', {
                           fieldName: field.name,
@@ -187,8 +187,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         onClick={() => handleBooleanChange(false)}
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === false
-                            ? 'bg-red-100 border-red-500 text-red-700'
-                            : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
+                            : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToNo', {
                           fieldName: field.name,
@@ -215,7 +215,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       type={field?.type === 'number' ? 'number' : 'text'}
                       value={String(editValue)}
                       onChange={handleInputChange}
-                      className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full"
+                      className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400 w-full"
                     />
                   )}
                 </div>
@@ -247,10 +247,10 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 className="flex flex-col sm:flex-row items-stretch gap-2 cursor-pointer"
                 onClick={handleToggleButtons}
               >
-                <div className="text-xl font-medium text-gray-700 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 flex-shrink-0 pb-2 sm:pb-0">
+                <div className="text-xl font-medium text-gray-700 dark:text-gray-200 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 flex-shrink-0 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
                 </div>
-                <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 flex-1 min-w-0 pt-2 sm:pt-0">
+                <div className="text-lg text-gray-800 dark:text-gray-200 font-semibold pl-0 sm:pl-2 flex-1 min-w-0 pt-2 sm:pt-0">
                   {typeof record.value === 'string' &&
                   record.value.length > 30 ? (
                     <button
@@ -273,10 +273,10 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch cursor-pointer"
                 onClick={handleToggleButtons}
               >
-                <div className="text-xl font-medium text-gray-700 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 pb-2 sm:pb-0">
+                <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
                 </div>
-                <div className="text-lg text-gray-800 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
+                <div className="text-lg text-gray-800 dark:text-gray-200 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
                   {typeof record.value === 'boolean' ? (
                     record.value ? (
                       <span className="inline-flex items-center gap-2 text-green-600">
@@ -293,7 +293,9 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     <span className="break-words">
                       {record.value}
                       {field?.unit && typeof record.value !== 'boolean' && (
-                        <span className="text-gray-600 ml-1">{field.unit}</span>
+                        <span className="text-gray-600 dark:text-gray-400 ml-1">
+                          {field.unit}
+                        </span>
                       )}
                     </span>
                   )}
