@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CartesianGrid,
   Legend,
@@ -11,10 +11,42 @@ import {
 } from 'recharts';
 import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
+import { isDev } from '../utils/devTools';
+import {
+  performanceMonitor,
+  trackDatabaseOperation,
+} from '../utils/performanceMonitor';
 
 export default function RecordGraph() {
   const { t } = useI18n();
-  const { records, fields } = useRecordsStore();
+  const { records, fields, loadRecords, loadFields } = useRecordsStore();
+
+  // パフォーマンス監視の初期化
+  useEffect(() => {
+    performanceMonitor.trackRender.start('RecordGraph');
+    return () => {
+      performanceMonitor.trackRender.end('RecordGraph');
+    };
+  });
+
+  // データ読み込み（パフォーマンス監視付き）
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await trackDatabaseOperation('load-fields-graph', async () => {
+          await loadFields();
+        });
+
+        await trackDatabaseOperation('load-records-graph', async () => {
+          await loadRecords();
+        });
+      } catch (error) {
+        console.error('Data loading error:', error);
+      }
+    };
+
+    loadData();
+  }, [loadFields, loadRecords]);
 
   // 期間選択オプション
   const PERIOD_OPTIONS = [
@@ -32,8 +64,10 @@ export default function RecordGraph() {
   );
   const [period, setPeriod] = useState(7); // デフォルト1週間
 
-  // 選択中の項目のデータのみ抽出
+  // 選択中の項目のデータのみ抽出（パフォーマンス監視付き）
   const filteredData = useMemo(() => {
+    const startTime = performance.now();
+
     if (!selectedFieldId) return [];
     let data = records
       .filter(r => r.fieldId === selectedFieldId)
@@ -44,8 +78,60 @@ export default function RecordGraph() {
       cutoff.setDate(cutoff.getDate() - period + 1);
       data = data.filter(r => new Date(r.date) >= cutoff);
     }
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow graph data filtering: ${duration.toFixed(2)}ms for ${
+          records.length
+        } records`
+      );
+    }
+
     return data;
   }, [records, selectedFieldId, period]);
+
+  // フィールド選択のハンドラー（パフォーマンス監視付き）
+  const handleFieldChange = (fieldId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('field-select');
+    setSelectedFieldId(fieldId);
+    performanceMonitor.trackInteraction.end(interactionId, 'field-select');
+  };
+
+  // 期間選択のハンドラー（パフォーマンス監視付き）
+  const handlePeriodChange = (newPeriod: number) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('period-select');
+    setPeriod(newPeriod);
+    performanceMonitor.trackInteraction.end(interactionId, 'period-select');
+  };
+
+  // 開発環境でのパフォーマンス情報表示
+  useEffect(() => {
+    if (!isDev) return;
+
+    const logPerformanceInfo = () => {
+      console.group('🔍 RecordGraph Performance Info');
+      console.log(`📊 Total Records: ${records.length}`);
+      console.log(`📊 Total Fields: ${fields.length}`);
+      console.log(`📊 Number Fields: ${numberFields.length}`);
+      console.log(`📊 Filtered Data Points: ${filteredData.length}`);
+      console.log(`📊 Selected Field: ${selectedFieldId}`);
+      console.log(`📊 Period: ${period} days`);
+      console.groupEnd();
+    };
+
+    const timeout = setTimeout(logPerformanceInfo, 2000);
+    return () => clearTimeout(timeout);
+  }, [
+    records.length,
+    fields.length,
+    numberFields.length,
+    filteredData.length,
+    selectedFieldId,
+    period,
+  ]);
 
   return (
     <div className="p-2 sm:p-4 max-w-full sm:max-w-2xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen px-2 sm:px-0">
@@ -57,7 +143,7 @@ export default function RecordGraph() {
           {t('pages.graph.field')}
           <select
             value={selectedFieldId}
-            onChange={e => setSelectedFieldId(e.target.value)}
+            onChange={e => handleFieldChange(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 ml-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400"
           >
             {numberFields.map(f => (
@@ -71,7 +157,7 @@ export default function RecordGraph() {
           {t('pages.graph.period')}
           <select
             value={period}
-            onChange={e => setPeriod(Number(e.target.value))}
+            onChange={e => handlePeriodChange(Number(e.target.value))}
             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 ml-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400"
           >
             {PERIOD_OPTIONS.map(opt => (

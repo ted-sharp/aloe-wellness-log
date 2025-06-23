@@ -22,6 +22,11 @@ import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import { useToastStore } from '../store/toast';
 import type { Field, RecordItem } from '../types/record';
+import { isDev } from '../utils/devTools';
+import {
+  performanceMonitor,
+  trackDatabaseOperation,
+} from '../utils/performanceMonitor';
 import {
   validateDateString,
   validateFieldValue,
@@ -66,10 +71,10 @@ export default function RecordInput() {
 
   // アクセシビリティフック
   const { announcePolite } = useLiveRegion();
-  const { getFieldProps } = useFormAccessibility();
+  const { getFieldProps: _getFieldProps } = useFormAccessibility();
 
   // エラーハンドリングフック
-  const { handleAsyncError } = useErrorHandler();
+  const { handleAsyncError: _handleAsyncError } = useErrorHandler();
 
   // ストア
   const {
@@ -105,14 +110,57 @@ export default function RecordInput() {
   const [recordNotes, setRecordNotes] = useState<string>('');
 
   // 並び替えモーダルの表示状態
-  const [showSortModal, setShowSortModal] = useState(false);
+  const [_showSortModal, _setShowSortModal] = useState(false);
 
+  // パフォーマンス監視の初期化
   useEffect(() => {
-    loadFields();
-    loadRecords();
+    performanceMonitor.trackRender.start('RecordInput');
+    return () => {
+      performanceMonitor.trackRender.end('RecordInput');
+    };
+  });
+
+  // データ読み込み（パフォーマンス監視付き）
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await trackDatabaseOperation('load-fields-input', async () => {
+          await loadFields();
+        });
+
+        await trackDatabaseOperation('load-records-input', async () => {
+          await loadRecords();
+        });
+      } catch (error) {
+        console.error('Data loading error:', error);
+      }
+    };
+
+    loadData();
   }, [loadFields, loadRecords]);
 
+  // 開発環境でのパフォーマンス情報表示
+  useEffect(() => {
+    if (!isDev) return;
+
+    const logPerformanceInfo = () => {
+      console.group('🔍 RecordInput Performance Info');
+      console.log(`📊 Total Fields: ${fields.length}`);
+      console.log(`📊 Total Records: ${records.length}`);
+      console.log(`📊 Form Values Count: ${Object.keys(values).length}`);
+      console.log(`📊 Current Date: ${recordDate}`);
+      console.log(`📊 Current Time: ${recordTime}`);
+      console.groupEnd();
+    };
+
+    const timeout = setTimeout(logPerformanceInfo, 2000);
+    return () => clearTimeout(timeout);
+  }, [fields.length, records.length, values, recordDate, recordTime]);
+
   const handleChange = (fieldId: string, value: string | number | boolean) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('field-change');
+
     setValues(prev => ({ ...prev, [fieldId]: value }));
     setFormError(null); // エラーをクリア
 
@@ -126,6 +174,8 @@ export default function RecordInput() {
         })
       );
     }
+
+    performanceMonitor.trackInteraction.end(interactionId, 'field-change');
   };
 
   // 項目が入力されているかどうかを判定する関数
@@ -190,11 +240,18 @@ export default function RecordInput() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const interactionId =
+      performanceMonitor.trackInteraction.start('form-submit');
+
     // バリデーション
     const error = validate();
     if (error) {
       setFormError(error);
       announcePolite(t('errors.inputError', { message: error }));
+      performanceMonitor.trackInteraction.end(
+        interactionId,
+        'form-submit-validation-error'
+      );
       return;
     }
 
@@ -236,10 +293,16 @@ export default function RecordInput() {
         recordedCount++;
       }
 
-      // レコードを一括で追加
-      for (const record of recordsToAdd) {
-        await addRecord(record);
-      }
+      // レコードを一括で追加（パフォーマンス監視付き）
+      await trackDatabaseOperation(
+        'add-records-batch',
+        async () => {
+          for (const record of recordsToAdd) {
+            await addRecord(record);
+          }
+        },
+        recordsToAdd.length
+      );
 
       // 記録成功をアナウンス
       announcePolite(getAnnouncement('recordSaved', { count: recordedCount }));
@@ -257,6 +320,11 @@ export default function RecordInput() {
       const now = new Date();
       setRecordDate(formatLocalDate(now));
       setRecordTime(formatLocalTime(now));
+
+      performanceMonitor.trackInteraction.end(
+        interactionId,
+        'form-submit-success'
+      );
     } catch (error) {
       console.error('Save error:', error);
       const errorMessage = translateError(
@@ -265,6 +333,10 @@ export default function RecordInput() {
       );
       setFormError(errorMessage);
       showError(errorMessage);
+      performanceMonitor.trackInteraction.end(
+        interactionId,
+        'form-submit-error'
+      );
     }
   };
 
@@ -281,6 +353,9 @@ export default function RecordInput() {
 
   // 前回値を設定するハンドラー
   const handleSetLastValue = (fieldId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('set-last-value');
+
     const lastValue = getLastValue(fieldId);
     if (lastValue !== '') {
       handleChange(fieldId, lastValue);
@@ -293,6 +368,8 @@ export default function RecordInput() {
         );
       }
     }
+
+    performanceMonitor.trackInteraction.end(interactionId, 'set-last-value');
   };
 
   // 現在の日時を設定する関数

@@ -45,18 +45,18 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     };
   }
 
-  public static getDerivedStateFromError(error: Error): Partial<State> {
+  public static getDerivedStateFromError(_error: Error): Partial<State> {
     return {
       hasError: true,
       lastErrorTime: Date.now(),
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public componentDidCatch(_error: Error, errorInfo: ErrorInfo) {
     const { context, onError } = this.props;
 
     // 統合エラーオブジェクトを作成
-    const unifiedError = createUnifiedError(error, {
+    const unifiedError = createUnifiedError(_error, {
       source: 'error_boundary',
       level: this.props.level || 'component',
       context: context || 'Unknown',
@@ -164,21 +164,21 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     const canRetry = this.canRetry();
 
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-          <HiExclamationTriangle className="w-8 h-8 text-red-600" />
+      <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-800/30 rounded-full mb-4">
+          <HiExclamationTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
 
-        <h2 className="text-xl font-bold text-red-800 mb-2 text-center">
+        <h2 className="text-xl font-bold text-red-800 dark:text-red-200 mb-2 text-center">
           {this.getErrorTitle()}
         </h2>
 
-        <p className="text-red-700 mb-6 text-center max-w-md">
+        <p className="text-red-700 dark:text-red-300 mb-6 text-center max-w-md">
           {this.getErrorMessage()}
         </p>
 
         {retryCount > 0 && (
-          <p className="text-sm text-red-600 mb-4">
+          <p className="text-sm text-red-600 dark:text-red-400 mb-4">
             試行回数: {retryCount}/{this.maxRetries}
           </p>
         )}
@@ -218,28 +218,28 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
         {/* 開発環境でのデバッグ情報 */}
         {process.env.NODE_ENV === 'development' && this.state.unifiedError && (
-          <details className="mt-6 w-full max-w-2xl">
-            <summary className="cursor-pointer text-sm text-red-600 font-medium">
+          <details className="mt-6 w-full max-w-2xl text-left">
+            <summary className="cursor-pointer text-sm text-red-600 dark:text-red-400 font-medium">
               デバッグ情報
             </summary>
-            <div className="mt-2 p-4 bg-red-100 border border-red-300 rounded text-xs font-mono overflow-auto max-h-40">
-              <div className="mb-2">
+            <div className="mt-2 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-xs font-mono overflow-auto max-h-40 text-left">
+              <div className="mb-2 text-left">
                 <strong>エラーID:</strong> {this.state.unifiedError.id}
               </div>
-              <div className="mb-2">
+              <div className="mb-2 text-left">
                 <strong>タイプ:</strong> {this.state.unifiedError.type}
               </div>
-              <div className="mb-2">
+              <div className="mb-2 text-left">
                 <strong>重要度:</strong> {this.state.unifiedError.severity}
               </div>
-              <div className="mb-2">
+              <div className="mb-2 text-left">
                 <strong>リトライ可能:</strong>{' '}
                 {this.state.unifiedError.retryable ? 'はい' : 'いいえ'}
               </div>
               {this.state.unifiedError.stack && (
-                <div>
+                <div className="text-left">
                   <strong>スタックトレース:</strong>
-                  <pre className="whitespace-pre-wrap text-xs mt-1">
+                  <pre className="whitespace-pre-wrap text-xs mt-1 text-left">
                     {this.state.unifiedError.stack}
                   </pre>
                 </div>

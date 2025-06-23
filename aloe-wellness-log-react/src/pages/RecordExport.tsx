@@ -19,6 +19,11 @@ import {
 import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
+import { isDev } from '../utils/devTools';
+import {
+  performanceMonitor,
+  trackDatabaseOperation,
+} from '../utils/performanceMonitor';
 
 function formatDateForFilename(date: Date) {
   const year = date.getFullYear();
@@ -87,17 +92,93 @@ export default function RecordExport() {
   const [isGeneratingTestData, setIsGeneratingTestData] =
     useState<boolean>(false);
 
+  // エラーテスト用の状態
+  const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
+
+  // エラーテスト用: レンダリング時にエラーを投げる
+  if (errorToThrow) {
+    throw errorToThrow;
+  }
+
+  // パフォーマンス監視の初期化
   useEffect(() => {
-    loadFields();
-    loadRecords();
+    performanceMonitor.trackRender.start('RecordExport');
+    return () => {
+      performanceMonitor.trackRender.end('RecordExport');
+    };
+  });
+
+  // データ読み込み（パフォーマンス監視付き）
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await trackDatabaseOperation(
+          'load-fields-export',
+          async _operationId => {
+            await loadFields();
+          }
+        );
+
+        await trackDatabaseOperation(
+          'load-records-export',
+          async _operationId => {
+            await loadRecords();
+          }
+        );
+      } catch (error) {
+        console.error('Data loading error:', error);
+      }
+    };
+
+    loadData();
   }, [loadFields, loadRecords]);
 
-  // 日付・時刻で降順ソート（新しい順）
-  const sortedRecords = [...records].sort((a, b) => {
-    const aKey = `${a.date} ${a.time}`;
-    const bKey = `${b.date} ${b.time}`;
-    return bKey.localeCompare(aKey);
-  });
+  // 開発環境でのパフォーマンス情報表示
+  useEffect(() => {
+    if (!isDev) return;
+
+    const logPerformanceInfo = () => {
+      console.group('🔍 RecordExport Performance Info');
+      console.log(`📊 Total Records: ${records.length}`);
+      console.log(`📊 Total Fields: ${fields.length}`);
+      console.log(`📊 Import Status: ${importStatus || 'none'}`);
+      console.log(`📊 Test Data Status: ${testDataStatus || 'none'}`);
+      console.log(`📊 Test Data Progress: ${testDataProgress}%`);
+      console.log(`📊 Is Generating: ${isGeneratingTestData}`);
+      console.groupEnd();
+    };
+
+    const timeout = setTimeout(logPerformanceInfo, 2000);
+    return () => clearTimeout(timeout);
+  }, [
+    records.length,
+    fields.length,
+    importStatus,
+    testDataStatus,
+    testDataProgress,
+    isGeneratingTestData,
+  ]);
+
+  // 日付・時刻で降順ソート（新しい順）（パフォーマンス監視付き）
+  const sortedRecords = (() => {
+    const startTime = performance.now();
+    const result = [...records].sort((a, b) => {
+      const aKey = `${a.date} ${a.time}`;
+      const bKey = `${b.date} ${b.time}`;
+      return bKey.localeCompare(aKey);
+    });
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow record sorting: ${duration.toFixed(2)}ms for ${
+          records.length
+        } records`
+      );
+    }
+
+    return result;
+  })();
 
   const handleExportCSV = () => {
     const csv = toCSV(sortedRecords, fields, t);
@@ -643,6 +724,166 @@ export default function RecordExport() {
           </Button>
         </div>
       </div>
+
+      {/* エラーダイアログテスト用セクション（開発環境のみ） */}
+      {isDev && (
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-2xl shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-semibold text-orange-800 dark:text-orange-400 mb-6 flex items-center gap-2">
+            <HiExclamationTriangle className="w-6 h-6 text-orange-600 dark:text-orange-500" />
+            🐛 エラーダイアログテスト (開発環境のみ)
+          </h2>
+          <div className="mb-6 text-left">
+            <p className="text-base text-orange-700 dark:text-orange-300 mb-3">
+              エラーダイアログの表示とダークモード対応をテストするためのボタンです。
+            </p>
+            <p className="text-sm text-orange-600 dark:text-orange-400">
+              ⚠️ 注意: これらのボタンは意図的にエラーを発生させます。
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                setErrorToThrow(
+                  new Error(
+                    'テスト用レンダリングエラー: コンポーネントでエラーが発生しました'
+                  )
+                );
+              }}
+              fullWidth={false}
+            >
+              💥 レンダリングエラー
+            </Button>
+
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                setErrorToThrow(
+                  new Error(
+                    'テスト用型エラー: undefined プロパティアクセスエラー'
+                  )
+                );
+              }}
+              fullWidth={false}
+            >
+              🚫 型エラー
+            </Button>
+
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                // 非同期エラーはError Boundaryでキャッチされないため、
+                // unhandledrejectionイベントを使用してキャッチ
+                const asyncError = async () => {
+                  await new Promise((_, reject) => {
+                    setTimeout(
+                      () =>
+                        reject(
+                          new Error(
+                            'テスト用非同期エラー: Promise が拒否されました'
+                          )
+                        ),
+                      100
+                    );
+                  });
+                };
+
+                // グローバルエラーハンドラーで処理
+                asyncError().catch(error => {
+                  setErrorToThrow(error);
+                });
+              }}
+              fullWidth={false}
+            >
+              ⏰ 非同期エラー
+            </Button>
+
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                try {
+                  JSON.parse('{ invalid json syntax }');
+                } catch (error) {
+                  setErrorToThrow(
+                    new Error(
+                      `テスト用JSONパースエラー: ${
+                        error instanceof Error ? error.message : '不明なエラー'
+                      }`
+                    )
+                  );
+                }
+              }}
+              fullWidth={false}
+            >
+              📝 JSONエラー
+            </Button>
+
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                setErrorToThrow(
+                  new Error(
+                    'テスト用メモリエラー: 大量のデータ処理中にエラーが発生しました'
+                  )
+                );
+              }}
+              fullWidth={false}
+            >
+              🧠 メモリエラー
+            </Button>
+
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => {
+                setErrorToThrow(
+                  new Error(
+                    'テスト用スタックオーバーフローエラー: 無限再帰呼び出しが発生しました'
+                  )
+                );
+              }}
+              fullWidth={false}
+            >
+              ♾️ スタックオーバーフロー
+            </Button>
+          </div>
+
+          <div className="mt-6 p-4 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-600 rounded-lg">
+            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">
+              💡 エラーダイアログが表示される場面
+            </h3>
+            <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1 list-disc list-inside">
+              <li>
+                <strong>レンダリングエラー:</strong>{' '}
+                コンポーネントの描画中にエラーが発生
+              </li>
+              <li>
+                <strong>型エラー:</strong> undefined や null
+                のプロパティアクセス
+              </li>
+              <li>
+                <strong>非同期エラー:</strong> Promise の reject や async/await
+                のエラー
+              </li>
+              <li>
+                <strong>JSONエラー:</strong> 不正なJSON形式のパース
+              </li>
+              <li>
+                <strong>メモリエラー:</strong> メモリ不足や大量データ処理
+              </li>
+              <li>
+                <strong>スタックオーバーフロー:</strong> 無限再帰呼び出し
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl shadow-md p-6">
         <h2 className="text-2xl font-semibold text-red-800 dark:text-red-400 mb-6 flex items-center gap-2">

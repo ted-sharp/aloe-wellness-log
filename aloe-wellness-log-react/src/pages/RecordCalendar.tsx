@@ -5,6 +5,11 @@ import { HiCheckCircle, HiClock, HiXCircle } from 'react-icons/hi2';
 import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
+import { isDev } from '../utils/devTools';
+import {
+  performanceMonitor,
+  trackDatabaseOperation,
+} from '../utils/performanceMonitor';
 import { truncateText } from '../utils/textUtils';
 
 export default function RecordCalendar() {
@@ -16,9 +21,31 @@ export default function RecordCalendar() {
   // 現在の言語からlocaleを決定
   const currentLocale = currentLanguage === 'ja' ? 'ja-JP' : 'en-US';
 
+  // パフォーマンス監視の初期化
   useEffect(() => {
-    loadFields();
-    loadRecords();
+    performanceMonitor.trackRender.start('RecordCalendar');
+    return () => {
+      performanceMonitor.trackRender.end('RecordCalendar');
+    };
+  });
+
+  // データ読み込み（パフォーマンス監視付き）
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await trackDatabaseOperation('load-fields-calendar', async () => {
+          await loadFields();
+        });
+
+        await trackDatabaseOperation('load-records-calendar', async () => {
+          await loadRecords();
+        });
+      } catch (error) {
+        console.error('Data loading error:', error);
+      }
+    };
+
+    loadData();
   }, [loadFields, loadRecords]);
 
   // fieldIdから項目名・型を取得（RecordListと同じ関数）
@@ -43,7 +70,7 @@ export default function RecordCalendar() {
     return field;
   };
 
-  const toggleTextExpansion = (recordId: string) => {
+  const _toggleTextExpansion = (recordId: string) => {
     setExpandedTexts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(recordId)) {
@@ -73,25 +100,51 @@ export default function RecordCalendar() {
     });
   };
 
-  // 日付ごとに記録があるかどうかを判定
+  // 日付ごとに記録があるかどうかを判定（パフォーマンス監視付き）
   const recordDates = useMemo(() => {
+    const startTime = performance.now();
     const set = new Set(records.map(r => r.date));
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow record dates calculation: ${duration.toFixed(2)}ms for ${
+          records.length
+        } records`
+      );
+    }
+
     return set;
   }, [records]);
 
-  // 選択日の記録一覧
+  // 選択日の記録一覧（パフォーマンス監視付き）
   const selectedRecords = useMemo(() => {
+    const startTime = performance.now();
+
     if (!selectedDate) return [];
     // タイムゾーンを考慮した日付文字列を作成
     const year = selectedDate.getFullYear();
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const day = String(selectedDate.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
-    return records.filter(r => r.date === dateStr);
+    const result = records.filter(r => r.date === dateStr);
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow selected records filtering: ${duration.toFixed(2)}ms for ${
+          records.length
+        } records`
+      );
+    }
+
+    return result;
   }, [records, selectedDate]);
 
-  // 選択日の記録を時刻ごとにグループ化
+  // 選択日の記録を時刻ごとにグループ化（パフォーマンス監視付き）
   const groupedSelectedRecords = useMemo(() => {
+    const startTime = performance.now();
+
     if (selectedRecords.length === 0) return {};
 
     // 時刻で降順ソート（新しい順）
@@ -103,13 +156,76 @@ export default function RecordCalendar() {
 
     // 日付・時刻ごとにグループ化
     const groupMap: Record<string, RecordItem[]> = {};
-    return sortedRecords.reduce((acc, rec) => {
+    const result = sortedRecords.reduce((acc, rec) => {
       const key = `${rec.date} ${rec.time}`;
       if (!acc[key]) acc[key] = [];
       acc[key].push(rec);
       return acc;
     }, groupMap);
+
+    const duration = performance.now() - startTime;
+    if (isDev && duration > 10) {
+      console.warn(
+        `🐌 Slow record grouping: ${duration.toFixed(2)}ms for ${
+          selectedRecords.length
+        } records`
+      );
+    }
+
+    return result;
   }, [selectedRecords]);
+
+  // 日付選択のハンドラー（パフォーマンス監視付き）
+  const handleDateChange = (date: Date | null) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('date-select');
+    setSelectedDate(date);
+    performanceMonitor.trackInteraction.end(interactionId, 'date-select');
+  };
+
+  // テキスト展開のハンドラー（パフォーマンス監視付き）
+  const handleToggleTextExpansion = (recordId: string) => {
+    const interactionId =
+      performanceMonitor.trackInteraction.start('text-expand');
+    _toggleTextExpansion(recordId);
+    performanceMonitor.trackInteraction.end(interactionId, 'text-expand');
+  };
+
+  // 開発環境でのパフォーマンス情報表示
+  useEffect(() => {
+    if (!isDev) return;
+
+    const logPerformanceInfo = () => {
+      console.group('🔍 RecordCalendar Performance Info');
+      console.log(`📊 Total Records: ${records.length}`);
+      console.log(`📊 Total Fields: ${fields.length}`);
+      console.log(`📊 Record Dates Count: ${recordDates.size}`);
+      console.log(`📊 Selected Records: ${selectedRecords.length}`);
+      console.log(
+        `📊 Grouped Records: ${
+          Object.keys(groupedSelectedRecords).length
+        } groups`
+      );
+      console.log(`📊 Expanded Texts: ${expandedTexts.size}`);
+      console.log(
+        `📊 Selected Date: ${
+          selectedDate ? selectedDate.toISOString().split('T')[0] : 'none'
+        }`
+      );
+      console.groupEnd();
+    };
+
+    const timeout = setTimeout(logPerformanceInfo, 2000);
+    return () => clearTimeout(timeout);
+  }, [
+    records.length,
+    fields.length,
+    recordDates.size,
+    selectedRecords.length,
+    Object.keys(groupedSelectedRecords).length,
+    expandedTexts.size,
+    selectedDate,
+  ]);
 
   return (
     <div className="max-w-md mx-auto">
@@ -192,7 +308,7 @@ export default function RecordCalendar() {
           }
         `}</style>
         <Calendar
-          onChange={date => setSelectedDate(date as Date)}
+          onChange={date => handleDateChange(date as Date)}
           value={selectedDate}
           locale={currentLocale}
           tileContent={({ date, view }) => {
@@ -259,7 +375,7 @@ export default function RecordCalendar() {
                                   rec.value.length > 30 ? (
                                     <button
                                       onClick={() =>
-                                        toggleTextExpansion(rec.id)
+                                        handleToggleTextExpansion(rec.id)
                                       }
                                       className="text-left hover:text-blue-600 transition-colors break-words w-full"
                                       title={t('common.clickToExpand')}
