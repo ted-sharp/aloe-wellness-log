@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import { useI18n } from '../hooks/useI18n';
 import type { Field, RecordItem as RecordItemType } from '../types/record';
+import { truncateText } from '../utils/textUtils';
 
 interface RecordItemProps {
   record: RecordItemType;
@@ -24,12 +25,6 @@ interface RecordItemProps {
   onToggleTextExpansion: (recordId: string) => void;
   onToggleButtons: (recordId: string) => void;
 }
-
-// テキスト省略機能のヘルパー関数
-const truncateText = (text: string, maxLength: number = 30) => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
-};
 
 const RecordItem: React.FC<RecordItemProps> = memo(
   ({

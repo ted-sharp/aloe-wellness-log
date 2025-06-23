@@ -5,6 +5,7 @@ import { HiCheckCircle, HiClock, HiXCircle } from 'react-icons/hi2';
 import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
+import { truncateText } from '../utils/textUtils';
 
 export default function RecordCalendar() {
   const { t, translateFieldName, currentLanguage, formatDate } = useI18n();
@@ -40,12 +41,6 @@ export default function RecordCalendar() {
     }
 
     return field;
-  };
-
-  // テキスト省略機能のヘルパー関数
-  const truncateText = (text: string, maxLength: number = 30) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
   };
 
   const toggleTextExpansion = (recordId: string) => {
