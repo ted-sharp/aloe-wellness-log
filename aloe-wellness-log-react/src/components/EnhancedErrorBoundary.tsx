@@ -23,6 +23,9 @@ interface State {
   unifiedError: UnifiedError | null;
   retryCount: number;
   lastErrorTime: number;
+  isAutoRetrying: boolean;
+  nextRetryIn: number;
+  lastErrorId: string | null; // 最後のエラーIDを記録
 }
 
 /**
@@ -42,13 +45,23 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       unifiedError: null,
       retryCount: 0,
       lastErrorTime: 0,
+      isAutoRetrying: false,
+      nextRetryIn: 0,
+      lastErrorId: null,
     };
+  }
+
+  public componentDidMount() {
+    // ページ読み込み時にエラー状態をリセット
+    console.log('🔄 ErrorBoundary初期化: エラー状態をリセット');
   }
 
   public static getDerivedStateFromError(_error: Error): Partial<State> {
     return {
       hasError: true,
       lastErrorTime: Date.now(),
+      isAutoRetrying: false,
+      nextRetryIn: 0,
     };
   }
 
@@ -67,10 +80,21 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     // エラーログ出力
     logUnifiedError(unifiedError, `ErrorBoundary(${context || 'Unknown'})`);
 
+    // 新しいエラーかどうかを判定
+    const isSameError = this.state.lastErrorId === unifiedError.id;
+    const newRetryCount = isSameError ? this.state.retryCount + 1 : 1;
+
+    console.log(
+      `🔍 エラー判定: ${
+        isSameError ? '同じエラー' : '新しいエラー'
+      } (${unifiedError.id.slice(-8)})`
+    );
+
     // 状態更新
     this.setState({
       unifiedError,
-      retryCount: this.state.retryCount + 1,
+      retryCount: newRetryCount,
+      lastErrorId: unifiedError.id,
     });
 
     // カスタムエラーハンドラー実行
@@ -82,28 +106,40 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   private scheduleAutoRetry = (unifiedError: UnifiedError) => {
     const { enableRetry = true } = this.props;
-    const { retryCount, lastErrorTime } = this.state;
+    const { retryCount } = this.state;
 
     if (
       !enableRetry ||
       !unifiedError.retryable ||
-      retryCount >= this.maxRetries ||
-      Date.now() - lastErrorTime < this.retryTimeout
+      retryCount >= this.maxRetries
     ) {
       return;
     }
 
+    // 指数バックオフでリトライ間隔を計算
+    const retryDelay = 2000 + Math.pow(retryCount, 2) * 1000;
+
+    console.log(
+      `🔄 自動リトライをスケジュール: ${retryDelay}ms後に試行${
+        retryCount + 1
+      }回目`
+    );
+
     // 一定時間後に自動リトライ
     setTimeout(() => {
+      console.log(`🔄 自動リトライ実行: 試行${retryCount + 1}回目`);
       this.handleRetry();
-    }, 2000 + Math.pow(retryCount, 2) * 1000); // 指数バックオフ
+    }, retryDelay);
   };
 
   private handleRetry = () => {
+    console.log(`🔄 手動リトライ実行 (試行回数: ${this.state.retryCount})`);
     this.setState({
       hasError: false,
       unifiedError: null,
-      // retryCountはリセットしない（累積で管理）
+      isAutoRetrying: false,
+      nextRetryIn: 0,
+      // retryCountとlastErrorIdは保持（同じエラーが再発した場合のため）
     });
   };
 
@@ -137,14 +173,35 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     return level === 'page' ? 'ページエラー' : 'エラーが発生しました';
   };
 
-  private getErrorMessage = (): string => {
+  private getErrorMessage = (): ReactNode => {
     const { unifiedError } = this.state;
 
     if (unifiedError) {
-      return unifiedError.userMessage;
+      // \nを<br/>に変換して改行を適切に表示
+      const message = unifiedError.userMessage;
+      if (message.includes('\n')) {
+        const parts = message.split('\n');
+        return (
+          <>
+            {parts.map((part, index) => (
+              <React.Fragment key={index}>
+                {part}
+                {index < parts.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </>
+        );
+      }
+      return message;
     }
 
-    return 'アプリケーションで予期しないエラーが発生いたしました。';
+    return (
+      <>
+        予期しないエラーが発生いたしました。
+        <br />
+        お困りの場合は再度お試しください。
+      </>
+    );
   };
 
   private canRetry = (): boolean => {
