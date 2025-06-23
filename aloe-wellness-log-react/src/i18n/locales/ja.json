@@ -67,7 +67,9 @@
         "unitOptional": "単位（任意）"
       },
       "selectFields": "項目選択",
-      "sortFields": "項目並び替え"
+      "sortFields": "項目並び替え",
+      "recordSuccess": "記録を保存いたしましたわ",
+      "recordError": "記録の保存に失敗いたしました"
     },
     "list": {
       "title": "一覧",
@@ -124,11 +126,11 @@
       "deleteAllError": "❌ データの削除に失敗しました。",
       "importing": "インポート中...",
       "importSuccess": "件のレコードをインポートしました",
-      "importError": "❌ インポートに失敗しました:",
+      "importError": "インポートに失敗しました:",
       "unsupportedFileFormat": "❌ サポートされていないファイル形式です（.csv または .json のみ）",
       "generatingTestData": "テストデータを生成中...",
       "testDataSuccess": "件のテストデータを生成しました",
-      "testDataError": "❌ テストデータの生成に失敗しました:",
+      "testDataError": "テストデータの生成に失敗しました:",
       "testDataOf": "/"
     },
     "management": {
@@ -206,7 +208,9 @@
     "invalidValue": "{{field}}の値が正しくありません",
     "notesMaxLength": "備考は{{max}}文字以内で入力してください",
     "fieldNameRequired": "項目名は必須です",
-    "dataTypeRequired": "データ型は必須です"
+    "dataTypeRequired": "データ型は必須です",
+    "fieldNameInput": "項目名を入力してください",
+    "duplicateFieldName": "同じ名前の項目が既に存在します"
   },
   "aria": {
     "inputField": "{{fieldName}}を入力",
@@ -247,7 +251,9 @@
     "graphPageError": "グラフ画面の読み込みに失敗いたしました。",
     "calendarPageError": "カレンダー画面の読み込みに失敗いたしました。",
     "exportPageError": "管理画面の読み込みに失敗いたしました。",
-    "reloadPage": "ページを再読み込み"
+    "reloadPage": "ページを再読み込み",
+    "fieldDataNotFound": "項目データが見つかりません。ページをリロードしてください。",
+    "fieldDataLoadFailed": "項目データの読み込みに失敗しました。"
   },
   "accessibility": {
     "announcements": {
@@ -260,7 +266,15 @@
       "languageChanged": "言語を{{language}}に変更いたしました",
       "pageLoaded": "{{page}}ページが読み込まれました",
       "errorOccurred": "エラーが発生いたしました: {{message}}",
-      "operationCompleted": "操作が完了いたしました"
+      "operationCompleted": "操作が完了いたしました",
+      "fieldChanged": "{{fieldName}}を{{value}}に設定しました",
+      "fieldDisplayChanged": "項目を{{state}}に変更しましたわ",
+      "fieldAddedSuccess": "項目を追加しましたわ",
+      "fieldEditedSuccess": "項目を編集しましたわ",
+      "fieldTempDisplayAdded": "項目を一時表示に追加しましたわ",
+      "fieldDeletedSuccess": "項目を削除しましたわ",
+      "sortOrderSaved": "並び順を保存しましたわ",
+      "fieldHidden": "項目を非表示にしましたわ"
     },
     "instructions": {
       "navigation": "矢印キーで移動、Enterキーで選択",
@@ -308,7 +322,8 @@
     "next": "次へ",
     "previous": "前へ",
     "clickToExpand": "クリックして全文表示",
-    "item": "項目"
+    "item": "項目",
+    "confirmDeleteField": "項目「{{fieldName}}」を削除してもよろしいですか？\n\nこの項目に関連するすべての記録データも削除されます。"
   },
   "dialogs": {
     "sortModal": {

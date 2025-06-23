@@ -67,7 +67,9 @@
         "unitOptional": "Unit (Optional)"
       },
       "selectFields": "Select Fields",
-      "sortFields": "Sort Fields"
+      "sortFields": "Sort Fields",
+      "recordSuccess": "Record has been saved successfully",
+      "recordError": "Failed to save record"
     },
     "list": {
       "title": "List",
@@ -124,11 +126,11 @@
       "deleteAllError": "❌ Failed to delete data.",
       "importing": "Importing...",
       "importSuccess": "records imported successfully",
-      "importError": "❌ Import failed:",
+      "importError": "Import failed:",
       "unsupportedFileFormat": "❌ Unsupported file format (only .csv or .json files are supported)",
       "generatingTestData": "Generating test data...",
       "testDataSuccess": "test data entries generated successfully",
-      "testDataError": "❌ Test data generation failed:",
+      "testDataError": "Test data generation failed:",
       "testDataOf": "/"
     },
     "management": {
@@ -213,7 +215,9 @@
     "invalidValue": "Invalid value for {{field}}",
     "notesMaxLength": "Notes must be {{max}} characters or less",
     "fieldNameRequired": "Item name is required",
-    "dataTypeRequired": "Data type is required"
+    "dataTypeRequired": "Data type is required",
+    "fieldNameInput": "Please enter field name",
+    "duplicateFieldName": "A field with the same name already exists"
   },
   "aria": {
     "inputField": "Enter {{fieldName}}",
@@ -256,22 +260,22 @@
     "graphPageError": "Failed to load graph page.",
     "calendarPageError": "Failed to load calendar page.",
     "exportPageError": "Failed to load settings page.",
-    "reloadPage": "Reload Page"
+    "reloadPage": "Reload Page",
+    "fieldDataNotFound": "Field data not found. Please reload the page.",
+    "fieldDataLoadFailed": "Failed to load field data."
   },
   "accessibility": {
     "announcements": {
       "fieldChanged": "Set {{fieldName}} to {{value}}",
-      "recordSaved": "Recorded {{count}} items",
+      "recordSaved": "Record has been saved",
       "currentTimeSet": "Set current date and time",
       "previousValueSet": "Set previous value for {{fieldName}}",
       "sortOrderSaved": "Saved item order",
       "dialogOpened": "Item sorting dialog opened. You can close it with the Escape key.",
-      "fieldDisplayChanged": "Changed {{fieldName}} to {{state}}",
+      "fieldDisplayChanged": "Changed field to visible display",
       "dragStarted": "Started dragging {{fieldName}}",
       "dragCompleted": "Moved {{fieldName}} to {{targetName}} position",
       "dragCancelled": "Cancelled dragging {{fieldName}}",
-
-      "recordSaved": "Record has been saved",
       "recordDeleted": "Record has been deleted",
       "fieldAdded": "Field has been added",
       "fieldUpdated": "Field has been updated",
@@ -280,7 +284,13 @@
       "languageChanged": "Language changed to {{language}}",
       "pageLoaded": "{{page}} page has been loaded",
       "errorOccurred": "An error occurred: {{message}}",
-      "operationCompleted": "Operation completed"
+      "operationCompleted": "Operation completed",
+      "fieldAddedSuccess": "Field has been added successfully",
+      "fieldEditedSuccess": "Field has been edited successfully",
+      "fieldTempDisplayAdded": "Field has been added to temporary display",
+      "fieldDeletedSuccess": "Field has been deleted successfully",
+      "sortOrderSaved": "Sort order has been saved successfully",
+      "fieldHidden": "Field has been hidden successfully"
     },
     "instructions": {
       "navigation": "Use arrow keys to navigate, Enter to select",
@@ -328,7 +338,8 @@
     "next": "Next",
     "previous": "Previous",
     "clickToExpand": "Click to show full text",
-    "item": "field"
+    "item": "field",
+    "confirmDeleteField": "Are you sure you want to delete the field \"{{fieldName}}\"?\n\nAll record data related to this field will also be deleted."
   },
   "dialogs": {
     "sortModal": {

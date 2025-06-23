@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useI18n } from '../hooks/useI18n';
 import { useOptimizedMemo } from '../hooks/usePerformance';
 import { isDev } from '../utils/devTools';
 
@@ -13,6 +14,8 @@ interface VirtualizedListProps<T> {
   onScroll?: (scrollTop: number) => void;
   estimatedItemHeight?: number;
   enableSmoothScrolling?: boolean;
+  role?: string;
+  ariaLabel?: string;
 }
 
 // パフォーマンス最適化された仮想化リスト
@@ -27,7 +30,10 @@ function VirtualizedList<T>({
   onScroll,
   estimatedItemHeight,
   enableSmoothScrolling = true,
+  role = 'list',
+  ariaLabel,
 }: VirtualizedListProps<T>) {
+  const { t } = useI18n();
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const isScrolling = useRef(false);
@@ -187,9 +193,10 @@ function VirtualizedList<T>({
         enableSmoothScrolling ? 'scroll-smooth' : ''
       } ${className}`}
       style={{ height }}
+      role={role}
+      aria-label={ariaLabel || t('accessibility.labels.information')}
       onScroll={handleScroll}
-      role="listbox"
-      aria-label="仮想化リスト"
+      tabIndex={0}
     >
       {/* 全体の高さを確保するためのコンテナ */}
       <div

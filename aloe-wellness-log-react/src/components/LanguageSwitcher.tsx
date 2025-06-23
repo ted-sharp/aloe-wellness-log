@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { HiChevronDown, HiLanguage } from 'react-icons/hi2';
 import { useDropdownAccessibility } from '../hooks/useAccessibility';
-import { useLanguageSwitcher } from '../hooks/useI18n';
+import { useI18n, useLanguageSwitcher } from '../hooks/useI18n';
 
 interface LanguageSwitcherProps {
   className?: string;
@@ -15,6 +15,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const { t } = useI18n();
   const {
     currentLanguage,
     changeLanguage,
@@ -65,9 +66,9 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         <button
           className="flex items-center gap-1 px-2 py-1 text-sm text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-1 rounded transition-colors duration-200"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={`現在の言語: ${getLanguageName(
-            currentLanguage
-          )}。クリックして言語を変更`}
+          aria-label={t('language.switchTo', {
+            language: getLanguageName(currentLanguage),
+          })}
           {...comboboxProps}
         >
           <HiLanguage className="w-4 h-4" aria-hidden="true" />
@@ -105,7 +106,10 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                       <span>{language.name}</span>
                     </span>
                     {language.code === currentLanguage && (
-                      <span className="sr-only"> (現在選択中)</span>
+                      <span className="sr-only">
+                        {' '}
+                        ({t('navigation.currentPage')})
+                      </span>
                     )}
                   </button>
                 </li>
@@ -131,16 +135,18 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     <div className={`relative ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
         <HiLanguage className="w-4 h-4 inline mr-1" aria-hidden="true" />
-        表示言語 / Display Language
+        {currentLanguage === 'ja'
+          ? '表示言語 / Display Language'
+          : 'Display Language / 表示言語'}
       </label>
 
       <div className="relative">
         <button
           className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-2 text-left focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 focus:border-blue-600 dark:focus:border-blue-400 flex items-center justify-between"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={`現在の言語: ${getLanguageName(
-            currentLanguage
-          )}。クリックして言語を変更`}
+          aria-label={t('language.switchTo', {
+            language: getLanguageName(currentLanguage),
+          })}
           {...comboboxProps}
         >
           <span className="flex items-center gap-2">
@@ -182,7 +188,11 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                       <span className="font-medium">{language.name}</span>
                       {language.code === currentLanguage && (
                         <span className="ml-auto text-blue-600 dark:text-blue-400">
-                          ✓<span className="sr-only"> (現在選択中)</span>
+                          ✓
+                          <span className="sr-only">
+                            {' '}
+                            ({t('navigation.currentPage')})
+                          </span>
                         </span>
                       )}
                     </div>
@@ -204,7 +214,9 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       </div>
 
       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        アプリケーションの表示言語を変更できます。設定は自動的に保存されます。
+        {currentLanguage === 'ja'
+          ? 'アプリケーションの表示言語を変更できます。設定は自動的に保存されます。'
+          : 'You can change the display language of the application. Settings are automatically saved.'}
       </p>
     </div>
   );

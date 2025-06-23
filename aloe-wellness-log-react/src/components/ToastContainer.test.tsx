@@ -232,7 +232,7 @@ describe('ToastContainer', () => {
         {
           id: 'success-toast',
           type: 'success',
-          message: '成功メッセージ',
+          message: 'Success message',
         },
       ],
       addToast: vi.fn(),
@@ -252,7 +252,7 @@ describe('ToastContainer', () => {
         {
           id: 'test-toast',
           type: 'error',
-          message: 'テストエラー',
+          message: 'Test error',
         },
       ],
       addToast: vi.fn(),
@@ -263,12 +263,12 @@ describe('ToastContainer', () => {
     render(<ToastContainer />);
 
     const container = screen.getByRole('region');
-    expect(container).toHaveAttribute('aria-label', '通知メッセージ');
+    expect(container).toHaveAttribute('aria-label', 'Information');
     expect(container).toHaveAttribute('aria-live', 'polite');
     expect(container).toHaveAttribute('aria-atomic', 'false');
 
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveAttribute('aria-label', 'エラー: テストエラー');
+    expect(toast).toHaveAttribute('aria-label', 'Error: Test error');
   });
 
   test('スクリーンリーダー用のラベルが含まれる', () => {
@@ -277,7 +277,7 @@ describe('ToastContainer', () => {
         {
           id: 'test-toast',
           type: 'warning',
-          message: 'テスト警告',
+          message: 'Test warning',
         },
       ],
       addToast: vi.fn(),
@@ -287,7 +287,7 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
 
-    expect(screen.getByText('警告:', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Warning:', { exact: false })).toBeInTheDocument();
   });
 
   test('閉じるボタンのアクセシビリティラベルが正しい', () => {

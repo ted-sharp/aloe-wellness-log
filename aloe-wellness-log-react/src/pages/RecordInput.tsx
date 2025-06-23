@@ -94,7 +94,12 @@ export default function RecordInput() {
     // 値が変更されたことをアナウンス（但し過度にならないよう、boolean型のみ）
     const field = fields.find(f => f.fieldId === fieldId);
     if (field?.type === 'boolean' && typeof value === 'boolean') {
-      announcePolite(`${field.name}を${value ? 'あり' : 'なし'}に設定しました`);
+      announcePolite(
+        getAnnouncement('fieldChanged', {
+          fieldName: translateFieldName(field.fieldId),
+          value: value ? t('fields.yes') : t('fields.no'),
+        })
+      );
     }
   };
 
@@ -850,11 +855,14 @@ export default function RecordInput() {
                                 unit: e.target.value,
                               }))
                             }
-                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                            placeholder="例: kg"
-                            aria-describedby="new-field-unit-desc"
+                            placeholder={t('fields.inputPlaceholder', {
+                              example: 'kg',
+                            })}
+                            className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 focus:border-blue-600 dark:focus:border-blue-400"
+                            aria-describedby="unit-description"
+                            aria-label={t('aria.unitFieldDescription')}
                           />
-                          <div id="new-field-unit-desc" className="sr-only">
+                          <div id="unit-description" className="sr-only">
                             {t('aria.unitFieldDescription')}
                           </div>
                         </div>

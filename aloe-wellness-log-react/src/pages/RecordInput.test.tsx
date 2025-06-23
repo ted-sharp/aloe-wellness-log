@@ -139,13 +139,8 @@ describe('RecordInput', () => {
   it('初期レンダリングが正常に行われる', () => {
     render(<RecordInput />);
 
-    expect(screen.getByText('健康記録入力')).toBeInTheDocument();
-    expect(
-      screen.getByText('項目をクリックすると操作ボタンが表示されます')
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /記録する/i })
-    ).toBeInTheDocument();
+    expect(screen.getByText('Record Input')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /record/i })).toBeInTheDocument();
   });
 
   it('フィールドデータの読み込みが実行される', () => {
@@ -222,7 +217,9 @@ describe('RecordInput', () => {
 
     // Successトーストが表示されることを確認
     await waitFor(() => {
-      expect(mockShowSuccess).toHaveBeenCalledWith('記録を保存いたしましたわ');
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        'Record has been saved successfully'
+      );
     });
   });
 
@@ -305,7 +302,9 @@ describe('RecordInput', () => {
 
     // 成功メッセージが表示されることを確認（空でも処理は成功扱い）
     await waitFor(() => {
-      expect(mockShowSuccess).toHaveBeenCalledWith('記録を保存いたしましたわ');
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        'Record has been saved successfully'
+      );
     });
   });
 
@@ -319,7 +318,7 @@ describe('RecordInput', () => {
     });
     if (cancelButtons.length === 0) {
       // 編集モードでない場合は正常なのでテストをパス
-      expect(screen.getByText('健康記録入力')).toBeInTheDocument();
+      expect(screen.getByText('Record Input')).toBeInTheDocument();
       return;
     }
 
@@ -328,6 +327,6 @@ describe('RecordInput', () => {
     await user.click(cancelButton);
 
     // キャンセルボタンクリック後も画面が正常であることを確認
-    expect(screen.getByText('健康記録入力')).toBeInTheDocument();
+    expect(screen.getByText('Record Input')).toBeInTheDocument();
   });
 });

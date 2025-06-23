@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   HiCheckCircle,
   HiExclamationTriangle,
@@ -11,6 +12,7 @@ import { ToastType, useToastStore } from '../store/toast';
 const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToastStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // 新しいトーストが追加された時のフォーカス管理
   useEffect(() => {
@@ -77,13 +79,13 @@ const ToastContainer: React.FC = () => {
   const getTypeLabel = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return '成功';
+        return t('accessibility.labels.success');
       case 'error':
-        return 'エラー';
+        return t('accessibility.labels.error');
       case 'warning':
-        return '警告';
+        return t('accessibility.labels.warning');
       case 'info':
-        return '情報';
+        return t('accessibility.labels.information');
     }
   };
 
@@ -94,7 +96,7 @@ const ToastContainer: React.FC = () => {
       ref={containerRef}
       className="fixed top-4 right-4 z-50 space-y-2"
       role="region"
-      aria-label="通知メッセージ"
+      aria-label={t('accessibility.labels.information')}
       aria-live="polite"
       aria-atomic="false"
     >
@@ -124,7 +126,7 @@ const ToastContainer: React.FC = () => {
             <button
               onClick={() => removeToast(toast.id)}
               className="flex-shrink-0 text-gray-400 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-full p-1"
-              aria-label={`${getTypeLabel(toast.type)}通知を閉じる`}
+              aria-label={t('actions.close')}
             >
               <HiXMark className="w-4 h-4" aria-hidden="true" />
             </button>
