@@ -145,7 +145,7 @@ const handleGlobalError = (error: ErrorEvent | PromiseRejectionEvent) => {
       lineno: error.lineno,
       colno: error.colno,
       stack: error.error?.stack,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString(),
       userAgent: navigator.userAgent,
       url: window.location.href,
     };
@@ -154,7 +154,7 @@ const handleGlobalError = (error: ErrorEvent | PromiseRejectionEvent) => {
     errorInfo = {
       reason: error.reason,
       promise: String(error.promise),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toLocaleString(),
       userAgent: navigator.userAgent,
       url: window.location.href,
     };

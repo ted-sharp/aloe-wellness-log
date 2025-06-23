@@ -27,6 +27,30 @@ import {
   validateTimeString,
 } from '../utils/validation';
 
+// ローカル時間ベースの日時フォーマット関数
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatLocalTime = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+const formatLocalDateTime = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
 // データ型オプションは動的に生成
 
 export default function RecordInput() {
@@ -69,11 +93,11 @@ export default function RecordInput() {
   // 日時管理用のstate（デフォルトは現在時刻）
   const [recordDate, setRecordDate] = useState(() => {
     const now = new Date();
-    return now.toISOString().slice(0, 10); // YYYY-MM-DD
+    return formatLocalDate(now); // YYYY-MM-DD
   });
   const [recordTime, setRecordTime] = useState(() => {
     const now = new Date();
-    return now.toTimeString().slice(0, 5); // HH:MM
+    return formatLocalTime(now); // HH:MM
   });
 
   // 備考管理用のstate
@@ -191,7 +215,7 @@ export default function RecordInput() {
             value: value,
             date: recordDate,
             time: recordTime,
-            datetime: selectedDateTime.toISOString(),
+            datetime: formatLocalDateTime(selectedDateTime),
           });
           recordedCount++;
         }
@@ -206,7 +230,7 @@ export default function RecordInput() {
           value: recordNotes.trim(),
           date: recordDate,
           time: recordTime,
-          datetime: selectedDateTime.toISOString(),
+          datetime: formatLocalDateTime(selectedDateTime),
         });
         recordedCount++;
       }
@@ -230,8 +254,8 @@ export default function RecordInput() {
 
       // 現在時刻に更新
       const now = new Date();
-      setRecordDate(now.toISOString().slice(0, 10));
-      setRecordTime(now.toTimeString().slice(0, 5));
+      setRecordDate(formatLocalDate(now));
+      setRecordTime(formatLocalTime(now));
     } catch (error) {
       console.error('Save error:', error);
       const errorMessage = translateError(
@@ -273,8 +297,8 @@ export default function RecordInput() {
   // 現在の日時を設定する関数
   const handleSetCurrentDateTime = () => {
     const now = new Date();
-    setRecordDate(now.toISOString().slice(0, 10));
-    setRecordTime(now.toTimeString().slice(0, 5));
+    setRecordDate(formatLocalDate(now));
+    setRecordTime(formatLocalTime(now));
     announcePolite(getAnnouncement('currentTimeSet'));
   };
 
