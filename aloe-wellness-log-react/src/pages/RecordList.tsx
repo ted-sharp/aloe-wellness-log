@@ -60,9 +60,9 @@ const RecordGroup = memo<{
     });
 
     return (
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <div className="text-2xl font-semibold text-gray-800 mb-8 border-b border-gray-200 pb-4 flex items-center gap-2">
-          <HiCalendarDays className="w-6 h-6 text-blue-600" />
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6">
+        <div className="text-2xl font-semibold text-gray-800 dark:text-white mb-8 border-b border-gray-200 dark:border-gray-600 pb-4 flex items-center gap-2">
+          <HiCalendarDays className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           {datetime}
         </div>
         <ul className="space-y-4">
@@ -439,29 +439,29 @@ export default function RecordList() {
 
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6 sm:mb-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-6 sm:mb-8">
         {t('pages.list.title')}
       </h1>
 
       {/* 表示件数選択 */}
-      <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4 sm:p-6 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div className="text-center sm:text-left">
-            <span className="text-lg sm:text-xl font-bold text-gray-800">
+            <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
               {paginatedGroups.totalGroups}
             </span>
-            <span className="text-sm sm:text-base text-gray-600 ml-1">
+            <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300 ml-1">
               {t('pages.list.recordGroups')}
             </span>
           </div>
           <div className="flex items-center justify-center sm:justify-end gap-2">
-            <span className="text-sm sm:text-base text-gray-600 whitespace-nowrap">
+            <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {t('pages.list.displayCount')}
             </span>
             <select
               value={pageSize}
               onChange={e => handlePageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm sm:text-base min-w-[80px]"
+              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400 text-sm sm:text-base min-w-[80px]"
             >
               <option value={10}>{t('pages.list.items10')}</option>
               <option value={20}>{t('pages.list.items20')}</option>
@@ -474,26 +474,26 @@ export default function RecordList() {
 
       {/* ページネーション（上部） */}
       {paginatedGroups.totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-4 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
               {t('pages.list.page')}
             </span>
@@ -504,7 +504,7 @@ export default function RecordList() {
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
@@ -513,7 +513,7 @@ export default function RecordList() {
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
@@ -524,7 +524,7 @@ export default function RecordList() {
 
       {/* 記録一覧 */}
       {Object.entries(paginatedGroups.groups).length === 0 && (
-        <div className="bg-white rounded-2xl shadow-md p-6 sm:p-8 text-center text-gray-500">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 sm:p-8 text-center text-gray-500 dark:text-gray-400">
           <p className="text-base sm:text-lg">{t('pages.list.noRecords')}</p>
         </div>
       )}
@@ -554,26 +554,26 @@ export default function RecordList() {
 
       {/* ページネーション（下部） */}
       {paginatedGroups.totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-md p-3 sm:p-4 mt-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-3 sm:p-4 mt-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => goToPage(1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronDoubleLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
               <button
                 onClick={() => goToPage(paginatedGroups.currentPage - 1)}
                 disabled={paginatedGroups.currentPage === 1}
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {paginatedGroups.currentPage} / {paginatedGroups.totalPages}{' '}
               {t('pages.list.page')}
             </span>
@@ -584,7 +584,7 @@ export default function RecordList() {
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
@@ -593,7 +593,7 @@ export default function RecordList() {
                 disabled={
                   paginatedGroups.currentPage === paginatedGroups.totalPages
                 }
-                className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <HiChevronDoubleRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>

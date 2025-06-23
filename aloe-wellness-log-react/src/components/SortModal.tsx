@@ -121,7 +121,7 @@ function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-purple-300"
+      className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-400"
       {...attributes}
       role="listitem"
       aria-label={`${field.name}${t(
@@ -134,9 +134,11 @@ function SortableItem({
       >
         {/* スマホ用：項目名と単位を上部に */}
         <div className="flex justify-between items-center sm:hidden">
-          <div className="text-lg font-medium text-gray-700">{field.name}</div>
+          <div className="text-lg font-medium text-gray-700 dark:text-gray-200">
+            {field.name}
+          </div>
           <div
-            className="text-sm text-gray-600"
+            className="text-sm text-gray-600 dark:text-gray-400"
             aria-label={`${t('dialogs.sortModal.unit')}: ${
               field.unit || t('dialogs.sortModal.noUnit')
             }`}
@@ -152,7 +154,7 @@ function SortableItem({
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
-                className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-150"
+                className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-1 transition-colors duration-150"
                 aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
                 aria-pressed="true"
               >
@@ -162,7 +164,7 @@ function SortableItem({
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
-                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 transition-colors duration-150"
+                className="bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-1 transition-colors duration-150"
                 aria-label={`${field.name}${t(
                   'dialogs.sortModal.makeVisible'
                 )}`}
@@ -173,14 +175,14 @@ function SortableItem({
             )}
           </div>
           <div
-            className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 rounded p-1"
+            className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
             aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
             {...listeners}
           >
             <HiArrowsUpDown
-              className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors duration-150"
+              className="w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
               aria-hidden="true"
             />
           </div>
@@ -189,12 +191,12 @@ function SortableItem({
         {/* デスクトップ用：横並びレイアウト（元の形式） */}
         <div className="hidden sm:contents">
           {/* 左端：表示/非表示状態（クリック可能） */}
-          <div className="text-center border-r border-gray-200 pr-3">
+          <div className="text-center border-r border-gray-200 dark:border-gray-600 pr-3">
             {field.defaultDisplay ? (
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
-                className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors duration-150"
+                className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-1 transition-colors duration-150"
                 aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
                 aria-pressed="true"
               >
@@ -204,7 +206,7 @@ function SortableItem({
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
-                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 transition-colors duration-150"
+                className="bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-1 transition-colors duration-150"
                 aria-label={`${field.name}${t(
                   'dialogs.sortModal.makeVisible'
                 )}`}
@@ -216,13 +218,13 @@ function SortableItem({
           </div>
 
           {/* 項目名 */}
-          <div className="text-lg font-medium text-gray-700 border-r border-gray-200 pr-3 text-right">
+          <div className="text-lg font-medium text-gray-700 dark:text-gray-200 border-r border-gray-200 dark:border-gray-600 pr-3 text-right">
             {field.name}
           </div>
 
           {/* 単位 */}
           <div
-            className="text-gray-600 border-r border-gray-200 pr-3 text-left"
+            className="text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-600 pr-3 text-left"
             aria-label={`${t('dialogs.sortModal.unit')}: ${
               field.unit || t('dialogs.sortModal.noUnit')
             }`}
@@ -232,14 +234,14 @@ function SortableItem({
 
           {/* 右端：上下アイコン（ドラッグハンドル） */}
           <div
-            className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 rounded p-1"
+            className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
             aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
             {...listeners}
           >
             <HiArrowsUpDown
-              className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors duration-150"
+              className="w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
               aria-hidden="true"
             />
           </div>
@@ -354,23 +356,23 @@ const SortModal: React.FC<SortModalProps> = ({
       {/* モーダルコンテンツ */}
       <div className="flex min-h-full items-center justify-center p-4 text-center">
         <div
-          className="relative w-full max-w-sm sm:max-w-xl transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all"
+          className="relative w-full max-w-sm sm:max-w-xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-4 sm:p-6 text-left align-middle shadow-xl transition-all"
           onKeyDown={handleKeyDown}
           onClick={e => e.stopPropagation()}
         >
           <h3
-            className="text-xl sm:text-2xl font-bold leading-6 text-gray-900 mb-4 sm:mb-6 flex items-center gap-2"
+            className="text-xl sm:text-2xl font-bold leading-6 text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center gap-2"
             id="sort-modal-title"
           >
             <HiBars3
-              className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
+              className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400"
               aria-hidden="true"
             />
             {t('dialogs.sortModal.title')}
           </h3>
 
           <div className="mb-4" id="sort-modal-description">
-            <p className="text-gray-600 text-xs sm:text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
               {t('dialogs.sortModal.description')}
             </p>
           </div>
@@ -453,7 +455,7 @@ const SortModal: React.FC<SortModalProps> = ({
           >
             <button
               type="button"
-              className="bg-gray-400 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="bg-gray-400 dark:bg-gray-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               onClick={onClose}
               aria-label={t('dialogs.sortModal.cancelLabel')}
             >
@@ -462,7 +464,7 @@ const SortModal: React.FC<SortModalProps> = ({
             </button>
             <button
               type="button"
-              className="bg-purple-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="bg-purple-600 dark:bg-purple-700 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 dark:hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               onClick={handleSave}
               aria-label={t('dialogs.sortModal.saveLabel')}
             >

@@ -477,25 +477,25 @@ export default function RecordExport() {
 
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-12">
         {t('pages.export.title')}
       </h1>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
           {t('pages.export.dataDetails')}
         </h2>
-        <div className="text-base text-gray-600 space-y-3">
+        <div className="text-base text-gray-600 dark:text-gray-300 space-y-3">
           <p className="flex items-center gap-2">
-            <HiChartBarSquare className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">
+            <HiChartBarSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <strong className="text-gray-800 dark:text-white">
               {t('pages.export.totalRecords')}
             </strong>{' '}
             {sortedRecords.length}
           </p>
           <p className="flex items-center gap-2">
-            <HiCalendarDays className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">
+            <HiCalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <strong className="text-gray-800 dark:text-white">
               {t('pages.export.period')}
             </strong>{' '}
             {sortedRecords.length > 0
@@ -505,8 +505,8 @@ export default function RecordExport() {
               : t('pages.export.noData')}
           </p>
           <p className="flex items-center gap-2">
-            <HiClipboardDocumentList className="w-5 h-5 text-blue-600" />
-            <strong className="text-gray-800">
+            <HiClipboardDocumentList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <strong className="text-gray-800 dark:text-white">
               {t('pages.export.fields')}
             </strong>{' '}
             {t('pages.export.allHealthFields')}
@@ -514,11 +514,11 @@ export default function RecordExport() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
           {t('pages.export.exportData')}
         </h2>
-        <div className="text-sm text-gray-600 mb-6">
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           {t('pages.export.exportDescription')}
         </div>
         <div className="flex flex-col gap-4 mb-6">
@@ -543,11 +543,11 @@ export default function RecordExport() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
           {t('pages.export.importData')}
         </h2>
-        <div className="text-sm text-gray-600 mb-6">
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           {t('pages.export.importDescription')}
         </div>
 
@@ -585,11 +585,11 @@ export default function RecordExport() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
           {t('pages.export.testData')}
         </h2>
-        <div className="text-sm text-gray-600 mb-6">
+        <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           {t('pages.export.testDataDescription')}
         </div>
 
@@ -635,13 +635,13 @@ export default function RecordExport() {
         </div>
       </div>
 
-      <div className="bg-red-50 border border-red-200 rounded-2xl shadow-md p-6">
-        <h2 className="text-2xl font-semibold text-red-800 mb-6 flex items-center gap-2">
-          <HiExclamationTriangle className="w-6 h-6 text-red-600" />
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl shadow-md p-6">
+        <h2 className="text-2xl font-semibold text-red-800 dark:text-red-400 mb-6 flex items-center gap-2">
+          <HiExclamationTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
           {t('pages.export.dangerZone')}
         </h2>
         <div className="mb-6 text-left">
-          <p className="text-base text-red-700 mb-3">
+          <p className="text-base text-red-700 dark:text-red-300 mb-3">
             {t('pages.export.dangerZoneDescription')}
           </p>
         </div>

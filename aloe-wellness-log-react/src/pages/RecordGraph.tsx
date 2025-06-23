@@ -48,17 +48,17 @@ export default function RecordGraph() {
   }, [records, selectedFieldId, period]);
 
   return (
-    <div className="p-2 sm:p-4 max-w-full sm:max-w-2xl mx-auto bg-gray-50 min-h-screen px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+    <div className="p-2 sm:p-4 max-w-full sm:max-w-2xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen px-2 sm:px-0">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-12">
         {t('pages.graph.title')}
       </h1>
       <div className="flex gap-4 mb-4 items-center">
-        <label>
+        <label className="text-gray-700 dark:text-gray-300">
           {t('pages.graph.field')}
           <select
             value={selectedFieldId}
             onChange={e => setSelectedFieldId(e.target.value)}
-            className="border rounded px-2 py-1 ml-2"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 ml-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400"
           >
             {numberFields.map(f => (
               <option key={f.fieldId} value={f.fieldId}>
@@ -67,12 +67,12 @@ export default function RecordGraph() {
             ))}
           </select>
         </label>
-        <label>
+        <label className="text-gray-700 dark:text-gray-300">
           {t('pages.graph.period')}
           <select
             value={period}
             onChange={e => setPeriod(Number(e.target.value))}
-            className="border rounded px-2 py-1 ml-2"
+            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded px-2 py-1 ml-2 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-400"
           >
             {PERIOD_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
@@ -82,7 +82,7 @@ export default function RecordGraph() {
           </select>
         </label>
       </div>
-      <div className="bg-white rounded shadow p-4">
+      <div className="bg-white dark:bg-gray-800 rounded shadow p-4">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart
             data={filteredData}

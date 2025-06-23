@@ -24,7 +24,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
       {/* QRコードアイコンボタン */}
       <button
         onClick={openModal}
-        className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors ${className}`}
+        className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:ring-offset-2 transition-colors ${className}`}
         title={t('dialogs.qrCode.show')}
       >
         <BsQrCode className="w-4 h-4" />
@@ -39,15 +39,15 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
         >
-          <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full shadow-xl">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 m-4 max-w-sm w-full shadow-xl">
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t('dialogs.qrCode.title')}
               </h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
                 <IoClose className="w-5 h-5" />
               </button>
@@ -55,7 +55,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
             {/* QRコード */}
             <div className="flex flex-col items-center space-y-4">
-              <div className="bg-white p-4 rounded-lg shadow-inner border">
+              <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-inner border border-gray-200 dark:border-gray-600">
                 <QRCode
                   value={url}
                   size={200}
@@ -65,10 +65,12 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                   {t('dialogs.qrCode.scanText')}
                 </p>
-                <p className="text-xs text-gray-500 break-all">{url}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
+                  {url}
+                </p>
               </div>
 
               {/* コピーボタン */}
@@ -83,7 +85,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
                     button.textContent = originalText;
                   }, 2000);
                 }}
-                className="px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:ring-offset-2 transition-colors"
               >
                 {t('dialogs.qrCode.copyUrl')}
               </button>
@@ -92,7 +94,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
             {/* 閉じるボタン */}
             <button
               onClick={closeModal}
-              className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors"
             >
               {t('dialogs.qrCode.close')}
             </button>

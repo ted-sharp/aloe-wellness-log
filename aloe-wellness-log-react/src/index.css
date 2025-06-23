@@ -7,6 +7,35 @@
   --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ダークモードクラスベース設定（Playwrightなど独立ブラウザ環境用） */
+.dark,
+html[data-theme='dark'],
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+}
+
+.dark input[type='date'],
+.dark input[type='time'],
+.dark input[type='datetime-local'],
+html[data-theme='dark'] input[type='date'],
+html[data-theme='dark'] input[type='time'],
+html[data-theme='dark'] input[type='datetime-local'] {
+  color-scheme: dark;
+  background-color: #374151 !important;
+  color: white !important;
+  border-color: #4b5563 !important;
+}
+
+.dark input[type='date']::-webkit-calendar-picker-indicator,
+.dark input[type='time']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 /* モバイルファーストのベース設定 */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

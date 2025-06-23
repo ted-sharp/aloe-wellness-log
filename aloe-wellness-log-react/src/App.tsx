@@ -44,7 +44,9 @@ const RecordInput = lazy(() => {
               <h2 className="text-xl font-bold text-red-600 mb-4">
                 {t('errors.loadingError')}
               </h2>
-              <p className="text-gray-600 mb-4">{t('errors.inputPageError')}</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {t('errors.inputPageError')}
+              </p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -75,7 +77,9 @@ const RecordList = lazy(() => {
               <h2 className="text-xl font-bold text-red-600 mb-4">
                 {t('errors.loadingError')}
               </h2>
-              <p className="text-gray-600 mb-4">{t('errors.listPageError')}</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {t('errors.listPageError')}
+              </p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -106,7 +110,9 @@ const RecordGraph = lazy(() => {
               <h2 className="text-xl font-bold text-red-600 mb-4">
                 {t('errors.loadingError')}
               </h2>
-              <p className="text-gray-600 mb-4">{t('errors.graphPageError')}</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {t('errors.graphPageError')}
+              </p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -137,7 +143,7 @@ const RecordCalendar = lazy(() => {
               <h2 className="text-xl font-bold text-red-600 mb-4">
                 {t('errors.loadingError')}
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.calendarPageError')}
               </p>
               <button
@@ -170,7 +176,7 @@ const RecordExport = lazy(() => {
               <h2 className="text-xl font-bold text-red-600 mb-4">
                 {t('errors.loadingError')}
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {t('errors.exportPageError')}
               </p>
               <button
@@ -194,13 +200,15 @@ const PageLoader = ({ pageName }: { pageName?: string }) => {
     <div className="flex items-center justify-center min-h-[400px]">
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-        <p className="text-gray-600 font-medium">
+        <p className="text-gray-600 dark:text-gray-300 font-medium">
           {pageName
             ? t('loading.pageWithName', { pageName })
             : t('loading.page')}
         </p>
         {isDev && (
-          <p className="text-xs text-gray-400">{t('loading.performance')}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            {t('loading.performance')}
+          </p>
         )}
       </div>
     </div>
@@ -270,7 +278,7 @@ function Navigation() {
 
       {/* デスクトップ用ナビゲーション */}
       <nav
-        className="hidden md:flex justify-between items-center gap-4 mb-12 p-4 bg-white rounded-lg shadow-lg mx-4 mt-4"
+        className="hidden md:flex justify-between items-center gap-4 mb-12 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg mx-4 mt-4"
         role="navigation"
         aria-label={t('navigation.goTo', { page: 'メイン' })}
       >
@@ -308,15 +316,15 @@ function Navigation() {
       </nav>
 
       {/* モバイル用ヘッダー */}
-      <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white rounded-lg shadow-sm mx-4 mt-4">
-        <h1 className="text-base font-bold text-gray-800 whitespace-nowrap">
+      <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm mx-4 mt-4">
+        <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap">
           {t('app.title')}
         </h1>
 
         <div className="flex items-center">
           <button
             onClick={toggleMenu}
-            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+            className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
             aria-label={
               isMenuOpen ? t('navigation.closeMenu') : t('navigation.openMenu')
             }
@@ -325,17 +333,17 @@ function Navigation() {
           >
             <div className="w-6 h-6 flex flex-col justify-center space-y-1">
               <div
-                className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
                   isMenuOpen ? 'rotate-45 translate-y-1.5' : ''
                 }`}
               ></div>
               <div
-                className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
                   isMenuOpen ? 'opacity-0' : ''
                 }`}
               ></div>
               <div
-                className={`h-0.5 w-6 bg-gray-800 transition-all duration-300 ${
+                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
                   isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
                 }`}
               ></div>
@@ -348,7 +356,7 @@ function Navigation() {
       {isMenuOpen && (
         <div
           id="mobile-menu"
-          className="md:hidden absolute top-full left-4 right-4 bg-white rounded-lg shadow-lg z-40 mb-4"
+          className="md:hidden absolute top-full left-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-40 mb-4"
           role="dialog"
           aria-modal="true"
           aria-label={t('navigation.mobileNavigation')}
@@ -363,12 +371,12 @@ function Navigation() {
                   key={item.path}
                   to={item.path}
                   onClick={closeMenu}
-                  className={`px-4 py-3 font-medium text-base hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 border-b border-gray-100 ${
+                  className={`px-4 py-3 font-medium text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 border-b border-gray-100 dark:border-gray-600 ${
                     item.color === 'green'
-                      ? '!text-green-600 hover:bg-green-50 focus:bg-green-50 hover:!text-green-600 visited:!text-green-600 active:!text-green-600'
+                      ? '!text-green-600 dark:!text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:bg-green-50 dark:focus:bg-green-900/20 hover:!text-green-600 dark:hover:!text-green-400 visited:!text-green-600 dark:visited:!text-green-400 active:!text-green-600 dark:active:!text-green-400'
                       : item.color === 'purple'
-                      ? '!text-purple-600 hover:bg-purple-50 focus:bg-purple-50 hover:!text-purple-600 visited:!text-purple-600 active:!text-purple-600'
-                      : '!text-blue-500 hover:bg-blue-50 focus:bg-blue-50 hover:!text-blue-500 visited:!text-blue-500 active:!text-blue-500'
+                      ? '!text-purple-600 dark:!text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:bg-purple-50 dark:focus:bg-purple-900/20 hover:!text-purple-600 dark:hover:!text-purple-400 visited:!text-purple-600 dark:visited:!text-purple-400 active:!text-purple-600 dark:active:!text-purple-400'
+                      : '!text-blue-500 dark:!text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-50 dark:focus:bg-blue-900/20 hover:!text-blue-500 dark:hover:!text-blue-400 visited:!text-blue-500 dark:visited:!text-blue-400 active:!text-blue-500 dark:active:!text-blue-400'
                   }`}
                   aria-current={isCurrentPage(item.path) ? 'page' : undefined}
                   aria-label={t('navigation.goTo', { page: item.label })}
@@ -383,7 +391,7 @@ function Navigation() {
               ))}
 
               {/* 区切り線 */}
-              <div className="border-t border-gray-200 my-2"></div>
+              <div className="border-t border-gray-200 dark:border-gray-600 my-2"></div>
 
               {/* 言語切り替え */}
               <div className="flex justify-center px-4 py-2">
@@ -391,7 +399,7 @@ function Navigation() {
               </div>
 
               {/* QRコードとPWAボタン */}
-              <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100">
+              <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-600">
                 <QRCodeDisplay className="text-sm px-3 py-2" />
                 <PWAInstallButton
                   className="text-sm px-3 py-2"
@@ -460,7 +468,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="bg-gray-50 min-h-screen">
+      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
         <ToastContainer />
         <Router>
           <header role="banner">

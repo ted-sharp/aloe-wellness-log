@@ -118,11 +118,11 @@ export default function RecordCalendar() {
 
   return (
     <div className="max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-12">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-12">
         {t('pages.calendar.title')}
       </h1>
 
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
         <style>{`
           .react-calendar {
             width: 100%;
@@ -140,10 +140,22 @@ export default function RecordCalendar() {
             align-items: center;
             justify-content: center;
             text-align: center;
+            color: #374151;
+          }
+          @media (prefers-color-scheme: dark) {
+            .react-calendar__tile {
+              color: #d1d5db;
+            }
           }
           .react-calendar__tile:enabled:hover,
           .react-calendar__tile:enabled:focus {
             background-color: #dbeafe;
+          }
+          @media (prefers-color-scheme: dark) {
+            .react-calendar__tile:enabled:hover,
+            .react-calendar__tile:enabled:focus {
+              background-color: #1e3a8a;
+            }
           }
           .react-calendar__tile--active {
             background: #2563eb !important;
@@ -158,14 +170,30 @@ export default function RecordCalendar() {
             font-size: 16px;
             padding: 8px 16px;
           }
+          @media (prefers-color-scheme: dark) {
+            .react-calendar__navigation button {
+              color: #d1d5db;
+            }
+          }
           .react-calendar__navigation button:enabled:hover,
           .react-calendar__navigation button:enabled:focus {
             background-color: #f3f4f6;
             border-radius: 8px;
           }
+          @media (prefers-color-scheme: dark) {
+            .react-calendar__navigation button:enabled:hover,
+            .react-calendar__navigation button:enabled:focus {
+              background-color: #374151;
+            }
+          }
           .react-calendar__month-view__weekdays {
             font-weight: 600;
             color: #6b7280;
+          }
+          @media (prefers-color-scheme: dark) {
+            .react-calendar__month-view__weekdays {
+              color: #9ca3af;
+            }
           }
         `}</style>
         <Calendar
@@ -192,7 +220,7 @@ export default function RecordCalendar() {
 
       {selectedDate && (
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-8">
             {formatDate(selectedDate, {
               year: 'numeric',
               month: 'long',
@@ -202,7 +230,7 @@ export default function RecordCalendar() {
             {t('pages.calendar.recordsFor')}
           </h2>
           {selectedRecords.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-500">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
               <p className="text-lg">{t('pages.calendar.noRecords')}</p>
             </div>
           ) : (
@@ -211,10 +239,10 @@ export default function RecordCalendar() {
                 ([datetime, recs]) => (
                   <div
                     key={datetime}
-                    className="bg-white rounded-2xl shadow-md p-6"
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6"
                   >
-                    <div className="text-2xl font-semibold text-gray-800 mb-6 border-b border-gray-200 pb-4 flex items-center gap-2">
-                      <HiClock className="w-6 h-6 text-blue-600" />
+                    <div className="text-2xl font-semibold text-gray-800 dark:text-white mb-6 border-b border-gray-200 dark:border-gray-600 pb-4 flex items-center gap-2">
+                      <HiClock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                       {recs[0].time}
                     </div>
                     <ul className="space-y-4">
@@ -223,15 +251,15 @@ export default function RecordCalendar() {
                         return (
                           <li
                             key={rec.id}
-                            className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
+                            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                           >
                             {field?.fieldId === 'notes' ? (
                               // 備考は縦棒区切りの左寄せレイアウト
                               <div className="flex items-stretch gap-2">
-                                <div className="text-xl font-medium text-gray-700 pr-2 border-r border-gray-200 flex-shrink-0">
+                                <div className="text-xl font-medium text-gray-700 dark:text-gray-300 pr-2 border-r border-gray-200 dark:border-gray-500 flex-shrink-0">
                                   {field ? field.name : rec.fieldId}
                                 </div>
-                                <div className="text-lg text-gray-800 font-semibold pl-2 flex-1 min-w-0">
+                                <div className="text-lg text-gray-800 dark:text-white font-semibold pl-2 flex-1 min-w-0">
                                   {typeof rec.value === 'string' &&
                                   rec.value.length > 30 ? (
                                     <button
@@ -255,10 +283,10 @@ export default function RecordCalendar() {
                             ) : (
                               // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
                               <div className="grid grid-cols-2 gap-2 items-stretch">
-                                <div className="text-xl font-medium text-gray-700 text-right pr-2 border-r border-gray-200">
+                                <div className="text-xl font-medium text-gray-700 dark:text-gray-300 text-right pr-2 border-r border-gray-200 dark:border-gray-500">
                                   {field ? field.name : rec.fieldId}
                                 </div>
-                                <div className="text-lg text-gray-800 font-semibold pl-2 text-left">
+                                <div className="text-lg text-gray-800 dark:text-white font-semibold pl-2 text-left">
                                   {typeof rec.value === 'boolean' ? (
                                     rec.value ? (
                                       <span className="inline-flex items-center gap-2 text-green-600">
@@ -276,7 +304,7 @@ export default function RecordCalendar() {
                                       {rec.value}
                                       {field?.unit &&
                                         typeof rec.value !== 'boolean' && (
-                                          <span className="text-gray-600 ml-1">
+                                          <span className="text-gray-600 dark:text-gray-400 ml-1">
                                             {field.unit}
                                           </span>
                                         )}
