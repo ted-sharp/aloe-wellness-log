@@ -68,8 +68,8 @@
       },
       "selectFields": "項目選択",
       "sortFields": "項目並び替え",
-      "recordSuccess": "記録を保存いたしましたわ",
-      "recordError": "記録の保存に失敗いたしました"
+      "recordSuccess": "記録を保存しました",
+      "recordError": "記録の保存に失敗しました"
     },
     "list": {
       "title": "一覧",
@@ -81,7 +81,7 @@
       "items100": "100件",
       "page": "ページ",
       "confirmDelete": "本当に削除してよろしいですか？",
-      "noRecords": "記録がありませんわ。"
+      "noRecords": "記録がありません。"
     },
     "graph": {
       "title": "グラフ",
@@ -96,7 +96,7 @@
     "calendar": {
       "title": "カレンダー",
       "recordsFor": "の記録",
-      "noRecords": "この日の記録はありませんわ。"
+      "noRecords": "この日の記録はありません。"
     },
     "export": {
       "title": "管理",
@@ -234,47 +234,47 @@
     "newFieldDetails": "新規項目の詳細情報"
   },
   "errors": {
-    "general": "予期しないエラーが発生いたしました。お困りの場合は再度お試しくださいませ。",
-    "validation": "入力内容に問題がございます。{{message}}",
-    "database": "データベース操作でエラーが発生いたしました。しばらく待ってからお試しくださいませ。",
-    "network": "ネットワーク接続に問題がございます。インターネット接続をご確認くださいませ。",
-    "storage": "ストレージ容量が不足しております。不要なデータを削除してからお試しくださいませ。",
-    "rendering": "画面の表示に問題が発生いたしました。ページを再読み込みしてお試しくださいませ。",
-    "performance": "システムの応答が遅くなっております。しばらく待ってからお試しくださいませ。",
-    "security": "セキュリティ上の問題が検出されました。ページを再読み込みしてお試しくださいませ。",
-    "authentication": "認証に問題がございます。ページを再読み込みしてお試しくださいませ。",
-    "permission": "この操作を実行する権限がございません。",
+    "general": "予期しないエラーが発生しました。お困りの場合は再度お試しください。",
+    "validation": "入力内容に問題があります。{{message}}",
+    "database": "データベース操作でエラーが発生しました。しばらく待ってからお試しください。",
+    "network": "ネットワーク接続に問題があります。インターネット接続をご確認ください。",
+    "storage": "ストレージ容量が不足しています。不要なデータを削除してからお試しください。",
+    "rendering": "画面の表示に問題が発生しました。ページを再読み込みしてお試しください。",
+    "performance": "システムの応答が遅くなっています。しばらく待ってからお試しください。",
+    "security": "セキュリティ上の問題が検出されました。ページを再読み込みしてお試しください。",
+    "authentication": "認証に問題があります。ページを再読み込みしてお試しください。",
+    "permission": "この操作を実行する権限がありません。",
     "inputError": "入力エラー: {{message}}",
     "loadingError": "読み込みエラー",
-    "inputPageError": "記録入力画面の読み込みに失敗いたしました。",
-    "listPageError": "記録一覧画面の読み込みに失敗いたしました。",
-    "graphPageError": "グラフ画面の読み込みに失敗いたしました。",
-    "calendarPageError": "カレンダー画面の読み込みに失敗いたしました。",
-    "exportPageError": "管理画面の読み込みに失敗いたしました。",
+    "inputPageError": "記録入力画面の読み込みに失敗しました。",
+    "listPageError": "記録一覧画面の読み込みに失敗しました。",
+    "graphPageError": "グラフ画面の読み込みに失敗しました。",
+    "calendarPageError": "カレンダー画面の読み込みに失敗しました。",
+    "exportPageError": "管理画面の読み込みに失敗しました。",
     "reloadPage": "ページを再読み込み",
     "fieldDataNotFound": "項目データが見つかりません。ページをリロードしてください。",
     "fieldDataLoadFailed": "項目データの読み込みに失敗しました。"
   },
   "accessibility": {
     "announcements": {
-      "recordSaved": "記録を保存いたしました",
-      "recordDeleted": "記録を削除いたしました",
-      "fieldAdded": "項目を追加いたしました",
-      "fieldUpdated": "項目を更新いたしました",
-      "fieldDeleted": "項目を削除いたしました",
-      "sortOrderChanged": "並び順を変更いたしました",
-      "languageChanged": "言語を{{language}}に変更いたしました",
+      "recordSaved": "記録を保存しました",
+      "recordDeleted": "記録を削除しました",
+      "fieldAdded": "項目を追加しました",
+      "fieldUpdated": "項目を更新しました",
+      "fieldDeleted": "項目を削除しました",
+      "sortOrderChanged": "並び順を変更しました",
+      "languageChanged": "言語を{{language}}に変更しました",
       "pageLoaded": "{{page}}ページが読み込まれました",
-      "errorOccurred": "エラーが発生いたしました: {{message}}",
-      "operationCompleted": "操作が完了いたしました",
+      "errorOccurred": "エラーが発生しました: {{message}}",
+      "operationCompleted": "操作が完了しました",
       "fieldChanged": "{{fieldName}}を{{value}}に設定しました",
-      "fieldDisplayChanged": "項目を{{state}}に変更しましたわ",
-      "fieldAddedSuccess": "項目を追加しましたわ",
-      "fieldEditedSuccess": "項目を編集しましたわ",
-      "fieldTempDisplayAdded": "項目を一時表示に追加しましたわ",
-      "fieldDeletedSuccess": "項目を削除しましたわ",
-      "sortOrderSaved": "並び順を保存しましたわ",
-      "fieldHidden": "項目を非表示にしましたわ"
+      "fieldDisplayChanged": "項目を{{state}}に変更しました",
+      "fieldAddedSuccess": "項目を追加しました",
+      "fieldEditedSuccess": "項目を編集しました",
+      "fieldTempDisplayAdded": "項目を一時表示に追加しました",
+      "fieldDeletedSuccess": "項目を削除しました",
+      "sortOrderSaved": "並び順を保存しました",
+      "fieldHidden": "項目を非表示にしました"
     },
     "instructions": {
       "navigation": "矢印キーで移動、Enterキーで選択",
