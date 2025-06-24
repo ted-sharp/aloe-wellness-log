@@ -194,7 +194,7 @@ createRoot(document.getElementById('root')!).render(
   // <StrictMode>
   <ErrorBoundary>
     <ToastContainer />
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <App />
     </Router>
   </ErrorBoundary>
