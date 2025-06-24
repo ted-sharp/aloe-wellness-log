@@ -1,5 +1,8 @@
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App.tsx';
+import ErrorBoundary from './components/ErrorBoundary';
+import ToastContainer from './components/ToastContainer';
 import './index.css';
 import { initializePrivacySettings } from './utils/privacy';
 
@@ -189,7 +192,12 @@ window.addEventListener('unhandledrejection', handleGlobalError);
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
-  <App />
+  <ErrorBoundary>
+    <ToastContainer />
+    <Router>
+      <App />
+    </Router>
+  </ErrorBoundary>
   // </StrictMode>
 );
 

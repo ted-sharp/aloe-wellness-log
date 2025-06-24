@@ -1,19 +1,10 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import {
-  Link,
-  Navigate,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-  useLocation,
-} from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import Button from './components/Button';
-import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
-import ToastContainer from './components/ToastContainer';
 import { useI18n } from './hooks/useI18n';
 import { useRecordsStore } from './store/records';
 import {
@@ -473,82 +464,71 @@ function App() {
   }, [initializeFields, initializeFieldsWithTranslation, translateFieldName]);
 
   return (
-    <ErrorBoundary>
-      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <ToastContainer />
-        <Router>
-          <header role="banner">
-            <Navigation />
-          </header>
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <header role="banner">
+        <Navigation />
+      </header>
 
-          <main id="main-content" role="main" className="px-4" tabIndex={-1}>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <Suspense
-                      fallback={
-                        <PageLoader pageName={t('pages.input.title')} />
-                      }
-                    >
-                      <RecordInput />
-                    </Suspense>
+      <main id="main-content" role="main" className="px-4" tabIndex={-1}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Suspense
+                  fallback={<PageLoader pageName={t('pages.input.title')} />}
+                >
+                  <RecordInput />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/list"
+              element={
+                <Suspense
+                  fallback={<PageLoader pageName={t('pages.list.title')} />}
+                >
+                  <RecordList />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/graph"
+              element={
+                <Suspense
+                  fallback={<PageLoader pageName={t('pages.graph.title')} />}
+                >
+                  <RecordGraph />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <Suspense
+                  fallback={<PageLoader pageName={t('pages.calendar.title')} />}
+                >
+                  <RecordCalendar />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/export"
+              element={
+                <Suspense
+                  fallback={
+                    <PageLoader pageName={t('pages.management.title')} />
                   }
-                />
-                <Route
-                  path="/list"
-                  element={
-                    <Suspense
-                      fallback={<PageLoader pageName={t('pages.list.title')} />}
-                    >
-                      <RecordList />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="/graph"
-                  element={
-                    <Suspense
-                      fallback={
-                        <PageLoader pageName={t('pages.graph.title')} />
-                      }
-                    >
-                      <RecordGraph />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="/calendar"
-                  element={
-                    <Suspense
-                      fallback={
-                        <PageLoader pageName={t('pages.calendar.title')} />
-                      }
-                    >
-                      <RecordCalendar />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="/export"
-                  element={
-                    <Suspense
-                      fallback={
-                        <PageLoader pageName={t('pages.management.title')} />
-                      }
-                    >
-                      <RecordExport />
-                    </Suspense>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </main>
-        </Router>
-      </div>
-    </ErrorBoundary>
+                >
+                  <RecordExport />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </main>
+    </div>
   );
 }
 
