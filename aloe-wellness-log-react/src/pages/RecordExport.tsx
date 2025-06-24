@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   HiArrowDownTray,
-  HiArrowPath,
   HiCalendarDays,
   HiChartBarSquare,
   HiClipboardDocumentList,
@@ -96,20 +95,9 @@ export default function RecordExport() {
   // エラーテスト用の状態
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
-  // 自動リトライデモ用の状態
-  const [demoAttemptCount, setDemoAttemptCount] = useState<number>(0);
-  const [demoErrorType, setDemoErrorType] = useState<string | null>(null);
-
   // エラーテスト用: レンダリング時にエラーを投げる
   if (errorToThrow) {
     throw errorToThrow;
-  }
-
-  // 自動リトライデモ用: 初回のみエラーを発生（リトライ時は成功）
-  if (demoErrorType && demoAttemptCount === 0) {
-    // 初回のみエラーを投げ、状態をリセット（リトライ時は成功させる）
-    setDemoErrorType(null);
-    throw new Error(`模擬${demoErrorType}エラー: 自動リトライ機能をテスト中`);
   }
 
   // パフォーマンス監視の初期化
@@ -737,7 +725,7 @@ export default function RecordExport() {
         </div>
       </div>
 
-      {/* エラーダイアログテスト用セクション（開発環境のみ） */}
+      {/* エラーテストUIセクション */}
       {isDev && (
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-semibold text-orange-800 dark:text-orange-400 mb-6 flex items-center gap-2">
@@ -746,13 +734,12 @@ export default function RecordExport() {
           </h2>
           <div className="mb-6 text-left">
             <p className="text-base text-orange-700 dark:text-orange-300 mb-3">
-              エラーダイアログの表示とダークモード対応をテストするためのボタンです。
+              下のボタンを押すと、強制的にエラーが発生し、アプリ全体のエラーダイアログが表示されます。
             </p>
             <p className="text-sm text-orange-600 dark:text-orange-400">
-              ⚠️ 注意: これらのボタンは意図的にエラーを発生させます。
+              ※自動リトライや試行回数のデモは廃止されました。
             </p>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button
               variant="danger"
@@ -768,7 +755,6 @@ export default function RecordExport() {
             >
               💥 レンダリングエラー
             </Button>
-
             <Button
               variant="danger"
               size="md"
@@ -783,7 +769,6 @@ export default function RecordExport() {
             >
               🚫 型エラー
             </Button>
-
             <Button
               variant="danger"
               size="md"
@@ -803,8 +788,6 @@ export default function RecordExport() {
                     );
                   });
                 };
-
-                // グローバルエラーハンドラーで処理
                 asyncError().catch(error => {
                   setErrorToThrow(error);
                 });
@@ -813,7 +796,6 @@ export default function RecordExport() {
             >
               ⏰ 非同期エラー
             </Button>
-
             <Button
               variant="danger"
               size="md"
@@ -834,7 +816,6 @@ export default function RecordExport() {
             >
               📝 JSONエラー
             </Button>
-
             <Button
               variant="danger"
               size="md"
@@ -849,7 +830,6 @@ export default function RecordExport() {
             >
               🧠 メモリエラー
             </Button>
-
             <Button
               variant="danger"
               size="md"
@@ -864,122 +844,6 @@ export default function RecordExport() {
             >
               ♾️ スタックオーバーフロー
             </Button>
-          </div>
-
-          <div className="mt-6 p-4 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-600 rounded-lg">
-            <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">
-              💡 エラーダイアログが表示される場面
-            </h3>
-            <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1 list-disc list-inside">
-              <li>
-                <strong>レンダリングエラー:</strong>{' '}
-                コンポーネントの描画中にエラーが発生
-              </li>
-              <li>
-                <strong>型エラー:</strong> undefined や null
-                のプロパティアクセス
-              </li>
-              <li>
-                <strong>非同期エラー:</strong> Promise の reject や async/await
-                のエラー
-              </li>
-              <li>
-                <strong>JSONエラー:</strong> 不正なJSON形式のパース
-              </li>
-              <li>
-                <strong>メモリエラー:</strong> メモリ不足や大量データ処理
-              </li>
-              <li>
-                <strong>スタックオーバーフロー:</strong> 無限再帰呼び出し
-              </li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* 自動リトライデモセクション（開発環境のみ） */}
-      {isDev && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-400 mb-6 flex items-center gap-2">
-            <HiArrowPath className="w-6 h-6 text-blue-600 dark:text-blue-500" />
-            🔄 自動リトライデモ (開発環境のみ)
-          </h2>
-          <div className="mb-6 text-left">
-            <p className="text-base text-blue-700 dark:text-blue-300 mb-3">
-              実際の自動リトライ機能を体験できるデモです。確率的にエラーが発生し、自動的にリトライが実行されます。
-            </p>
-            <p className="text-sm text-blue-600 dark:text-blue-400">
-              💡 ヒント:
-              エラーダイアログの「試行回数」が実際にカウントアップするのを確認できます。
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => {
-                setDemoErrorType('network');
-                setDemoAttemptCount(0);
-              }}
-              fullWidth={false}
-            >
-              🌐 模擬ネットワークエラー
-              <br />
-              <span className="text-xs opacity-75">(30%成功率)</span>
-            </Button>
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => {
-                setDemoErrorType('database');
-                setDemoAttemptCount(0);
-              }}
-              fullWidth={false}
-            >
-              💾 模擬DB接続エラー
-              <br />
-              <span className="text-xs opacity-75">(3回目で成功)</span>
-            </Button>
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => {
-                setDemoErrorType('temporary');
-                setDemoAttemptCount(0);
-              }}
-              fullWidth={false}
-            >
-              ⏱️ 模擬一時的エラー
-              <br />
-              <span className="text-xs opacity-75">(50%成功率)</span>
-            </Button>
-          </div>
-
-          <div className="mt-6 p-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-600 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              🎯 自動リトライの特徴
-            </h3>
-            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
-              <li>
-                <strong>指数バックオフ:</strong>{' '}
-                リトライ間隔が徐々に長くなります
-              </li>
-              <li>
-                <strong>最大3回まで:</strong> 無限ループを防ぎます
-              </li>
-              <li>
-                <strong>確率的成功:</strong> 実際のネットワーク状況を模擬
-              </li>
-              <li>
-                <strong>自動回復:</strong> 成功時に自動的にエラー状態が解除
-              </li>
-              <li>
-                <strong>透明性:</strong> 現在の試行回数を表示
-              </li>
-            </ul>
           </div>
         </div>
       )}

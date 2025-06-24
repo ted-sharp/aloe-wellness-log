@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom';
 import './App.css';
 import Button from './components/Button';
-import { PageErrorBoundary } from './components/EnhancedErrorBoundary';
+import ErrorBoundary from './components/ErrorBoundary';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
@@ -473,7 +473,7 @@ function App() {
   }, [initializeFields, initializeFieldsWithTranslation, translateFieldName]);
 
   return (
-    <PageErrorBoundary context="App">
+    <ErrorBoundary>
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
         <ToastContainer />
         <Router>
@@ -548,7 +548,7 @@ function App() {
           </main>
         </Router>
       </div>
-    </PageErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
