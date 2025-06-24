@@ -131,7 +131,22 @@
       "generatingTestData": "Generating test data...",
       "testDataSuccess": "test data entries generated successfully",
       "testDataError": "Test data generation failed:",
-      "testDataOf": "/"
+      "testDataOf": "/",
+      "errorTestTitle": "🐛 Error Dialog Test (Development Only)",
+      "errorTestDescription": "Press the buttons below to intentionally trigger errors and display the global error dialog.",
+      "errorTestNote": "* The auto-retry and attempt count demo has been removed.",
+      "errorTestRender": "Test Render Error: An error occurred in the component.",
+      "errorTestRenderBtn": "💥 Render Error",
+      "errorTestType": "Test Type Error: Undefined property access error.",
+      "errorTestTypeBtn": "🚫 Type Error",
+      "errorTestAsync": "Test Async Error: Promise was rejected.",
+      "errorTestAsyncBtn": "⏰ Async Error",
+      "errorTestJson": "Test JSON Parse Error: {{msg}}",
+      "errorTestJsonBtn": "📝 JSON Error",
+      "errorTestMemory": "Test Memory Error: Error occurred during large data processing.",
+      "errorTestMemoryBtn": "🧠 Memory Error",
+      "errorTestStack": "Test Stack Overflow Error: Infinite recursion occurred.",
+      "errorTestStackBtn": "♾️ Stack Overflow"
     },
     "management": {
       "title": "Settings",
@@ -377,5 +392,16 @@
       "copied": "Copied!",
       "close": "Close"
     }
+  },
+  "errorDialog": {
+    "title": "Sorry",
+    "message": "An unexpected error has occurred.",
+    "reloadAdvice": "If you are having trouble, please reload the page.",
+    "retry": "Try Again",
+    "reload": "Reload Page",
+    "details": "Technical Details (Click to Show)",
+    "errorName": "Error Name",
+    "errorMessage": "Error Message",
+    "stackTrace": "Stack Trace"
   }
 }

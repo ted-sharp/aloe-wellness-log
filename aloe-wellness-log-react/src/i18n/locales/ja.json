@@ -131,7 +131,22 @@
       "generatingTestData": "テストデータを生成中...",
       "testDataSuccess": "件のテストデータを生成しました",
       "testDataError": "テストデータの生成に失敗しました:",
-      "testDataOf": "/"
+      "testDataOf": "/",
+      "errorTestTitle": "🐛 エラーダイアログテスト (開発環境のみ)",
+      "errorTestDescription": "下のボタンを押すと、強制的にエラーが発生し、アプリ全体のエラーダイアログが表示されます。",
+      "errorTestNote": "※自動リトライや試行回数のデモは廃止されました。",
+      "errorTestRender": "テスト用レンダリングエラー: コンポーネントでエラーが発生しました",
+      "errorTestRenderBtn": "💥 レンダリングエラー",
+      "errorTestType": "テスト用型エラー: undefined プロパティアクセスエラー",
+      "errorTestTypeBtn": "🚫 型エラー",
+      "errorTestAsync": "テスト用非同期エラー: Promise が拒否されました",
+      "errorTestAsyncBtn": "⏰ 非同期エラー",
+      "errorTestJson": "テスト用JSONパースエラー: {{msg}}",
+      "errorTestJsonBtn": "📝 JSONエラー",
+      "errorTestMemory": "テスト用メモリエラー: 大量のデータ処理中にエラーが発生しました",
+      "errorTestMemoryBtn": "🧠 メモリエラー",
+      "errorTestStack": "テスト用スタックオーバーフローエラー: 無限再帰呼び出しが発生しました",
+      "errorTestStackBtn": "♾️ スタックオーバーフロー"
     },
     "management": {
       "title": "管理"
@@ -361,5 +376,16 @@
       "copied": "コピーしました！",
       "close": "閉じる"
     }
+  },
+  "errorDialog": {
+    "title": "申し訳ございません",
+    "message": "予期しないエラーが発生いたしました。",
+    "reloadAdvice": "お困りの場合はページを再読み込みしてください。",
+    "retry": "もう一度試す",
+    "reload": "ページを再読み込み",
+    "details": "技術的な詳細（クリックで表示）",
+    "errorName": "エラー名",
+    "errorMessage": "エラーメッセージ",
+    "stackTrace": "スタックトレース"
   }
 }

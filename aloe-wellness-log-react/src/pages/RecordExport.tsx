@@ -730,14 +730,23 @@ export default function RecordExport() {
         <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-semibold text-orange-800 dark:text-orange-400 mb-6 flex items-center gap-2">
             <HiExclamationTriangle className="w-6 h-6 text-orange-600 dark:text-orange-500" />
-            🐛 エラーダイアログテスト (開発環境のみ)
+            {t(
+              'pages.export.errorTestTitle',
+              '🐛 エラーダイアログテスト (開発環境のみ)'
+            )}
           </h2>
           <div className="mb-6 text-left">
             <p className="text-base text-orange-700 dark:text-orange-300 mb-3">
-              下のボタンを押すと、強制的にエラーが発生し、アプリ全体のエラーダイアログが表示されます。
+              {t(
+                'pages.export.errorTestDescription',
+                '下のボタンを押すと、強制的にエラーが発生し、アプリ全体のエラーダイアログが表示されます。'
+              )}
             </p>
             <p className="text-sm text-orange-600 dark:text-orange-400">
-              ※自動リトライや試行回数のデモは廃止されました。
+              {t(
+                'pages.export.errorTestNote',
+                '※自動リトライや試行回数のデモは廃止されました。'
+              )}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -747,13 +756,16 @@ export default function RecordExport() {
               onClick={() => {
                 setErrorToThrow(
                   new Error(
-                    'テスト用レンダリングエラー: コンポーネントでエラーが発生しました'
+                    t(
+                      'pages.export.errorTestRender',
+                      'テスト用レンダリングエラー: コンポーネントでエラーが発生しました'
+                    )
                   )
                 );
               }}
               fullWidth={false}
             >
-              💥 レンダリングエラー
+              {t('pages.export.errorTestRenderBtn', '💥 レンダリングエラー')}
             </Button>
             <Button
               variant="danger"
@@ -761,27 +773,31 @@ export default function RecordExport() {
               onClick={() => {
                 setErrorToThrow(
                   new Error(
-                    'テスト用型エラー: undefined プロパティアクセスエラー'
+                    t(
+                      'pages.export.errorTestType',
+                      'テスト用型エラー: undefined プロパティアクセスエラー'
+                    )
                   )
                 );
               }}
               fullWidth={false}
             >
-              🚫 型エラー
+              {t('pages.export.errorTestTypeBtn', '🚫 型エラー')}
             </Button>
             <Button
               variant="danger"
               size="md"
               onClick={() => {
-                // 非同期エラーはError Boundaryでキャッチされないため、
-                // unhandledrejectionイベントを使用してキャッチ
                 const asyncError = async () => {
                   await new Promise((_, reject) => {
                     setTimeout(
                       () =>
                         reject(
                           new Error(
-                            'テスト用非同期エラー: Promise が拒否されました'
+                            t(
+                              'pages.export.errorTestAsync',
+                              'テスト用非同期エラー: Promise が拒否されました'
+                            )
                           )
                         ),
                       100
@@ -794,7 +810,7 @@ export default function RecordExport() {
               }}
               fullWidth={false}
             >
-              ⏰ 非同期エラー
+              {t('pages.export.errorTestAsyncBtn', '⏰ 非同期エラー')}
             </Button>
             <Button
               variant="danger"
@@ -805,16 +821,21 @@ export default function RecordExport() {
                 } catch (error) {
                   setErrorToThrow(
                     new Error(
-                      `テスト用JSONパースエラー: ${
-                        error instanceof Error ? error.message : '不明なエラー'
-                      }`
+                      t(
+                        'pages.export.errorTestJson',
+                        `テスト用JSONパースエラー: ${
+                          error instanceof Error
+                            ? error.message
+                            : '不明なエラー'
+                        }`
+                      )
                     )
                   );
                 }
               }}
               fullWidth={false}
             >
-              📝 JSONエラー
+              {t('pages.export.errorTestJsonBtn', '📝 JSONエラー')}
             </Button>
             <Button
               variant="danger"
@@ -822,13 +843,16 @@ export default function RecordExport() {
               onClick={() => {
                 setErrorToThrow(
                   new Error(
-                    'テスト用メモリエラー: 大量のデータ処理中にエラーが発生しました'
+                    t(
+                      'pages.export.errorTestMemory',
+                      'テスト用メモリエラー: 大量のデータ処理中にエラーが発生しました'
+                    )
                   )
                 );
               }}
               fullWidth={false}
             >
-              🧠 メモリエラー
+              {t('pages.export.errorTestMemoryBtn', '🧠 メモリエラー')}
             </Button>
             <Button
               variant="danger"
@@ -836,13 +860,16 @@ export default function RecordExport() {
               onClick={() => {
                 setErrorToThrow(
                   new Error(
-                    'テスト用スタックオーバーフローエラー: 無限再帰呼び出しが発生しました'
+                    t(
+                      'pages.export.errorTestStack',
+                      'テスト用スタックオーバーフローエラー: 無限再帰呼び出しが発生しました'
+                    )
                   )
                 );
               }}
               fullWidth={false}
             >
-              ♾️ スタックオーバーフロー
+              {t('pages.export.errorTestStackBtn', '♾️ スタックオーバーフロー')}
             </Button>
           </div>
         </div>
