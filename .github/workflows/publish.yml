@@ -1,29 +1,31 @@
-name: Publish NuGet Package
+name: Build docs for GitHub Pages
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
-  build-and-publish:
+  build-docs:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          dotnet-version: '8.0.x'
-          
-      - name: Restore dependencies
-        run: dotnet restore src/Aloe.Utils.Template/Aloe.Utils.Template.csproj
-        
-      - name: Build
-        run: dotnet build src/Aloe.Utils.Template/Aloe.Utils.Template.csproj --configuration Release
-      
-      - name: Pack (symbols+source)
-        run: dotnet pack src/Aloe.Utils.Template/Aloe.Utils.Template.csproj --configuration Release --no-build --include-symbols --include-source --output ./nupkgs
-      
-      - name: Publish to NuGet
-        run: dotnet nuget push ./nupkgs/*.nupkg ./nupkgs/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          node-version: 20
+          cache: "yarn"
+
+      - name: 📦 Install dependencies
+        working-directory: aloe-wellness-log-react
+        run: yarn install --frozen-lockfile
+
+      - name: 🛠 Build docs (output to ../docs)
+        working-directory: aloe-wellness-log-react
+        run: yarn build:docs
+
+      - name: 📝 Copy index.html to 404.html for SPA support
+        run: cp docs/index.html docs/404.html
