@@ -34,9 +34,7 @@ describe('PWAInstallButton', () => {
     fireEvent(window, new Event('beforeinstallprompt'));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'アプリをインストール' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
     });
   });
 
@@ -48,7 +46,7 @@ describe('PWAInstallButton', () => {
 
     await waitFor(() => {
       const button = screen.getByRole('button', {
-        name: 'アプリをインストール',
+        name: '追加',
       });
       expect(button).toHaveClass('custom-class');
     });
@@ -73,13 +71,11 @@ describe('PWAInstallButton', () => {
     fireEvent(window, beforeInstallPromptEvent);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'アプリをインストール' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
     });
 
     const installButton = screen.getByRole('button', {
-      name: 'アプリをインストール',
+      name: '追加',
     });
     fireEvent.click(installButton);
 
@@ -96,9 +92,7 @@ describe('PWAInstallButton', () => {
     fireEvent(window, new Event('beforeinstallprompt'));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'アプリをインストール' })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '追加' })).toBeInTheDocument();
     });
 
     // appinstalledイベントを発火
@@ -106,7 +100,7 @@ describe('PWAInstallButton', () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('button', { name: 'アプリをインストール' })
+        screen.queryByRole('button', { name: '追加' })
       ).not.toBeInTheDocument();
     });
   });
@@ -191,11 +185,11 @@ describe('PWAInstallButton', () => {
 
     await waitFor(() => {
       const button = screen.getByRole('button', {
-        name: 'アプリをインストール',
+        name: '追加',
       });
       // ボタンが存在し、適切なaria-labelが設定されていることを確認
       expect(button).toBeInTheDocument();
-      expect(button).toHaveAttribute('aria-label', 'アプリをインストール');
+      expect(button).toHaveAttribute('aria-label', '追加');
     });
   });
 
@@ -211,7 +205,7 @@ describe('PWAInstallButton', () => {
 
     await waitFor(() => {
       const buttons = screen.getAllByRole('button', {
-        name: 'アプリをインストール',
+        name: '追加',
       });
       expect(buttons).toHaveLength(2);
       expect(buttons[0]).toHaveClass('first');

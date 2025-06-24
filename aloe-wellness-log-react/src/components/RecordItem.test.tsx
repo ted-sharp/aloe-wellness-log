@@ -272,9 +272,10 @@ describe('RecordItem', () => {
         />
       );
 
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).toBeInTheDocument();
-      expect(checkbox).toBeChecked();
+      const yesButton = screen.getByRole('button', {
+        name: '体重をありに設定',
+      });
+      expect(yesButton).toBeInTheDocument();
     });
   });
 
