@@ -47,7 +47,8 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
               </h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="bg-gray-200/80 dark:bg-gray-700/70 text-gray-400 dark:text-gray-300 hover:bg-gray-300/90 dark:hover:bg-gray-600/80 transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
+                aria-label={t('actions.close')}
               >
                 <IoClose className="w-5 h-5" />
               </button>
