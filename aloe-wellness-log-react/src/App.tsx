@@ -372,7 +372,7 @@ function Navigation() {
             aria-label={t('navigation.mobileMainNavigation')}
           >
             <div className="flex flex-col">
-              {navItems.map((item, index) => (
+              {navItems.map(item => (
                 <Link
                   key={item.path}
                   to={item.path}

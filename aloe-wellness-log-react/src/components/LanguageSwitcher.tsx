@@ -13,7 +13,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   compact = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [, setSelectedIndex] = useState(0);
 
   const { t } = useI18n();
   const {
@@ -29,15 +29,14 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   );
 
   // ドロップダウンアクセシビリティ
-  const { comboboxProps, listboxProps, getOptionProps } =
-    useDropdownAccessibility({
-      items: availableLanguages,
-      isOpen,
-      selectedIndex: currentIndex >= 0 ? currentIndex : 0,
-      onSelectionChange: setSelectedIndex,
-      onToggle: () => setIsOpen(!isOpen),
-      onClose: () => setIsOpen(false),
-    });
+  const { comboboxProps, listboxProps } = useDropdownAccessibility({
+    items: availableLanguages,
+    isOpen,
+    selectedIndex: currentIndex >= 0 ? currentIndex : 0,
+    onSelectionChange: setSelectedIndex,
+    onToggle: () => setIsOpen(!isOpen),
+    onClose: () => setIsOpen(false),
+  });
 
   // 言語選択ハンドラー
   const handleLanguageSelect = useCallback(

@@ -44,7 +44,7 @@ i18n
     debug: import.meta.env.MODE === 'development',
 
     // キーが見つからない場合の表示
-    missingKeyHandler: (lng, ns, key) => {
+    missingKeyHandler: (lng, _ns, key) => {
       if (import.meta.env.MODE === 'development') {
         console.warn(`Missing translation key: ${key} for language: ${lng}`);
       }

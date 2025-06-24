@@ -272,7 +272,7 @@ const SortModal: React.FC<SortModalProps> = ({
 
   // アクセシビリティ関連フック
   const { modalProps } = useModalAccessibility(isOpen);
-  const { announcePolite, announceAssertive } = useLiveRegion();
+  const { announcePolite } = useLiveRegion();
 
   // キーボードナビゲーション
   const keyboardHandlers = {

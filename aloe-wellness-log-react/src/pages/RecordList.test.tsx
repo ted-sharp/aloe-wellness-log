@@ -129,7 +129,7 @@ describe('RecordList', () => {
     await waitFor(() => {
       // 2つの日時グループがある
       const items = screen.getAllByText(
-        (content, element) =>
+        (_content, element) =>
           !!element?.textContent?.includes('件の記録グループ') &&
           element.textContent?.startsWith('2')
       );
@@ -179,7 +179,7 @@ describe('RecordList', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          (content, element) => element?.textContent === '0件の記録グループ'
+          (_content, element) => element?.textContent === '0件の記録グループ'
         )
       ).toBeInTheDocument();
     });
@@ -289,7 +289,7 @@ describe('RecordList', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          (content, element) => element?.textContent === '1件の記録グループ'
+          (_content, element) => element?.textContent === '1件の記録グループ'
         )
       ).toBeInTheDocument();
     });

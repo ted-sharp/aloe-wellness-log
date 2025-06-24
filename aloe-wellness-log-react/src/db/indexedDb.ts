@@ -171,57 +171,6 @@ async function withRetry<T>(
   throw lastError!;
 }
 
-// 型ガード関数（強化版）
-function isRecordItem(obj: unknown): obj is RecordItem {
-  if (typeof obj !== 'object' || obj === null) {
-    return false;
-  }
-
-  const record = obj as Record<string, unknown>;
-
-  return (
-    typeof record.id === 'string' &&
-    record.id.length > 0 &&
-    typeof record.date === 'string' &&
-    /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
-    typeof record.time === 'string' &&
-    /^\d{2}:\d{2}$/.test(record.time) &&
-    typeof record.datetime === 'string' &&
-    record.datetime.length > 0 &&
-    typeof record.fieldId === 'string' &&
-    record.fieldId.length > 0 &&
-    record.value !== undefined &&
-    (typeof record.value === 'number' ||
-      typeof record.value === 'string' ||
-      typeof record.value === 'boolean')
-  );
-}
-
-function isField(obj: unknown): obj is Field {
-  if (typeof obj !== 'object' || obj === null) {
-    return false;
-  }
-
-  const field = obj as Record<string, unknown>;
-
-  return (
-    typeof field.fieldId === 'string' &&
-    field.fieldId.length > 0 &&
-    typeof field.name === 'string' &&
-    field.name.length > 0 &&
-    typeof field.type === 'string' &&
-    ['number', 'string', 'boolean'].includes(field.type) &&
-    (field.unit === undefined || typeof field.unit === 'string') &&
-    (field.order === undefined || typeof field.order === 'number') &&
-    (field.defaultDisplay === undefined ||
-      typeof field.defaultDisplay === 'boolean') &&
-    (field.default === undefined ||
-      (field.type === 'number' && typeof field.default === 'number') ||
-      (field.type === 'string' && typeof field.default === 'string') ||
-      (field.type === 'boolean' && typeof field.default === 'boolean'))
-  );
-}
-
 function validateRecords(data: unknown[]): RecordItem[] {
   const validationResult = validateRecordArray(data);
 

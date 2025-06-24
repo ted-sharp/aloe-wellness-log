@@ -306,8 +306,8 @@ export const getAccessibleFontSize = () => {
  * カラーコントラスト検証（簡易版）
  */
 export const validateColorContrast = (
-  foreground: string,
-  background: string
+  _foreground: string,
+  _background: string
 ): { ratio: number; passAA: boolean; passAAA: boolean } => {
   // 簡易実装：実際のプロダクションでは専用ライブラリを使用推奨
   // ここでは基本的な判定のみ
