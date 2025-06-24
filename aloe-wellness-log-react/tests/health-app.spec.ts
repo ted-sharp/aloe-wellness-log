@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('健康管理アプリ', () => {
   test.beforeEach(async ({ page }) => {
@@ -8,22 +8,24 @@ test.describe('健康管理アプリ', () => {
 
   test('トップページが正常に表示される', async ({ page }) => {
     // ページタイトルの確認
-    await expect(page).toHaveTitle(/Vite \+ React \+ TS/);
+    await expect(page).toHaveTitle('🌿 アロエ健康ログ');
 
     // ナビゲーションメニューの確認
-    await expect(page.locator('text=記録入力')).toBeVisible();
-    await expect(page.locator('text=記録一覧')).toBeVisible();
-    await expect(page.locator('text=記録グラフ')).toBeVisible();
-    await expect(page.locator('text=記録カレンダー')).toBeVisible();
-    await expect(page.locator('text=エクスポート')).toBeVisible();
+    await expect(page.locator('text=入力')).toBeVisible();
+    await expect(page.locator('text=一覧')).toBeVisible();
+    await expect(page.locator('text=グラフ')).toBeVisible();
+    await expect(page.locator('text=カレンダー')).toBeVisible();
+    await expect(page.locator('text=管理')).toBeVisible();
   });
 
-    test('記録入力画面での基本操作', async ({ page }) => {
+  test('記録入力画面での基本操作', async ({ page }) => {
     // 記録入力画面にいることを確認（日時選択セクションで判定）
-    await expect(page.locator('label', { hasText: '📅 記録日時' })).toBeVisible();
+    await expect(page.locator('legend', { hasText: '記録日時' })).toBeVisible();
 
     // 備考入力テスト
-    const notesTextarea = page.locator('textarea[placeholder*="その時の体調"]');
+    const notesTextarea = page.locator(
+      'textarea[placeholder="その日の体調や気になったことなど、自由にメモできます"]'
+    );
     await expect(notesTextarea).toBeVisible();
     await notesTextarea.fill('テスト記録です');
 
@@ -41,38 +43,40 @@ test.describe('健康管理アプリ', () => {
 
     // チェックボックス（運動有無など）をチェック
     const checkboxes = page.locator('input[type="checkbox"]');
-    if (await checkboxes.count() > 0) {
+    if ((await checkboxes.count()) > 0) {
       await checkboxes.first().check();
     }
 
     // 保存ボタンをクリック
-    const saveButton = page.locator('button', { hasText: '📝 記録する' });
+    const saveButton = page.locator('button', { hasText: '記録する' });
     await expect(saveButton).toBeVisible();
     await saveButton.click();
 
     // 保存完了の確認（トーストメッセージの表示を待つ）
-    await expect(page.locator('text=記録を保存いたしましたわ')).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('text=記録を保存しました')).toBeVisible({
+      timeout: 3000,
+    });
 
     // トーストメッセージが消えるまで待つ
     await page.waitForTimeout(1000);
   });
 
-    test('記録一覧画面の表示確認', async ({ page }) => {
+  test('記録一覧画面の表示確認', async ({ page }) => {
     // 記録一覧画面に移動
-    await page.locator('text=記録一覧').click();
+    await page.locator('text=一覧').click();
     await expect(page.url()).toContain('/list');
 
     // 記録一覧のタイトル確認
-    await expect(page.locator('h2', { hasText: '記録一覧' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: '一覧' })).toBeVisible();
   });
 
   test('記録グラフ画面の表示確認', async ({ page }) => {
     // 記録グラフ画面に移動
-    await page.locator('text=記録グラフ').click();
+    await page.locator('text=グラフ').click();
     await expect(page.url()).toContain('/graph');
 
     // グラフページのタイトル確認
-    await expect(page.locator('h2', { hasText: '記録グラフ' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'グラフ' })).toBeVisible();
 
     // グラフ設定の選択フィールド確認
     await expect(page.locator('select').first()).toBeVisible(); // 項目選択
@@ -80,11 +84,11 @@ test.describe('健康管理アプリ', () => {
 
   test('記録カレンダー画面の表示確認', async ({ page }) => {
     // 記録カレンダー画面に移動
-    await page.locator('text=記録カレンダー').click();
+    await page.locator('text=カレンダー').click();
     await expect(page.url()).toContain('/calendar');
 
     // カレンダーページのタイトル確認
-    await expect(page.locator('h2', { hasText: '記録カレンダー' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'カレンダー' })).toBeVisible();
 
     // カレンダーコンポーネントの存在確認
     await expect(page.locator('.react-calendar')).toBeVisible();
@@ -92,25 +96,29 @@ test.describe('健康管理アプリ', () => {
 
   test('エクスポート画面の表示確認', async ({ page }) => {
     // エクスポート画面に移動
-    await page.locator('text=エクスポート').click();
+    await page.locator('text=管理').click();
     await expect(page.url()).toContain('/export');
 
     // エクスポートページのタイトル確認
-    await expect(page.locator('h2', { hasText: 'エクスポート' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: '管理' })).toBeVisible();
 
     // エクスポートボタンの存在確認
-    await expect(page.locator('button', { hasText: 'JSON形式でダウンロード' })).toBeVisible();
-    await expect(page.locator('button', { hasText: 'CSV形式でダウンロード' })).toBeVisible();
+    await expect(
+      page.locator('button', { hasText: 'JSONファイルをダウンロード' })
+    ).toBeVisible();
+    await expect(
+      page.locator('button', { hasText: 'CSVファイルをダウンロード' })
+    ).toBeVisible();
   });
 
   test('ナビゲーション動作の確認', async ({ page }) => {
     // 各ページへのナビゲーションテスト
     const navItems = [
-      { text: '記録一覧', url: '/list' },
-      { text: '記録グラフ', url: '/graph' },
-      { text: '記録カレンダー', url: '/calendar' },
-      { text: 'エクスポート', url: '/export' },
-      { text: '記録入力', url: '/' },
+      { text: '一覧', url: '/list' },
+      { text: 'グラフ', url: '/graph' },
+      { text: 'カレンダー', url: '/calendar' },
+      { text: '管理', url: '/export' },
+      { text: '入力', url: '/' },
     ];
 
     for (const nav of navItems) {
