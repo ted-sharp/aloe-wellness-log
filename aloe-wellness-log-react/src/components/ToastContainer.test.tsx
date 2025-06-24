@@ -179,7 +179,7 @@ describe('ToastContainer', () => {
     render(<ToastContainer />);
 
     const closeButton = screen.getByRole('button', {
-      name: '成功通知を閉じる',
+      name: '閉じる',
     });
     fireEvent.click(closeButton);
 
@@ -263,12 +263,12 @@ describe('ToastContainer', () => {
     render(<ToastContainer />);
 
     const container = screen.getByRole('region');
-    expect(container).toHaveAttribute('aria-label', 'Information');
+    expect(container).toHaveAttribute('aria-label', '情報');
     expect(container).toHaveAttribute('aria-live', 'polite');
     expect(container).toHaveAttribute('aria-atomic', 'false');
 
     const toast = screen.getByRole('alert');
-    expect(toast).toHaveAttribute('aria-label', 'Error: Test error');
+    expect(toast).toHaveAttribute('aria-label', 'エラー: Test error');
   });
 
   test('スクリーンリーダー用のラベルが含まれる', () => {
@@ -287,15 +287,15 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
 
-    expect(screen.getByText('Warning:', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('警告:', { exact: false })).toBeInTheDocument();
   });
 
   test('閉じるボタンのアクセシビリティラベルが正しい', () => {
     const toastTypes = [
-      { type: 'success', label: '成功通知を閉じる' },
-      { type: 'error', label: 'エラー通知を閉じる' },
-      { type: 'warning', label: '警告通知を閉じる' },
-      { type: 'info', label: '情報通知を閉じる' },
+      { type: 'success', label: '閉じる' },
+      { type: 'error', label: '閉じる' },
+      { type: 'warning', label: '閉じる' },
+      { type: 'info', label: '閉じる' },
     ] as const;
 
     toastTypes.forEach(({ type, label }) => {

@@ -192,7 +192,7 @@ describe('useFieldManagement', () => {
 
     expect(result.current.temporaryDisplayFields.has('heart_rate')).toBe(true);
     expect(mockShowSuccess).toHaveBeenCalledWith(
-      '項目を一時表示に追加しましたわ'
+      '項目を一時表示に追加しました'
     );
   });
 

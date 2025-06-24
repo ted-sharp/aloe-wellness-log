@@ -70,11 +70,12 @@ describe('RecordCalendar', () => {
     expect(screen.getByTestId('mock-calendar')).toBeInTheDocument();
   });
 
-  it('コンポーネントマウント時にloadFieldsとloadRecordsが呼ばれる', () => {
+  it('コンポーネントマウント時にloadFieldsとloadRecordsが呼ばれる', async () => {
     render(<RecordCalendar />);
-
-    expect(mockLoadFields).toHaveBeenCalledTimes(1);
-    expect(mockLoadRecords).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockLoadFields).toHaveBeenCalledTimes(1);
+      expect(mockLoadRecords).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('日付を選択すると選択日のヘッダーが表示される', async () => {
@@ -84,7 +85,13 @@ describe('RecordCalendar', () => {
     fireEvent.click(dayButton);
 
     await waitFor(() => {
-      expect(screen.getByText('2023/12/15 の記録')).toBeInTheDocument();
+      // 改行や空白を無視して部分一致でマッチ
+      expect(
+        screen.getByText(
+          content =>
+            content.replace(/\s+/g, '') === '2023年12月15日金曜日の記録'
+        )
+      ).toBeInTheDocument();
     });
   });
 
@@ -96,7 +103,7 @@ describe('RecordCalendar', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('この日の記録はありませんわ。')
+        screen.getByText('この日の記録はありません。')
       ).toBeInTheDocument();
     });
   });
@@ -217,7 +224,7 @@ describe('RecordCalendar', () => {
     fireEvent.click(dayButton);
 
     await waitFor(() => {
-      expect(screen.getByText('備考')).toBeInTheDocument();
+      expect(screen.getByText('備考・メモ')).toBeInTheDocument();
       expect(screen.getByText('テスト備考')).toBeInTheDocument();
     });
   });

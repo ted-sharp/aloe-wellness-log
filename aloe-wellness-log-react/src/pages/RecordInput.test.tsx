@@ -118,6 +118,7 @@ describe('RecordInput', () => {
       deleteAllRecords: vi.fn(),
       deleteAllFields: vi.fn(),
       deleteAllData: vi.fn(),
+      fieldsOperation: { loading: false, error: null },
     });
 
     // useToastStore のモック
@@ -139,15 +140,19 @@ describe('RecordInput', () => {
   it('初期レンダリングが正常に行われる', () => {
     render(<RecordInput />);
 
-    expect(screen.getByText('Record Input')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /record/i })).toBeInTheDocument();
+    expect(screen.getByText('記録入力')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '記録する' })
+    ).toBeInTheDocument();
   });
 
-  it('フィールドデータの読み込みが実行される', () => {
+  it('フィールドデータの読み込みが実行される', async () => {
     render(<RecordInput />);
 
-    expect(mockLoadFields).toHaveBeenCalled();
-    expect(mockLoadRecords).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockLoadFields).toHaveBeenCalled();
+      expect(mockLoadRecords).toHaveBeenCalled();
+    });
   });
 
   it('体重フィールドが表示される', () => {
@@ -161,7 +166,9 @@ describe('RecordInput', () => {
     render(<RecordInput />);
 
     expect(screen.getByText('運動有無(早歩き)')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '運動をありに設定' })
+    ).toBeInTheDocument();
   });
 
   it('数値入力ができる', async () => {
@@ -178,11 +185,15 @@ describe('RecordInput', () => {
     const user = userEvent.setup();
     render(<RecordInput />);
 
-    const exerciseCheckbox = screen.getByRole('checkbox');
-    expect(exerciseCheckbox).not.toBeChecked();
-
-    await user.click(exerciseCheckbox);
-    expect(exerciseCheckbox).toBeChecked();
+    const exerciseButton = screen.getByRole('button', {
+      name: '運動をありに設定',
+    });
+    expect(exerciseButton).toBeInTheDocument();
+    await user.click(exerciseButton);
+    // ボタンのaria-labelが「運動をなしに設定」に変わることを確認
+    expect(
+      screen.getByRole('button', { name: '運動をなしに設定' })
+    ).toBeInTheDocument();
   });
 
   it('記録ボタンクリック時にaddRecordが呼ばれる', async () => {
@@ -217,9 +228,7 @@ describe('RecordInput', () => {
 
     // Successトーストが表示されることを確認
     await waitFor(() => {
-      expect(mockShowSuccess).toHaveBeenCalledWith(
-        'Record has been saved successfully'
-      );
+      expect(mockShowSuccess).toHaveBeenCalledWith('記録を保存しました');
     });
   });
 
@@ -255,7 +264,9 @@ describe('RecordInput', () => {
 
     expect(screen.getByText('備考・メモ')).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText(/その時の体調、気づき、特記事項など/)
+      screen.getByPlaceholderText(
+        'その日の体調や気になったことなど、自由にメモできます'
+      )
     ).toBeInTheDocument();
   });
 
@@ -263,7 +274,9 @@ describe('RecordInput', () => {
     const user = userEvent.setup();
     render(<RecordInput />);
 
-    const notesInput = screen.getByLabelText('備考・メモを入力');
+    const notesInput = screen.getByLabelText(
+      'その日の体調や気になったことなど、自由にメモできます'
+    );
     await user.type(notesInput, 'test note');
 
     expect(notesInput).toHaveValue('test note');
@@ -273,7 +286,9 @@ describe('RecordInput', () => {
     const user = userEvent.setup();
     render(<RecordInput />);
 
-    const currentTimeButton = screen.getByText('現在時刻');
+    const currentTimeButton = screen.getByRole('button', {
+      name: '現在の日時を設定',
+    });
     await user.click(currentTimeButton);
 
     // 現在時刻設定後の確認は実装により異なるため、
@@ -308,16 +323,10 @@ describe('RecordInput', () => {
     const submitButton = screen.getByRole('button', { name: '記録する' });
     await user.click(submitButton);
 
-    // 空の値の場合はaddRecordが呼ばれないことを確認
+    // 空の値の場合はaddRecordもshowSuccessも呼ばれないことを確認
     await waitFor(() => {
       expect(mockAddRecord).not.toHaveBeenCalled();
-    });
-
-    // 成功メッセージが表示されることを確認（空でも処理は成功扱い）
-    await waitFor(() => {
-      expect(mockShowSuccess).toHaveBeenCalledWith(
-        'Record has been saved successfully'
-      );
+      expect(mockShowSuccess).not.toHaveBeenCalled();
     });
   });
 
@@ -331,7 +340,7 @@ describe('RecordInput', () => {
     });
     if (cancelButtons.length === 0) {
       // 編集モードでない場合は正常なのでテストをパス
-      expect(screen.getByText('Record Input')).toBeInTheDocument();
+      expect(screen.getByText('記録入力')).toBeInTheDocument();
       return;
     }
 
@@ -340,6 +349,6 @@ describe('RecordInput', () => {
     await user.click(cancelButton);
 
     // キャンセルボタンクリック後も画面が正常であることを確認
-    expect(screen.getByText('Record Input')).toBeInTheDocument();
+    expect(screen.getByText('記録入力')).toBeInTheDocument();
   });
 });
