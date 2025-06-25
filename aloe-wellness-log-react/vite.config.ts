@@ -123,8 +123,8 @@ export default defineConfig(({ mode, command }) => {
       terserOptions: isProduction
         ? {
             compress: {
-              drop_console: true, // console.logを本番環境で削除
-              drop_debugger: true,
+              drop_console: false, // console.logを本番環境で削除
+              drop_debugger: false,
               pure_funcs: ['console.log', 'console.warn'], // より詳細な除去設定
             },
             mangle: {
@@ -134,10 +134,12 @@ export default defineConfig(({ mode, command }) => {
         : undefined,
 
       // ソースマップの設定（開発環境では有効、本番環境では無効化）
-      sourcemap: !isProduction,
+      // sourcemap: !isProduction,
+      sourcemap: true,
 
       // CSSの最適化
-      cssMinify: isProduction,
+      // cssMinify: isProduction,
+      cssMinify: false,
     },
 
     // 依存関係の事前バンドル最適化
