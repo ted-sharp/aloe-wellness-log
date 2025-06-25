@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/aloe-wellness-log/manifest.json" />
+    <link rel="manifest" href="manifest.json" />
 
     <!-- Primary Meta Tags -->
     <title>アロエ健康管理ログ</title>
@@ -17,7 +17,7 @@
     />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/aloe-wellness-log/aloe-icon.png" />
+    <link rel="icon" type="image/png" href="aloe-icon.png" />
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#059669" />
@@ -27,11 +27,11 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="アロエ健康ログ" />
-    <link rel="apple-touch-icon" href="/aloe-wellness-log/aloe-icon.png" />
+    <link rel="apple-touch-icon" href="aloe-icon.png" />
 
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#059669" />
-    <meta name="msapplication-config" content="/aloe-wellness-log/browserconfig.xml" />
+    <meta name="msapplication-config" content="browserconfig.xml" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -171,169 +171,5 @@
     <div id="root"></div>
 
     <!-- Main App Script -->
-
-    <!-- Service Worker Registration -->
-    <script>
-      // 環境判定（本番環境かどうか）
-      const isProduction =
-        window.location.protocol === 'https:' ||
-        window.location.hostname === 'localhost';
-      const isDevelopment =
-        !isProduction ||
-        (window.location.hostname === 'localhost' &&
-          window.location.port !== '');
-
-      // Service Worker登録（本番環境のみ）
-      if ('serviceWorker' in navigator && isProduction && !isDevelopment) {
-        window.addEventListener('load', async () => {
-          try {
-            // ベースパスを動的に取得（GitHub Pages対応）
-            const pathname = window.location.pathname;
-            const basePath =
-              pathname === '/'
-                ? '/'
-                : pathname.startsWith('/aloe-wellness-log/')
-                ? '/aloe-wellness-log/'
-                : '/';
-            const swPath = basePath.endsWith('/')
-              ? `${basePath}sw.js`
-              : `${basePath}/sw.js`;
-            const scope = basePath;
-
-            const registration = await navigator.serviceWorker.register(
-              swPath,
-              {
-                scope: scope,
-              }
-            );
-
-            console.log(
-              '🌿 Service Worker registered successfully:',
-              registration.scope
-            );
-
-            // 更新チェック
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (
-                    newWorker.state === 'installed' &&
-                    navigator.serviceWorker.controller
-                  ) {
-                    // 新しいバージョンが利用可能
-                    console.log('🔄 New version available! Please refresh.');
-                    showUpdateNotification();
-                  }
-                });
-              }
-            });
-          } catch (error) {
-            console.error('❌ Service Worker registration failed:', error);
-          }
-        });
-      } else {
-        console.log('🚧 Service Worker disabled in development mode');
-
-        // 開発環境では既存のService Workerを削除
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker
-            .getRegistrations()
-            .then(registrations => {
-              registrations.forEach(registration => {
-                registration.unregister();
-                console.log('🗑️ Unregistered Service Worker for development');
-              });
-            })
-            .catch(error => {
-              console.warn('⚠️ Failed to unregister Service Workers:', error);
-            });
-        }
-      }
-
-      // 更新通知の表示
-      function showUpdateNotification() {
-        // カスタムトーストで更新通知を表示（実装は後で追加）
-        if (window.showToast) {
-          window.showToast(
-            '新しいバージョンが利用可能です。ページを更新してください。',
-            'info'
-          );
-        }
-      }
-
-      // アプリインストール促進
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', e => {
-        console.log('💾 Install prompt triggered');
-        e.preventDefault();
-        deferredPrompt = e;
-
-        // インストールボタンを表示（実装は後で追加）
-        showInstallButton();
-      });
-
-      function showInstallButton() {
-        // カスタムインストールボタンの表示ロジック
-        console.log('📱 Showing install button');
-      }
-
-      // インストール実行
-      window.installApp = async function () {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log(`📱 User response to install prompt: ${outcome}`);
-          deferredPrompt = null;
-        }
-      };
-
-      // アプリがインストールされた時
-      window.addEventListener('appinstalled', () => {
-        console.log('✅ App was installed successfully');
-        deferredPrompt = null;
-      });
-
-      // ローディング画面の制御
-      window.addEventListener('load', () => {
-        // アプリの読み込み完了後、ローディング画面を非表示
-        setTimeout(() => {
-          const loadingScreen = document.getElementById('loading-screen');
-          if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            setTimeout(() => {
-              loadingScreen.style.display = 'none';
-            }, 300);
-          }
-        }, 500);
-      });
-
-      // オフライン/オンライン状態の監視
-      window.addEventListener('online', () => {
-        console.log('🌐 App is back online');
-        if (window.showToast) {
-          window.showToast('インターネット接続が復旧しました', 'success');
-        }
-      });
-
-      window.addEventListener('offline', () => {
-        console.log('📴 App is offline');
-        if (window.showToast) {
-          window.showToast(
-            'オフラインモードです。記録は後で同期されます',
-            'warning'
-          );
-        }
-      });
-
-      // エラーハンドリング
-      window.addEventListener('error', event => {
-        console.error('🚨 Global error caught:', event.error);
-      });
-
-      window.addEventListener('unhandledrejection', event => {
-        console.error('🚨 Unhandled promise rejection:', event.reason);
-      });
-    </script>
   </body>
 </html>
