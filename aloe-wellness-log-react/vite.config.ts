@@ -89,8 +89,8 @@ export default defineConfig(({ mode, command }) => {
 
     // パフォーマンス最適化設定
     build: {
-      // GitHub Pages (docs フォルダ) 用の出力設定
-      outDir: '../docs',
+      // GitHub Pages (docs/aloe-wellness-log フォルダ) 用の出力設定
+      outDir: '../docs/aloe-wellness-log',
       emptyOutDir: true,
       // チャンクサイズの制限を調整
       chunkSizeWarningLimit: 600,

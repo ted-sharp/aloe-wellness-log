@@ -190,11 +190,18 @@ const handleGlobalError = (error: ErrorEvent | PromiseRejectionEvent) => {
 window.addEventListener('error', handleGlobalError);
 window.addEventListener('unhandledrejection', handleGlobalError);
 
+// ✨ 余分な末尾 '/' を削除して BrowserRouter に渡す
+const routerBase = (() => {
+  const raw = import.meta.env.BASE_URL;
+  // '/' だけのときは '' を返し、それ以外は末尾スラッシュを落とす
+  return raw.length > 1 ? raw.replace(/\/$/, '') : '';
+})();
+
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
   <ErrorBoundary>
     <ToastContainer />
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router basename={routerBase}>
       <App />
     </Router>
   </ErrorBoundary>
