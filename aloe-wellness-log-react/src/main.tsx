@@ -213,3 +213,19 @@ window.addEventListener('load', () => {
   const loadTime = performance.now() - startTime;
   sendPerformanceEvent('initialLoad', { loadTime });
 });
+
+// Service Worker登録（PWA対応・GitHub Pages/docs対応ベストプラクティス）
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    // Viteのbase設定に応じて正しいパスで登録
+    const swPath = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/sw.js`;
+    navigator.serviceWorker
+      .register(swPath)
+      .then(reg => {
+        console.log('🛡️ Service Worker registered:', reg);
+      })
+      .catch(err => {
+        console.error('❌ Service Worker registration failed:', err);
+      });
+  });
+}

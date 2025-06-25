@@ -46,6 +46,12 @@ function swAutoUpdate(basePath: string) {
           `const STATIC_CACHE_NAME = 'aloe-wellness-static-v${version}';`
         );
 
+        // base pathを自動埋め込み
+        swContent = swContent.replace(
+          /const BASE_PATH = '.*?';/, // 既存またはダミーのBASE_PATH行
+          `const BASE_PATH = '${basePath}';`
+        );
+
         // ビルドファイルを追加
         const buildFileList = buildFiles.map(file => `  '${file}'`).join(',\n');
         swContent = swContent.replace(

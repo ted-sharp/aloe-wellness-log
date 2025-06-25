@@ -1,6 +1,9 @@
 // Service Worker for Aloe Wellness Log PWA
 // 🔐 セキュリティ強化版
 
+// Viteビルド時に自動で置換されるbase path
+const BASE_PATH = '/';
+
 const CACHE_NAME = 'aloe-wellness-v1.0.0';
 const STATIC_CACHE_NAME = 'aloe-wellness-static-v1.0.0';
 const DYNAMIC_CACHE_NAME = 'aloe-wellness-dynamic-v1.0.0';
@@ -195,6 +198,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // ナビゲーションリクエスト（HTMLページ遷移）の場合はindex.htmlにフォールバック
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(BASE_PATH + 'index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
     caches
       .match(request)
@@ -251,7 +262,7 @@ self.addEventListener('fetch', event => {
 
             // オフライン時のフォールバック
             if (IMPORTANT_ROUTES.includes(new URL(request.url).pathname)) {
-              return caches.match('/');
+              return caches.match(BASE_PATH + 'index.html');
             }
 
             throw error;
