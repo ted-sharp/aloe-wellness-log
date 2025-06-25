@@ -14,13 +14,7 @@
   "icons": [
     {
       "src": "aloe-icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "aloe-icon.png",
-      "sizes": "512x512",
+      "sizes": "94x88",
       "type": "image/png",
       "purpose": "maskable any"
     }

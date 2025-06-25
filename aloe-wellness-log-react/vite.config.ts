@@ -15,6 +15,7 @@ function swAutoUpdate(basePath: string) {
       bundle: Record<string, { fileName: string; type: string }>
     ) {
       // ビルド後のファイル名を取得
+      const extra = [`${basePath}manifest.json`, `${basePath}aloe-icon.png`];
       const jsFiles = Object.keys(bundle).filter(key => key.endsWith('.js'));
       const cssFiles = Object.keys(bundle).filter(key => key.endsWith('.css'));
 
@@ -25,6 +26,7 @@ function swAutoUpdate(basePath: string) {
 
         // ビルドファイルリストを動的に更新
         const buildFiles = [
+          ...extra,
           ...jsFiles.map(file => `${basePath}assets/${file}`),
           ...cssFiles.map(file => `${basePath}assets/${file}`),
         ];

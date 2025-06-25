@@ -170,6 +170,16 @@
     <!-- App Root -->
     <div id="root"></div>
 
+    <script>
+      window.addEventListener('load', () => {
+        const loading = document.getElementById('loading-screen');
+        if (loading) {
+          loading.classList.add('hidden');
+          setTimeout(() => (loading.style.display = 'none'), 300);
+        }
+      });
+    </script>
+
     <!-- Main App Script -->
   </body>
 </html>
