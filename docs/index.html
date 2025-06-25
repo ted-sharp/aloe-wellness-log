@@ -31,7 +31,10 @@
 
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#059669" />
-    <meta name="msapplication-config" content="/aloe-wellness-log/browserconfig.xml" />
+    <meta
+      name="msapplication-config"
+      content="/aloe-wellness-log/browserconfig.xml"
+    />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -137,7 +140,7 @@
 
       .loading-text {
         color: #374151;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui,
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
           sans-serif;
         font-size: 1.25rem;
         font-weight: 600;
@@ -153,12 +156,36 @@
         }
       }
     </style>
-    <script type="module" crossorigin src="/aloe-wellness-log/assets/index-DY8_zVYl.js"></script>
-    <link rel="modulepreload" crossorigin href="/aloe-wellness-log/assets/react-vendor-BzNAZZ5j.js">
-    <link rel="modulepreload" crossorigin href="/aloe-wellness-log/assets/ui-vendor-D7AUAfXm.js">
-    <link rel="modulepreload" crossorigin href="/aloe-wellness-log/assets/icons-vendor-DoCnAwwa.js">
-    <link rel="modulepreload" crossorigin href="/aloe-wellness-log/assets/state-vendor-O6FgWrPy.js">
-    <link rel="stylesheet" crossorigin href="/aloe-wellness-log/assets/index-EjZS8ui4.css">
+    <script
+      type="module"
+      crossorigin
+      src="/aloe-wellness-log/assets/index-DY8_zVYl.js"
+    ></script>
+    <link
+      rel="modulepreload"
+      crossorigin
+      href="/aloe-wellness-log/assets/react-vendor-BzNAZZ5j.js"
+    />
+    <link
+      rel="modulepreload"
+      crossorigin
+      href="/aloe-wellness-log/assets/ui-vendor-D7AUAfXm.js"
+    />
+    <link
+      rel="modulepreload"
+      crossorigin
+      href="/aloe-wellness-log/assets/icons-vendor-DoCnAwwa.js"
+    />
+    <link
+      rel="modulepreload"
+      crossorigin
+      href="/aloe-wellness-log/assets/state-vendor-O6FgWrPy.js"
+    />
+    <link
+      rel="stylesheet"
+      crossorigin
+      href="/aloe-wellness-log/assets/index-EjZS8ui4.css"
+    />
   </head>
   <body>
     <!-- Loading Screen -->
@@ -176,26 +203,26 @@
     <script>
       // 環境判定（本番環境かどうか）
       const isProduction =
-        window.location.protocol === 'https:' ||
-        window.location.hostname === 'localhost';
+        window.location.protocol === "https:" ||
+        window.location.hostname === "localhost";
       const isDevelopment =
         !isProduction ||
-        (window.location.hostname === 'localhost' &&
-          window.location.port !== '');
+        (window.location.hostname === "localhost" &&
+          window.location.port !== "");
 
       // Service Worker登録（本番環境のみ）
-      if ('serviceWorker' in navigator && isProduction && !isDevelopment) {
-        window.addEventListener('load', async () => {
+      if ("serviceWorker" in navigator && isProduction && !isDevelopment) {
+        window.addEventListener("load", async () => {
           try {
             // ベースパスを動的に取得（GitHub Pages対応）
             const pathname = window.location.pathname;
             const basePath =
-              pathname === '/'
-                ? '/'
-                : pathname.startsWith('/aloe-wellness-log/')
-                ? '/aloe-wellness-log/'
-                : '/';
-            const swPath = basePath.endsWith('/')
+              pathname === "/"
+                ? "/"
+                : pathname.startsWith("/aloe-wellness-log/")
+                ? "/aloe-wellness-log/"
+                : "/";
+            const swPath = basePath.endsWith("/")
               ? `${basePath}sw.js`
               : `${basePath}/sw.js`;
             const scope = basePath;
@@ -208,45 +235,45 @@
             );
 
             console.log(
-              '🌿 Service Worker registered successfully:',
+              "🌿 Service Worker registered successfully:",
               registration.scope
             );
 
             // 更新チェック
-            registration.addEventListener('updatefound', () => {
+            registration.addEventListener("updatefound", () => {
               const newWorker = registration.installing;
               if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
+                newWorker.addEventListener("statechange", () => {
                   if (
-                    newWorker.state === 'installed' &&
+                    newWorker.state === "installed" &&
                     navigator.serviceWorker.controller
                   ) {
                     // 新しいバージョンが利用可能
-                    console.log('🔄 New version available! Please refresh.');
+                    console.log("🔄 New version available! Please refresh.");
                     showUpdateNotification();
                   }
                 });
               }
             });
           } catch (error) {
-            console.error('❌ Service Worker registration failed:', error);
+            console.error("❌ Service Worker registration failed:", error);
           }
         });
       } else {
-        console.log('🚧 Service Worker disabled in development mode');
+        console.log("🚧 Service Worker disabled in development mode");
 
         // 開発環境では既存のService Workerを削除
-        if ('serviceWorker' in navigator) {
+        if ("serviceWorker" in navigator) {
           navigator.serviceWorker
             .getRegistrations()
-            .then(registrations => {
-              registrations.forEach(registration => {
+            .then((registrations) => {
+              registrations.forEach((registration) => {
                 registration.unregister();
-                console.log('🗑️ Unregistered Service Worker for development');
+                console.log("🗑️ Unregistered Service Worker for development");
               });
             })
-            .catch(error => {
-              console.warn('⚠️ Failed to unregister Service Workers:', error);
+            .catch((error) => {
+              console.warn("⚠️ Failed to unregister Service Workers:", error);
             });
         }
       }
@@ -256,16 +283,16 @@
         // カスタムトーストで更新通知を表示（実装は後で追加）
         if (window.showToast) {
           window.showToast(
-            '新しいバージョンが利用可能です。ページを更新してください。',
-            'info'
+            "新しいバージョンが利用可能です。ページを更新してください。",
+            "info"
           );
         }
       }
 
       // アプリインストール促進
       let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', e => {
-        console.log('💾 Install prompt triggered');
+      window.addEventListener("beforeinstallprompt", (e) => {
+        console.log("💾 Install prompt triggered");
         e.preventDefault();
         deferredPrompt = e;
 
@@ -275,7 +302,7 @@
 
       function showInstallButton() {
         // カスタムインストールボタンの表示ロジック
-        console.log('📱 Showing install button');
+        console.log("📱 Showing install button");
       }
 
       // インストール実行
@@ -289,50 +316,50 @@
       };
 
       // アプリがインストールされた時
-      window.addEventListener('appinstalled', () => {
-        console.log('✅ App was installed successfully');
+      window.addEventListener("appinstalled", () => {
+        console.log("✅ App was installed successfully");
         deferredPrompt = null;
       });
 
       // ローディング画面の制御
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         // アプリの読み込み完了後、ローディング画面を非表示
         setTimeout(() => {
-          const loadingScreen = document.getElementById('loading-screen');
+          const loadingScreen = document.getElementById("loading-screen");
           if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
+            loadingScreen.classList.add("hidden");
             setTimeout(() => {
-              loadingScreen.style.display = 'none';
+              loadingScreen.style.display = "none";
             }, 300);
           }
         }, 500);
       });
 
       // オフライン/オンライン状態の監視
-      window.addEventListener('online', () => {
-        console.log('🌐 App is back online');
+      window.addEventListener("online", () => {
+        console.log("🌐 App is back online");
         if (window.showToast) {
-          window.showToast('インターネット接続が復旧しました', 'success');
+          window.showToast("インターネット接続が復旧しました", "success");
         }
       });
 
-      window.addEventListener('offline', () => {
-        console.log('📴 App is offline');
+      window.addEventListener("offline", () => {
+        console.log("📴 App is offline");
         if (window.showToast) {
           window.showToast(
-            'オフラインモードです。記録は後で同期されます',
-            'warning'
+            "オフラインモードです。記録は後で同期されます",
+            "warning"
           );
         }
       });
 
       // エラーハンドリング
-      window.addEventListener('error', event => {
-        console.error('🚨 Global error caught:', event.error);
+      window.addEventListener("error", (event) => {
+        console.error("🚨 Global error caught:", event.error);
       });
 
-      window.addEventListener('unhandledrejection', event => {
-        console.error('🚨 Unhandled promise rejection:', event.reason);
+      window.addEventListener("unhandledrejection", (event) => {
+        console.error("🚨 Unhandled promise rejection:", event.reason);
       });
     </script>
   </body>

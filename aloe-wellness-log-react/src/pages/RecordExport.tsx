@@ -675,59 +675,62 @@ export default function RecordExport() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
-          {t('pages.export.testData')}
-        </h2>
-        <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-          {t('pages.export.testDataDescription')}
-        </div>
+      {/* テストデータ生成セクション（開発環境のみ表示） */}
+      {isDev && (
+        <div className="bg-purple-50 dark:bg-purple-900/20 border-2 border-dashed border-purple-400 dark:border-purple-500 rounded-2xl shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-semibold text-purple-800 dark:text-purple-400 mb-6">
+            {t('pages.export.testData')}（開発環境専用）
+          </h2>
+          <div className="text-sm text-purple-700 dark:text-purple-300 mb-6">
+            {t('pages.export.testDataDescription')}
+          </div>
 
-        {testDataStatus && (
-          <div className="mb-6">
-            {testDataStatus.includes('✅') && (
-              <SuccessMessage message={testDataStatus.replace('✅ ', '')} />
-            )}
-            {testDataStatus.includes('❌') && (
-              <ErrorMessage message={testDataStatus.replace('❌ ', '')} />
-            )}
-            {!testDataStatus.includes('✅') &&
-              !testDataStatus.includes('❌') && (
-                <InfoMessage message={testDataStatus} />
+          {testDataStatus && (
+            <div className="mb-6">
+              {testDataStatus.includes('✅') && (
+                <SuccessMessage message={testDataStatus.replace('✅ ', '')} />
               )}
-          </div>
-        )}
+              {testDataStatus.includes('❌') && (
+                <ErrorMessage message={testDataStatus.replace('❌ ', '')} />
+              )}
+              {!testDataStatus.includes('✅') &&
+                !testDataStatus.includes('❌') && (
+                  <InfoMessage message={testDataStatus} />
+                )}
+            </div>
+          )}
 
-        {isGeneratingTestData && (
-          <div className="mb-6">
-            <ProgressBar
-              value={testDataProgress}
-              label={t('pages.export.generatingTestData')}
-              showPercentage={true}
-              variant="primary"
-              size="md"
-            />
-          </div>
-        )}
+          {isGeneratingTestData && (
+            <div className="mb-6">
+              <ProgressBar
+                value={testDataProgress}
+                label={t('pages.export.generatingTestData')}
+                showPercentage={true}
+                variant="primary"
+                size="md"
+              />
+            </div>
+          )}
 
-        <div className="flex flex-col gap-4 mb-6">
-          <Button
-            variant="purple"
-            size="lg"
-            icon={HiSparkles}
-            onClick={handleGenerateTestData}
-            fullWidth={false}
-            disabled={isGeneratingTestData}
-            loading={isGeneratingTestData}
-          >
-            {t('pages.export.generateTestData')}
-          </Button>
+          <div className="flex flex-col gap-4 mb-6">
+            <Button
+              variant="purple"
+              size="lg"
+              icon={HiSparkles}
+              onClick={handleGenerateTestData}
+              fullWidth={false}
+              disabled={isGeneratingTestData}
+              loading={isGeneratingTestData}
+            >
+              {t('pages.export.generateTestData')}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* エラーテストUIセクション */}
       {isDev && (
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-2xl shadow-md p-6 mb-8">
+        <div className="bg-orange-50 dark:bg-orange-900/20 border-2 border-dashed border-orange-200 dark:border-orange-700 rounded-2xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-semibold text-orange-800 dark:text-orange-400 mb-6 flex items-center gap-2">
             <HiExclamationTriangle className="w-6 h-6 text-orange-600 dark:text-orange-500" />
             {t(
