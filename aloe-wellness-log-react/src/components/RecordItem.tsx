@@ -199,6 +199,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       type={field?.type === 'number' ? 'number' : 'text'}
                       value={String(editValue)}
                       onChange={handleInputChange}
+                      onClick={e => e.stopPropagation()}
                       className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400 w-full"
                     />
                   )}
