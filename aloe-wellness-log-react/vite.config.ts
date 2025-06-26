@@ -142,12 +142,12 @@ export default defineConfig(({ mode, command }) => {
         : undefined,
 
       // ソースマップの設定（開発環境では有効、本番環境では無効化）
-      // sourcemap: !isProduction,
-      sourcemap: true,
+      // sourcemap: true,
+      sourcemap: !isProduction,
 
       // CSSの最適化
-      // cssMinify: isProduction,
-      cssMinify: false,
+      // cssMinify: false,
+      cssMinify: isProduction,
     },
 
     // 依存関係の事前バンドル最適化
