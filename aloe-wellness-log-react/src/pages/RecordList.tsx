@@ -34,6 +34,7 @@ const RecordGroup = memo<{
   onEditValueChange: (value: string | number | boolean) => void;
   onToggleTextExpansion: (recordId: string) => void;
   onToggleButtons: (recordId: string) => void;
+  onToggleExclude: (record: RecordItemType) => void;
 }>(
   ({
     datetime,
@@ -51,6 +52,7 @@ const RecordGroup = memo<{
     onEditValueChange,
     onToggleTextExpansion,
     onToggleButtons,
+    onToggleExclude,
   }) => {
     // レンダリング監視
     useEffect(() => {
@@ -83,6 +85,7 @@ const RecordGroup = memo<{
               onEditValueChange={onEditValueChange}
               onToggleTextExpansion={onToggleTextExpansion}
               onToggleButtons={onToggleButtons}
+              onToggleExclude={onToggleExclude}
             />
           ))}
         </ul>
@@ -405,6 +408,17 @@ export default function RecordList() {
     performanceMonitor.trackInteraction.end(interactionId, 'toggle-buttons');
   }, []);
 
+  const handleToggleExclude = useCallback(
+    async (rec: RecordItemType) => {
+      try {
+        await updateRecord({ ...rec, excludeFromGraph: !rec.excludeFromGraph });
+      } catch (error) {
+        console.error('Exclude toggle error:', error);
+      }
+    },
+    [updateRecord]
+  );
+
   const handlePageSizeChange = useCallback((newPageSize: number) => {
     const interactionId =
       performanceMonitor.trackInteraction.start('page-size-change');
@@ -561,6 +575,7 @@ export default function RecordList() {
             onEditValueChange={handleEditValueChange}
             onToggleTextExpansion={handleToggleTextExpansion}
             onToggleButtons={handleToggleButtons}
+            onToggleExclude={handleToggleExclude}
           />
         ))}
       </div>

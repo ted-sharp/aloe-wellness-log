@@ -534,9 +534,10 @@ export default function RecordInput() {
                                 });
                               }}
                               className={
-                                values[field.fieldId] === true
-                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
-                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                (values[field.fieldId] === true
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
+                                ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium transition-colors duration-200'
                               }
                               aria-label={getAriaLabel('setToYes', {
                                 fieldName: translateFieldName(field.fieldId),
@@ -565,9 +566,10 @@ export default function RecordInput() {
                                 });
                               }}
                               className={
-                                values[field.fieldId] === false
-                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
-                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                (values[field.fieldId] === false
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
+                                ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium transition-colors duration-200'
                               }
                               aria-label={getAriaLabel('setToNo', {
                                 fieldName: translateFieldName(field.fieldId),
@@ -620,9 +622,9 @@ export default function RecordInput() {
                           }}
                           className={
                             (excludeFromGraph[field.fieldId]
-                              ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                              ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
                               : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
-                            ' min-w-[48px] h-10 px-0 text-sm'
+                            ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium transition-colors duration-200'
                           }
                           aria-label={t('pages.input.excludeFromGraph')}
                         >

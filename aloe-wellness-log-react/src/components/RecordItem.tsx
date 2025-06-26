@@ -24,6 +24,7 @@ interface RecordItemProps {
   onEditValueChange: (value: string | number | boolean) => void;
   onToggleTextExpansion: (recordId: string) => void;
   onToggleButtons: (recordId: string) => void;
+  onToggleExclude: (record: RecordItemType) => void;
 }
 
 const RecordItem: React.FC<RecordItemProps> = memo(
@@ -41,6 +42,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
     onEditValueChange,
     onToggleTextExpansion,
     onToggleButtons,
+    onToggleExclude,
   }) => {
     const { t, getAriaLabel } = useI18n();
     const isEditing = editId === record.id;
@@ -92,10 +94,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
     return (
       <li className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
         {isEditing ? (
-          // 編集モード
           <div>
             {field?.fieldId === 'notes' ? (
-              // 備考編集は左寄せレイアウト（通常表示と同じ）
               <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
                 <div className="text-xl font-medium text-gray-700 dark:text-gray-200 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 flex-shrink-0 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
@@ -105,10 +105,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => handleBooleanChange(true)}
+                        onClick={() =>
+                          handleBooleanChange(
+                            editValue === true ? undefined : true
+                          )
+                        }
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === true
-                            ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
                             : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToYes', {
@@ -119,10 +123,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleBooleanChange(false)}
+                        onClick={() =>
+                          handleBooleanChange(
+                            editValue === false ? undefined : false
+                          )
+                        }
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === false
-                            ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
                             : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToNo', {
@@ -131,19 +139,6 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       >
                         {t('fields.no')}
                       </button>
-                      {editValue !== undefined && editValue !== '' && (
-                        <button
-                          type="button"
-                          onClick={() => handleBooleanChange(undefined)}
-                          className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
-                          aria-label={getAriaLabel('clearSelection', {
-                            fieldName: field.name,
-                          })}
-                          title={t('fields.clearSelection')}
-                        >
-                          ×
-                        </button>
-                      )}
                     </div>
                   ) : (
                     <textarea
@@ -155,8 +150,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 </div>
               </div>
             ) : (
-              // 備考以外は二分割グリッドレイアウト
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch mb-4">
+              <div className="grid grid-cols-3 gap-2 items-center mb-4">
                 <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
                   {field ? field.name : record.fieldId}
                 </div>
@@ -165,10 +159,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => handleBooleanChange(true)}
+                        onClick={() =>
+                          handleBooleanChange(
+                            editValue === true ? undefined : true
+                          )
+                        }
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === true
-                            ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
                             : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToYes', {
@@ -179,10 +177,14 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleBooleanChange(false)}
+                        onClick={() =>
+                          handleBooleanChange(
+                            editValue === false ? undefined : false
+                          )
+                        }
                         className={`px-3 py-1.5 rounded-lg border-2 text-sm font-medium transition-colors duration-200 flex-shrink-0 ${
                           editValue === false
-                            ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300'
                             : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                         aria-label={getAriaLabel('setToNo', {
@@ -191,19 +193,6 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       >
                         {t('fields.no')}
                       </button>
-                      {editValue !== undefined && editValue !== '' && (
-                        <button
-                          type="button"
-                          onClick={() => handleBooleanChange(undefined)}
-                          className="px-2 py-1.5 rounded-lg border-2 border-gray-300 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
-                          aria-label={getAriaLabel('clearSelection', {
-                            fieldName: field.name,
-                          })}
-                          title={t('fields.clearSelection')}
-                        >
-                          ×
-                        </button>
-                      )}
                     </div>
                   ) : (
                     <input
@@ -213,6 +202,21 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                       className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400 w-full"
                     />
                   )}
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => onToggleExclude(record)}
+                    className={
+                      (record.excludeFromGraph
+                        ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                        : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
+                      ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium'
+                    }
+                    aria-label={t('pages.input.excludeFromGraph')}
+                  >
+                    {t('pages.input.excludeFromGraphShort') || '除外'}
+                  </button>
                 </div>
               </div>
             )}
@@ -234,10 +238,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
             </div>
           </div>
         ) : (
-          // 表示モード
           <div>
             {field?.fieldId === 'notes' ? (
-              // 備考は縦棒区切りの左寄せレイアウト（カレンダーと同じ）
               <div
                 className="flex flex-col sm:flex-row items-stretch gap-2 cursor-pointer"
                 onClick={handleToggleButtons}
@@ -263,9 +265,8 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                 </div>
               </div>
             ) : (
-              // 備考以外は真ん中で区切って右寄せ・左寄せレイアウト
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch cursor-pointer"
+                className="grid grid-cols-3 gap-2 items-center cursor-pointer"
                 onClick={handleToggleButtons}
               >
                 <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
@@ -295,10 +296,22 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                     </span>
                   )}
                 </div>
+                <div className="flex justify-end">
+                  <span
+                    className={
+                      (record.excludeFromGraph
+                        ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                        : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300') +
+                      ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium flex items-center justify-center select-none'
+                    }
+                    aria-label={t('pages.input.excludeFromGraph')}
+                  >
+                    {t('pages.input.excludeFromGraphShort') || '除外'}
+                  </span>
+                </div>
               </div>
             )}
 
-            {/* 編集・削除ボタン（クリックで表示/非表示） */}
             {areButtonsShown && (
               <div className="flex gap-2 sm:gap-3 justify-center mt-4 pt-4 border-t border-gray-200">
                 <button
