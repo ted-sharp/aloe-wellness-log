@@ -90,6 +90,32 @@ test.describe('健康管理アプリ', () => {
     await page.waitForTimeout(1000);
   });
 
+  test('記録入力画面で除外ボタンを押してもエラーが発生しない', async ({
+    page,
+  }) => {
+    // 記録入力画面のページタイトル確認
+    await expect(
+      page.getByRole('heading', { level: 1, name: '記録入力' })
+    ).toBeVisible();
+
+    // 除外ボタンを取得（最初の項目でテスト）
+    const excludeButton = page.getByRole('button', { name: '除外' }).first();
+    await expect(excludeButton).toBeVisible();
+
+    // 除外ボタンをクリック
+    await excludeButton.click();
+
+    // エラーやクラッシュが発生していないことを確認（main要素が表示されている）
+    await expect(page.getByRole('main')).toBeVisible();
+
+    // 追加で、エラートーストやErrorBoundaryの表示がないことも確認（任意）
+    await expect(
+      page
+        .locator('[role="alert"], [role="status"]')
+        .filter({ hasText: /エラー|error|Exception/i })
+    ).toHaveCount(0);
+  });
+
   test('記録一覧画面の表示確認', async ({ page }) => {
     // モバイルナビゲーションに対応
     await ensureNavigationVisible(page);

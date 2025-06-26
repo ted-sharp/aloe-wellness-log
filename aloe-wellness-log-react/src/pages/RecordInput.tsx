@@ -626,7 +626,7 @@ export default function RecordInput() {
                               : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
                             ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium transition-colors duration-200'
                           }
-                          aria-label={t('pages.input.excludeFromGraph')}
+                          aria-label={t('pages.input.excludeFromGraphShort')}
                         >
                           {t('pages.input.excludeFromGraphShort') || '除外'}
                         </Button>

@@ -213,7 +213,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
                       ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium'
                     }
-                    aria-label={t('pages.input.excludeFromGraph')}
+                    aria-label={t('pages.input.excludeFromGraphShort')}
                   >
                     {t('pages.input.excludeFromGraphShort') || '除外'}
                   </button>
@@ -304,7 +304,7 @@ const RecordItem: React.FC<RecordItemProps> = memo(
                         : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300') +
                       ' min-w-[48px] h-10 px-0 text-sm rounded-lg border-2 font-medium flex items-center justify-center select-none'
                     }
-                    aria-label={t('pages.input.excludeFromGraph')}
+                    aria-label={t('pages.input.excludeFromGraphShort')}
                   >
                     {t('pages.input.excludeFromGraphShort') || '除外'}
                   </span>
