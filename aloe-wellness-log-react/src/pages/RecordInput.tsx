@@ -536,7 +536,15 @@ export default function RecordInput() {
                               size="sm"
                               onClick={e => {
                                 e.stopPropagation();
-                                handleChange(field.fieldId, true);
+                                setValues(prev => {
+                                  if (prev[field.fieldId] === true) {
+                                    const newValues = { ...prev };
+                                    delete newValues[field.fieldId];
+                                    return newValues;
+                                  } else {
+                                    return { ...prev, [field.fieldId]: true };
+                                  }
+                                });
                               }}
                               className={
                                 values[field.fieldId] === true
@@ -559,7 +567,15 @@ export default function RecordInput() {
                               size="sm"
                               onClick={e => {
                                 e.stopPropagation();
-                                handleChange(field.fieldId, false);
+                                setValues(prev => {
+                                  if (prev[field.fieldId] === false) {
+                                    const newValues = { ...prev };
+                                    delete newValues[field.fieldId];
+                                    return newValues;
+                                  } else {
+                                    return { ...prev, [field.fieldId]: false };
+                                  }
+                                });
                               }}
                               className={
                                 values[field.fieldId] === false
@@ -572,28 +588,6 @@ export default function RecordInput() {
                             >
                               {t('fields.no')}
                             </Button>
-                            {values[field.fieldId] !== undefined && (
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  setValues(prev => {
-                                    const newValues = { ...prev };
-                                    delete newValues[field.fieldId];
-                                    return newValues;
-                                  });
-                                }}
-                                className="border-gray-300 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                                aria-label={getAriaLabel('clearSelection', {
-                                  fieldName: translateFieldName(field.fieldId),
-                                })}
-                                title={t('fields.clearSelection')}
-                              >
-                                ×
-                              </Button>
-                            )}
                           </div>
                         ) : (
                           <input
