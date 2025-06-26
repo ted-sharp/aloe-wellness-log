@@ -47,6 +47,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -65,6 +66,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -86,6 +88,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -105,6 +108,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -123,6 +127,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -149,6 +154,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={showButtons}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -170,6 +176,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={showButtons}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -191,6 +198,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -209,6 +217,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -228,6 +237,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -247,6 +257,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -269,6 +280,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -294,6 +306,7 @@ describe('RecordItem', () => {
           expandedTexts={new Set()}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
@@ -316,6 +329,7 @@ describe('RecordItem', () => {
           expandedTexts={expandedTexts}
           showButtons={new Set()}
           {...mockHandlers}
+          onToggleExclude={vi.fn()}
         />
       );
 
