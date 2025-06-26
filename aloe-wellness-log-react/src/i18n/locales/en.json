@@ -69,7 +69,8 @@
       "selectFields": "Select Fields",
       "sortFields": "Sort Fields",
       "recordSuccess": "Record has been saved successfully",
-      "recordError": "Failed to save record"
+      "recordError": "Failed to save record",
+      "excludeFromGraphShort": "Exclude"
     },
     "list": {
       "title": "List",

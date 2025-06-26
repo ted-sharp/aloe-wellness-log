@@ -55,9 +55,11 @@ export default function RecordGraph() {
     { label: t('pages.graph.periods.all'), value: 0 },
   ];
 
-  // 数値・文字列型のフィールドをorder順でソート
+  // フィールド選択肢（グラフ除外フラグ対応）
   const numberFields = fields
-    .filter(f => f.type === 'number' || f.type === 'string')
+    .filter(
+      f => (f.type === 'number' || f.type === 'string') && !f.excludeFromGraph
+    )
     .sort((a, b) => (a.order || 999) - (b.order || 999));
   const [selectedFieldId, setSelectedFieldId] = useState(
     numberFields.length > 0 ? numberFields[0].fieldId : ''

@@ -112,6 +112,11 @@ export default function RecordInput() {
   // 並び替えモーダルの表示状態
   const [_showSortModal, _setShowSortModal] = useState(false);
 
+  // 1. 入力値ごとにexcludeFromGraphのstateを持つ
+  const [excludeFromGraph, setExcludeFromGraph] = useState<
+    Record<string, boolean>
+  >({});
+
   // パフォーマンス監視の初期化
   useEffect(() => {
     performanceMonitor.trackRender.start('RecordInput');
@@ -274,6 +279,7 @@ export default function RecordInput() {
             date: recordDate,
             time: recordTime,
             datetime: formatLocalDateTime(selectedDateTime),
+            excludeFromGraph: !!excludeFromGraph[field.fieldId],
           });
           recordedCount++;
         }
@@ -289,6 +295,7 @@ export default function RecordInput() {
           date: recordDate,
           time: recordTime,
           datetime: formatLocalDateTime(selectedDateTime),
+          excludeFromGraph: false,
         });
         recordedCount++;
       }
@@ -320,6 +327,9 @@ export default function RecordInput() {
       const now = new Date();
       setRecordDate(formatLocalDate(now));
       setRecordTime(formatLocalTime(now));
+
+      // 4. 記録後はexcludeFromGraphもリセット
+      setExcludeFromGraph({});
 
       performanceMonitor.trackInteraction.end(
         interactionId,
@@ -438,12 +448,10 @@ export default function RecordInput() {
                           )}
                         />
                       </div>
-                      <div className="pl-0 sm:pl-2 pt-2 sm:pt-0">
+                      <div className="pl-0 sm:pl-2 pt-2 sm:pt-0 flex flex-col gap-2">
                         {field.type === 'boolean' ? (
-                          // boolean型の項目は右側を空白地帯に
                           <div className="h-full"></div>
                         ) : (
-                          // boolean型以外は単位入力
                           <input
                             type="text"
                             value={fieldManagement.editField.unit ?? ''}
@@ -459,6 +467,24 @@ export default function RecordInput() {
                             )}
                           />
                         )}
+                        <label className="flex items-center gap-2 mt-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={
+                              !!fieldManagement.editField.excludeFromGraph
+                            }
+                            onChange={e =>
+                              fieldManagement.setEditField(f => ({
+                                ...f,
+                                excludeFromGraph: e.target.checked,
+                              }))
+                            }
+                          />
+                          {t(
+                            'pages.input.fieldManagement.excludeFromGraph',
+                            'グラフに表示しない'
+                          )}
+                        </label>
                       </div>
                     </div>
 
@@ -491,117 +517,135 @@ export default function RecordInput() {
                 ) : (
                   <div>
                     {/* 項目表示（入力・単位のレイアウト） */}
-                    <div
-                      className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch cursor-pointer"
-                      onClick={() =>
-                        fieldManagement.toggleButtons(field.fieldId)
-                      }
-                    >
-                      <div className="text-xl font-medium text-gray-700 dark:text-gray-200 text-left sm:text-right pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-600 pb-2 sm:pb-0">
-                        {field.name}
-                      </div>
-                      <div className="text-lg text-gray-800 dark:text-gray-200 font-semibold pl-0 sm:pl-2 text-left pt-2 sm:pt-0">
-                        <div className="flex items-center gap-3">
-                          {field.type === 'boolean' ? (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant={
-                                  values[field.fieldId] === true
-                                    ? 'primary'
-                                    : 'secondary'
-                                }
-                                size="sm"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleChange(field.fieldId, true);
-                                }}
-                                className={
-                                  values[field.fieldId] === true
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
-                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }
-                                aria-label={getAriaLabel('setToYes', {
-                                  fieldName: translateFieldName(field.fieldId),
-                                })}
-                              >
-                                {t('fields.yes')}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant={
-                                  values[field.fieldId] === false
-                                    ? 'primary'
-                                    : 'secondary'
-                                }
-                                size="sm"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleChange(field.fieldId, false);
-                                }}
-                                className={
-                                  values[field.fieldId] === false
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
-                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }
-                                aria-label={getAriaLabel('setToNo', {
-                                  fieldName: translateFieldName(field.fieldId),
-                                })}
-                              >
-                                {t('fields.no')}
-                              </Button>
-                              {values[field.fieldId] !== undefined && (
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    setValues(prev => {
-                                      const newValues = { ...prev };
-                                      delete newValues[field.fieldId];
-                                      return newValues;
-                                    });
-                                  }}
-                                  className="border-gray-300 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                                  aria-label={getAriaLabel('clearSelection', {
-                                    fieldName: translateFieldName(
-                                      field.fieldId
-                                    ),
-                                  })}
-                                  title={t('fields.clearSelection')}
-                                >
-                                  ×
-                                </Button>
-                              )}
-                            </div>
-                          ) : (
-                            <input
-                              type={field.type === 'number' ? 'number' : 'text'}
-                              value={String(values[field.fieldId] || '')}
-                              onChange={e =>
-                                handleChange(
-                                  field.fieldId,
-                                  field.type === 'number'
-                                    ? Number(e.target.value) || ''
-                                    : e.target.value
-                                )
+                    <div className="grid grid-cols-3 gap-2 items-center w-full">
+                      {/* 左：ラベル */}
+                      <span className="text-right text-lg font-semibold text-gray-700 dark:text-gray-200 select-none truncate">
+                        {translateFieldName(field.fieldId)}
+                      </span>
+                      {/* 中央：入力欄＋単位 */}
+                      <div className="flex items-center gap-2 w-full">
+                        {field.type === 'boolean' ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant={
+                                values[field.fieldId] === true
+                                  ? 'primary'
+                                  : 'secondary'
                               }
-                              onClick={e => e.stopPropagation()} // 親のクリックイベントを防ぐ
-                              className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                              aria-label={getAriaLabel('inputField', {
+                              size="sm"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleChange(field.fieldId, true);
+                              }}
+                              className={
+                                values[field.fieldId] === true
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              }
+                              aria-label={getAriaLabel('setToYes', {
                                 fieldName: translateFieldName(field.fieldId),
                               })}
-                            />
-                          )}
-                          <div className="w-full sm:w-32">
-                            {field.unit && (
-                              <span className="text-gray-600 dark:text-gray-400 font-medium">
-                                {field.unit}
-                              </span>
+                            >
+                              {t('fields.yes')}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={
+                                values[field.fieldId] === false
+                                  ? 'primary'
+                                  : 'secondary'
+                              }
+                              size="sm"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleChange(field.fieldId, false);
+                              }}
+                              className={
+                                values[field.fieldId] === false
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                                  : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              }
+                              aria-label={getAriaLabel('setToNo', {
+                                fieldName: translateFieldName(field.fieldId),
+                              })}
+                            >
+                              {t('fields.no')}
+                            </Button>
+                            {values[field.fieldId] !== undefined && (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setValues(prev => {
+                                    const newValues = { ...prev };
+                                    delete newValues[field.fieldId];
+                                    return newValues;
+                                  });
+                                }}
+                                className="border-gray-300 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                                aria-label={getAriaLabel('clearSelection', {
+                                  fieldName: translateFieldName(field.fieldId),
+                                })}
+                                title={t('fields.clearSelection')}
+                              >
+                                ×
+                              </Button>
                             )}
                           </div>
-                        </div>
+                        ) : (
+                          <input
+                            type={field.type === 'number' ? 'number' : 'text'}
+                            value={String(values[field.fieldId] || '')}
+                            onChange={e =>
+                              handleChange(
+                                field.fieldId,
+                                field.type === 'number'
+                                  ? Number(e.target.value) || ''
+                                  : e.target.value
+                              )
+                            }
+                            onClick={e => e.stopPropagation()}
+                            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                            aria-label={getAriaLabel('inputField', {
+                              fieldName: translateFieldName(field.fieldId),
+                            })}
+                          />
+                        )}
+                        {field.unit && (
+                          <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                            {field.unit}
+                          </span>
+                        )}
+                      </div>
+                      {/* 右：除外ボタン */}
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant={
+                            excludeFromGraph[field.fieldId]
+                              ? 'primary'
+                              : 'secondary'
+                          }
+                          size="sm"
+                          onClick={() =>
+                            setExcludeFromGraph(prev => ({
+                              ...prev,
+                              [field.fieldId]: !prev[field.fieldId],
+                            }))
+                          }
+                          className={
+                            (excludeFromGraph[field.fieldId]
+                              ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                              : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600') +
+                            ' min-w-[48px] h-10 px-0 text-sm'
+                          }
+                          aria-label={t('pages.input.excludeFromGraph')}
+                        >
+                          {t('pages.input.excludeFromGraphShort') || '除外'}
+                        </Button>
                       </div>
                     </div>
 
@@ -948,7 +992,7 @@ export default function RecordInput() {
                             {t('aria.dataTypeDescription')}
                           </div>
                         </div>
-                        <div className="w-full sm:w-32">
+                        <div className="w-full sm:w-32 flex flex-col gap-2">
                           <label
                             htmlFor="new-field-unit"
                             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -972,9 +1016,24 @@ export default function RecordInput() {
                             aria-describedby="unit-description"
                             aria-label={t('aria.unitFieldDescription')}
                           />
-                          <div id="unit-description" className="sr-only">
-                            {t('aria.unitFieldDescription')}
-                          </div>
+                          <label className="flex items-center gap-2 mt-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={
+                                !!fieldManagement.newField.excludeFromGraph
+                              }
+                              onChange={e =>
+                                fieldManagement.setNewField(f => ({
+                                  ...f,
+                                  excludeFromGraph: e.target.checked,
+                                }))
+                              }
+                            />
+                            {t(
+                              'pages.input.fieldManagement.excludeFromGraph',
+                              'グラフに表示しない'
+                            )}
+                          </label>
                         </div>
                       </div>
 

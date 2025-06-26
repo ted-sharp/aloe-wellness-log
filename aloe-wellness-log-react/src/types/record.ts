@@ -17,6 +17,7 @@ export type Field<T extends FieldType = FieldType> = {
   default?: FieldValueMap[T];
   order?: number; // 表示順序（小さいほど上に表示）
   defaultDisplay?: boolean; // デフォルトで記録入力画面に表示するかどうか
+  excludeFromGraph?: boolean; // グラフ表示除外フラグ
 };
 
 // 特定タイプのフィールド型
@@ -32,6 +33,7 @@ export type RecordItem = {
   datetime: string; // ISO8601
   fieldId: string;
   value: number | string | boolean;
+  excludeFromGraph?: boolean; // この記録をグラフから除外
 };
 
 // 型安全な記録データ（フィールドタイプと値の組み合わせ）

@@ -69,7 +69,8 @@
       "selectFields": "項目選択",
       "sortFields": "項目並び替え",
       "recordSuccess": "記録を保存しました",
-      "recordError": "記録の保存に失敗しました"
+      "recordError": "記録の保存に失敗しました",
+      "excludeFromGraphShort": "除外"
     },
     "list": {
       "title": "一覧",

@@ -11,6 +11,7 @@ type NewField = {
   name: string;
   type: 'number' | 'string' | 'boolean';
   unit?: string;
+  excludeFromGraph?: boolean;
 };
 
 export function useFieldManagement() {
@@ -27,16 +28,19 @@ export function useFieldManagement() {
     name: '',
     type: 'number',
     unit: '',
+    excludeFromGraph: false,
   });
   const [editFieldId, setEditFieldId] = useState<string | null>(null);
-  const [editField, setEditField] = useState<Partial<Field>>({});
+  const [editField, setEditField] = useState<Partial<Field>>({
+    excludeFromGraph: false,
+  });
   const [addFieldError, setAddFieldError] = useState<string | null>(null);
   const [editingExistingFieldId, setEditingExistingFieldId] = useState<
     string | null
   >(null);
   const [editingExistingField, setEditingExistingField] = useState<
     Partial<Field>
-  >({});
+  >({ excludeFromGraph: false });
   const [temporaryDisplayFields, setTemporaryDisplayFields] = useState<
     Set<string>
   >(new Set());
@@ -89,12 +93,18 @@ export function useFieldManagement() {
             unit: newField.unit?.trim() || undefined,
             order: getNextDefaultOrder(),
             defaultDisplay: false,
+            excludeFromGraph: !!newField.excludeFromGraph,
           });
 
           // 非表示項目として追加するので、一時的に表示リストに追加
           setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
 
-          setNewField({ name: '', type: 'number', unit: '' });
+          setNewField({
+            name: '',
+            type: 'number',
+            unit: '',
+            excludeFromGraph: false,
+          });
           setShowAddField(false);
           setShowSelectField(false);
           await loadFields();
@@ -127,13 +137,14 @@ export function useFieldManagement() {
     setEditField({
       name: field.name,
       unit: field.unit,
+      excludeFromGraph: field.excludeFromGraph ?? false,
     });
   }, []);
 
   const handleEditFieldSave = useCallback(async () => {
     if (!editFieldId || !editField.name?.trim()) {
       setEditFieldId(null);
-      setEditField({});
+      setEditField({ excludeFromGraph: false });
       setShowButtons(new Set());
       return;
     }
@@ -147,6 +158,7 @@ export function useFieldManagement() {
           ...original,
           name: editField.name!.trim(),
           unit: editField.unit?.trim() || undefined,
+          excludeFromGraph: !!editField.excludeFromGraph,
         });
         await loadFields();
         return true;
@@ -162,7 +174,7 @@ export function useFieldManagement() {
     }
 
     setEditFieldId(null);
-    setEditField({});
+    setEditField({ excludeFromGraph: false });
     setShowButtons(new Set());
   }, [
     editFieldId,
@@ -243,6 +255,7 @@ export function useFieldManagement() {
     setEditingExistingField({
       name: field.name,
       unit: field.unit,
+      excludeFromGraph: field.excludeFromGraph ?? false,
     });
     setShowSelectButtons(new Set());
   }, []);
@@ -250,7 +263,7 @@ export function useFieldManagement() {
   const handleEditExistingFieldSave = useCallback(async () => {
     if (!editingExistingFieldId || !editingExistingField.name?.trim()) {
       setEditingExistingFieldId(null);
-      setEditingExistingField({});
+      setEditingExistingField({ excludeFromGraph: false });
       setShowSelectButtons(new Set());
       return;
     }
@@ -266,6 +279,7 @@ export function useFieldManagement() {
           unit: editingExistingField.unit?.trim() || undefined,
           order: original.order,
           defaultDisplay: original.defaultDisplay,
+          excludeFromGraph: !!editingExistingField.excludeFromGraph,
         });
         await loadFields();
         return true;
@@ -281,7 +295,7 @@ export function useFieldManagement() {
     }
 
     setEditingExistingFieldId(null);
-    setEditingExistingField({});
+    setEditingExistingField({ excludeFromGraph: false });
     setShowSelectButtons(new Set());
   }, [
     editingExistingFieldId,
