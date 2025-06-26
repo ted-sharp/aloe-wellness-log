@@ -467,24 +467,6 @@ export default function RecordInput() {
                             )}
                           />
                         )}
-                        <label className="flex items-center gap-2 mt-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={
-                              !!fieldManagement.editField.excludeFromGraph
-                            }
-                            onChange={e =>
-                              fieldManagement.setEditField(f => ({
-                                ...f,
-                                excludeFromGraph: e.target.checked,
-                              }))
-                            }
-                          />
-                          {t(
-                            'pages.input.fieldManagement.excludeFromGraph',
-                            'グラフに表示しない'
-                          )}
-                        </label>
                       </div>
                     </div>
 
@@ -517,7 +499,12 @@ export default function RecordInput() {
                 ) : (
                   <div>
                     {/* 項目表示（入力・単位のレイアウト） */}
-                    <div className="grid grid-cols-3 gap-2 items-center w-full">
+                    <div
+                      className="grid grid-cols-3 gap-2 items-center w-full cursor-pointer"
+                      onClick={() =>
+                        fieldManagement.toggleButtons(field.fieldId)
+                      }
+                    >
                       {/* 左：ラベル */}
                       <span className="text-right text-lg font-semibold text-gray-700 dark:text-gray-200 select-none truncate">
                         {translateFieldName(field.fieldId)}
@@ -593,15 +580,15 @@ export default function RecordInput() {
                           <input
                             type={field.type === 'number' ? 'number' : 'text'}
                             value={String(values[field.fieldId] || '')}
-                            onChange={e =>
+                            onChange={e => {
+                              e.stopPropagation();
                               handleChange(
                                 field.fieldId,
                                 field.type === 'number'
                                   ? Number(e.target.value) || ''
                                   : e.target.value
-                              )
-                            }
-                            onClick={e => e.stopPropagation()}
+                              );
+                            }}
                             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                             aria-label={getAriaLabel('inputField', {
                               fieldName: translateFieldName(field.fieldId),
@@ -624,12 +611,13 @@ export default function RecordInput() {
                               : 'secondary'
                           }
                           size="sm"
-                          onClick={() =>
+                          onClick={e => {
+                            e.stopPropagation();
                             setExcludeFromGraph(prev => ({
                               ...prev,
                               [field.fieldId]: !prev[field.fieldId],
-                            }))
-                          }
+                            }));
+                          }}
                           className={
                             (excludeFromGraph[field.fieldId]
                               ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
@@ -643,25 +631,17 @@ export default function RecordInput() {
                       </div>
                     </div>
 
-                    {/* 前回値・編集・非表示ボタン（クリックで表示/非表示） */}
+                    {/* 編集・非表示などのボタン群 */}
                     {fieldManagement.areButtonsShown(field.fieldId) && (
                       <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-200">
-                        <Button
-                          variant="sky"
-                          size="sm"
-                          icon={HiClipboardDocumentList}
-                          onClick={() => handleSetLastValue(field.fieldId)}
-                          aria-label={getAriaLabel('setPreviousValue', {
-                            fieldName: translateFieldName(field.fieldId),
-                          })}
-                        >
-                          {t('actions.lastValue')}
-                        </Button>
                         <Button
                           variant="primary"
                           size="sm"
                           icon={HiPencil}
-                          onClick={() => fieldManagement.handleEditField(field)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            fieldManagement.handleEditField(field);
+                          }}
                           aria-label={getAriaLabel('editField', {
                             fieldName: translateFieldName(field.fieldId),
                           })}
@@ -672,12 +652,29 @@ export default function RecordInput() {
                           variant="danger"
                           size="sm"
                           icon={HiEyeSlash}
-                          onClick={() => fieldManagement.handleHideField(field)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            fieldManagement.handleHideField(field);
+                          }}
                           aria-label={getAriaLabel('hideField', {
                             fieldName: translateFieldName(field.fieldId),
                           })}
                         >
                           {t('actions.hide')}
+                        </Button>
+                        <Button
+                          variant="sky"
+                          size="sm"
+                          icon={HiClipboardDocumentList}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleSetLastValue(field.fieldId);
+                          }}
+                          aria-label={getAriaLabel('setPreviousValue', {
+                            fieldName: translateFieldName(field.fieldId),
+                          })}
+                        >
+                          {t('actions.lastValue')}
                         </Button>
                       </div>
                     )}
@@ -1010,24 +1007,6 @@ export default function RecordInput() {
                             aria-describedby="unit-description"
                             aria-label={t('aria.unitFieldDescription')}
                           />
-                          <label className="flex items-center gap-2 mt-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={
-                                !!fieldManagement.newField.excludeFromGraph
-                              }
-                              onChange={e =>
-                                fieldManagement.setNewField(f => ({
-                                  ...f,
-                                  excludeFromGraph: e.target.checked,
-                                }))
-                              }
-                            />
-                            {t(
-                              'pages.input.fieldManagement.excludeFromGraph',
-                              'グラフに表示しない'
-                            )}
-                          </label>
                         </div>
                       </div>
 
