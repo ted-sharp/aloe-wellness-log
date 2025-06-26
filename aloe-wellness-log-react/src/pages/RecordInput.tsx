@@ -505,7 +505,12 @@ export default function RecordInput() {
                           {field.type === 'boolean' ? (
                             <div className="flex items-center gap-2">
                               <Button
-                                variant="success"
+                                type="button"
+                                variant={
+                                  values[field.fieldId] === true
+                                    ? 'primary'
+                                    : 'secondary'
+                                }
                                 size="sm"
                                 onClick={e => {
                                   e.stopPropagation();
@@ -513,8 +518,8 @@ export default function RecordInput() {
                                 }}
                                 className={
                                   values[field.fieldId] === true
-                                    ? 'bg-green-100 dark:bg-green-900/30 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300 border-2'
-                                    : ''
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }
                                 aria-label={getAriaLabel('setToYes', {
                                   fieldName: translateFieldName(field.fieldId),
@@ -523,7 +528,12 @@ export default function RecordInput() {
                                 {t('fields.yes')}
                               </Button>
                               <Button
-                                variant="danger"
+                                type="button"
+                                variant={
+                                  values[field.fieldId] === false
+                                    ? 'primary'
+                                    : 'secondary'
+                                }
                                 size="sm"
                                 onClick={e => {
                                   e.stopPropagation();
@@ -531,8 +541,8 @@ export default function RecordInput() {
                                 }}
                                 className={
                                   values[field.fieldId] === false
-                                    ? 'bg-red-100 dark:bg-red-900/30 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300 border-2'
-                                    : ''
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-700 dark:text-blue-300 border-2'
+                                    : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                                 }
                                 aria-label={getAriaLabel('setToNo', {
                                   fieldName: translateFieldName(field.fieldId),
@@ -542,6 +552,7 @@ export default function RecordInput() {
                               </Button>
                               {values[field.fieldId] !== undefined && (
                                 <Button
+                                  type="button"
                                   variant="secondary"
                                   size="sm"
                                   onClick={e => {
@@ -552,6 +563,7 @@ export default function RecordInput() {
                                       return newValues;
                                     });
                                   }}
+                                  className="border-gray-300 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                                   aria-label={getAriaLabel('clearSelection', {
                                     fieldName: translateFieldName(
                                       field.fieldId
