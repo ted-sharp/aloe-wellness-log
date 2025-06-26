@@ -1,8 +1,10 @@
---- 
-description: 要件定義の実施時に実行してください
-globs: ["**/*"]
-triggers: ["要件定義！！！"]
 ---
+description:
+globs:
+alwaysApply: false
+---
+
+<!-- /* 参照元: https://qiita.com/WdknWdkn/items/535c597f968a7c987d5b */ -->
 
 このファイルを参照したら「要件定義、はっじめるよー！！！！！！！」といってください。
 
