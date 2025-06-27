@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { HiCalendarDays } from 'react-icons/hi2';
+import Button from '../components/Button';
+import { useI18n } from '../hooks/useI18n';
+import { useRecordsStore } from '../store/records';
 
 /**
  * 毎日記録ページ（今後実装予定）
@@ -40,6 +43,22 @@ const formatWeekday = (date: Date) => {
 // ダミー：偶数日なら入力済み
 const isRecorded = (date: Date) => date.getDate() % 2 === 0;
 
+// 日付・時刻ユーティリティ
+const formatLocalTime = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+const formatLocalDateTime = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
 const DailyRecord: React.FC = () => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(today);
@@ -50,6 +69,22 @@ const DailyRecord: React.FC = () => {
   // 日付ピッカーとボタン群のref
   const pickerRef = useRef<HTMLDivElement>(null);
   const btnsRef = useRef<HTMLDivElement>(null);
+
+  const {
+    fields,
+    addRecord,
+    updateRecord,
+    deleteRecord,
+    records,
+    addField,
+    loadRecords,
+  } = useRecordsStore();
+  const { t, translateFieldName } = useI18n();
+
+  // 新規項目追加用state
+  const [showAddField, setShowAddField] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+  const [addFieldError, setAddFieldError] = useState('');
 
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
@@ -103,6 +138,73 @@ const DailyRecord: React.FC = () => {
 
   const handleSelect = (date: Date) => {
     setSelectedDate(date);
+  };
+
+  // 表示するbool型フィールド
+  const boolFields = fields
+    .filter(f => f.type === 'boolean' && f.defaultDisplay)
+    .sort((a, b) => (a.order || 999) - (b.order || 999));
+  // 日付・時刻文字列
+  const recordDate = formatDate(selectedDate);
+  const recordTime = formatLocalTime(selectedDate);
+  // 既存記録の取得
+  const getBoolRecord = (fieldId: string) =>
+    records.find(r => r.fieldId === fieldId && r.date === recordDate);
+  const getBoolValue = (fieldId: string): boolean | undefined => {
+    const rec = getBoolRecord(fieldId);
+    return typeof rec?.value === 'boolean' ? rec.value : undefined;
+  };
+  // ボタン押下時の保存/切替/解除処理
+  const handleBoolInput = async (fieldId: string, value: boolean) => {
+    const rec = getBoolRecord(fieldId);
+    if (rec && rec.value === value) {
+      // 同じ値を押したら記録削除
+      await deleteRecord(rec.id);
+      await loadRecords();
+    } else if (rec) {
+      // 異なる値なら上書き
+      await updateRecord({ ...rec, value });
+      await loadRecords();
+    } else {
+      // 新規追加
+      const now = new Date();
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      await addRecord({
+        id,
+        fieldId,
+        value,
+        date: recordDate,
+        time: recordTime,
+        datetime: formatLocalDateTime(now),
+      });
+      await loadRecords();
+    }
+  };
+  // 新規bool項目追加処理
+  const handleAddField = async () => {
+    setAddFieldError('');
+    const name = newFieldName.trim();
+    if (!name) {
+      setAddFieldError('項目名を入力してください');
+      return;
+    }
+    // 重複チェック
+    if (fields.some(f => f.name === name)) {
+      setAddFieldError('同じ名前の項目が既に存在します');
+      return;
+    }
+    const fieldId = `custom_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 6)}`;
+    await addField({
+      fieldId,
+      name,
+      type: 'boolean',
+      order: (fields.length + 1) * 10,
+      defaultDisplay: true,
+    });
+    setShowAddField(false);
+    setNewFieldName('');
   };
 
   return (
@@ -212,11 +314,109 @@ const DailyRecord: React.FC = () => {
           })}
         </div>
       </div>
+      {/* タイトル：日付ピッカー下・左上 */}
+      <div className="w-full max-w-md mx-auto mt-2 mb-4 flex justify-start pl-4">
+        <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
+          {formatDate(selectedDate)}
+        </span>
+      </div>
       {/* メインコンテンツ */}
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mt-12">
-          毎日記録ページ（{formatDate(selectedDate)} 選択中）
-        </h1>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col gap-6 w-full max-w-md">
+          {boolFields.map(field => {
+            const value = getBoolValue(field.fieldId);
+            return (
+              <div
+                key={field.fieldId}
+                className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4"
+              >
+                <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
+                  {translateFieldName(field.fieldId)}
+                </span>
+                <Button
+                  variant={value === true ? 'primary' : 'secondary'}
+                  size="md"
+                  onClick={async () => {
+                    if (value === true) {
+                      // あり→未選択（解除）
+                      const rec = getBoolRecord(field.fieldId);
+                      if (rec) {
+                        await deleteRecord(rec.id);
+                        await loadRecords();
+                      }
+                    } else {
+                      await handleBoolInput(field.fieldId, true);
+                    }
+                  }}
+                  aria-pressed={value === true}
+                  className="flex-1"
+                >
+                  {t('fields.yes')}
+                </Button>
+                <Button
+                  variant={value === false ? 'primary' : 'secondary'}
+                  size="md"
+                  onClick={async () => {
+                    if (value === false) {
+                      // なし→未選択（解除）
+                      const rec = getBoolRecord(field.fieldId);
+                      if (rec) {
+                        await deleteRecord(rec.id);
+                        await loadRecords();
+                      }
+                    } else {
+                      await handleBoolInput(field.fieldId, false);
+                    }
+                  }}
+                  aria-pressed={value === false}
+                  className="flex-1"
+                >
+                  {t('fields.no')}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        {/* 新規項目追加ボタンとフォーム（下部） */}
+        <div className="w-full max-w-md mt-8">
+          {showAddField ? (
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="text"
+                value={newFieldName}
+                onChange={e => setNewFieldName(e.target.value)}
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="新しい項目名を入力"
+                autoFocus
+              />
+              <Button variant="success" size="sm" onClick={handleAddField}>
+                {t('actions.save') || '保存'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowAddField(false);
+                  setNewFieldName('');
+                }}
+              >
+                {t('actions.cancel') || 'キャンセル'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="teal"
+              size="md"
+              fullWidth
+              onClick={() => setShowAddField(true)}
+            >
+              {t('pages.input.fieldManagement.addNewField') || '＋新規項目'}
+            </Button>
+          )}
+          {addFieldError && (
+            <div className="text-red-600 text-sm mt-1">{addFieldError}</div>
+          )}
+        </div>
       </div>
       {/* カレンダーモーダル */}
       {isCalendarOpen && (
