@@ -6,6 +6,7 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import { useI18n } from './hooks/useI18n';
+import DailyRecord from './pages/DailyRecord';
 import { useRecordsStore } from './store/records';
 import {
   debugLog,
@@ -254,6 +255,7 @@ function Navigation() {
   }, [isMenuOpen]);
 
   const navItems = [
+    { path: '/daily', label: '日課', color: 'teal' },
     { path: '/', label: t('navigation.input'), color: 'green' },
     { path: '/list', label: t('navigation.list'), color: 'blue' },
     { path: '/graph', label: t('navigation.graph'), color: 'blue' },
@@ -521,6 +523,14 @@ function App() {
                   }
                 >
                   <RecordExport />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/daily"
+              element={
+                <Suspense fallback={<PageLoader pageName="日課" />}>
+                  <DailyRecord />
                 </Suspense>
               }
             />

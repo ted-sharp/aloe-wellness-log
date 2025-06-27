@@ -4,6 +4,7 @@
     "skipToContent": "Skip to main content"
   },
   "navigation": {
+    "daily": "Daily",
     "input": "Input",
     "list": "List",
     "graph": "Graph",

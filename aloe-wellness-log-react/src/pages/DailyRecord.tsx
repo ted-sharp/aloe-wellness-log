@@ -1,0 +1,265 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import { HiCalendarDays } from 'react-icons/hi2';
+
+/**
+ * 毎日記録ページ（今後実装予定）
+ */
+
+// 日付ユーティリティ
+const BUTTON_WIDTH = 56; // px, Tailwind w-14
+const MIN_BUTTONS = 5; // 最低表示数
+const MAX_BUTTONS = 21; // 最大表示数（過剰な横スクロール防止）
+
+const getDateArray = (centerDate: Date, range: number) => {
+  const arr = [];
+  for (let i = -range; i <= range; i++) {
+    const d = new Date(centerDate);
+    d.setDate(centerDate.getDate() + i);
+    arr.push(new Date(d));
+  }
+  return arr;
+};
+
+const formatDate = (date: Date) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    '0'
+  )}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+const formatDay = (date: Date) => {
+  return `${date.getDate()}`;
+};
+
+const formatWeekday = (date: Date) => {
+  return ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+};
+
+// ダミー：偶数日なら入力済み
+const isRecorded = (date: Date) => date.getDate() % 2 === 0;
+
+const DailyRecord: React.FC = () => {
+  const today = new Date();
+  const [centerDate, setCenterDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [buttonCount, setButtonCount] = useState<number>(MIN_BUTTONS);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // 日付ピッカーとボタン群のref
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const btnsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.deltaY < 0) {
+        handleNext();
+      } else if (e.deltaY > 0) {
+        handlePrev();
+      }
+    };
+    const picker = pickerRef.current;
+    const btns = btnsRef.current;
+    if (picker)
+      picker.addEventListener('wheel', handleWheel, { passive: false });
+    if (btns) btns.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      if (picker) picker.removeEventListener('wheel', handleWheel);
+      if (btns) btns.removeEventListener('wheel', handleWheel);
+    };
+    // eslint-disable-next-line
+  }, [centerDate]);
+
+  // 画面幅に応じてボタン数を再計算
+  const updateButtonCount = useCallback(() => {
+    const width = window.innerWidth;
+    // 左右の余白やボタン間gap(8px*個数)を考慮
+    const maxButtons = Math.floor((width - 64) / (BUTTON_WIDTH + 8));
+    setButtonCount(Math.max(MIN_BUTTONS, Math.min(MAX_BUTTONS, maxButtons)));
+  }, []);
+
+  useEffect(() => {
+    updateButtonCount();
+    window.addEventListener('resize', updateButtonCount);
+    return () => window.removeEventListener('resize', updateButtonCount);
+  }, [updateButtonCount]);
+
+  const range = Math.floor(buttonCount / 2);
+  const dateArray = getDateArray(centerDate, range);
+
+  const handlePrev = () => {
+    const prev = new Date(centerDate);
+    prev.setDate(centerDate.getDate() - 1);
+    setCenterDate(prev);
+  };
+  const handleNext = () => {
+    const next = new Date(centerDate);
+    next.setDate(centerDate.getDate() + 1);
+    setCenterDate(next);
+  };
+
+  const handleSelect = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
+      {/* 日付ピッカー */}
+      <div
+        ref={pickerRef}
+        className="w-full flex items-center justify-center py-6 bg-white/80 dark:bg-gray-900/80 shadow-md sticky top-0 z-10"
+      >
+        {/* カレンダーアイコンボタン（左端） */}
+        <button
+          type="button"
+          onClick={() => setIsCalendarOpen(true)}
+          className="ml-2 mr-1 flex items-center justify-center w-12 h-12 rounded-full border-2 border-blue-400 bg-white dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+          aria-label="カレンダーを開く"
+        >
+          <HiCalendarDays className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+        </button>
+        <div
+          ref={btnsRef}
+          className="flex-1 flex gap-1 mx-1 overflow-x-auto justify-center"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {/* スクロールバー非表示 for Webkit */}
+          <style>{`
+            .scrollbar-hide::-webkit-scrollbar, .scrollbar-none::-webkit-scrollbar, .scrollbar-fake::-webkit-scrollbar {
+              display: none !important;
+            }
+          `}</style>
+          {dateArray.map((date, idx) => {
+            const isSelected = formatDate(date) === formatDate(selectedDate);
+            const isToday = formatDate(date) === formatDate(today);
+            const prevDate = idx > 0 ? dateArray[idx - 1] : null;
+            const showMonth =
+              idx === 0 ||
+              (prevDate && date.getMonth() !== prevDate.getMonth());
+            // 曜日ごとの文字色
+            const dayOfWeek = date.getDay();
+            const weekdayColor =
+              dayOfWeek === 0
+                ? 'text-red-500'
+                : dayOfWeek === 6
+                ? 'text-blue-500'
+                : '';
+            // 中央ボタン判定
+            const isCenter = idx === range;
+            return (
+              <React.Fragment key={formatDate(date)}>
+                {showMonth && (
+                  <span
+                    className="flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs font-bold select-none cursor-default border border-gray-300 dark:border-gray-600"
+                    aria-hidden="true"
+                  >
+                    {date.getMonth() + 1}月
+                  </span>
+                )}
+                <button
+                  onClick={() => handleSelect(date)}
+                  className={`flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 rounded-xl border-2 transition-colors duration-150
+                    ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : isToday
+                        ? 'bg-blue-100 border-blue-300 text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                    }
+                    hover:bg-blue-200 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400
+                    ${isCenter ? 'border-4 border-blue-400 z-10' : ''}`}
+                  aria-current={isSelected ? 'date' : undefined}
+                  style={{ position: 'relative' }}
+                >
+                  <span className={`text-xs font-medium ${weekdayColor}`}>
+                    {formatWeekday(date)}
+                  </span>
+                  <span className="text-lg font-bold">{formatDay(date)}</span>
+                  {isRecorded(date) && (
+                    <span className="absolute top-1 right-1">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle
+                          cx="10"
+                          cy="10"
+                          r="9"
+                          stroke="#22c55e"
+                          strokeWidth="2"
+                          fill="white"
+                        />
+                        <path
+                          d="M6 10.5l3 3 5-5"
+                          stroke="#22c55e"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+      {/* メインコンテンツ */}
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mt-12">
+          毎日記録ページ（{formatDate(selectedDate)} 選択中）
+        </h1>
+      </div>
+      {/* カレンダーモーダル */}
+      {isCalendarOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-[95vw] max-w-md relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsCalendarOpen(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+              aria-label="閉じる"
+            >
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 6l12 12M6 18L18 6"
+                />
+              </svg>
+            </button>
+            <Calendar
+              onChange={date => {
+                setSelectedDate(date as Date);
+                setCenterDate(date as Date);
+                setIsCalendarOpen(false);
+              }}
+              value={selectedDate}
+              locale="ja-JP"
+              className="w-full"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DailyRecord;
