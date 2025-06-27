@@ -187,7 +187,8 @@
       "number": "Number",
       "string": "Text",
       "boolean": "Yes/No"
-    }
+    },
+    "addFieldPlaceholder": "New field name"
   },
   "actions": {
     "save": "Save",
@@ -207,7 +208,8 @@
     "select": "Select",
     "display": "Display",
     "temporarily": "Temporarily",
-    "permanently": "Permanently"
+    "permanently": "Permanently",
+    "addField": "+ Add New Field"
   },
   "modals": {
     "sort": {

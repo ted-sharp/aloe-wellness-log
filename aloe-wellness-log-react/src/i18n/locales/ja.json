@@ -180,7 +180,8 @@
       "number": "数値",
       "string": "文字列",
       "boolean": "成否"
-    }
+    },
+    "addFieldPlaceholder": "新しい項目名"
   },
   "actions": {
     "save": "保存",
@@ -200,7 +201,8 @@
     "select": "選択",
     "display": "表示",
     "temporarily": "一時的に",
-    "permanently": "永続的に"
+    "permanently": "永続的に",
+    "addField": "新規項目"
   },
   "modals": {
     "sort": {
