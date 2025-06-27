@@ -106,35 +106,6 @@ export const debugRender = (
   }
 };
 
-// メモリ使用量の確認
-export const debugMemory = () => {
-  if (isDev) {
-    try {
-      if (typeof performance !== 'undefined' && 'memory' in performance) {
-        const memInfo = (performance as PerformanceLike).memory;
-        if (memInfo) {
-          debugLog('🧠 Memory Usage:', {
-            used: `${(memInfo.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-            total: `${(memInfo.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
-            limit: `${(memInfo.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
-          });
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Memory debug failed:', error);
-    }
-  }
-};
-
-// Performance Memory型定義
-interface PerformanceLike extends Performance {
-  memory?: {
-    usedJSHeapSize: number;
-    totalJSHeapSize: number;
-    jsHeapSizeLimit: number;
-  };
-}
-
 // 開発用のグローバルヘルパー
 export const exposeDevTools = () => {
   if (isDev && typeof window !== 'undefined') {
@@ -146,7 +117,6 @@ export const exposeDevTools = () => {
         debugStore,
         debugAPI,
         debugDB,
-        debugMemory,
         perfStart,
         perfEnd,
         // RecordsStore の直接操作（開発用）
@@ -199,7 +169,6 @@ interface WindowWithDevTools extends Window {
     debugStore: typeof debugStore;
     debugAPI: typeof debugAPI;
     debugDB: typeof debugDB;
-    debugMemory: typeof debugMemory;
     perfStart: typeof perfStart;
     perfEnd: typeof perfEnd;
     getRecords: () => void;

@@ -275,12 +275,6 @@ export class MemoryTracker {
           )}%)`
         );
       }
-
-      debugLog(
-        `🧠 Memory: ${memory.used}MB / ${
-          memory.limit
-        }MB (${usagePercentage.toFixed(1)}%)`
-      );
     }
   }
 
@@ -389,10 +383,10 @@ export class PerformanceMonitor {
       this.memoryTracker.startMemoryMonitoring();
     }
 
-    // 定期レポート開始
-    this.reportingInterval = setInterval(() => {
-      this.generateReport();
-    }, this.config.reportInterval);
+    // 定期レポート開始（generateReport削除のため無効化）
+    // this.reportingInterval = setInterval(() => {
+    //   this.generateReport();
+    // }, this.config.reportInterval);
 
     debugLog('🔍 Performance monitoring started');
   }
@@ -457,65 +451,6 @@ export class PerformanceMonitor {
       return 0;
     },
   };
-
-  // パフォーマンスレポート生成
-  generateReport():
-    | {
-        timestamp: string;
-        renderStats: Record<string, { count: number; reRenders: number }>;
-        memoryUsage: PerformanceMetrics['memoryUsage'];
-        averageMetrics: Partial<PerformanceMetrics>;
-        recommendations: string[];
-      }
-    | undefined {
-    if (!isDev) return undefined;
-
-    const renderStats = this.renderTracker.getStats();
-    const memoryUsage = this.memoryTracker.getCurrentMemoryUsage();
-    const averageMetrics = performanceStorage.getAverageMetrics();
-
-    const report = {
-      timestamp: new Date().toISOString(),
-      renderStats,
-      memoryUsage,
-      averageMetrics,
-      recommendations: this.getRecommendations(renderStats, memoryUsage),
-    };
-
-    debugLog('📊 Performance Report:', report);
-
-    return report;
-  }
-
-  private getRecommendations(
-    renderStats: Record<string, { count: number; reRenders: number }>,
-    memoryUsage: PerformanceMetrics['memoryUsage']
-  ): string[] {
-    const recommendations: string[] = [];
-
-    // レンダリング最適化の提案
-    for (const [component, stats] of Object.entries(renderStats)) {
-      if (stats.reRenders > 10) {
-        recommendations.push(
-          `Consider React.memo for ${component} (${stats.reRenders} re-renders)`
-        );
-      }
-    }
-
-    // メモリ最適化の提案
-    if (memoryUsage) {
-      const usagePercentage = (memoryUsage.used / memoryUsage.limit) * 100;
-      if (usagePercentage > 70) {
-        recommendations.push(
-          `High memory usage (${usagePercentage.toFixed(
-            1
-          )}%) - consider data cleanup`
-        );
-      }
-    }
-
-    return recommendations;
-  }
 
   // メトリクス取得
   getMetrics(): (PerformanceMetrics & { timestamp: number })[] {
@@ -596,14 +531,14 @@ if (isDev && typeof window !== 'undefined') {
     window as typeof window & {
       __ALOE_PERF__?: {
         monitor: PerformanceMonitor;
-        generateReport: () => ReturnType<PerformanceMonitor['generateReport']>;
+        // generateReport: () => ReturnType<PerformanceMonitor['generateReport']>; // 削除
         getMetrics: () => ReturnType<PerformanceMonitor['getMetrics']>;
         clearMetrics: () => void;
       };
     }
   ).__ALOE_PERF__ = {
     monitor: performanceMonitor,
-    generateReport: () => performanceMonitor.generateReport(),
+    // generateReport: () => performanceMonitor.generateReport(), // 削除
     getMetrics: () => performanceMonitor.getMetrics(),
     clearMetrics: () => performanceMonitor.clearMetrics(),
   };

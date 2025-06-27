@@ -29,11 +29,11 @@ declare global {
 initializePrivacySettings();
 
 // パフォーマンス監視を開発環境でのみ有効化
-if (import.meta.env.MODE === 'development') {
-  import('./utils/performanceMonitor').then(({ PerformanceMonitor }) => {
-    new PerformanceMonitor();
-  });
-}
+// if (import.meta.env.MODE === 'development') {
+//   import('./utils/performanceMonitor').then(({ PerformanceMonitor }) => {
+//     new PerformanceMonitor();
+//   });
+// }
 
 // Service Worker登録はindex.htmlで実行
 
