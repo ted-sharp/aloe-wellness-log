@@ -619,7 +619,7 @@ const DailyRecord: React.FC = () => {
         {isEditMode && (
           <div className="w-full max-w-md mt-6 mb-2">
             {showAddField ? (
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
                 <input
                   type="text"
                   value={newFieldName}
