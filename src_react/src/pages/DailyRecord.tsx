@@ -312,7 +312,11 @@ const DailyRecord: React.FC = () => {
         )}
         <button
           type="button"
-          onClick={onDelete}
+          onClick={() => {
+            if (window.confirm('本当に削除しますか？')) {
+              onDelete();
+            }
+          }}
           className="text-red-500 hover:text-red-700 p-2"
           aria-label="削除"
         >
