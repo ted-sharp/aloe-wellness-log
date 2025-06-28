@@ -161,13 +161,20 @@ const DailyRecord: React.FC = () => {
     const fieldId = `custom_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 6)}`;
-    await addField({
+    const newField = {
       fieldId,
       name,
-      type: 'boolean',
+      type: 'boolean' as const,
       order: (fields.length + 1) * 10,
       defaultDisplay: true,
-    });
+      scope: 'daily' as const,
+    };
+    await addField(newField);
+    // 編集モード中なら即時ローカルstateにも反映
+    if (isEditMode) {
+      setEditFields(fields => [...fields, { ...newField }]);
+      setEditOrder(order => [...order, fieldId]);
+    }
     setShowAddField(false);
     setNewFieldName('');
   };
@@ -313,7 +320,11 @@ const DailyRecord: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            if (window.confirm('本当に削除しますか？')) {
+            if (
+              window.confirm(
+                '本当に削除しますか？\n（保存すると確定されます。）'
+              )
+            ) {
               onDelete();
             }
           }}

@@ -18,6 +18,7 @@ export type Field<T extends FieldType = FieldType> = {
   order?: number; // 表示順序（小さいほど上に表示）
   defaultDisplay?: boolean; // デフォルトで記録入力画面に表示するかどうか
   excludeFromGraph?: boolean; // グラフ表示除外フラグ
+  scope: 'daily' | 'weight'; // どの画面で使うか
 };
 
 // 特定タイプのフィールド型

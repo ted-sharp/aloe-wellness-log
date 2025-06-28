@@ -11,6 +11,15 @@ const baseFieldStructure = [
     type: 'number' as const,
     order: 1,
     defaultDisplay: true,
+    scope: 'weight' as const,
+  },
+  {
+    fieldId: 'body_fat',
+    unit: '%',
+    type: 'number' as const,
+    order: 1.5,
+    defaultDisplay: false,
+    scope: 'weight' as const,
   },
   {
     fieldId: 'systolic_bp',
@@ -18,6 +27,7 @@ const baseFieldStructure = [
     type: 'number' as const,
     order: 2,
     defaultDisplay: true,
+    scope: 'weight' as const,
   },
   {
     fieldId: 'diastolic_bp',
@@ -25,6 +35,7 @@ const baseFieldStructure = [
     type: 'number' as const,
     order: 3,
     defaultDisplay: true,
+    scope: 'weight' as const,
   },
   {
     fieldId: 'heart_rate',
@@ -32,6 +43,7 @@ const baseFieldStructure = [
     type: 'number' as const,
     order: 4,
     defaultDisplay: false,
+    scope: 'weight' as const,
   },
   {
     fieldId: 'body_temperature',
@@ -39,36 +51,42 @@ const baseFieldStructure = [
     type: 'number' as const,
     order: 5,
     defaultDisplay: false,
+    scope: 'weight' as const,
   },
   {
     fieldId: 'exercise',
     type: 'boolean' as const,
     order: 6,
     defaultDisplay: true,
+    scope: 'daily' as const,
   },
   {
     fieldId: 'meal',
     type: 'boolean' as const,
     order: 7,
     defaultDisplay: true,
+    scope: 'daily' as const,
   },
   {
     fieldId: 'sleep',
     type: 'boolean' as const,
     order: 8,
     defaultDisplay: true,
+    scope: 'daily' as const,
   },
   {
     fieldId: 'smoke',
     type: 'boolean' as const,
     order: 9,
     defaultDisplay: false,
+    scope: 'daily' as const,
   },
   {
     fieldId: 'alcohol',
     type: 'boolean' as const,
     order: 10,
     defaultDisplay: false,
+    scope: 'daily' as const,
   },
 ];
 
@@ -81,6 +99,16 @@ const initialFields: Field[] = [
     type: 'number',
     order: 1,
     defaultDisplay: true,
+    scope: 'weight',
+  },
+  {
+    fieldId: 'body_fat',
+    name: '体脂肪',
+    unit: '%',
+    type: 'number',
+    order: 1.5,
+    defaultDisplay: false,
+    scope: 'weight',
   },
   {
     fieldId: 'systolic_bp',
@@ -89,6 +117,7 @@ const initialFields: Field[] = [
     type: 'number',
     order: 2,
     defaultDisplay: true,
+    scope: 'weight',
   },
   {
     fieldId: 'diastolic_bp',
@@ -97,6 +126,7 @@ const initialFields: Field[] = [
     type: 'number',
     order: 3,
     defaultDisplay: true,
+    scope: 'weight',
   },
   {
     fieldId: 'heart_rate',
@@ -105,6 +135,7 @@ const initialFields: Field[] = [
     type: 'number',
     order: 4,
     defaultDisplay: false,
+    scope: 'weight',
   },
   {
     fieldId: 'body_temperature',
@@ -113,6 +144,7 @@ const initialFields: Field[] = [
     type: 'number',
     order: 5,
     defaultDisplay: false,
+    scope: 'weight',
   },
   {
     fieldId: 'exercise',
@@ -120,6 +152,7 @@ const initialFields: Field[] = [
     type: 'boolean',
     order: 6,
     defaultDisplay: true,
+    scope: 'daily',
   },
   {
     fieldId: 'meal',
@@ -127,6 +160,7 @@ const initialFields: Field[] = [
     type: 'boolean',
     order: 7,
     defaultDisplay: true,
+    scope: 'daily',
   },
   {
     fieldId: 'sleep',
@@ -134,6 +168,7 @@ const initialFields: Field[] = [
     type: 'boolean',
     order: 8,
     defaultDisplay: true,
+    scope: 'daily',
   },
   {
     fieldId: 'smoke',
@@ -141,6 +176,7 @@ const initialFields: Field[] = [
     type: 'boolean',
     order: 9,
     defaultDisplay: false,
+    scope: 'daily',
   },
   {
     fieldId: 'alcohol',
@@ -148,6 +184,7 @@ const initialFields: Field[] = [
     type: 'boolean',
     order: 10,
     defaultDisplay: false,
+    scope: 'daily',
   },
 ];
 
@@ -285,6 +322,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
       let needsUpdate = false;
       const orderMapping: Record<string, number> = {
         weight: 1,
+        body_fat: 1.5,
         systolic_bp: 2,
         diastolic_bp: 3,
         heart_rate: 4,
@@ -299,6 +337,7 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
       // defaultDisplay属性の正しい初期値マッピング
       const defaultDisplayMapping: Record<string, boolean> = {
         weight: true,
+        body_fat: false,
         systolic_bp: true,
         diastolic_bp: true,
         heart_rate: false,

@@ -179,14 +179,21 @@ const WeightRecord: React.FC = () => {
     const fieldId = `custom_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 6)}`;
-    await addField({
+    const newField = {
       fieldId,
       name,
       unit,
-      type: 'number',
+      type: 'number' as const,
       order: (fields.length + 1) * 10,
       defaultDisplay: true,
-    });
+      scope: 'weight' as const,
+    };
+    await addField(newField);
+    // 編集モード中なら即時ローカルstateにも反映
+    if (isEditMode) {
+      setEditFields(fields => [...fields, { ...newField }]);
+      setEditOrder(order => [...order, fieldId]);
+    }
     setShowAddField(false);
     setNewFieldName('');
     setNewFieldUnit('');
@@ -356,7 +363,11 @@ const WeightRecord: React.FC = () => {
         <button
           type="button"
           onClick={() => {
-            if (window.confirm('本当に削除しますか？')) {
+            if (
+              window.confirm(
+                '本当に削除しますか？\n（保存すると確定されます。）'
+              )
+            ) {
               onDelete();
             }
           }}
