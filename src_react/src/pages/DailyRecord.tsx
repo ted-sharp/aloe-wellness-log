@@ -15,6 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   HiBars3,
+  HiCheck,
   HiCheckCircle,
   HiEye,
   HiEyeSlash,
@@ -527,21 +528,25 @@ const DailyRecord: React.FC = () => {
                 <Button
                   variant="primary"
                   size="md"
+                  icon={HiCheck}
+                  aria-label="保存"
                   onClick={handleAddField}
                   disabled={!newFieldName.trim()}
                 >
-                  {t('actions.save') || '保存'}
+                  {''}
                 </Button>
                 <Button
                   variant="secondary"
                   size="md"
+                  icon={HiXMark}
+                  aria-label="キャンセル"
                   onClick={() => {
                     setShowAddField(false);
                     setNewFieldName('');
                     setAddFieldError('');
                   }}
                 >
-                  {t('actions.cancel') || 'キャンセル'}
+                  {''}
                 </Button>
               </div>
             ) : (

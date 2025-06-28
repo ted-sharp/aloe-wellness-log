@@ -21,6 +21,7 @@ import React, {
 } from 'react';
 import {
   HiBars3,
+  HiCheck,
   HiCheckCircle,
   HiEye,
   HiEyeSlash,
@@ -585,14 +586,18 @@ const WeightRecord: React.FC = () => {
                 <Button
                   variant="primary"
                   size="md"
+                  icon={HiCheck}
+                  aria-label="保存"
                   onClick={handleAddField}
                   disabled={!newFieldName.trim()}
                 >
-                  {t('actions.save') || '保存'}
+                  {''}
                 </Button>
                 <Button
                   variant="secondary"
                   size="md"
+                  icon={HiXMark}
+                  aria-label="キャンセル"
                   onClick={() => {
                     setShowAddField(false);
                     setNewFieldName('');
@@ -600,7 +605,7 @@ const WeightRecord: React.FC = () => {
                     setAddFieldError('');
                   }}
                 >
-                  {t('actions.cancel') || 'キャンセル'}
+                  {''}
                 </Button>
               </div>
             ) : (
