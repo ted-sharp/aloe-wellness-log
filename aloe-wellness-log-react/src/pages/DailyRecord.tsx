@@ -12,7 +12,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   HiBars3,
   HiCheckCircle,
@@ -189,17 +189,46 @@ const DailyRecord: React.FC = () => {
     // isEditModeがfalseになるときは何もしない
   }, [isEditMode]);
 
+  // 編集モード用の追加state
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  // caretPosMapのstateをrefに置換
+  const caretPosRef = useRef<{ [key: string]: { start: number; end: number } }>(
+    {}
+  );
+  useEffect(() => {
+    if (!editingFieldId) return;
+    const input = inputRefs.current[editingFieldId];
+    if (input) {
+      const pos = caretPosRef.current[editingFieldId] ?? {
+        start: input.value.length,
+        end: input.value.length,
+      };
+      input.setSelectionRange(pos.start, pos.end);
+    }
+  }, [editingFieldId]);
+
   // D&Dハンドル付きSortableItem
   const SortableItem = React.memo(function SortableItem({
     field,
+    isEditing,
+    onStartEdit,
+    onEndEdit,
     onNameChange,
     onDelete,
     onToggleDisplay,
+    inputRef,
   }: {
     field: (typeof editFields)[number];
-    onNameChange: (fieldId: string, name: string) => void;
-    onDelete: (fieldId: string) => void;
-    onToggleDisplay: (fieldId: string) => void;
+    isEditing: boolean;
+    onStartEdit: () => void;
+    onEndEdit: () => void;
+    onNameChange: (name: string) => void;
+    onDelete: () => void;
+    onToggleDisplay: () => void;
+    inputRef:
+      | React.RefObject<HTMLInputElement>
+      | ((el: HTMLInputElement | null) => void);
   }) {
     const {
       attributes,
@@ -209,40 +238,80 @@ const DailyRecord: React.FC = () => {
       transition,
       isDragging,
     } = useSortable({ id: field.fieldId });
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
+    const style: React.CSSProperties = {
+      ...(isDragging
+        ? { transform: CSS.Transform.toString(transform), transition }
+        : {}),
       opacity: isDragging ? 0.5 : 1,
       background: isDragging ? '#f3f4f6' : undefined,
     };
-    const isHidden = field.defaultDisplay === false;
+    // draftローカルstateで編集値を保持
+    const [draft, setDraft] = React.useState(field.name);
+    // 編集開始時にdraftへコピー
+    React.useEffect(() => {
+      if (isEditing) setDraft(field.name);
+    }, [isEditing, field.name]);
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex items-center gap-2 rounded-xl shadow p-4 mb-2 transition-colors
-          ${
-            isHidden
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
-              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'
-          }`}
+        className={`flex items-center gap-2 rounded-xl shadow p-4 mb-2 transition-colors ${
+          field.defaultDisplay === false
+            ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'
+        }`}
       >
-        <input
-          type="text"
-          value={field.name}
-          onChange={e => {
-            onNameChange(field.fieldId, e.target.value);
-          }}
-          className={`flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold min-w-[5em] bg-inherit
-            ${
-              isHidden
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={draft}
+            onChange={e => {
+              setDraft(e.target.value);
+              const start = e.target.selectionStart ?? e.target.value.length;
+              const end = e.target.selectionEnd ?? e.target.value.length;
+              caretPosRef.current[field.fieldId] = { start, end };
+            }}
+            onSelect={e => {
+              const target = e.target as HTMLInputElement;
+              caretPosRef.current[field.fieldId] = {
+                start: target.selectionStart ?? target.value.length,
+                end: target.selectionEnd ?? target.value.length,
+              };
+            }}
+            onBlur={() => {
+              onNameChange(draft);
+              onEndEdit();
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                onNameChange(draft);
+                onEndEdit();
+              }
+            }}
+            className={`flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold min-w-[5em] bg-inherit ${
+              field.defaultDisplay === false
                 ? 'border-gray-200 dark:border-gray-600 text-gray-400 bg-gray-50 dark:bg-gray-800'
                 : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
             }`}
-        />
+          />
+        ) : (
+          <span
+            className="flex-1 text-lg font-semibold min-w-[5em] cursor-pointer"
+            onClick={onStartEdit}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') onStartEdit();
+            }}
+            role="button"
+            aria-label="項目名を編集"
+            tabIndex={0}
+          >
+            {field.name}
+          </span>
+        )}
         <button
           type="button"
-          onClick={() => onDelete(field.fieldId)}
+          onClick={onDelete}
           className="text-red-500 hover:text-red-700 p-2"
           aria-label="削除"
         >
@@ -250,27 +319,31 @@ const DailyRecord: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => onToggleDisplay(field.fieldId)}
+          onClick={onToggleDisplay}
           className={`p-2 ${
-            isHidden
+            field.defaultDisplay === false
               ? 'text-gray-400 hover:text-blue-400'
               : 'text-blue-500 hover:text-blue-700'
           }`}
-          aria-label={isHidden ? '表示項目にする' : '非表示項目にする'}
+          aria-label={
+            field.defaultDisplay === false
+              ? '表示項目にする'
+              : '非表示項目にする'
+          }
         >
-          {isHidden ? (
+          {field.defaultDisplay === false ? (
             <HiEyeSlash className="w-6 h-6" />
           ) : (
             <HiEye className="w-6 h-6" />
           )}
         </button>
         <span
-          {...attributes}
-          {...listeners}
           className="cursor-move p-2"
           aria-label="並び替えハンドル"
-          tabIndex={0}
           style={{ touchAction: 'none' }}
+          {...attributes}
+          {...listeners}
+          tabIndex={0}
         >
           <HiBars3 className="w-6 h-6 text-gray-400" />
         </span>
@@ -310,12 +383,6 @@ const DailyRecord: React.FC = () => {
       setEditOrder(arrayMove(editOrder, oldIdx, newIdx));
     }
   };
-  // 項目名変更
-  const handleNameChange = useCallback((fieldId: string, name: string) => {
-    setEditFields(fields =>
-      fields.map(f => (f.fieldId === fieldId ? { ...f, name } : f))
-    );
-  }, []);
   // 削除
   const handleDelete = useCallback((fieldId: string) => {
     setEditDelete(list => [...list, fieldId]);
@@ -363,13 +430,24 @@ const DailyRecord: React.FC = () => {
                 {editOrder.map(id => {
                   const field = editFields.find(f => f.fieldId === id);
                   if (!field) return null;
+                  const isEditing = editingFieldId === field.fieldId;
                   return (
                     <SortableItem
                       key={field.fieldId}
                       field={field}
-                      onNameChange={handleNameChange}
-                      onDelete={handleDelete}
-                      onToggleDisplay={handleToggleDisplay}
+                      isEditing={isEditing}
+                      onStartEdit={() => setEditingFieldId(field.fieldId)}
+                      onEndEdit={() => setEditingFieldId(null)}
+                      onNameChange={name =>
+                        setEditFields(fields =>
+                          fields.map(f =>
+                            f.fieldId === field.fieldId ? { ...f, name } : f
+                          )
+                        )
+                      }
+                      onDelete={() => handleDelete(field.fieldId)}
+                      onToggleDisplay={() => handleToggleDisplay(field.fieldId)}
+                      inputRef={el => (inputRefs.current[field.fieldId] = el)}
                     />
                   );
                 })}
