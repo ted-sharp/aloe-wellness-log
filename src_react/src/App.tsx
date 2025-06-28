@@ -20,178 +20,6 @@ import {
   showDevWarnings,
 } from './utils/devTools';
 
-// 動的インポート（Lazy Loading）でページコンポーネントを読み込み
-const RecordInput = lazy(() => {
-  perfStart('RecordInput-load');
-  return import('./pages/RecordInput')
-    .then(module => {
-      perfEnd('RecordInput-load');
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordInput:', error);
-      // フォールバック用の最小限コンポーネント
-      return {
-        default: function ErrorComponent() {
-          const { t } = useI18n();
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                {t('errors.loadingError')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {t('errors.inputPageError')}
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                {t('errors.reloadPage')}
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
-
-const RecordList = lazy(() => {
-  perfStart('RecordList-load');
-  return import('./pages/RecordList')
-    .then(module => {
-      perfEnd('RecordList-load');
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordList:', error);
-      return {
-        default: function ErrorComponent() {
-          const { t } = useI18n();
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                {t('errors.loadingError')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {t('errors.listPageError')}
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                {t('errors.reloadPage')}
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
-
-const RecordGraph = lazy(() => {
-  perfStart('RecordGraph-load');
-  return import('./pages/RecordGraph')
-    .then(module => {
-      perfEnd('RecordGraph-load');
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordGraph:', error);
-      return {
-        default: function ErrorComponent() {
-          const { t } = useI18n();
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                {t('errors.loadingError')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {t('errors.graphPageError')}
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                {t('errors.reloadPage')}
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
-
-const RecordCalendar = lazy(() => {
-  perfStart('RecordCalendar-load');
-  return import('./pages/RecordCalendar')
-    .then(module => {
-      perfEnd('RecordCalendar-load');
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordCalendar:', error);
-      return {
-        default: function ErrorComponent() {
-          const { t } = useI18n();
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                {t('errors.loadingError')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {t('errors.calendarPageError')}
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                {t('errors.reloadPage')}
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
-
-const RecordExport = lazy(() => {
-  perfStart('RecordExport-load');
-  return import('./pages/RecordExport')
-    .then(module => {
-      perfEnd('RecordExport-load');
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordExport:', error);
-      return {
-        default: function ErrorComponent() {
-          const { t } = useI18n();
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                {t('errors.loadingError')}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                {t('errors.exportPageError')}
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                {t('errors.reloadPage')}
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
-
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {
   const { t } = useI18n();
@@ -260,10 +88,6 @@ function Navigation() {
     { path: '/daily', label: '日課', color: 'teal' },
     { path: '/weight', label: '体重', color: 'teal' },
     { path: '/bp', label: '血圧', color: 'teal' },
-    { path: '/', label: t('navigation.input'), color: 'green' },
-    { path: '/list', label: t('navigation.list'), color: 'blue' },
-    { path: '/graph', label: t('navigation.graph'), color: 'blue' },
-    { path: '/calendar', label: t('navigation.calendar'), color: 'blue' },
     { path: '/export', label: t('navigation.management'), color: 'purple' },
   ];
 
@@ -291,9 +115,7 @@ function Navigation() {
               key={item.path}
               to={item.path}
               className={`${
-                item.color === 'green'
-                  ? 'bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700'
-                  : item.color === 'purple'
+                item.color === 'purple'
                   ? 'bg-purple-600 border-purple-600 hover:bg-purple-700 hover:border-purple-700'
                   : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
               } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
@@ -375,9 +197,7 @@ function Navigation() {
                   to={item.path}
                   onClick={closeMenu}
                   className={`px-4 py-3 font-medium text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 border-b border-gray-100 dark:border-gray-600 ${
-                    item.color === 'green'
-                      ? '!text-green-600 dark:!text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:bg-green-50 dark:focus:bg-green-900/20 hover:!text-green-600 dark:hover:!text-green-400 visited:!text-green-600 dark:visited:!text-green-400 active:!text-green-600 dark:active:!text-green-400'
-                      : item.color === 'purple'
+                    item.color === 'purple'
                       ? '!text-purple-600 dark:!text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:bg-purple-50 dark:focus:bg-purple-900/20 hover:!text-purple-600 dark:hover:!text-purple-400 visited:!text-purple-600 dark:visited:!text-purple-400 active:!text-purple-600 dark:active:!text-purple-400'
                       : '!text-blue-500 dark:!text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-50 dark:focus:bg-blue-900/20 hover:!text-blue-500 dark:hover:!text-blue-400 visited:!text-blue-500 dark:visited:!text-blue-400 active:!text-blue-500 dark:active:!text-blue-400'
                   }`}
@@ -426,6 +246,40 @@ function Navigation() {
     </div>
   );
 }
+
+const RecordExport = lazy(() => {
+  perfStart('RecordExport-load');
+  return import('./pages/RecordExport')
+    .then(module => {
+      perfEnd('RecordExport-load');
+      return module;
+    })
+    .catch(error => {
+      console.error('Failed to load RecordExport:', error);
+      return {
+        default: function ErrorComponent() {
+          const { t } = useI18n();
+          return (
+            <div className="p-8 text-center">
+              <h2 className="text-xl font-bold text-red-600 mb-4">
+                {t('errors.loadingError')}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                {t('errors.exportPageError')}
+              </p>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => window.location.reload()}
+              >
+                {t('errors.reloadPage')}
+              </Button>
+            </div>
+          );
+        },
+      };
+    });
+});
 
 function App() {
   const { initializeFields, initializeFieldsWithTranslation } =
@@ -479,58 +333,6 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route
-              path="/"
-              element={
-                <Suspense
-                  fallback={<PageLoader pageName={t('pages.input.title')} />}
-                >
-                  <RecordInput />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/list"
-              element={
-                <Suspense
-                  fallback={<PageLoader pageName={t('pages.list.title')} />}
-                >
-                  <RecordList />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/graph"
-              element={
-                <Suspense
-                  fallback={<PageLoader pageName={t('pages.graph.title')} />}
-                >
-                  <RecordGraph />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <Suspense
-                  fallback={<PageLoader pageName={t('pages.calendar.title')} />}
-                >
-                  <RecordCalendar />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/export"
-              element={
-                <Suspense
-                  fallback={
-                    <PageLoader pageName={t('pages.management.title')} />
-                  }
-                >
-                  <RecordExport />
-                </Suspense>
-              }
-            />
-            <Route
               path="/daily"
               element={
                 <Suspense fallback={<PageLoader pageName="日課" />}>
@@ -554,7 +356,19 @@ function App() {
                 </Suspense>
               }
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route
+              path="/export"
+              element={
+                <Suspense
+                  fallback={
+                    <PageLoader pageName={t('pages.management.title')} />
+                  }
+                >
+                  <RecordExport />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<Navigate to="/daily" replace />} />
           </Routes>
         </Suspense>
       </main>

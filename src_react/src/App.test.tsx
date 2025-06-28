@@ -26,23 +26,6 @@ vi.mock('./components/PWAInstallButton', () => ({
   ),
 }));
 
-// Lazy loadingされるページコンポーネントをモック
-vi.mock('./pages/RecordInput', () => ({
-  default: () => <div data-testid="record-input">記録入力ページ</div>,
-}));
-
-vi.mock('./pages/RecordList', () => ({
-  default: () => <div data-testid="record-list">記録一覧ページ</div>,
-}));
-
-vi.mock('./pages/RecordGraph', () => ({
-  default: () => <div data-testid="record-graph">グラフページ</div>,
-}));
-
-vi.mock('./pages/RecordCalendar', () => ({
-  default: () => <div data-testid="record-calendar">カレンダーページ</div>,
-}));
-
 vi.mock('./pages/RecordExport', () => ({
   default: () => <div data-testid="record-export">管理ページ</div>,
 }));
@@ -108,16 +91,7 @@ describe('App', () => {
 
     // デスクトップ用ナビゲーションリンクを確認
     expect(
-      screen.getByRole('link', { name: '入力に移動' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: '一覧に移動' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'グラフに移動' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'カレンダーに移動' })
+      screen.getByRole('link', { name: '日課に移動' })
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: '管理に移動' })
@@ -222,10 +196,10 @@ describe('App', () => {
   test('現在のページが正しくaria-currentで示される', async () => {
     render(<App />);
 
-    // デフォルトでは入力ページが現在のページ
+    // デフォルトでは日課ページが現在のページ
     await waitFor(() => {
       const currentPageLink = screen.getByRole('link', {
-        name: '入力に移動',
+        name: '日課に移動',
       });
       expect(currentPageLink).toHaveAttribute('aria-current', 'page');
     });

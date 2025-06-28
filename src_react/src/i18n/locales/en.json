@@ -5,10 +5,6 @@
   },
   "navigation": {
     "daily": "Daily",
-    "input": "Input",
-    "list": "List",
-    "graph": "Graph",
-    "calendar": "Calendar",
     "management": "Settings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
