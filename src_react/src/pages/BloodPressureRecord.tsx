@@ -51,7 +51,7 @@ const formatLocalDateTime = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-const WeightRecord: React.FC = () => {
+const BloodPressureRecord: React.FC = () => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(today);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
@@ -77,11 +77,11 @@ const WeightRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const numberFields = useMemo(
+  const bpFields = useMemo(
     () =>
       isEditMode
         ? fields
-            .filter(f => f.type === 'number' && f.scope === 'weight')
+            .filter(f => f.type === 'number' && f.scope === 'bp')
             .slice()
             .sort((a, b) => {
               if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
@@ -89,8 +89,7 @@ const WeightRecord: React.FC = () => {
             })
         : fields
             .filter(
-              f =>
-                f.type === 'number' && f.scope === 'weight' && f.defaultDisplay
+              f => f.type === 'number' && f.scope === 'bp' && f.defaultDisplay
             )
             .slice()
             .sort((a, b) => {
@@ -100,10 +99,10 @@ const WeightRecord: React.FC = () => {
     [fields, isEditMode]
   );
   const [editFields, setEditFields] = useState(() =>
-    numberFields.map(f => ({ ...f }))
+    bpFields.map(f => ({ ...f }))
   );
   const [editOrder, setEditOrder] = useState(() =>
-    numberFields.map(f => f.fieldId)
+    bpFields.map(f => f.fieldId)
   );
   const [editDelete, setEditDelete] = useState<string[]>([]);
 
@@ -120,7 +119,7 @@ const WeightRecord: React.FC = () => {
   const recordTime = formatLocalTime(selectedDate);
 
   // 既存記録の取得
-  const getNumberRecord = (fieldId: string) =>
+  const getBPRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
 
   // 入力値ローカルstate
@@ -128,12 +127,12 @@ const WeightRecord: React.FC = () => {
   useEffect(() => {
     // 日付変更やレコード更新時に既存値を反映
     const newValues: Record<string, string> = {};
-    numberFields.forEach(f => {
-      const rec = getNumberRecord(f.fieldId);
+    bpFields.forEach(f => {
+      const rec = getBPRecord(f.fieldId);
       newValues[f.fieldId] = rec ? String(rec.value) : '';
     });
     setInputValues(newValues);
-  }, [fields, isEditMode, records, recordDate, numberFields]);
+  }, [fields, isEditMode, records, recordDate, bpFields]);
 
   // 保存
   const handleSave = async (fieldId: string) => {
@@ -141,7 +140,7 @@ const WeightRecord: React.FC = () => {
     if (!value) return;
     const numValue = Number(value);
     if (isNaN(numValue)) return;
-    const rec = getNumberRecord(fieldId);
+    const rec = getBPRecord(fieldId);
     if (rec) {
       await updateRecord({ ...rec, value: numValue });
     } else {
@@ -159,7 +158,7 @@ const WeightRecord: React.FC = () => {
   };
   // 削除
   const handleDelete = async (fieldId: string) => {
-    const rec = getNumberRecord(fieldId);
+    const rec = getBPRecord(fieldId);
     if (rec) {
       await deleteRecord(rec.id);
       await loadRecords();
@@ -175,7 +174,7 @@ const WeightRecord: React.FC = () => {
       setAddFieldError('項目名を入力してください');
       return;
     }
-    if (fields.some(f => f.name === name)) {
+    if (fields.some(f => f.name === name && f.scope === 'bp')) {
       setAddFieldError('同じ名前の項目が既に存在します');
       return;
     }
@@ -189,7 +188,7 @@ const WeightRecord: React.FC = () => {
       type: 'number' as const,
       order: (fields.length + 1) * 10,
       defaultDisplay: true,
-      scope: 'weight' as const,
+      scope: 'bp' as const,
     };
     await addField(newField);
     // 編集モード中なら即時ローカルstateにも反映
@@ -205,15 +204,15 @@ const WeightRecord: React.FC = () => {
   // 編集モード切替時に最新フィールドで初期化
   useEffect(() => {
     if (isEditMode) {
-      const allNumberFields = fields
-        .filter(f => f.type === 'number' && f.scope === 'weight')
+      const allBPFields = fields
+        .filter(f => f.type === 'number' && f.scope === 'bp')
         .slice()
         .sort((a, b) => {
           if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
           return a.fieldId.localeCompare(b.fieldId);
         });
-      setEditFields(allNumberFields.map(f => ({ ...f })));
-      setEditOrder(allNumberFields.map(f => f.fieldId));
+      setEditFields(allBPFields.map(f => ({ ...f })));
+      setEditOrder(allBPFields.map(f => f.fieldId));
       setEditDelete([]);
     }
   }, [isEditMode, fields]);
@@ -444,7 +443,6 @@ const WeightRecord: React.FC = () => {
   const handleDeleteField = useCallback((fieldId: string) => {
     setEditDelete(list => [...list, fieldId]);
     setEditFields(fields => fields.filter(f => f.fieldId !== fieldId));
-    setEditOrder(order => order.filter(id => id !== fieldId));
   }, []);
   const handleToggleDisplay = useCallback((fieldId: string) => {
     setEditFields(fields =>
@@ -454,13 +452,12 @@ const WeightRecord: React.FC = () => {
     );
   }, []);
 
-  // その日付にnumber型の記録が1つでもあればtrue
+  // 入力済み日付かどうか判定
   const isRecorded = (date: Date) => {
-    const d = formatDate(date);
     return records.some(
       r =>
-        r.date === d &&
-        fields.some(f => f.fieldId === r.fieldId && f.type === 'number')
+        r.date === formatDate(date) &&
+        bpFields.some(f => f.fieldId === r.fieldId)
     );
   };
 
@@ -473,9 +470,16 @@ const WeightRecord: React.FC = () => {
         setCenterDate={setCenterDate}
         isRecorded={isRecorded}
       />
+      {/* 選択中の日付表示 */}
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
           {formatDate(selectedDate)}
+          {isRecorded(selectedDate) && (
+            <HiCheck
+              className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
+              aria-label="入力済み"
+            />
+          )}
         </span>
       </div>
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
@@ -525,7 +529,7 @@ const WeightRecord: React.FC = () => {
               </SortableContext>
             </DndContext>
           ) : (
-            numberFields.map(field => {
+            bpFields.map(field => {
               const value = inputValues[field.fieldId] ?? '';
               return (
                 <div
@@ -682,4 +686,4 @@ const WeightRecord: React.FC = () => {
   );
 };
 
-export default WeightRecord;
+export default BloodPressureRecord;

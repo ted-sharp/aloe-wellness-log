@@ -6,6 +6,7 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import { useI18n } from './hooks/useI18n';
+import BloodPressureRecord from './pages/BloodPressureRecord';
 import DailyRecord from './pages/DailyRecord';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
@@ -258,6 +259,7 @@ function Navigation() {
   const navItems = [
     { path: '/daily', label: '日課', color: 'teal' },
     { path: '/weight', label: '体重', color: 'teal' },
+    { path: '/bp', label: '血圧', color: 'teal' },
     { path: '/', label: t('navigation.input'), color: 'green' },
     { path: '/list', label: t('navigation.list'), color: 'blue' },
     { path: '/graph', label: t('navigation.graph'), color: 'blue' },
@@ -541,6 +543,14 @@ function App() {
               element={
                 <Suspense fallback={<PageLoader pageName="体重" />}>
                   <WeightRecord />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/bp"
+              element={
+                <Suspense fallback={<PageLoader pageName="血圧" />}>
+                  <BloodPressureRecord />
                 </Suspense>
               }
             />
