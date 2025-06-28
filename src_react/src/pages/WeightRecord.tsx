@@ -25,11 +25,13 @@ import {
   HiCheckCircle,
   HiEye,
   HiEyeSlash,
+  HiNoSymbol,
   HiPencil,
   HiPlus,
   HiTrash,
   HiXMark,
 } from 'react-icons/hi2';
+import { PiChartLineDown } from 'react-icons/pi';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
 import { useI18n } from '../hooks/useI18n';
@@ -573,6 +575,27 @@ const WeightRecord: React.FC = () => {
                       {field.unit}
                     </span>
                   )}
+                  <Button
+                    variant={field.excludeFromGraph ? 'secondary' : 'sky'}
+                    size="sm"
+                    onClick={() => {
+                      // excludeFromGraphトグル
+                      const updated = {
+                        ...field,
+                        excludeFromGraph: !field.excludeFromGraph,
+                      };
+                      updateField(updated);
+                    }}
+                    aria-pressed={field.excludeFromGraph}
+                    className="ml-2 flex items-center"
+                  >
+                    <span className="relative inline-block w-5 h-5 align-middle">
+                      <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-black" />
+                      {field.excludeFromGraph && (
+                        <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
+                      )}
+                    </span>
+                  </Button>
                 </div>
               );
             })
