@@ -32,8 +32,6 @@ import { useRecordsStore } from '../store/records';
  * 毎日記録ページ（今後実装予定）
  */
 
-// ダミー：偶数日なら入力済み
-const isRecorded = (date: Date) => date.getDate() % 2 === 0;
 const formatDate = (date: Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
     2,
@@ -116,6 +114,14 @@ const DailyRecord: React.FC = () => {
   const getBoolValue = (fieldId: string): boolean | undefined => {
     const rec = getBoolRecord(fieldId);
     return typeof rec?.value === 'boolean' ? rec.value : undefined;
+  };
+  // 日付ごとの記録済み判定（scope: 'daily'で絞り込み）
+  const isRecorded = (date: Date) => {
+    const d = formatDate(date);
+    const dailyFieldIds = fields
+      .filter(f => f.scope === 'daily')
+      .map(f => f.fieldId);
+    return records.some(r => r.date === d && dailyFieldIds.includes(r.fieldId));
   };
   // ボタン押下時の保存/切替/解除処理
   const handleBoolInput = async (fieldId: string, value: boolean) => {
@@ -426,6 +432,12 @@ const DailyRecord: React.FC = () => {
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
           {formatDate(selectedDate)}
+          {isRecorded(selectedDate) && (
+            <HiCheck
+              className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
+              aria-label="入力済み"
+            />
+          )}
         </span>
       </div>
       {/* メインコンテンツ */}

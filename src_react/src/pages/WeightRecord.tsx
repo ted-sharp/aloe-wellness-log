@@ -435,6 +435,12 @@ const WeightRecord: React.FC = () => {
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
           {formatDate(selectedDate)}
+          {isRecorded(selectedDate) && (
+            <HiCheck
+              className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
+              aria-label="入力済み"
+            />
+          )}
         </span>
       </div>
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
