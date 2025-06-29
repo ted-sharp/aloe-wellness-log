@@ -127,25 +127,31 @@ const WeightRecord: React.FC = () => {
 
   // 入力値ローカルstate
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [noteValues, setNoteValues] = useState<Record<string, string>>({});
+  const [timeValues, setTimeValues] = useState<Record<string, string>>({});
   useEffect(() => {
-    // 日付変更やレコード更新時に既存値を反映
-    const newValues: Record<string, string> = {};
+    const newNotes: Record<string, string> = {};
+    const newTimes: Record<string, string> = {};
     numberFields.forEach(f => {
       const rec = getNumberRecord(f.fieldId);
-      newValues[f.fieldId] = rec ? String(rec.value) : '';
+      newNotes[f.fieldId] = rec && rec.note ? rec.note : '';
+      newTimes[f.fieldId] = rec && rec.time ? rec.time : '08:00';
     });
-    setInputValues(newValues);
+    setNoteValues(newNotes);
+    setTimeValues(newTimes);
   }, [fields, isEditMode, records, recordDate, numberFields]);
 
   // 保存
   const handleSave = async (fieldId: string) => {
     const value = inputValues[fieldId];
+    const note = noteValues[fieldId] || '';
+    const time = timeValues[fieldId] || '08:00';
     if (!value) return;
     const numValue = Number(value);
     if (isNaN(numValue)) return;
     const rec = getNumberRecord(fieldId);
     if (rec) {
-      await updateRecord({ ...rec, value: numValue });
+      await updateRecord({ ...rec, value: numValue, note, time });
     } else {
       const now = new Date();
       await addRecord({
@@ -153,8 +159,9 @@ const WeightRecord: React.FC = () => {
         fieldId,
         value: numValue,
         date: recordDate,
-        time: recordTime,
+        time,
         datetime: formatLocalDateTime(now),
+        note,
       });
     }
     await loadRecords();
@@ -534,79 +541,128 @@ const WeightRecord: React.FC = () => {
               const rec = records.find(
                 r => r.fieldId === field.fieldId && r.date === recordDate
               );
+              const note = noteValues[field.fieldId] || '';
+              const time = timeValues[field.fieldId] || '08:00';
               return (
                 <div
                   key={field.fieldId}
-                  className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4"
+                  className="flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4"
                 >
-                  <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
-                    {field.name}
-                  </span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.1"
-                    min="0"
-                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200"
-                    value={value}
+                  {/* 時刻入力欄 */}
+                  <div className="flex items-center gap-2 mb-1">
+                    <label
+                      htmlFor={`time-${field.fieldId}`}
+                      className="text-gray-600 dark:text-gray-300 text-sm min-w-[3em]"
+                    >
+                      時刻
+                    </label>
+                    <input
+                      id={`time-${field.fieldId}`}
+                      type="time"
+                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200"
+                      value={time}
+                      onChange={e =>
+                        setTimeValues(v => ({
+                          ...v,
+                          [field.fieldId]: e.target.value,
+                        }))
+                      }
+                      onBlur={() => {
+                        if (inputValues[field.fieldId]) {
+                          handleSave(field.fieldId);
+                        }
+                      }}
+                    />
+                  </div>
+                  {/* 体重入力欄 */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
+                      {field.name}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200"
+                      value={value}
+                      onChange={e =>
+                        setInputValues(v => ({
+                          ...v,
+                          [field.fieldId]: e.target.value,
+                        }))
+                      }
+                      onBlur={() => {
+                        if (inputValues[field.fieldId]) {
+                          handleSave(field.fieldId);
+                        } else {
+                          handleDelete(field.fieldId);
+                        }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          if (inputValues[field.fieldId]) {
+                            handleSave(field.fieldId);
+                          } else {
+                            handleDelete(field.fieldId);
+                          }
+                        }
+                      }}
+                      placeholder={
+                        field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
+                      }
+                    />
+                    {field.unit && (
+                      <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                        {field.unit}
+                      </span>
+                    )}
+                    {rec && (
+                      <Button
+                        variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
+                        size="sm"
+                        onClick={async () => {
+                          await updateRecord({
+                            ...rec,
+                            excludeFromGraph: !rec.excludeFromGraph,
+                          });
+                          await loadRecords();
+                        }}
+                        aria-pressed={rec.excludeFromGraph}
+                        className="ml-2 flex items-center"
+                        title={
+                          rec.excludeFromGraph
+                            ? 'この記録をグラフから除外中'
+                            : 'この記録をグラフに表示中'
+                        }
+                      >
+                        <span className="relative inline-block w-5 h-5 align-middle">
+                          <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-gray-600 dark:text-gray-200" />
+                          {rec.excludeFromGraph && (
+                            <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
+                          )}
+                        </span>
+                      </Button>
+                    )}
+                  </div>
+                  {/* note入力欄を追加 */}
+                  <textarea
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none"
+                    rows={2}
+                    placeholder="補足・メモ（任意）"
+                    value={note}
                     onChange={e =>
-                      setInputValues(v => ({
+                      setNoteValues(v => ({
                         ...v,
                         [field.fieldId]: e.target.value,
                       }))
                     }
                     onBlur={() => {
-                      if (value) {
+                      if (inputValues[field.fieldId]) {
                         handleSave(field.fieldId);
-                      } else {
-                        handleDelete(field.fieldId);
                       }
                     }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        if (value) {
-                          handleSave(field.fieldId);
-                        } else {
-                          handleDelete(field.fieldId);
-                        }
-                      }
-                    }}
-                    placeholder={
-                      field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
-                    }
                   />
-                  {field.unit && (
-                    <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                      {field.unit}
-                    </span>
-                  )}
-                  {rec && (
-                    <Button
-                      variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
-                      size="sm"
-                      onClick={async () => {
-                        await updateRecord({
-                          ...rec,
-                          excludeFromGraph: !rec.excludeFromGraph,
-                        });
-                        await loadRecords();
-                      }}
-                      aria-pressed={rec.excludeFromGraph}
-                      className="ml-2 flex items-center"
-                      title={
-                        rec.excludeFromGraph
-                          ? 'この記録をグラフから除外中'
-                          : 'この記録をグラフに表示中'
-                      }
-                    >
-                      <span className="relative inline-block w-5 h-5 align-middle">
-                        <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-gray-600 dark:text-gray-200" />
-                        {rec.excludeFromGraph && (
-                          <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
-                        )}
-                      </span>
-                    </Button>
-                  )}
                 </div>
               );
             })

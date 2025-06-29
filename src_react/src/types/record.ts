@@ -19,6 +19,7 @@ export type Field<T extends FieldType = FieldType> = {
   defaultDisplay?: boolean; // デフォルトで記録入力画面に表示するかどうか
   excludeFromGraph?: boolean; // グラフ表示除外フラグ
   scope: 'daily' | 'weight' | 'bp'; // どの画面で使うか
+  note?: string; // 補足・メモ
 };
 
 // 特定タイプのフィールド型
@@ -35,6 +36,7 @@ export type RecordItem = {
   fieldId: string;
   value: number | string | boolean;
   excludeFromGraph?: boolean; // この記録をグラフから除外
+  note?: string; // 補足・メモ
 };
 
 // 型安全な記録データ（フィールドタイプと値の組み合わせ）
