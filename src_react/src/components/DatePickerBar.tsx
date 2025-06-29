@@ -127,7 +127,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
         startTime = Date.now();
       }
     };
-    const handleTouchMove = (e: TouchEvent) => {
+    const handleTouchMove = () => {
       if (startX === null) return;
     };
 
