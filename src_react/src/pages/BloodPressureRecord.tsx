@@ -537,44 +537,46 @@ const BloodPressureRecord: React.FC = () => {
                   <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
                     {field.name}
                   </span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.1"
-                    min="0"
-                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200"
-                    value={value}
-                    onChange={e =>
-                      setInputValues(v => ({
-                        ...v,
-                        [field.fieldId]: e.target.value,
-                      }))
-                    }
-                    onBlur={() => {
-                      if (value) {
-                        handleSave(field.fieldId);
-                      } else {
-                        handleDelete(field.fieldId);
+                  <div className="flex flex-1 min-w-0 items-center">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.1"
+                      min="0"
+                      className="flex-1 min-w-0 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200"
+                      value={value}
+                      onChange={e =>
+                        setInputValues(v => ({
+                          ...v,
+                          [field.fieldId]: e.target.value,
+                        }))
                       }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
+                      onBlur={() => {
                         if (value) {
                           handleSave(field.fieldId);
                         } else {
                           handleDelete(field.fieldId);
                         }
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          if (value) {
+                            handleSave(field.fieldId);
+                          } else {
+                            handleDelete(field.fieldId);
+                          }
+                        }
+                      }}
+                      placeholder={
+                        field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
                       }
-                    }}
-                    placeholder={
-                      field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
-                    }
-                  />
-                  {field.unit && (
-                    <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                      {field.unit}
-                    </span>
-                  )}
+                    />
+                    {field.unit && (
+                      <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap shrink-0 overflow-hidden">
+                        {field.unit}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })
@@ -585,22 +587,24 @@ const BloodPressureRecord: React.FC = () => {
           <div className="w-full max-w-md mt-6 mb-2">
             {showAddField ? (
               <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-                <input
-                  type="text"
-                  value={newFieldName}
-                  onChange={e => setNewFieldName(e.target.value)}
-                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="新しい項目名"
-                  maxLength={20}
-                />
-                <input
-                  type="text"
-                  value={newFieldUnit}
-                  onChange={e => setNewFieldUnit(e.target.value)}
-                  className="w-20 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="単位"
-                  maxLength={10}
-                />
+                <div className="flex flex-1 min-w-0 gap-2">
+                  <input
+                    type="text"
+                    value={newFieldName}
+                    onChange={e => setNewFieldName(e.target.value)}
+                    className="flex-1 min-w-0 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="新しい項目名"
+                    maxLength={20}
+                  />
+                  <input
+                    type="text"
+                    value={newFieldUnit}
+                    onChange={e => setNewFieldUnit(e.target.value)}
+                    className="w-20 shrink-0 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="単位"
+                    maxLength={10}
+                  />
+                </div>
                 <Button
                   variant="primary"
                   size="md"
