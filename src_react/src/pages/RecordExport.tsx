@@ -19,10 +19,7 @@ import {
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 import { isDev } from '../utils/devTools';
-import {
-  performanceMonitor,
-  trackDatabaseOperation,
-} from '../utils/performanceMonitor';
+import { performanceMonitor } from '../utils/performanceMonitor';
 
 function formatDateForFilename(date: Date) {
   const year = date.getFullYear();
@@ -105,31 +102,6 @@ export default function RecordExport() {
       performanceMonitor.trackRender.end('RecordExport');
     };
   });
-
-  // データ読み込み（パフォーマンス監視付き）
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await trackDatabaseOperation(
-          'load-fields-export',
-          async _operationId => {
-            await loadFields();
-          }
-        );
-
-        await trackDatabaseOperation(
-          'load-records-export',
-          async _operationId => {
-            await loadRecords();
-          }
-        );
-      } catch (error) {
-        console.error('Data loading error:', error);
-      }
-    };
-
-    loadData();
-  }, [loadFields, loadRecords]);
 
   // 開発環境でのパフォーマンス情報表示
   useEffect(() => {
@@ -409,6 +381,8 @@ export default function RecordExport() {
           await deleteAllData();
           // 初期項目を再度作成
           await initializeFields();
+          await loadFields();
+          await loadRecords();
           alert('すべてのデータを削除しました');
         } catch (error) {
           console.error('Delete error:', error);

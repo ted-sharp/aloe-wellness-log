@@ -260,8 +260,13 @@ const RecordExport = lazy(() => {
 });
 
 function App() {
-  const { initializeFields, initializeFieldsWithTranslation } =
-    useRecordsStore();
+  const {
+    initializeFields,
+    initializeFieldsWithTranslation,
+    fieldsOperation,
+    recordsOperation,
+    loadRecords,
+  } = useRecordsStore();
 
   useEffect(() => {
     try {
@@ -300,6 +305,13 @@ function App() {
     }
   }, [initializeFields, initializeFieldsWithTranslation]);
 
+  // fieldsの初期化が終わったらrecordsもロード
+  useEffect(() => {
+    if (!fieldsOperation.loading) {
+      loadRecords();
+    }
+  }, [fieldsOperation.loading, loadRecords]);
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <header role="banner">
@@ -307,51 +319,57 @@ function App() {
       </header>
 
       <main id="main-content" role="main" className="px-4" tabIndex={-1}>
-        <Suspense fallback={<PageLoader pageName="日課" />}>
-          <Routes>
-            <Route
-              path="/daily"
-              element={
-                <Suspense fallback={<PageLoader pageName="日課" />}>
-                  <DailyRecord />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/weight"
-              element={
-                <Suspense fallback={<PageLoader pageName="体重" />}>
-                  <WeightRecord />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/other"
-              element={
-                <Suspense fallback={<PageLoader pageName="その他" />}>
-                  <OtherRecord />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/graph"
-              element={
-                <Suspense fallback={<PageLoader pageName="グラフ" />}>
-                  <RecordGraph />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/export"
-              element={
-                <Suspense fallback={<PageLoader pageName="管理" />}>
-                  <RecordExport />
-                </Suspense>
-              }
-            />
-            <Route path="*" element={<Navigate to="/daily" replace />} />
-          </Routes>
-        </Suspense>
+        {fieldsOperation &&
+        recordsOperation &&
+        (fieldsOperation.loading || recordsOperation.loading) ? (
+          <PageLoader pageName="初期化中" />
+        ) : (
+          <Suspense fallback={<PageLoader pageName="日課" />}>
+            <Routes>
+              <Route
+                path="/daily"
+                element={
+                  <Suspense fallback={<PageLoader pageName="日課" />}>
+                    <DailyRecord />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/weight"
+                element={
+                  <Suspense fallback={<PageLoader pageName="体重" />}>
+                    <WeightRecord />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/other"
+                element={
+                  <Suspense fallback={<PageLoader pageName="その他" />}>
+                    <OtherRecord />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/graph"
+                element={
+                  <Suspense fallback={<PageLoader pageName="グラフ" />}>
+                    <RecordGraph />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/export"
+                element={
+                  <Suspense fallback={<PageLoader pageName="管理" />}>
+                    <RecordExport />
+                  </Suspense>
+                }
+              />
+              <Route path="*" element={<Navigate to="/daily" replace />} />
+            </Routes>
+          </Suspense>
+        )}
       </main>
     </div>
   );

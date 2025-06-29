@@ -440,21 +440,41 @@ export const useRecordsStore = create<RecordsState>((set, get) => ({
   },
 
   initializeFieldsWithTranslation: async (translateFieldName: TranslateFn) => {
-    const fields = await db.getAllFields();
-    if (fields.length === 0) {
-      // バッチ操作で初期フィールドを追加
-      await db.batchUpdateFields(
-        baseFieldStructure.map(field => ({
+    set(_state => ({
+      fieldsOperation: { loading: true, error: null },
+    }));
+    try {
+      const fields = await db.getAllFields();
+      if (fields.length === 0) {
+        // バッチ操作で初期フィールドを追加
+        const newFields = baseFieldStructure.map(field => ({
           ...field,
           name: translateFieldName(field.fieldId),
-        }))
-      );
-      set({
-        fields: baseFieldStructure.map(field => ({
-          ...field,
-          name: translateFieldName(field.fieldId),
-        })),
-      });
+        }));
+        await db.batchUpdateFields(newFields);
+        set({
+          fields: newFields,
+          fieldsOperation: { loading: false, error: null },
+        });
+      } else {
+        set({
+          fields,
+          fieldsOperation: { loading: false, error: null },
+        });
+      }
+    } catch (error) {
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'フィールド初期化に失敗しました',
+              error
+            );
+      set(_state => ({
+        fieldsOperation: { loading: false, error: dbError },
+      }));
+      throw dbError;
     }
   },
 
