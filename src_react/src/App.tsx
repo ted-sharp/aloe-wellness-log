@@ -8,6 +8,7 @@ import QRCodeDisplay from './components/QRCodeDisplay';
 import { useI18n } from './hooks/useI18n';
 import BloodPressureRecord from './pages/BloodPressureRecord';
 import DailyRecord from './pages/DailyRecord';
+import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
 import {
@@ -88,6 +89,7 @@ function Navigation() {
     { path: '/daily', label: '日課', color: 'teal' },
     { path: '/weight', label: '体重', color: 'teal' },
     { path: '/bp', label: '血圧', color: 'teal' },
+    { path: '/graph', label: 'グラフ', color: 'blue' },
     { path: '/export', label: t('navigation.management'), color: 'purple' },
   ];
 
@@ -353,6 +355,14 @@ function App() {
               element={
                 <Suspense fallback={<PageLoader pageName="血圧" />}>
                   <BloodPressureRecord />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/graph"
+              element={
+                <Suspense fallback={<PageLoader pageName="グラフ" />}>
+                  <RecordGraph />
                 </Suspense>
               }
             />

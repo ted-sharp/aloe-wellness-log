@@ -93,7 +93,8 @@
         "week": "1週間",
         "month": "1ヶ月",
         "all": "全期間"
-      }
+      },
+      "weightTitle": "体重グラフ"
     },
     "calendar": {
       "title": "カレンダー",

@@ -459,10 +459,12 @@ const WeightRecord: React.FC = () => {
   // その日付にnumber型の記録が1つでもあればtrue
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
+    // scope: 'weight' のフィールドIDだけを対象に
+    const weightFieldIds = fields
+      .filter(f => f.scope === 'weight')
+      .map(f => f.fieldId);
     return records.some(
-      r =>
-        r.date === d &&
-        fields.some(f => f.fieldId === r.fieldId && f.type === 'number')
+      r => r.date === d && weightFieldIds.includes(r.fieldId)
     );
   };
 
@@ -529,6 +531,9 @@ const WeightRecord: React.FC = () => {
           ) : (
             numberFields.map(field => {
               const value = inputValues[field.fieldId] ?? '';
+              const rec = records.find(
+                r => r.fieldId === field.fieldId && r.date === recordDate
+              );
               return (
                 <div
                   key={field.fieldId}
@@ -575,27 +580,33 @@ const WeightRecord: React.FC = () => {
                       {field.unit}
                     </span>
                   )}
-                  <Button
-                    variant={field.excludeFromGraph ? 'secondary' : 'sky'}
-                    size="sm"
-                    onClick={() => {
-                      // excludeFromGraphトグル
-                      const updated = {
-                        ...field,
-                        excludeFromGraph: !field.excludeFromGraph,
-                      };
-                      updateField(updated);
-                    }}
-                    aria-pressed={field.excludeFromGraph}
-                    className="ml-2 flex items-center"
-                  >
-                    <span className="relative inline-block w-5 h-5 align-middle">
-                      <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-black" />
-                      {field.excludeFromGraph && (
-                        <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
-                      )}
-                    </span>
-                  </Button>
+                  {rec && (
+                    <Button
+                      variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
+                      size="sm"
+                      onClick={async () => {
+                        await updateRecord({
+                          ...rec,
+                          excludeFromGraph: !rec.excludeFromGraph,
+                        });
+                        await loadRecords();
+                      }}
+                      aria-pressed={rec.excludeFromGraph}
+                      className="ml-2 flex items-center"
+                      title={
+                        rec.excludeFromGraph
+                          ? 'この記録をグラフから除外中'
+                          : 'この記録をグラフに表示中'
+                      }
+                    >
+                      <span className="relative inline-block w-5 h-5 align-middle">
+                        <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-gray-600 dark:text-gray-200" />
+                        {rec.excludeFromGraph && (
+                          <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
+                        )}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               );
             })

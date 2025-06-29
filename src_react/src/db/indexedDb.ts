@@ -4,7 +4,7 @@ import { performanceMonitor } from '../utils/performanceMonitor';
 import { validateFieldArray, validateRecordArray } from '../utils/validation';
 
 const DB_NAME = 'aloe-wellness-log';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const RECORDS_STORE = 'records';
 const FIELDS_STORE = 'fields';
 const MAX_RETRY_ATTEMPTS = 3;
@@ -215,6 +215,7 @@ export function openDb(): Promise<IDBDatabase> {
             recordStore.createIndex('fieldIdIndex', 'fieldId', {
               unique: false,
             });
+            recordStore.createIndex('scopeIndex', 'scope', { unique: false });
           }
           if (!db.objectStoreNames.contains(FIELDS_STORE)) {
             const fieldStore = db.createObjectStore(FIELDS_STORE, {

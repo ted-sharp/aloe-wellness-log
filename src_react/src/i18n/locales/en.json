@@ -89,7 +89,8 @@
         "week": "1 Week",
         "month": "1 Month",
         "all": "All Period"
-      }
+      },
+      "weightTitle": "Weight Graph"
     },
     "calendar": {
       "title": "Calendar",
