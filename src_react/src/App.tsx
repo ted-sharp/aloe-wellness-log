@@ -260,13 +260,8 @@ const RecordExport = lazy(() => {
 });
 
 function App() {
-  const {
-    initializeFields,
-    initializeFieldsWithTranslation,
-    fieldsOperation,
-    recordsOperation,
-    loadRecords,
-  } = useRecordsStore();
+  const { initializeFields, fieldsOperation, recordsOperation, loadRecords } =
+    useRecordsStore();
 
   useEffect(() => {
     try {
@@ -286,8 +281,8 @@ function App() {
         }
       }
 
-      // フィールド初期化（国際化対応）
-      initializeFieldsWithTranslation();
+      // フィールド初期化（i18nなし）
+      initializeFields();
 
       if (isDev) {
         perfEnd('App-initialization');
@@ -303,7 +298,7 @@ function App() {
         console.error('❌ Fallback initialization also failed:', fallbackError);
       }
     }
-  }, [initializeFields, initializeFieldsWithTranslation]);
+  }, [initializeFields]);
 
   // fieldsの初期化が終わったらrecordsもロード
   useEffect(() => {

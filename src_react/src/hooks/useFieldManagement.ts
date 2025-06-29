@@ -81,6 +81,18 @@ export function useFieldManagement() {
       }
 
       const fieldId = newField.name.trim().replace(/\s+/g, '_').toLowerCase();
+      // scope自動判定
+      let scope: 'daily' | 'weight' | 'bp' = 'daily';
+      if (['weight', 'body_fat'].includes(fieldId)) scope = 'weight';
+      else if (
+        [
+          'systolic_bp',
+          'diastolic_bp',
+          'heart_rate',
+          'body_temperature',
+        ].includes(fieldId)
+      )
+        scope = 'bp';
 
       const result = await handleAsyncError(
         async () => {
@@ -92,6 +104,7 @@ export function useFieldManagement() {
             order: getNextDefaultOrder(),
             defaultDisplay: false,
             excludeFromGraph: !!newField.excludeFromGraph,
+            scope,
           });
 
           // 非表示項目として追加するので、一時的に表示リストに追加
