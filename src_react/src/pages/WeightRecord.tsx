@@ -1,33 +1,13 @@
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   HiBars3,
   HiCheck,
-  HiCheckCircle,
   HiEye,
   HiEyeSlash,
   HiNoSymbol,
-  HiPencil,
-  HiPlus,
   HiTrash,
   HiXMark,
 } from 'react-icons/hi2';
@@ -77,38 +57,6 @@ const WeightRecord: React.FC = () => {
   const [newFieldUnit, setNewFieldUnit] = useState('');
   const [addFieldError, setAddFieldError] = useState('');
 
-  // 編集モード用state
-  const [isEditMode, setIsEditMode] = useState(false);
-  const numberFields = useMemo(
-    () =>
-      isEditMode
-        ? fields
-            .filter(f => f.type === 'number' && f.scope === 'weight')
-            .slice()
-            .sort((a, b) => {
-              if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-              return a.fieldId.localeCompare(b.fieldId);
-            })
-        : fields
-            .filter(
-              f =>
-                f.type === 'number' && f.scope === 'weight' && f.defaultDisplay
-            )
-            .slice()
-            .sort((a, b) => {
-              if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-              return a.fieldId.localeCompare(b.fieldId);
-            }),
-    [fields, isEditMode]
-  );
-  const [editFields, setEditFields] = useState(() =>
-    numberFields.map(f => ({ ...f }))
-  );
-  const [editOrder, setEditOrder] = useState(() =>
-    numberFields.map(f => f.fieldId)
-  );
-  const [editDelete, setEditDelete] = useState<string[]>([]);
-
   // D&D sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -132,14 +80,14 @@ const WeightRecord: React.FC = () => {
   useEffect(() => {
     const newNotes: Record<string, string> = {};
     const newTimes: Record<string, string> = {};
-    numberFields.forEach(f => {
+    fields.forEach(f => {
       const rec = getNumberRecord(f.fieldId);
       newNotes[f.fieldId] = rec && rec.note ? rec.note : '';
       newTimes[f.fieldId] = rec && rec.time ? rec.time : '08:00';
     });
     setNoteValues(newNotes);
     setTimeValues(newTimes);
-  }, [fields, isEditMode, records, recordDate, numberFields]);
+  }, [fields, records, recordDate]);
 
   // 保存
   const handleSave = async (fieldId: string) => {
@@ -170,8 +118,10 @@ const WeightRecord: React.FC = () => {
   const handleDelete = async (fieldId: string) => {
     const rec = getNumberRecord(fieldId);
     if (rec) {
-      await deleteRecord(rec.id);
-      await loadRecords();
+      if (window.confirm('本当に削除しますか？')) {
+        await deleteRecord(rec.id);
+        await loadRecords();
+      }
     }
   };
 
@@ -201,31 +151,10 @@ const WeightRecord: React.FC = () => {
       scope: 'weight' as const,
     };
     await addField(newField);
-    // 編集モード中なら即時ローカルstateにも反映
-    if (isEditMode) {
-      setEditFields(fields => [...fields, { ...newField }]);
-      setEditOrder(order => [...order, fieldId]);
-    }
     setShowAddField(false);
     setNewFieldName('');
     setNewFieldUnit('');
   };
-
-  // 編集モード切替時に最新フィールドで初期化
-  useEffect(() => {
-    if (isEditMode) {
-      const allNumberFields = fields
-        .filter(f => f.type === 'number' && f.scope === 'weight')
-        .slice()
-        .sort((a, b) => {
-          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-          return a.fieldId.localeCompare(b.fieldId);
-        });
-      setEditFields(allNumberFields.map(f => ({ ...f })));
-      setEditOrder(allNumberFields.map(f => f.fieldId));
-      setEditDelete([]);
-    }
-  }, [isEditMode, fields]);
 
   // 編集モード用の追加state
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
@@ -258,7 +187,7 @@ const WeightRecord: React.FC = () => {
     inputRef,
     unitInputRef,
   }: {
-    field: (typeof editFields)[number];
+    field: (typeof fields)[number];
     isEditing: boolean;
     onStartEdit: () => void;
     onEndEdit: () => void;
@@ -422,47 +351,6 @@ const WeightRecord: React.FC = () => {
     );
   });
 
-  // 編集内容保存
-  const handleEditSave = async () => {
-    for (const delId of editDelete) {
-      await deleteField(delId);
-    }
-    for (let i = 0; i < editOrder.length; ++i) {
-      const f = editFields.find(f => f.fieldId === editOrder[i]);
-      if (f) {
-        await updateField({ ...f, order: i * 10 });
-      }
-    }
-    await loadFields();
-    setIsEditMode(false);
-  };
-  const handleEditCancel = () => {
-    setIsEditMode(false);
-  };
-  const handleDragEnd = (event: import('@dnd-kit/core').DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-    const activeId = String(active.id);
-    const overId = String(over.id);
-    if (activeId !== overId) {
-      const oldIdx = editOrder.indexOf(activeId);
-      const newIdx = editOrder.indexOf(overId);
-      setEditOrder(arrayMove(editOrder, oldIdx, newIdx));
-    }
-  };
-  const handleDeleteField = useCallback((fieldId: string) => {
-    setEditDelete(list => [...list, fieldId]);
-    setEditFields(fields => fields.filter(f => f.fieldId !== fieldId));
-    setEditOrder(order => order.filter(id => id !== fieldId));
-  }, []);
-  const handleToggleDisplay = useCallback((fieldId: string) => {
-    setEditFields(fields =>
-      fields.map(f =>
-        f.fieldId === fieldId ? { ...f, defaultDisplay: !f.defaultDisplay } : f
-      )
-    );
-  }, []);
-
   // その日付にnumber型の記録が1つでもあればtrue
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
@@ -473,6 +361,68 @@ const WeightRecord: React.FC = () => {
     return records.some(
       r => r.date === d && weightFieldIds.includes(r.fieldId)
     );
+  };
+
+  // 新規追加用state
+  const [newWeight, setNewWeight] = useState('');
+  const [newTime, setNewTime] = useState('08:00');
+  const [newNote, setNewNote] = useState('');
+
+  // 編集状態管理
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editWeight, setEditWeight] = useState('');
+  const [editTime, setEditTime] = useState('08:00');
+  const [editNote, setEditNote] = useState('');
+
+  // 編集開始
+  const startEdit = (rec: any) => {
+    setEditingId(rec.id);
+    setEditWeight(String(rec.value));
+    setEditTime(rec.time || '08:00');
+    setEditNote(rec.note || '');
+  };
+  // 編集キャンセル
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditWeight('');
+    setEditTime('08:00');
+    setEditNote('');
+  };
+  // 編集保存
+  const saveEdit = async (rec: any) => {
+    await updateRecord({
+      ...rec,
+      value: Number(editWeight),
+      time: editTime,
+      note: editNote,
+    });
+    setEditingId(null);
+    setEditWeight('');
+    setEditTime('08:00');
+    setEditNote('');
+    await loadRecords();
+  };
+
+  const numberFields = useMemo(
+    () =>
+      fields
+        .filter(
+          f => f.type === 'number' && f.scope === 'weight' && f.defaultDisplay
+        )
+        .slice()
+        .sort((a, b) => {
+          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
+          return a.fieldId.localeCompare(b.fieldId);
+        }),
+    [fields]
+  );
+
+  // newTimeのuseState初期値を現在時刻に
+  const getCurrentTimeString = () => {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
   };
 
   return (
@@ -491,282 +441,232 @@ const WeightRecord: React.FC = () => {
       </div>
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
         <div className="flex flex-col gap-6 w-full max-w-md">
-          {isEditMode ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={editOrder}
-                strategy={verticalListSortingStrategy}
+          {numberFields.map(field => {
+            // 同日・同項目の全記録を取得
+            const recordsOfDay = records
+              .filter(r => r.fieldId === field.fieldId && r.date === recordDate)
+              .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+            return (
+              <div
+                key={field.fieldId}
+                className="flex flex-col gap-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4"
               >
-                {editOrder.map(id => {
-                  const field = editFields.find(f => f.fieldId === id);
-                  if (!field) return null;
-                  const isEditing = editingFieldId === field.fieldId;
-                  return (
-                    <SortableItem
-                      key={field.fieldId}
-                      field={field}
-                      isEditing={isEditing}
-                      onStartEdit={() => setEditingFieldId(field.fieldId)}
-                      onEndEdit={() => setEditingFieldId(null)}
-                      onNameChange={name =>
-                        setEditFields(fields =>
-                          fields.map(f =>
-                            f.fieldId === field.fieldId ? { ...f, name } : f
-                          )
-                        )
-                      }
-                      onUnitChange={unit =>
-                        setEditFields(fields =>
-                          fields.map(f =>
-                            f.fieldId === field.fieldId ? { ...f, unit } : f
-                          )
-                        )
-                      }
-                      onDelete={() => handleDeleteField(field.fieldId)}
-                      onToggleDisplay={() => handleToggleDisplay(field.fieldId)}
-                      inputRef={el => (inputRefs.current[field.fieldId] = el)}
-                      unitInputRef={() => {}}
-                    />
-                  );
-                })}
-              </SortableContext>
-            </DndContext>
-          ) : (
-            numberFields.map(field => {
-              const value = inputValues[field.fieldId] ?? '';
-              const rec = records.find(
-                r => r.fieldId === field.fieldId && r.date === recordDate
-              );
-              const note = noteValues[field.fieldId] || '';
-              const time = timeValues[field.fieldId] || '08:00';
-              return (
-                <div
-                  key={field.fieldId}
-                  className="flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4"
-                >
-                  {/* 時刻入力欄 */}
-                  <div className="flex items-center gap-2 mb-1">
-                    <label
-                      htmlFor={`time-${field.fieldId}`}
-                      className="text-gray-600 dark:text-gray-300 text-sm min-w-[3em]"
-                    >
-                      時刻
-                    </label>
+                <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em] mb-2">
+                  {field.name}
+                </span>
+                {/* 既存記録リスト */}
+                {recordsOfDay.length > 0 &&
+                  recordsOfDay.map(rec => {
+                    return (
+                      <div
+                        key={rec.id}
+                        className="flex flex-col gap-1 w-full relative"
+                      >
+                        {/* 1行目: 時刻・体重・操作ボタン群 */}
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type="time"
+                            className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
+                            defaultValue={rec.time || '08:00'}
+                            onBlur={async e => {
+                              if (e.target.value !== rec.time) {
+                                await updateRecord({
+                                  ...rec,
+                                  time: e.target.value,
+                                });
+                                await loadRecords();
+                              }
+                            }}
+                          />
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.1"
+                            min="0"
+                            className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
+                            defaultValue={rec.value}
+                            onBlur={async e => {
+                              if (Number(e.target.value) !== rec.value) {
+                                await updateRecord({
+                                  ...rec,
+                                  value: Number(e.target.value),
+                                });
+                                await loadRecords();
+                              }
+                            }}
+                          />
+                          <div className="flex gap-1 ml-auto">
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              icon={HiTrash}
+                              aria-label="削除"
+                              onClick={async () => {
+                                if (window.confirm('本当に削除しますか？')) {
+                                  await deleteRecord(rec.id);
+                                  await loadRecords();
+                                }
+                              }}
+                              children=""
+                            />
+                            <Button
+                              variant={
+                                rec.excludeFromGraph === true
+                                  ? 'secondary'
+                                  : 'sky'
+                              }
+                              size="sm"
+                              aria-label={
+                                rec.excludeFromGraph === true
+                                  ? 'グラフ除外'
+                                  : 'グラフ表示'
+                              }
+                              onClick={async () => {
+                                await updateRecord({
+                                  ...rec,
+                                  excludeFromGraph: !rec.excludeFromGraph,
+                                });
+                                await loadRecords();
+                              }}
+                            >
+                              <span className="relative inline-block w-5 h-5">
+                                <PiChartLineDown className="w-5 h-5 text-white" />
+                                {rec.excludeFromGraph === true && (
+                                  <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                )}
+                              </span>
+                            </Button>
+                          </div>
+                        </div>
+                        {/* 2行目: note欄 */}
+                        <textarea
+                          className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full mt-1"
+                          rows={1}
+                          defaultValue={rec.note || ''}
+                          onBlur={async e => {
+                            if ((e.target.value || '') !== (rec.note || '')) {
+                              await updateRecord({
+                                ...rec,
+                                note: e.target.value,
+                              });
+                              await loadRecords();
+                            }
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                {/* 新規追加欄 */}
+                <div className="flex flex-col gap-1 w-full mt-2">
+                  <div className="flex items-center gap-2 w-full">
                     <input
-                      id={`time-${field.fieldId}`}
                       type="time"
-                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200"
-                      value={time}
-                      onChange={e =>
-                        setTimeValues(v => ({
-                          ...v,
-                          [field.fieldId]: e.target.value,
-                        }))
-                      }
-                      onBlur={() => {
-                        if (inputValues[field.fieldId]) {
-                          handleSave(field.fieldId);
-                        }
-                      }}
+                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
+                      value={newTime}
+                      onChange={e => setNewTime(e.target.value)}
                     />
-                  </div>
-                  {/* 体重入力欄 */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
-                      {field.name}
-                    </span>
                     <input
                       type="number"
                       inputMode="decimal"
                       step="0.1"
                       min="0"
-                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200"
-                      value={value}
-                      onChange={e =>
-                        setInputValues(v => ({
-                          ...v,
-                          [field.fieldId]: e.target.value,
-                        }))
-                      }
-                      onBlur={() => {
-                        if (inputValues[field.fieldId]) {
-                          handleSave(field.fieldId);
-                        } else {
-                          handleDelete(field.fieldId);
-                        }
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          if (inputValues[field.fieldId]) {
-                            handleSave(field.fieldId);
-                          } else {
-                            handleDelete(field.fieldId);
-                          }
-                        }
-                      }}
+                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
+                      value={newWeight}
+                      onChange={e => setNewWeight(e.target.value)}
                       placeholder={
                         field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
                       }
                     />
-                    {field.unit && (
-                      <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                        {field.unit}
-                      </span>
-                    )}
-                    {rec && (
-                      <Button
-                        variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
-                        size="sm"
-                        onClick={async () => {
-                          await updateRecord({
-                            ...rec,
-                            excludeFromGraph: !rec.excludeFromGraph,
-                          });
-                          await loadRecords();
-                        }}
-                        aria-pressed={rec.excludeFromGraph}
-                        className="ml-2 flex items-center"
-                        title={
-                          rec.excludeFromGraph
-                            ? 'この記録をグラフから除外中'
-                            : 'この記録をグラフに表示中'
-                        }
-                      >
-                        <span className="relative inline-block w-5 h-5 align-middle">
-                          <PiChartLineDown className="absolute left-0 top-0 w-5 h-5 text-gray-600 dark:text-gray-200" />
-                          {rec.excludeFromGraph && (
-                            <HiNoSymbol className="absolute left-0 top-0 w-5 h-5 text-red-500 opacity-80" />
-                          )}
-                        </span>
-                      </Button>
-                    )}
+                    <Button
+                      variant="success"
+                      size="sm"
+                      icon={HiCheck}
+                      aria-label="保存"
+                      className="ml-auto"
+                      onClick={async () => {
+                        if (!newWeight) return;
+                        await addRecord({
+                          id: `${Date.now()}-${Math.random()
+                            .toString(36)
+                            .substr(2, 9)}`,
+                          fieldId: field.fieldId,
+                          value: Number(newWeight),
+                          date: recordDate,
+                          time: newTime,
+                          datetime: formatLocalDateTime(new Date()),
+                          note: newNote,
+                        });
+                        setNewWeight('');
+                        setNewTime(getCurrentTimeString());
+                        setNewNote('');
+                        await loadRecords();
+                      }}
+                      children=""
+                    />
                   </div>
-                  {/* note入力欄を追加 */}
                   <textarea
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none"
-                    rows={2}
+                    className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full mt-1"
+                    rows={1}
+                    value={newNote}
+                    onChange={e => setNewNote(e.target.value)}
                     placeholder="補足・メモ（任意）"
-                    value={note}
-                    onChange={e =>
-                      setNoteValues(v => ({
-                        ...v,
-                        [field.fieldId]: e.target.value,
-                      }))
-                    }
-                    onBlur={() => {
-                      if (inputValues[field.fieldId]) {
-                        handleSave(field.fieldId);
-                      }
-                    }}
                   />
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
         {/* 新規項目追加ボタンとフォーム（編集モード時のみ） */}
-        {isEditMode && (
+        {showAddField && (
           <div className="w-full max-w-md mt-6 mb-2">
-            {showAddField ? (
-              <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
-                <input
-                  type="text"
-                  value={newFieldName}
-                  onChange={e => setNewFieldName(e.target.value)}
-                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder={
-                    t('fields.addFieldPlaceholder') || '新しい項目名'
-                  }
-                  maxLength={20}
-                />
-                <input
-                  type="text"
-                  value={newFieldUnit}
-                  onChange={e => setNewFieldUnit(e.target.value)}
-                  className="w-20 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="単位"
-                  maxLength={10}
-                />
-                <Button
-                  variant="primary"
-                  size="md"
-                  icon={HiCheck}
-                  aria-label="保存"
-                  onClick={handleAddField}
-                  disabled={!newFieldName.trim()}
-                >
-                  {''}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  icon={HiXMark}
-                  aria-label="キャンセル"
-                  onClick={() => {
-                    setShowAddField(false);
-                    setNewFieldName('');
-                    setNewFieldUnit('');
-                    setAddFieldError('');
-                  }}
-                >
-                  {''}
-                </Button>
-              </div>
-            ) : (
+            <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+              <input
+                type="text"
+                value={newFieldName}
+                onChange={e => setNewFieldName(e.target.value)}
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder={t('fields.addFieldPlaceholder') || '新しい項目名'}
+                maxLength={20}
+              />
+              <input
+                type="text"
+                value={newFieldUnit}
+                onChange={e => setNewFieldUnit(e.target.value)}
+                className="w-20 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="単位"
+                maxLength={10}
+              />
               <Button
-                variant="teal"
+                variant="primary"
                 size="md"
-                icon={HiPlus}
-                fullWidth
-                onClick={() => setShowAddField(true)}
+                icon={HiCheck}
+                aria-label="保存"
+                onClick={handleAddField}
+                disabled={!newFieldName.trim()}
               >
-                {t('actions.addField') || '＋新規項目'}
-              </Button>
-            )}
-            {addFieldError && (
-              <div className="text-red-500 text-sm mt-1">{addFieldError}</div>
-            )}
-          </div>
-        )}
-        {/* 編集モード切替・保存・キャンセルボタン */}
-        <div className="w-full max-w-md mt-6">
-          {isEditMode ? (
-            <div className="flex gap-2">
-              <Button
-                variant="success"
-                size="md"
-                icon={HiCheckCircle}
-                onClick={handleEditSave}
-                fullWidth
-              >
-                {t('actions.save') || '保存'}
+                {''}
               </Button>
               <Button
                 variant="secondary"
                 size="md"
                 icon={HiXMark}
-                onClick={handleEditCancel}
-                fullWidth
+                aria-label="キャンセル"
+                onClick={() => {
+                  setShowAddField(false);
+                  setNewFieldName('');
+                  setNewFieldUnit('');
+                  setAddFieldError('');
+                }}
               >
-                {t('actions.cancel') || 'キャンセル'}
+                {''}
               </Button>
             </div>
-          ) : (
-            <Button
-              variant="teal"
-              size="md"
-              icon={HiPencil}
-              fullWidth
-              onClick={() => setIsEditMode(true)}
-            >
-              {t('actions.edit') || '編集'}
-            </Button>
-          )}
-        </div>
+            {addFieldError && (
+              <div className="text-red-500 text-sm mt-1">{addFieldError}</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
