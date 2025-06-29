@@ -349,16 +349,10 @@ const WeightRecord: React.FC = () => {
     );
   });
 
-  // その日付にnumber型の記録が1つでもあればtrue
+  // その日付にfieldId==='weight'の記録が1つでもあればtrue
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
-    // scope: 'weight' のフィールドIDだけを対象に
-    const weightFieldIds = fields
-      .filter(f => f.scope === 'weight')
-      .map(f => f.fieldId);
-    return records.some(
-      r => r.date === d && weightFieldIds.includes(r.fieldId)
-    );
+    return records.some(r => r.date === d && r.fieldId === 'weight');
   };
 
   // 新規追加用state
