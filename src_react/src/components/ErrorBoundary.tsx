@@ -19,11 +19,16 @@ function ErrorBoundaryWrapper(props: ErrorBoundaryProps) {
 
 class ErrorBoundaryInner extends Component<
   ErrorBoundaryProps,
-  ErrorBoundaryState
+  ErrorBoundaryState & { copied?: boolean }
 > {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      copied: false,
+    };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -41,6 +46,17 @@ class ErrorBoundaryInner extends Component<
 
   handleReload = () => {
     window.location.reload();
+  };
+
+  handleCopy = async () => {
+    const { error, errorInfo } = this.state;
+    if (!error) return;
+    const errorText =
+      `エラー名: ${error.name}\nエラーメッセージ: ${error.message}\n` +
+      (errorInfo ? `スタックトレース:\n${errorInfo.componentStack}` : '');
+    await navigator.clipboard.writeText(errorText);
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 1500);
   };
 
   render() {
@@ -76,8 +92,16 @@ class ErrorBoundaryInner extends Component<
             </button>
           </div>
           <details className="mt-6 w-full max-w-2xl text-left">
-            <summary className="cursor-pointer text-sm text-red-600 dark:text-red-400 font-medium">
-              詳細
+            <summary className="cursor-pointer text-sm text-red-600 dark:text-red-400 font-medium flex items-center justify-between">
+              <span>詳細</span>
+              <button
+                type="button"
+                onClick={this.handleCopy}
+                className="ml-4 px-2 py-1 text-xs rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ minWidth: 60 }}
+              >
+                {this.state.copied ? 'コピーしました' : 'コピー'}
+              </button>
             </summary>
             <div className="mt-2 p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-xs font-mono overflow-auto max-h-40 text-left">
               <div className="mb-2 text-left">
