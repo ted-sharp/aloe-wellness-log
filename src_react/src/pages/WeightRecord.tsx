@@ -14,7 +14,6 @@ import {
 import { PiChartLineDown } from 'react-icons/pi';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
-import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 
 const formatDate = (date: Date) => {
@@ -49,7 +48,6 @@ const WeightRecord: React.FC = () => {
     updateField,
     loadFields,
   } = useRecordsStore();
-  const { t } = useI18n();
 
   // 新規項目追加用state
   const [showAddField, setShowAddField] = useState(false);
@@ -626,7 +624,7 @@ const WeightRecord: React.FC = () => {
                 value={newFieldName}
                 onChange={e => setNewFieldName(e.target.value)}
                 className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder={t('fields.addFieldPlaceholder') || '新しい項目名'}
+                placeholder="新しい項目名"
                 maxLength={20}
               />
               <input

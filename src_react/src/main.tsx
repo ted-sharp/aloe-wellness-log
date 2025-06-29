@@ -7,7 +7,7 @@ import './index.css';
 import { initializePrivacySettings } from './utils/privacy';
 
 // i18nの初期化
-import './i18n';
+// import './i18n';
 
 // PWA型定義
 declare global {

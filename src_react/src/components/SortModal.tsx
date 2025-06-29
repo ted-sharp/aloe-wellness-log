@@ -27,7 +27,6 @@ import {
   useLiveRegion,
   useModalAccessibility,
 } from '../hooks/useAccessibility';
-import { useI18n } from '../hooks/useI18n';
 import type { Field } from '../types/record';
 
 // ソート可能なアイテムコンポーネント
@@ -38,7 +37,6 @@ function SortableItem({
   field: Field;
   onToggleDisplay: (fieldId: string) => void;
 }) {
-  const { t } = useI18n();
   const {
     attributes,
     listeners,
@@ -66,11 +64,7 @@ function SortableItem({
 
       // スクリーンリーダー用アナウンス
       announcePolite(
-        `${field.name}${t('dialogs.sortModal.toggledAnnouncement', {
-          state: newState
-            ? t('dialogs.sortModal.visible')
-            : t('dialogs.sortModal.hidden'),
-        })}`
+        `${field.name}表示状態を${newState ? '表示' : '非表示'}にしました`
       );
     },
     [
@@ -79,7 +73,6 @@ function SortableItem({
       field.name,
       onToggleDisplay,
       announcePolite,
-      t,
     ]
   );
 
@@ -90,11 +83,7 @@ function SortableItem({
 
     // スクリーンリーダー用アナウンス
     announcePolite(
-      `${field.name}${t('dialogs.sortModal.toggledAnnouncement', {
-        state: newState
-          ? t('dialogs.sortModal.visible')
-          : t('dialogs.sortModal.hidden'),
-      })}`
+      `${field.name}表示状態を${newState ? '表示' : '非表示'}にしました`
     );
   }, [
     field.fieldId,
@@ -102,7 +91,6 @@ function SortableItem({
     field.name,
     onToggleDisplay,
     announcePolite,
-    t,
   ]);
 
   const keyboardHandlers = {
@@ -114,8 +102,8 @@ function SortableItem({
 
   // 表示状態の説明文
   const displayStateDescription = field.defaultDisplay
-    ? t('dialogs.sortModal.visibleDescription')
-    : t('dialogs.sortModal.hiddenDescription');
+    ? '表示されている状態です'
+    : '非表示の状態です';
 
   return (
     <div
@@ -124,9 +112,7 @@ function SortableItem({
       className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-400"
       {...attributes}
       role="listitem"
-      aria-label={`${field.name}${t(
-        'common.item'
-      )} - ${displayStateDescription} ${t('accessibility.sortable')}`}
+      aria-label={`${field.name} - ${displayStateDescription} ソート可能なアイテム`}
     >
       <div
         className="flex flex-col sm:grid sm:gap-3 sm:items-center gap-2"
@@ -139,9 +125,7 @@ function SortableItem({
           </div>
           <div
             className="text-sm text-gray-600 dark:text-gray-400"
-            aria-label={`${t('dialogs.sortModal.unit')}: ${
-              field.unit || t('dialogs.sortModal.noUnit')
-            }`}
+            aria-label={`単位: ${field.unit || '未設定'}`}
           >
             {field.unit ? `(${field.unit})` : '―'}
           </div>
@@ -155,22 +139,20 @@ function SortableItem({
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
+                aria-label={`${field.name}表示状態を非表示にする`}
                 aria-pressed="true"
               >
-                {t('dialogs.sortModal.visible')}
+                表示
               </button>
             ) : (
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}${t(
-                  'dialogs.sortModal.makeVisible'
-                )}`}
+                aria-label={`${field.name}表示状態を表示にする`}
                 aria-pressed="false"
               >
-                {t('dialogs.sortModal.hidden')}
+                非表示
               </button>
             )}
           </div>
@@ -178,7 +160,7 @@ function SortableItem({
             className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
-            aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
+            aria-label={`${field.name}をソートする`}
             {...listeners}
           >
             <HiArrowsUpDown
@@ -197,22 +179,20 @@ function SortableItem({
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}${t('dialogs.sortModal.makeHidden')}`}
+                aria-label={`${field.name}表示状態を非表示にする`}
                 aria-pressed="true"
               >
-                {t('dialogs.sortModal.visible')}
+                表示
               </button>
             ) : (
               <button
                 onClick={handleToggleDisplay}
                 onKeyDown={handleKeyDown}
                 className="bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-1 transition-colors duration-150"
-                aria-label={`${field.name}${t(
-                  'dialogs.sortModal.makeVisible'
-                )}`}
+                aria-label={`${field.name}表示状態を表示にする`}
                 aria-pressed="false"
               >
-                {t('dialogs.sortModal.hidden')}
+                非表示
               </button>
             )}
           </div>
@@ -225,9 +205,7 @@ function SortableItem({
           {/* 単位 */}
           <div
             className="text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-600 pr-3 text-left"
-            aria-label={`${t('dialogs.sortModal.unit')}: ${
-              field.unit || t('dialogs.sortModal.noUnit')
-            }`}
+            aria-label={`単位: ${field.unit || '未設定'}`}
           >
             {field.unit ? `(${field.unit})` : '―'}
           </div>
@@ -237,7 +215,7 @@ function SortableItem({
             className="flex justify-center cursor-move focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-1 rounded p-1"
             tabIndex={0}
             role="button"
-            aria-label={`${field.name}${t('dialogs.sortModal.dragToSort')}`}
+            aria-label={`${field.name}をソートする`}
             {...listeners}
           >
             <HiArrowsUpDown
@@ -268,9 +246,6 @@ const SortModal: React.FC<SortModalProps> = ({
   onSave,
   onToggleDisplay,
 }) => {
-  const { t } = useI18n();
-
-  // アクセシビリティ関連フック
   const { modalProps } = useModalAccessibility(isOpen);
   const { announcePolite } = useLiveRegion();
 
@@ -303,28 +278,26 @@ const SortModal: React.FC<SortModalProps> = ({
 
         if (activeField && overField) {
           announcePolite(
-            `${activeField.name}${t('dialogs.sortModal.dragEndAnnouncement', {
-              target: overField.name,
-            })}`
+            `${activeField.name}を${overField.name}の後に移動しました`
           );
         }
       }
     },
-    [onDragEnd, fields, announcePolite, t]
+    [onDragEnd, fields, announcePolite]
   );
 
   // 保存時のアナウンス
   const handleSave = useCallback(() => {
     onSave();
-    announcePolite(t('dialogs.sortModal.savedAnnouncement'));
-  }, [onSave, announcePolite, t]);
+    announcePolite('ソートを保存しました');
+  }, [onSave, announcePolite]);
 
   // モーダル開閉時のアナウンス
   useEffect(() => {
     if (isOpen) {
-      announcePolite(t('dialogs.sortModal.openedAnnouncement'));
+      announcePolite('ソートモーダルを開きました');
     }
-  }, [isOpen, announcePolite, t]);
+  }, [isOpen, announcePolite]);
 
   // HeadlessUIの自動body制御を無効化（モバイル表示問題の修正）
   useEffect(() => {
@@ -368,12 +341,12 @@ const SortModal: React.FC<SortModalProps> = ({
               className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400"
               aria-hidden="true"
             />
-            {t('dialogs.sortModal.title')}
+            ソートモーダル
           </h3>
 
           <div className="mb-4" id="sort-modal-description">
             <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
-              {t('dialogs.sortModal.description')}
+              ソートしたい項目をドラッグして並び替えてください。
             </p>
           </div>
 
@@ -385,18 +358,13 @@ const SortModal: React.FC<SortModalProps> = ({
               announcements: {
                 onDragStart: ({ active }) => {
                   const field = fields.find(f => f.fieldId === active.id);
-                  return `${field?.name || 'アイテム'}${t(
-                    'dialogs.sortModal.dragStartAnnouncement'
-                  )}`;
+                  return `${field?.name || 'アイテム'}をソートする`;
                 },
                 onDragOver: ({ active, over }) => {
                   const activeField = fields.find(f => f.fieldId === active.id);
                   const overField = fields.find(f => f.fieldId === over?.id);
                   if (activeField && overField) {
-                    return `${activeField.name}${t(
-                      'dialogs.sortModal.dragOverAnnouncement',
-                      { target: overField.name }
-                    )}`;
+                    return `${activeField.name}を${overField.name}の後に移動する`;
                   }
                   return '';
                 },
@@ -404,25 +372,18 @@ const SortModal: React.FC<SortModalProps> = ({
                   const activeField = fields.find(f => f.fieldId === active.id);
                   const overField = fields.find(f => f.fieldId === over?.id);
                   if (active.id === over?.id) {
-                    return `${activeField?.name || 'アイテム'}${t(
-                      'dialogs.sortModal.dragReturnAnnouncement'
-                    )}`;
+                    return `${activeField?.name || 'アイテム'}をソートしました`;
                   }
                   if (activeField && overField) {
-                    return `${activeField.name}${t(
-                      'dialogs.sortModal.dragEndAnnouncement',
-                      { target: overField.name }
-                    )}`;
+                    return `${activeField.name}を${overField.name}の後に移動しました`;
                   }
-                  return `${activeField?.name || 'アイテム'}${t(
-                    'dialogs.sortModal.dragCompleteAnnouncement'
-                  )}`;
+                  return `${activeField?.name || 'アイテム'}をソートしました`;
                 },
                 onDragCancel: ({ active }) => {
                   const field = fields.find(f => f.fieldId === active.id);
-                  return `${field?.name || 'アイテム'}${t(
-                    'dialogs.sortModal.dragCancelAnnouncement'
-                  )}`;
+                  return `${
+                    field?.name || 'アイテム'
+                  }をソートをキャンセルしました`;
                 },
               },
             }}
@@ -434,7 +395,7 @@ const SortModal: React.FC<SortModalProps> = ({
               <div
                 className="space-y-2 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pr-1 sm:pr-2"
                 role="list"
-                aria-label={t('dialogs.sortModal.listLabel')}
+                aria-label="ソート可能なアイテム"
                 aria-describedby="sort-modal-description"
               >
                 {fields.map(field => (
@@ -451,25 +412,25 @@ const SortModal: React.FC<SortModalProps> = ({
           <div
             className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end"
             role="group"
-            aria-label={t('dialogs.sortModal.buttonsLabel')}
+            aria-label="ソートモーダルのボタン"
           >
             <button
               type="button"
               className="bg-gray-400 dark:bg-gray-600 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-500 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               onClick={onClose}
-              aria-label={t('dialogs.sortModal.cancelLabel')}
+              aria-label="ソートモーダルを閉じる"
             >
               <HiXMark className="w-4 h-4" aria-hidden="true" />
-              {t('common.cancel')}
+              キャンセル
             </button>
             <button
               type="button"
               className="bg-purple-600 dark:bg-purple-700 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 dark:hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-offset-2 transition-colors duration-200 font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
               onClick={handleSave}
-              aria-label={t('dialogs.sortModal.saveLabel')}
+              aria-label="ソートを保存する"
             >
               <HiCheckCircle className="w-4 h-4" aria-hidden="true" />
-              {t('common.save')}
+              保存
             </button>
           </div>
         </div>

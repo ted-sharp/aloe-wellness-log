@@ -5,7 +5,6 @@ import { useRecordsStore } from '../store/records';
 import { useToastStore } from '../store/toast';
 import type { Field } from '../types/record';
 import { useErrorHandler } from './useErrorHandler';
-import { useI18n } from './useI18n';
 
 type NewField = {
   name: string;
@@ -15,7 +14,6 @@ type NewField = {
 };
 
 export function useFieldManagement() {
-  const { t, getAnnouncement } = useI18n();
   const { fields, loadFields, addField, updateField, deleteField } =
     useRecordsStore();
   const { showSuccess, showError } = useToastStore();
@@ -73,12 +71,12 @@ export function useFieldManagement() {
       setAddFieldError(null);
 
       if (!newField.name.trim()) {
-        setAddFieldError(t('validation.fieldNameInput'));
+        setAddFieldError('フィールド名を入力してください');
         return;
       }
 
       if (fields.some(f => f.name === newField.name.trim())) {
-        setAddFieldError(t('validation.duplicateFieldName'));
+        setAddFieldError('同じ名前のフィールドが既に存在します');
         return;
       }
 
@@ -111,13 +109,13 @@ export function useFieldManagement() {
           return true;
         },
         {
-          context: t('actions.add'),
-          fallbackMessage: t('errors.general'),
+          context: 'フィールド追加',
+          fallbackMessage: 'フィールドの追加に失敗しました',
         }
       );
 
       if (result) {
-        showSuccess(getAnnouncement('fieldAddedSuccess'));
+        showSuccess('フィールドが正常に追加されました');
       }
     },
     [
@@ -164,13 +162,13 @@ export function useFieldManagement() {
         return true;
       },
       {
-        context: t('actions.edit'),
-        fallbackMessage: t('errors.general'),
+        context: 'フィールド編集',
+        fallbackMessage: 'フィールドの編集に失敗しました',
       }
     );
 
     if (result) {
-      showSuccess(getAnnouncement('fieldEditedSuccess'));
+      showSuccess('フィールドが正常に編集されました');
     }
 
     setEditFieldId(null);
@@ -194,7 +192,7 @@ export function useFieldManagement() {
         setTemporaryDisplayFields(prev => new Set([...prev, fieldId]));
         setShowSelectField(false);
         setShowSelectButtons(new Set());
-        showSuccess(getAnnouncement('fieldTempDisplayAdded'));
+        showSuccess('フィールドが一時的に表示されました');
       }
     },
     [fields, showSuccess]
@@ -233,7 +231,7 @@ export function useFieldManagement() {
 
         await loadFields();
 
-        showSuccess(getAnnouncement('fieldDisplayChanged'));
+        showSuccess('フィールドの表示状態が正常に変更されました');
       } catch (error) {
         // エラー時のロールバック: 元の状態に戻す
         useRecordsStore.setState({ fields });
@@ -285,13 +283,13 @@ export function useFieldManagement() {
         return true;
       },
       {
-        context: t('actions.edit'),
-        fallbackMessage: t('errors.general'),
+        context: '既存項目編集',
+        fallbackMessage: '既存項目の編集に失敗しました',
       }
     );
 
     if (result) {
-      showSuccess(getAnnouncement('fieldEditedSuccess'));
+      showSuccess('既存項目が正常に編集されました');
     }
 
     setEditingExistingFieldId(null);
@@ -311,7 +309,7 @@ export function useFieldManagement() {
   const handleDeleteExistingField = useCallback(
     async (field: Field) => {
       const isConfirmed = window.confirm(
-        t('common.confirmDeleteField', { fieldName: field.name })
+        'このフィールドを削除してもよろしいですか？'
       );
 
       if (!isConfirmed) return;
@@ -324,13 +322,13 @@ export function useFieldManagement() {
           return true;
         },
         {
-          context: t('actions.delete'),
-          fallbackMessage: t('errors.general'),
+          context: 'フィールド削除',
+          fallbackMessage: 'フィールドの削除に失敗しました',
         }
       );
 
       if (result) {
-        showSuccess(getAnnouncement('fieldDeletedSuccess'));
+        showSuccess('フィールドが正常に削除されました');
       }
     },
     [deleteField, handleAsyncError, loadFields, showSuccess]
@@ -398,11 +396,11 @@ export function useFieldManagement() {
 
         // 再読み込み後もフィールドがない場合は警告
         if (currentFields.length === 0) {
-          showError(t('errors.fieldDataNotFound'));
+          showError('フィールドデータが見つかりませんでした');
           return;
         }
       } catch (error) {
-        showError(t('errors.fieldDataLoadFailed'));
+        showError('フィールドデータの読み込みに失敗しました');
         return;
       }
     }
@@ -454,13 +452,13 @@ export function useFieldManagement() {
         return true;
       },
       {
-        context: t('actions.sort'),
-        fallbackMessage: t('errors.general'),
+        context: 'フィールド並び替え',
+        fallbackMessage: 'フィールドの並び替えに失敗しました',
       }
     );
 
     if (result) {
-      showSuccess(getAnnouncement('sortOrderSaved'));
+      showSuccess('フィールドの並び替えが正常に保存されました');
     }
   }, [updateField, handleAsyncError, loadFields, showSuccess]);
 
@@ -490,7 +488,7 @@ export function useFieldManagement() {
       );
 
       if (result) {
-        showSuccess(getAnnouncement('fieldHidden'));
+        showSuccess('フィールドが正常に非表示になりました');
       }
     },
     [updateField, handleAsyncError, loadFields, showSuccess]

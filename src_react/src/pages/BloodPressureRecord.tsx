@@ -32,7 +32,6 @@ import {
 } from 'react-icons/hi2';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
-import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 
 const formatDate = (date: Date) => {
@@ -67,7 +66,6 @@ const BloodPressureRecord: React.FC = () => {
     updateField,
     loadFields,
   } = useRecordsStore();
-  const { t } = useI18n();
 
   // 新規項目追加用state
   const [showAddField, setShowAddField] = useState(false);
@@ -592,9 +590,7 @@ const BloodPressureRecord: React.FC = () => {
                   value={newFieldName}
                   onChange={e => setNewFieldName(e.target.value)}
                   className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder={
-                    t('fields.addFieldPlaceholder') || '新しい項目名'
-                  }
+                  placeholder="新しい項目名"
                   maxLength={20}
                 />
                 <input
@@ -638,7 +634,7 @@ const BloodPressureRecord: React.FC = () => {
                 fullWidth
                 onClick={() => setShowAddField(true)}
               >
-                {t('actions.addField') || '＋新規項目'}
+                ＋新規項目
               </Button>
             )}
             {addFieldError && (
@@ -657,7 +653,7 @@ const BloodPressureRecord: React.FC = () => {
                 onClick={handleEditSave}
                 fullWidth
               >
-                {t('actions.save') || '保存'}
+                保存
               </Button>
               <Button
                 variant="secondary"
@@ -666,7 +662,7 @@ const BloodPressureRecord: React.FC = () => {
                 onClick={handleEditCancel}
                 fullWidth
               >
-                {t('actions.cancel') || 'キャンセル'}
+                キャンセル
               </Button>
             </div>
           ) : (
@@ -677,7 +673,7 @@ const BloodPressureRecord: React.FC = () => {
               fullWidth
               onClick={() => setIsEditMode(true)}
             >
-              {t('actions.edit') || '編集'}
+              編集
             </Button>
           )}
         </div>

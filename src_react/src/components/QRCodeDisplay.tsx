@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { BsQrCode } from 'react-icons/bs';
 import { IoClose } from 'react-icons/io5';
 import QRCode from 'react-qr-code';
-import { useI18n } from '../hooks/useI18n';
 
 interface QRCodeDisplayProps {
   url?: string;
@@ -13,7 +12,6 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   url = 'https://ted-sharp.github.io/aloe-wellness-log/',
   className = '',
 }) => {
-  const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
@@ -25,12 +23,10 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
       <button
         onClick={openModal}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:ring-offset-2 transition-colors ${className}`}
-        title={t('dialogs.qrCode.show')}
+        title="QRコードを表示"
       >
         <BsQrCode className="w-4 h-4" />
-        <span className="hidden sm:inline">
-          {t('dialogs.qrCode.buttonText')}
-        </span>
+        <span className="hidden sm:inline">QRコード</span>
       </button>
 
       {/* QRコード表示モーダル */}
@@ -43,12 +39,12 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {t('dialogs.qrCode.title')}
+                QRコードを表示
               </h3>
               <button
                 onClick={closeModal}
                 className="bg-gray-200/80 dark:bg-gray-700/70 text-gray-400 dark:text-gray-300 hover:bg-gray-300/90 dark:hover:bg-gray-600/80 transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
-                aria-label={t('actions.close')}
+                aria-label="閉じる"
               >
                 <IoClose className="w-5 h-5" />
               </button>
@@ -67,7 +63,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  {t('dialogs.qrCode.scanText')}
+                  QRコードをスキャン
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
                   {url}
@@ -81,14 +77,14 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
                   // 簡単なフィードバック
                   const button = document.activeElement as HTMLButtonElement;
                   const originalText = button.textContent;
-                  button.textContent = t('dialogs.qrCode.copied');
+                  button.textContent = 'コピーしました！';
                   setTimeout(() => {
                     button.textContent = originalText;
                   }, 2000);
                 }}
                 className="px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:ring-offset-2 transition-colors"
               >
-                {t('dialogs.qrCode.copyUrl')}
+                URLをコピー
               </button>
             </div>
 
@@ -97,7 +93,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
               onClick={closeModal}
               className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-gray-400 focus:ring-offset-2 transition-colors"
             >
-              {t('dialogs.qrCode.close')}
+              閉じる
             </button>
           </div>
         </div>

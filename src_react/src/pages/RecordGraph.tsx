@@ -8,12 +8,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useI18n } from '../hooks/useI18n';
 import { useRecordsStore } from '../store/records';
 
 const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
-  const { t } = useI18n();
 
   // 体重フィールドIDを取得
   const weightField = fields.find(f => f.fieldId === 'weight');
@@ -48,7 +46,7 @@ const RecordGraph: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-start py-8">
       <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-white whitespace-nowrap">
-        {t('graph.weightTitle', '体重グラフ')}
+        体重グラフ
       </h1>
       <div className="w-full max-w-2xl h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <ResponsiveContainer width="100%" height="100%">
