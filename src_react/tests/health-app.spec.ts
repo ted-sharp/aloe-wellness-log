@@ -38,14 +38,12 @@ test.describe('健康管理アプリ', () => {
     await ensureNavigationVisible(page);
 
     // ナビゲーションメニューの確認（aria-labelで一意に特定）
-    await expect(page.getByRole('link', { name: '入力に移動' })).toBeVisible();
-    await expect(page.getByRole('link', { name: '一覧に移動' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '血圧に移動' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '体重に移動' })).toBeVisible();
     await expect(
       page.getByRole('link', { name: 'グラフに移動' })
     ).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: 'カレンダーに移動' })
-    ).toBeVisible();
+    await expect(page.getByRole('link', { name: '体重に移動' })).toBeVisible();
     await expect(page.getByRole('link', { name: '管理に移動' })).toBeVisible();
   });
 
@@ -121,7 +119,7 @@ test.describe('健康管理アプリ', () => {
     await ensureNavigationVisible(page);
 
     // 記録一覧画面に移動
-    await page.getByRole('link', { name: '一覧に移動' }).click();
+    await page.getByRole('link', { name: '体重に移動' }).click();
     await expect(page.url()).toContain('/list');
 
     // 記録一覧のページタイトル確認（h1で確認）
@@ -155,7 +153,7 @@ test.describe('健康管理アプリ', () => {
     await ensureNavigationVisible(page);
 
     // 記録カレンダー画面に移動
-    await page.getByRole('link', { name: 'カレンダーに移動' }).click();
+    await page.getByRole('link', { name: '体重に移動' }).click();
     await expect(page.url()).toContain('/calendar');
 
     // カレンダーページのタイトル確認（h1で確認）
@@ -192,11 +190,11 @@ test.describe('健康管理アプリ', () => {
   test('ナビゲーション動作の確認', async ({ page }) => {
     // 各ページへのナビゲーションテスト
     const navItems = [
-      { name: '一覧に移動', url: '/list' },
-      { name: 'グラフに移動', url: '/graph' },
-      { name: 'カレンダーに移動', url: '/calendar' },
-      { name: '管理に移動', url: '/export' },
-      { name: '入力に移動', url: '/' },
+      { name: '日課', url: '/daily' },
+      { name: '体重', url: '/weight' },
+      { name: '血圧', url: '/bp' },
+      { name: 'グラフ', url: '/graph' },
+      { name: '管理', url: '/export' },
     ];
 
     for (const nav of navItems) {

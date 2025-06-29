@@ -20,53 +20,85 @@ vi.mock('./useErrorHandler', () => ({
   }),
 }));
 
-const mockFields = [
+const mockFields: (
+  | {
+      fieldId: string;
+      name: string;
+      unit: string;
+      type: 'number';
+      order: number;
+      defaultDisplay: boolean;
+      scope: 'weight' | 'bp' | 'daily';
+      excludeFromGraph: boolean;
+    }
+  | {
+      fieldId: string;
+      name: string;
+      type: 'boolean';
+      order: number;
+      defaultDisplay: boolean;
+      scope: 'weight' | 'bp' | 'daily';
+      excludeFromGraph: boolean;
+    }
+)[] = [
   {
     fieldId: 'weight',
     name: '体重',
     unit: 'kg',
-    type: 'number' as const,
+    type: 'number',
     order: 1,
     defaultDisplay: true,
+    scope: 'weight',
+    excludeFromGraph: false,
   },
   {
     fieldId: 'systolic_bp',
     name: '最高血圧',
     unit: 'mmHg',
-    type: 'number' as const,
+    type: 'number',
     order: 2,
     defaultDisplay: true,
+    scope: 'bp',
+    excludeFromGraph: false,
   },
   {
     fieldId: 'diastolic_bp',
     name: '最低血圧',
     unit: 'mmHg',
-    type: 'number' as const,
+    type: 'number',
     order: 3,
     defaultDisplay: true,
+    scope: 'bp',
+    excludeFromGraph: false,
   },
   {
     fieldId: 'heart_rate',
     name: '心拍数',
     unit: 'bpm',
-    type: 'number' as const,
+    type: 'number',
     order: 4,
     defaultDisplay: false,
+    scope: 'bp',
+    excludeFromGraph: false,
   },
   {
     fieldId: 'body_temperature',
     name: '体温',
     unit: '℃',
-    type: 'number' as const,
+    type: 'number',
     order: 5,
     defaultDisplay: false,
+    scope: 'bp',
+    excludeFromGraph: false,
   },
   {
     fieldId: 'exercise',
     name: '運動(早歩き)',
-    type: 'boolean' as const,
+    type: 'boolean',
     order: 6,
     defaultDisplay: true,
+    scope: 'daily',
+    excludeFromGraph: false,
   },
 ];
 
@@ -122,6 +154,7 @@ describe('useFieldManagement', () => {
       name: '',
       type: 'number',
       unit: '',
+      excludeFromGraph: false,
     });
     expect(result.current.editFieldId).toBe(null);
     expect(result.current.addFieldError).toBe(null);
@@ -164,6 +197,7 @@ describe('useFieldManagement', () => {
       name: 'テスト項目',
       type: 'string',
       unit: 'test',
+      excludeFromGraph: false,
     });
   });
 
@@ -180,6 +214,7 @@ describe('useFieldManagement', () => {
     expect(result.current.editField).toEqual({
       name: '体重',
       unit: 'kg',
+      excludeFromGraph: false,
     });
   });
 
@@ -192,7 +227,7 @@ describe('useFieldManagement', () => {
 
     expect(result.current.temporaryDisplayFields.has('heart_rate')).toBe(true);
     expect(mockShowSuccess).toHaveBeenCalledWith(
-      '項目を一時表示に追加しました'
+      'フィールドが一時的に表示されました'
     );
   });
 
@@ -229,6 +264,7 @@ describe('useFieldManagement', () => {
     expect(result.current.editField).toEqual({
       name: '更新された名前',
       unit: '更新された単位',
+      excludeFromGraph: false,
     });
   });
 
@@ -302,7 +338,11 @@ describe('useFieldManagement', () => {
       result.current.setEditingExistingField(editContent);
     });
 
-    expect(result.current.editingExistingField).toEqual(editContent);
+    expect(result.current.editingExistingField).toEqual({
+      name: '編集中の体重',
+      unit: 'kg',
+      excludeFromGraph: false,
+    });
   });
 
   it('handleEditExistingField が既存フィールドの編集状態を設定する', () => {
@@ -318,6 +358,7 @@ describe('useFieldManagement', () => {
     expect(result.current.editingExistingField).toEqual({
       name: '心拍数',
       unit: 'bpm',
+      excludeFromGraph: false,
     });
   });
 

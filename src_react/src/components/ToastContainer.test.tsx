@@ -262,7 +262,7 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
 
-    const container = screen.getByRole('region');
+    const container = screen.getByRole('region', { name: '情報' });
     expect(container).toHaveAttribute('aria-label', '情報');
     expect(container).toHaveAttribute('aria-live', 'polite');
     expect(container).toHaveAttribute('aria-atomic', 'false');

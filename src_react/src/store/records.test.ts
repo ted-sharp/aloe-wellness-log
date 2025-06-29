@@ -61,8 +61,14 @@ describe('useRecordsStore', () => {
   describe('loadFields', () => {
     it('フィールドをロードし、order属性のマイグレーションを実行する', async () => {
       const mockFields: Field[] = [
-        { fieldId: 'weight', name: '体重', type: 'number', unit: 'kg' },
-        { fieldId: 'exercise', name: '運動', type: 'boolean' },
+        {
+          fieldId: 'weight',
+          name: '体重',
+          type: 'number',
+          unit: 'kg',
+          scope: 'weight',
+        },
+        { fieldId: 'exercise', name: '運動', type: 'boolean', scope: 'daily' },
       ];
 
       mockDb.getAllFields.mockResolvedValue(mockFields);
@@ -89,6 +95,7 @@ describe('useRecordsStore', () => {
           unit: 'kg',
           order: 1,
           defaultDisplay: true,
+          scope: 'weight',
         },
       ];
 
@@ -182,6 +189,7 @@ describe('useRecordsStore', () => {
         unit: 'kg',
         order: 1,
         defaultDisplay: true,
+        scope: 'weight',
       };
 
       mockDb.addField.mockResolvedValue(undefined);
@@ -281,7 +289,7 @@ describe('useRecordsStore', () => {
 
       // 初期フィールドの内容を確認
       const batchUpdateCall = mockDb.batchUpdateFields.mock.calls[0][0];
-      expect(batchUpdateCall).toHaveLength(10); // initialFieldsの数
+      expect(batchUpdateCall).toHaveLength(11); // initialFieldsの数
       expect(batchUpdateCall[0]).toEqual(
         expect.objectContaining({
           fieldId: 'weight',
@@ -294,7 +302,13 @@ describe('useRecordsStore', () => {
 
     it('フィールドが既に存在する場合、何もしない', async () => {
       const existingFields: Field[] = [
-        { fieldId: 'weight', name: '体重', type: 'number', unit: 'kg' },
+        {
+          fieldId: 'weight',
+          name: '体重',
+          type: 'number',
+          unit: 'kg',
+          scope: 'weight',
+        },
       ];
 
       mockDb.getAllFields.mockResolvedValue(existingFields);
@@ -354,7 +368,9 @@ describe('useRecordsStore', () => {
             value: 65,
           },
         ],
-        fields: [{ fieldId: 'weight', name: '体重', type: 'number' }],
+        fields: [
+          { fieldId: 'weight', name: '体重', type: 'number', scope: 'weight' },
+        ],
         recordsOperation: { loading: false, error: null },
         fieldsOperation: { loading: false, error: null },
       });
