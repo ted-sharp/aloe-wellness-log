@@ -634,7 +634,7 @@ const BloodPressureRecord: React.FC = () => {
                 fullWidth
                 onClick={() => setShowAddField(true)}
               >
-                ＋新規項目
+                新規項目
               </Button>
             )}
             {addFieldError && (
