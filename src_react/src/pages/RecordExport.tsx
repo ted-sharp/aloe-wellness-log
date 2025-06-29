@@ -401,12 +401,17 @@ export default function RecordExport() {
     try {
       await loadFields(); // 最新の項目を取得
 
-      if (fields.length === 0) {
-        throw new Error('No fields exist. Please initialize fields first.');
+      // defaultDisplay===falseの項目は除外
+      const visibleFields = fields.filter(f => f.defaultDisplay !== false);
+
+      if (visibleFields.length === 0) {
+        throw new Error(
+          '表示対象のフィールドが存在しません。初期化してください。'
+        );
       }
 
       const dataCount = 100; // 生成するデータ数
-      const daysBack = 30; // 過去30日分
+      const daysBack = 180; // 過去6か月分（約180日）
       let createdCount = 0;
 
       for (let i = 0; i < dataCount; i++) {
@@ -427,8 +432,9 @@ export default function RecordExport() {
           .padStart(2, '0')}`;
         const datetimeStr = `${dateStr} ${timeStr}`;
 
-        // ランダムな項目を選択
-        const randomField = fields[Math.floor(Math.random() * fields.length)];
+        // ランダムな項目を選択（visibleFieldsのみ対象）
+        const randomField =
+          visibleFields[Math.floor(Math.random() * visibleFields.length)];
 
         // 項目の型に応じてランダムな値を生成
         let value: string | number | boolean;
@@ -530,6 +536,105 @@ export default function RecordExport() {
 
     if (isConfirmed) {
       generateTestData();
+    }
+  };
+
+  // 体重専用テストデータ生成関数
+  const generateWeightTestData = async () => {
+    setTestDataStatus('体重テストデータを生成中...');
+    setIsGeneratingTestData(true);
+    setTestDataProgress(0);
+    try {
+      await loadFields();
+      const weightField = fields.find(
+        f => f.fieldId === 'weight' && f.defaultDisplay !== false
+      );
+      if (!weightField) {
+        throw new Error('体重フィールドが見つかりません。');
+      }
+      const daysBack = 180; // 180日分
+      const baseWeight = 75; // 初期体重
+      const minWeight = 50;
+      const maxWeight = 100;
+      let createdCount = 0;
+      for (let i = daysBack - 1; i >= 0; i--) {
+        // 日付を過去から順に生成
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        // 時刻は毎日8:00固定
+        const timeStr = '08:00';
+        const datetimeStr = `${dateStr} ${timeStr}`;
+        // 体重を徐々に減少させつつ±2kgの範囲でランダム変動
+        const trend = (daysBack - i) * 0.05; // 1日あたり0.05kg減少
+        const randomDelta = (Math.random() - 0.5) * 2; // -2〜+2kg（1日あたりの変化幅を±2に制限）
+        let weight = baseWeight - trend + randomDelta;
+        weight = Math.max(
+          minWeight,
+          Math.min(maxWeight, Math.round(weight * 10) / 10)
+        );
+        // 一意なIDを生成
+        const uniqueId = `test_weight_${dateStr}_${Math.random()
+          .toString(36)
+          .substr(2, 6)}`;
+        const testRecord = {
+          id: uniqueId,
+          date: dateStr,
+          time: timeStr,
+          datetime: datetimeStr,
+          fieldId: weightField.fieldId,
+          value: weight,
+        };
+        try {
+          await addRecord(testRecord);
+          createdCount++;
+        } catch (error) {
+          console.warn(
+            '体重テストレコードの追加をスキップ:',
+            testRecord.id,
+            error
+          );
+        }
+        // 進捗を更新
+        const progress = ((daysBack - i + 1) / daysBack) * 100;
+        setTestDataProgress(progress);
+        if ((daysBack - i + 1) % 10 === 0) {
+          setTestDataStatus(
+            `体重テストデータを生成中... ${daysBack - i + 1}/${daysBack}`
+          );
+        }
+      }
+      await loadRecords();
+      setTestDataStatus(`✅ 体重テストデータ${createdCount}件を生成しました`);
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 3000);
+    } catch (error) {
+      console.error('体重テストデータ生成エラー:', error);
+      setTestDataStatus(
+        `❌ 体重テストデータの生成に失敗しました: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 5000);
+    } finally {
+      setIsGeneratingTestData(false);
+    }
+  };
+
+  const handleGenerateWeightTestData = () => {
+    const isConfirmed = window.confirm(
+      '本当に体重テストデータを生成してもよろしいですか？'
+    );
+    if (isConfirmed) {
+      generateWeightTestData();
     }
   };
 
@@ -689,6 +794,17 @@ export default function RecordExport() {
               loading={isGeneratingTestData}
             >
               テストデータを生成
+            </Button>
+            <Button
+              variant="purple"
+              size="lg"
+              icon={HiSparkles}
+              onClick={handleGenerateWeightTestData}
+              fullWidth={false}
+              disabled={isGeneratingTestData}
+              loading={isGeneratingTestData}
+            >
+              体重テストデータ生成
             </Button>
           </div>
         </div>
