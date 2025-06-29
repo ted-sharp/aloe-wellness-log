@@ -4,8 +4,8 @@ import './App.css';
 import Button from './components/Button';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
-import BloodPressureRecord from './pages/BloodPressureRecord';
 import DailyRecord from './pages/DailyRecord';
+import OtherRecord from './pages/OtherRecord';
 import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
@@ -81,7 +81,7 @@ function Navigation() {
   const navItems = [
     { path: '/daily', label: '日課', color: 'teal' },
     { path: '/weight', label: '体重', color: 'teal' },
-    { path: '/bp', label: '血圧', color: 'teal' },
+    { path: '/other', label: 'その他', color: 'teal' },
     { path: '/graph', label: 'グラフ', color: 'blue' },
     { path: '/export', label: '管理', color: 'purple' },
   ];
@@ -310,7 +310,7 @@ function App() {
       </header>
 
       <main id="main-content" role="main" className="px-4" tabIndex={-1}>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<PageLoader pageName="日課" />}>
           <Routes>
             <Route
               path="/daily"
@@ -329,10 +329,10 @@ function App() {
               }
             />
             <Route
-              path="/bp"
+              path="/other"
               element={
-                <Suspense fallback={<PageLoader pageName="血圧" />}>
-                  <BloodPressureRecord />
+                <Suspense fallback={<PageLoader pageName="その他" />}>
+                  <OtherRecord />
                 </Suspense>
               }
             />

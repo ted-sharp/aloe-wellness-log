@@ -50,7 +50,7 @@ const formatLocalDateTime = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-const BloodPressureRecord: React.FC = () => {
+const OtherRecord: React.FC = () => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(today);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
@@ -75,7 +75,7 @@ const BloodPressureRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const bpFields = useMemo(
+  const otherFields = useMemo(
     () =>
       isEditMode
         ? fields
@@ -97,10 +97,10 @@ const BloodPressureRecord: React.FC = () => {
     [fields, isEditMode]
   );
   const [editFields, setEditFields] = useState(() =>
-    bpFields.map(f => ({ ...f }))
+    otherFields.map(f => ({ ...f }))
   );
   const [editOrder, setEditOrder] = useState(() =>
-    bpFields.map(f => f.fieldId)
+    otherFields.map(f => f.fieldId)
   );
   const [editDelete, setEditDelete] = useState<string[]>([]);
 
@@ -117,7 +117,7 @@ const BloodPressureRecord: React.FC = () => {
   const recordTime = formatLocalTime(selectedDate);
 
   // 既存記録の取得
-  const getBPRecord = (fieldId: string) =>
+  const getOtherRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
 
   // 入力値ローカルstate
@@ -125,12 +125,12 @@ const BloodPressureRecord: React.FC = () => {
   useEffect(() => {
     // 日付変更やレコード更新時に既存値を反映
     const newValues: Record<string, string> = {};
-    bpFields.forEach(f => {
-      const rec = getBPRecord(f.fieldId);
+    otherFields.forEach(f => {
+      const rec = getOtherRecord(f.fieldId);
       newValues[f.fieldId] = rec ? String(rec.value) : '';
     });
     setInputValues(newValues);
-  }, [fields, isEditMode, records, recordDate, bpFields]);
+  }, [fields, isEditMode, records, recordDate, otherFields]);
 
   // 保存
   const handleSave = async (fieldId: string) => {
@@ -138,7 +138,7 @@ const BloodPressureRecord: React.FC = () => {
     if (!value) return;
     const numValue = Number(value);
     if (isNaN(numValue)) return;
-    const rec = getBPRecord(fieldId);
+    const rec = getOtherRecord(fieldId);
     if (rec) {
       await updateRecord({ ...rec, value: numValue });
     } else {
@@ -156,7 +156,7 @@ const BloodPressureRecord: React.FC = () => {
   };
   // 削除
   const handleDelete = async (fieldId: string) => {
-    const rec = getBPRecord(fieldId);
+    const rec = getOtherRecord(fieldId);
     if (rec) {
       await deleteRecord(rec.id);
       await loadRecords();
@@ -189,11 +189,6 @@ const BloodPressureRecord: React.FC = () => {
       scope: 'bp' as const,
     };
     await addField(newField);
-    // 編集モード中なら即時ローカルstateにも反映
-    if (isEditMode) {
-      setEditFields(fields => [...fields, { ...newField }]);
-      setEditOrder(order => [...order, fieldId]);
-    }
     setShowAddField(false);
     setNewFieldName('');
     setNewFieldUnit('');
@@ -202,15 +197,15 @@ const BloodPressureRecord: React.FC = () => {
   // 編集モード切替時に最新フィールドで初期化
   useEffect(() => {
     if (isEditMode) {
-      const allBPFields = fields
+      const allOtherFields = fields
         .filter(f => f.type === 'number' && f.scope === 'bp')
         .slice()
         .sort((a, b) => {
           if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
           return a.fieldId.localeCompare(b.fieldId);
         });
-      setEditFields(allBPFields.map(f => ({ ...f })));
-      setEditOrder(allBPFields.map(f => f.fieldId));
+      setEditFields(allOtherFields.map(f => ({ ...f })));
+      setEditOrder(allOtherFields.map(f => f.fieldId));
       setEditDelete([]);
     }
   }, [isEditMode, fields]);
@@ -455,7 +450,7 @@ const BloodPressureRecord: React.FC = () => {
     return records.some(
       r =>
         r.date === formatDate(date) &&
-        bpFields.some(f => f.fieldId === r.fieldId)
+        otherFields.some(f => f.fieldId === r.fieldId)
     );
   };
 
@@ -527,7 +522,7 @@ const BloodPressureRecord: React.FC = () => {
               </SortableContext>
             </DndContext>
           ) : (
-            bpFields.map(field => {
+            otherFields.map(field => {
               const value = inputValues[field.fieldId] ?? '';
               return (
                 <div
@@ -686,4 +681,4 @@ const BloodPressureRecord: React.FC = () => {
   );
 };
 
-export default BloodPressureRecord;
+export default OtherRecord;
