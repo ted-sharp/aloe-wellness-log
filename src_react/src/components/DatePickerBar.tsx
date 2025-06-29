@@ -93,6 +93,75 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     };
   }, [centerDate, setCenterDate]);
 
+  // スマホ用: フリックで日付移動（慣性スクロール対応）
+  useEffect(() => {
+    const btns = btnsRef.current;
+    if (!btns) return;
+    let startX: number | null = null;
+    let startTime: number | null = null;
+    let animating = false;
+    let animationFrame: number | null = null;
+
+    const animateScroll = (days: number) => {
+      if (days === 0) return;
+      animating = true;
+      let remaining = Math.abs(days);
+      const dir = days > 0 ? 1 : -1;
+      const step = () => {
+        if (remaining > 0) {
+          const d = new Date(centerDate);
+          d.setDate(centerDate.getDate() + dir);
+          setCenterDate(d);
+          remaining--;
+          animationFrame = requestAnimationFrame(step);
+        } else {
+          animating = false;
+        }
+      };
+      step();
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1 && !animating) {
+        startX = e.touches[0].clientX;
+        startTime = Date.now();
+      }
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      if (startX === null) return;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (startX === null || startTime === null || animating) return;
+      const endX = e.changedTouches[0].clientX;
+      const dx = endX - startX;
+      const dt = Date.now() - startTime;
+      // 距離・速度から日数を決定
+      let days = 0;
+      if (Math.abs(dx) > 30) {
+        // 速度(px/ms)と距離(px)で重み付け
+        const velocity = Math.abs(dx) / Math.max(dt, 1); // px/ms
+        days = Math.round(
+          Math.min(7, Math.max(1, Math.abs(dx) / 40 + velocity * 10))
+        );
+        days = Math.min(7, Math.max(1, days));
+        days = dx < 0 ? days : -days;
+        animateScroll(days);
+      }
+      startX = null;
+      startTime = null;
+    };
+    btns.addEventListener('touchstart', handleTouchStart, { passive: true });
+    btns.addEventListener('touchmove', handleTouchMove, { passive: false });
+    btns.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      btns.removeEventListener('touchstart', handleTouchStart);
+      btns.removeEventListener('touchmove', handleTouchMove);
+      btns.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [centerDate, setCenterDate]);
+
   return (
     <div>
       <div
