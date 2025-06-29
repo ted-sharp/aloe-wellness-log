@@ -164,32 +164,10 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                   </span>
                   <span className="text-lg font-bold">{formatDay(date)}</span>
                   {isRecorded && isRecorded(date) && (
-                    <span className="absolute top-1 right-1">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <circle
-                          cx="10"
-                          cy="10"
-                          r="9"
-                          stroke="#22c55e"
-                          strokeWidth="2"
-                          fill="white"
-                        />
-                        <path
-                          d="M6 10.5l3 3 5-5"
-                          stroke="#22c55e"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          fill="none"
-                        />
-                      </svg>
-                    </span>
+                    <span
+                      className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 border border-white dark:border-gray-800"
+                      aria-label="記録済み"
+                    />
                   )}
                 </button>
               </React.Fragment>
