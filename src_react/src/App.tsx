@@ -135,8 +135,9 @@ function Navigation() {
 
       {/* モバイル用ヘッダー */}
       <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm mx-4 mt-4">
-        <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap">
-          App Title
+        <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap flex items-center gap-2">
+          <img src="/aloe-icon.png" alt="アロエアイコン" className="h-7 w-7" />
+          アロエ健康管理
         </h1>
 
         <div className="flex items-center">
