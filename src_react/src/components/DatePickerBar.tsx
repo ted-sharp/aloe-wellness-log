@@ -93,74 +93,43 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     };
   }, [centerDate, setCenterDate]);
 
-  // スマホ用: フリックで日付移動（慣性スクロール対応）
+  // スクロールで中央に最も近い日付を自動選択
   useEffect(() => {
     const btns = btnsRef.current;
     if (!btns) return;
-    let startX: number | null = null;
-    let startTime: number | null = null;
-    let animating = false;
-    let animationFrame: number | null = null;
-
-    const animateScroll = (days: number) => {
-      if (days === 0) return;
-      animating = true;
-      let remaining = Math.abs(days);
-      const dir = days > 0 ? 1 : -1;
-      const step = () => {
-        if (remaining > 0) {
-          const d = new Date(centerDate);
-          d.setDate(centerDate.getDate() + dir);
-          setCenterDate(d);
-          remaining--;
-          animationFrame = requestAnimationFrame(step);
-        } else {
-          animating = false;
-        }
-      };
-      step();
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1 && !animating) {
-        startX = e.touches[0].clientX;
-        startTime = Date.now();
-      }
-    };
-    const handleTouchMove = () => {
-      if (startX === null) return;
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (startX === null || startTime === null || animating) return;
-      const endX = e.changedTouches[0].clientX;
-      const dx = endX - startX;
-      const dt = Date.now() - startTime;
-      // 距離・速度から日数を決定
-      let days = 0;
-      if (Math.abs(dx) > 30) {
-        // 速度(px/ms)と距離(px)で重み付け
-        const velocity = Math.abs(dx) / Math.max(dt, 1); // px/ms
-        days = Math.round(
-          Math.min(7, Math.max(1, Math.abs(dx) / 40 + velocity * 10))
+    let scrollTimeout: number | null = null;
+    const handleScroll = () => {
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(() => {
+        // 各日付ボタンの中心座標を取得
+        const btnEls = btns.querySelectorAll<HTMLButtonElement>(
+          'button[data-date-idx]'
         );
-        days = Math.min(7, Math.max(1, days));
-        days = dx < 0 ? days : -days;
-        animateScroll(days);
-      }
-      startX = null;
-      startTime = null;
+        const btnsRect = btns.getBoundingClientRect();
+        const centerX = btnsRect.left + btnsRect.width / 2;
+        let minDist = Infinity;
+        let nearestIdx = 0;
+        btnEls.forEach((el, idx) => {
+          const rect = el.getBoundingClientRect();
+          const elCenter = rect.left + rect.width / 2;
+          const dist = Math.abs(centerX - elCenter);
+          if (dist < minDist) {
+            minDist = dist;
+            nearestIdx = idx;
+          }
+        });
+        // そのidxの日付を選択
+        if (dateArray[nearestIdx]) {
+          setSelectedDate(dateArray[nearestIdx]);
+        }
+      }, 120);
     };
-    btns.addEventListener('touchstart', handleTouchStart, { passive: true });
-    btns.addEventListener('touchmove', handleTouchMove, { passive: false });
-    btns.addEventListener('touchend', handleTouchEnd, { passive: true });
+    btns.addEventListener('scroll', handleScroll);
     return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-      btns.removeEventListener('touchstart', handleTouchStart);
-      btns.removeEventListener('touchmove', handleTouchMove);
-      btns.removeEventListener('touchend', handleTouchEnd);
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+      btns.removeEventListener('scroll', handleScroll);
     };
-  }, [centerDate, setCenterDate]);
+  }, [dateArray, setSelectedDate]);
 
   return (
     <div>
@@ -178,8 +147,13 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
         </button>
         <div
           ref={btnsRef}
-          className="flex-1 flex gap-1 mx-1 overflow-x-auto justify-center"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className="flex-1 flex gap-1 mx-1 overflow-x-auto justify-center scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
           <style>{`
             .scrollbar-hide::-webkit-scrollbar, .scrollbar-none::-webkit-scrollbar, .scrollbar-fake::-webkit-scrollbar {
@@ -212,6 +186,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                   </span>
                 )}
                 <button
+                  data-date-idx={idx}
                   onClick={() => {
                     setSelectedDate(date);
                   }}
@@ -226,7 +201,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                     hover:bg-blue-200 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400
                     ${isCenter ? 'border-4 border-blue-400 z-10' : ''}`}
                   aria-current={isSelected ? 'date' : undefined}
-                  style={{ position: 'relative' }}
+                  style={{ position: 'relative', scrollSnapAlign: 'center' }}
                 >
                   <span className={`text-xs font-medium ${weekdayColor}`}>
                     {formatWeekday(date)}
