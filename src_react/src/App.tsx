@@ -79,8 +79,8 @@ function Navigation() {
   }, [isMenuOpen]);
 
   const navItems = [
-    { path: '/daily', label: '日課', color: 'teal' },
     { path: '/weight', label: '体重', color: 'teal' },
+    { path: '/daily', label: '日課', color: 'teal' },
     { path: '/other', label: 'その他', color: 'teal' },
     { path: '/graph', label: 'グラフ', color: 'blue' },
     { path: '/export', label: '管理', color: 'purple' },
@@ -199,9 +199,6 @@ function Navigation() {
                   )}
                 </Link>
               ))}
-
-              {/* 区切り線 */}
-              <div className="border-t border-gray-200 dark:border-gray-600 my-2"></div>
 
               {/* QRコードとPWAボタン */}
               <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-600">
