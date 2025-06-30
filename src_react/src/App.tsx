@@ -262,8 +262,13 @@ const RecordExport = lazy(() => {
 });
 
 function App() {
-  const { initializeFields, fieldsOperation, recordsOperation, loadRecords } =
-    useRecordsStore();
+  const {
+    initializeFields,
+    loadFields,
+    fieldsOperation,
+    recordsOperation,
+    loadRecords,
+  } = useRecordsStore();
 
   useEffect(() => {
     try {
@@ -283,8 +288,10 @@ function App() {
         }
       }
 
-      // フィールド初期化（i18nなし）
-      initializeFields();
+      // 初回マウント時のみfields初期化→ロード
+      initializeFields().then(() => {
+        loadFields();
+      });
 
       if (isDev) {
         perfEnd('App-initialization');
@@ -300,7 +307,7 @@ function App() {
         console.error('❌ Fallback initialization also failed:', fallbackError);
       }
     }
-  }, [initializeFields]);
+  }, [initializeFields, loadFields]);
 
   // fieldsの初期化が終わったらrecordsもロード
   useEffect(() => {

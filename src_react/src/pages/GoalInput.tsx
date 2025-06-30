@@ -106,6 +106,7 @@ export default function GoalInput() {
   const yearFromAge = (age: number) => (currentYear - age).toString();
   // 身長の+5/-5
   const heightNum = Number(height) || 170;
+
   // 最新体重取得
   const latestWeight = (() => {
     const weightRecords = records
