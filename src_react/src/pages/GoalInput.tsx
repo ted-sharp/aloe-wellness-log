@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { HiInformationCircle, HiXMark } from 'react-icons/hi2';
 import Button from '../components/Button';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
@@ -12,6 +13,52 @@ function addMonths(dateStr: string, months: number) {
   return d.toISOString().slice(0, 10);
 }
 
+// 運動目標の例リスト
+const exerciseExamples = [
+  '通勤で早歩きする',
+  '一駅歩く',
+  '毎日30分歩く',
+  '毎日5000歩歩く',
+  'なるべく階段を使う',
+  '毎週ジョギングする',
+];
+
+// 減食目標の例リスト
+const dietExamples = [
+  '間食を控える',
+  '夜食をやめる',
+  '野菜を多く食べる',
+  '毎食ご飯を半分にする',
+  '週に1回はノンフライデー',
+];
+
+// 睡眠目標の例リスト
+const sleepExamples = [
+  '23時までに就寝する',
+  '7時間以上寝る',
+  '寝る前にスマホを見ない',
+  '毎日同じ時間に寝る',
+  '休日も同じ時間に起きる',
+];
+
+// 喫煙目標の例リスト
+const smokingExamples = [
+  '1日○本までにする',
+  '禁煙外来に通う',
+  '1週間に1本ずつ減らす',
+  '会社では吸わない',
+  '家では吸わない',
+];
+
+// 飲酒目標の例リスト
+const alcoholExamples = [
+  '週2回までにする',
+  '1日1杯までにする',
+  'ノンアルコール飲料を選ぶ',
+  '飲み会は月1回まで',
+  '休肝日を作る',
+];
+
 export default function GoalInput() {
   const { goal, setGoal, loadGoal } = useGoalStore();
   const { records } = useRecordsStore();
@@ -20,6 +67,21 @@ export default function GoalInput() {
   const [targetStart, setTargetStart] = useState('');
   const [targetEnd, setTargetEnd] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
+  const [exerciseGoal, setExerciseGoal] = useState('');
+  const [dietGoal, setDietGoal] = useState('');
+  const [sleepGoal, setSleepGoal] = useState('');
+  const [smokingGoal, setSmokingGoal] = useState('');
+  const [alcoholGoal, setAlcoholGoal] = useState('');
+  const [showExerciseExamples, setShowExerciseExamples] = useState(false);
+  const [showDietExamples, setShowDietExamples] = useState(false);
+  const [showSleepExamples, setShowSleepExamples] = useState(false);
+  const [showSmokingExamples, setShowSmokingExamples] = useState(false);
+  const [showAlcoholExamples, setShowAlcoholExamples] = useState(false);
+  const exerciseExampleRef = useRef<HTMLDivElement | null>(null);
+  const dietExampleRef = useRef<HTMLDivElement | null>(null);
+  const sleepExampleRef = useRef<HTMLDivElement | null>(null);
+  const smokingExampleRef = useRef<HTMLDivElement | null>(null);
+  const alcoholExampleRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     loadGoal().then(() => {
@@ -29,6 +91,11 @@ export default function GoalInput() {
         setTargetStart(goal.targetStart);
         setTargetEnd(goal.targetEnd);
         setTargetWeight(goal.targetWeight.toString());
+        setExerciseGoal(goal.exerciseGoal || '');
+        setDietGoal(goal.dietGoal || '');
+        setSleepGoal(goal.sleepGoal || '');
+        setSmokingGoal(goal.smokingGoal || '');
+        setAlcoholGoal(goal.alcoholGoal || '');
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,6 +108,11 @@ export default function GoalInput() {
       setTargetStart(goal.targetStart);
       setTargetEnd(goal.targetEnd);
       setTargetWeight(goal.targetWeight.toString());
+      setExerciseGoal(goal.exerciseGoal || '');
+      setDietGoal(goal.dietGoal || '');
+      setSleepGoal(goal.sleepGoal || '');
+      setSmokingGoal(goal.smokingGoal || '');
+      setAlcoholGoal(goal.alcoholGoal || '');
     }
   }, [goal]);
 
@@ -98,9 +170,25 @@ export default function GoalInput() {
         targetStart,
         targetEnd,
         targetWeight: Number(targetWeight),
+        exerciseGoal,
+        dietGoal,
+        sleepGoal,
+        smokingGoal,
+        alcoholGoal,
       });
     }
-  }, [birthYear, height, targetStart, targetEnd, targetWeight]);
+  }, [
+    birthYear,
+    height,
+    targetStart,
+    targetEnd,
+    targetWeight,
+    exerciseGoal,
+    dietGoal,
+    sleepGoal,
+    smokingGoal,
+    alcoholGoal,
+  ]);
 
   // 年齢→生年変換
   const yearFromAge = (age: number) => (currentYear - age).toString();
@@ -120,6 +208,109 @@ export default function GoalInput() {
     return weightRecords.length > 0 ? Number(weightRecords[0].value) : null;
   })();
 
+  // フォーム外クリックでポップアップを閉じる処理（useEffectで）
+  useEffect(() => {
+    if (!showExerciseExamples) return;
+    const handleClick = (e: MouseEvent) => {
+      const icon = document.querySelector('[aria-label="運動目標の例を表示"]');
+      const popup = exerciseExampleRef.current;
+      if (
+        icon &&
+        !icon.contains(e.target as Node) &&
+        popup &&
+        !popup.contains(e.target as Node)
+      ) {
+        setShowExerciseExamples(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showExerciseExamples]);
+
+  useEffect(() => {
+    if (showDietExamples) {
+      const handleClick = (e: MouseEvent) => {
+        const icon = document.querySelector(
+          '[aria-label="減食目標の例を表示"]'
+        );
+        const popup = dietExampleRef.current;
+        if (
+          icon &&
+          !icon.contains(e.target as Node) &&
+          popup &&
+          !popup.contains(e.target as Node)
+        ) {
+          setShowDietExamples(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [showDietExamples]);
+
+  useEffect(() => {
+    if (showSleepExamples) {
+      const handleClick = (e: MouseEvent) => {
+        const icon = document.querySelector(
+          '[aria-label="睡眠目標の例を表示"]'
+        );
+        const popup = sleepExampleRef.current;
+        if (
+          icon &&
+          !icon.contains(e.target as Node) &&
+          popup &&
+          !popup.contains(e.target as Node)
+        ) {
+          setShowSleepExamples(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [showSleepExamples]);
+
+  useEffect(() => {
+    if (showSmokingExamples) {
+      const handleClick = (e: MouseEvent) => {
+        const icon = document.querySelector(
+          '[aria-label="喫煙目標の例を表示"]'
+        );
+        const popup = smokingExampleRef.current;
+        if (
+          icon &&
+          !icon.contains(e.target as Node) &&
+          popup &&
+          !popup.contains(e.target as Node)
+        ) {
+          setShowSmokingExamples(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [showSmokingExamples]);
+
+  useEffect(() => {
+    if (showAlcoholExamples) {
+      const handleClick = (e: MouseEvent) => {
+        const icon = document.querySelector(
+          '[aria-label="飲酒目標の例を表示"]'
+        );
+        const popup = alcoholExampleRef.current;
+        if (
+          icon &&
+          !icon.contains(e.target as Node) &&
+          popup &&
+          !popup.contains(e.target as Node)
+        ) {
+          setShowAlcoholExamples(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [showAlcoholExamples]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900 py-8">
       <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-white whitespace-nowrap">
@@ -137,6 +328,7 @@ export default function GoalInput() {
               onChange={e => setBirthYear(e.target.value)}
               className="border rounded px-3 py-2 text-base"
               required
+              placeholder="例: 1990"
             />
             <Button
               type="button"
@@ -165,7 +357,7 @@ export default function GoalInput() {
           </div>
         </label>
         <label className="flex flex-col gap-1">
-          <span>身長（cm）</span>
+          <span>身長[cm] (例: 165.0)</span>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -175,6 +367,7 @@ export default function GoalInput() {
               onChange={e => setHeight(e.target.value)}
               className="border rounded px-3 py-2 text-base"
               required
+              placeholder="例: 165.0"
             />
             <Button
               type="button"
@@ -243,7 +436,7 @@ export default function GoalInput() {
           </div>
         </label>
         <label className="flex flex-col gap-1">
-          <span>目標体重（kg）</span>
+          <span>目標体重[kg] (例: 75.0)</span>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -254,6 +447,7 @@ export default function GoalInput() {
               onChange={e => setTargetWeight(e.target.value)}
               className="border rounded px-3 py-2 text-base"
               required
+              placeholder="例: 75.0"
             />
             <Button
               type="button"
@@ -266,6 +460,341 @@ export default function GoalInput() {
             >
               -2kg
             </Button>
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>運動目標 (例: なるべく階段を使う)</span>
+          <div className="flex items-center gap-2 relative">
+            <input
+              type="text"
+              value={exerciseGoal}
+              onChange={e => setExerciseGoal(e.target.value)}
+              className="border rounded px-3 py-2 text-base flex-1"
+              placeholder="例: 毎日30分歩く"
+            />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="運動目標の例を表示"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => setShowExerciseExamples(v => !v)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setShowExerciseExamples(v => !v);
+              }}
+            >
+              <HiInformationCircle
+                className="w-8 h-8"
+                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
+              />
+            </span>
+            {showExerciseExamples && (
+              <div
+                ref={exerciseExampleRef}
+                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
+                style={{ minWidth: '220px' }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
+                    運動目標の例
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="閉じる"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowExerciseExamples(false)}
+                  >
+                    <HiXMark className="w-4 h-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {exerciseExamples.map(ex => (
+                    <li key={ex}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
+                        onClick={() => {
+                          setExerciseGoal(ex);
+                          setShowExerciseExamples(false);
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>減食目標 (例: 間食を控える)</span>
+          <div className="flex items-center gap-2 relative">
+            <input
+              type="text"
+              value={dietGoal}
+              onChange={e => setDietGoal(e.target.value)}
+              className="border rounded px-3 py-2 text-base flex-1"
+              placeholder="例: 間食を控える"
+            />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="減食目標の例を表示"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => setShowDietExamples(v => !v)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setShowDietExamples(v => !v);
+              }}
+            >
+              <HiInformationCircle
+                className="w-8 h-8"
+                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
+              />
+            </span>
+            {showDietExamples && (
+              <div
+                ref={dietExampleRef}
+                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
+                style={{ minWidth: '220px' }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
+                    減食目標の例
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="閉じる"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowDietExamples(false)}
+                  >
+                    <HiXMark className="w-4 h-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {dietExamples.map(ex => (
+                    <li key={ex}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
+                        onClick={() => {
+                          setDietGoal(ex);
+                          setShowDietExamples(false);
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>睡眠目標 (例: 23時までに就寝する)</span>
+          <div className="flex items-center gap-2 relative">
+            <input
+              type="text"
+              value={sleepGoal}
+              onChange={e => setSleepGoal(e.target.value)}
+              className="border rounded px-3 py-2 text-base flex-1"
+              placeholder="例: 23時までに就寝する"
+            />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="睡眠目標の例を表示"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => setShowSleepExamples(v => !v)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setShowSleepExamples(v => !v);
+              }}
+            >
+              <HiInformationCircle
+                className="w-8 h-8"
+                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
+              />
+            </span>
+            {showSleepExamples && (
+              <div
+                ref={sleepExampleRef}
+                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
+                style={{ minWidth: '220px' }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
+                    睡眠目標の例
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="閉じる"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowSleepExamples(false)}
+                  >
+                    <HiXMark className="w-4 h-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {sleepExamples.map(ex => (
+                    <li key={ex}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
+                        onClick={() => {
+                          setSleepGoal(ex);
+                          setShowSleepExamples(false);
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>喫煙目標 (例: 1日○本までにする)</span>
+          <div className="flex items-center gap-2 relative">
+            <input
+              type="text"
+              value={smokingGoal}
+              onChange={e => setSmokingGoal(e.target.value)}
+              className="border rounded px-3 py-2 text-base flex-1"
+              placeholder="例: 1日○本までにする"
+            />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="喫煙目標の例を表示"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => setShowSmokingExamples(v => !v)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setShowSmokingExamples(v => !v);
+              }}
+            >
+              <HiInformationCircle
+                className="w-8 h-8"
+                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
+              />
+            </span>
+            {showSmokingExamples && (
+              <div
+                ref={smokingExampleRef}
+                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
+                style={{ minWidth: '220px' }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
+                    喫煙目標の例
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="閉じる"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowSmokingExamples(false)}
+                  >
+                    <HiXMark className="w-4 h-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {smokingExamples.map(ex => (
+                    <li key={ex}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
+                        onClick={() => {
+                          setSmokingGoal(ex);
+                          setShowSmokingExamples(false);
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>飲酒目標 (例: 週2回までにする)</span>
+          <div className="flex items-center gap-2 relative">
+            <input
+              type="text"
+              value={alcoholGoal}
+              onChange={e => setAlcoholGoal(e.target.value)}
+              className="border rounded px-3 py-2 text-base flex-1"
+              placeholder="例: 週2回までにする"
+            />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="飲酒目標の例を表示"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => setShowAlcoholExamples(v => !v)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  setShowAlcoholExamples(v => !v);
+              }}
+            >
+              <HiInformationCircle
+                className="w-8 h-8"
+                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
+              />
+            </span>
+            {showAlcoholExamples && (
+              <div
+                ref={alcoholExampleRef}
+                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
+                style={{ minWidth: '220px' }}
+                tabIndex={-1}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
+                    飲酒目標の例
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="閉じる"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowAlcoholExamples(false)}
+                  >
+                    <HiXMark className="w-4 h-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {alcoholExamples.map(ex => (
+                    <li key={ex}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
+                        onClick={() => {
+                          setAlcoholGoal(ex);
+                          setShowAlcoholExamples(false);
+                        }}
+                      >
+                        {ex}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </label>
       </form>
