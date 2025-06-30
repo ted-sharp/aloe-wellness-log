@@ -135,40 +135,52 @@ function Navigation() {
         </div>
       </nav>
 
-      {/* モバイル用ヘッダー */}
-      <div className="md:hidden flex justify-between items-center mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm mx-4 mt-4">
-        <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap flex items-center gap-2">
-          <img src="/aloe-icon.png" alt="アロエアイコン" className="h-7 w-7" />
-          アロエ健康管理
-        </h1>
-
-        <div className="flex items-center">
+      {/* モバイル用ヘッダー（タブ風ナビゲーション） */}
+      <div className="md:hidden flex w-full mb-4">
+        <nav className="flex w-full">
+          {['/weight', '/daily', '/other', '/graph'].map((path, idx, arr) => {
+            const item = navItems.find(i => i.path === path);
+            if (!item) return null;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex-1 text-center py-3 font-bold text-base transition-colors duration-200
+                  ${
+                    isCurrentPage(item.path)
+                      ? 'bg-blue-600 text-white mobile-nav-current'
+                      : 'bg-gray-100 dark:bg-gray-700 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800'
+                  }
+                  ${idx === 0 ? 'rounded-l-xl' : ''}
+                  ${idx === arr.length ? 'rounded-r-xl' : ''}
+                  rounded-none focus:outline-none focus:ring-0 border-0`}
+                aria-current={isCurrentPage(item.path) ? 'page' : undefined}
+                aria-label={item.label}
+                style={{ minWidth: 0 }}
+                onClick={closeMenu}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+          {/* ハンバーガーアイコンもタブとして右端に */}
           <button
             onClick={toggleMenu}
-            className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+            className="flex-1 text-center py-3 font-bold text-base bg-gray-100 dark:bg-gray-700 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-r-xl border-0 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
             aria-label={isMenuOpen ? 'メニューを閉じる' : 'メニューを開く'}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
+            style={{ minWidth: 0 }}
           >
-            <div className="w-6 h-6 flex flex-col justify-center space-y-1">
-              <div
-                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
-                  isMenuOpen ? 'rotate-45 translate-y-1.5' : ''
-                }`}
-              ></div>
-              <div
-                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
-                  isMenuOpen ? 'opacity-0' : ''
-                }`}
-              ></div>
-              <div
-                className={`h-0.5 w-6 bg-gray-800 dark:bg-gray-200 transition-all duration-300 ${
-                  isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
-                }`}
-              ></div>
-            </div>
+            <span className="inline-block align-middle">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <rect y="5" width="24" height="2" rx="1" fill="currentColor" />
+                <rect y="11" width="24" height="2" rx="1" fill="currentColor" />
+                <rect y="17" width="24" height="2" rx="1" fill="currentColor" />
+              </svg>
+            </span>
           </button>
-        </div>
+        </nav>
       </div>
 
       {/* モバイル用メニュー */}
@@ -188,7 +200,9 @@ function Navigation() {
                   to={item.path}
                   onClick={closeMenu}
                   className={`px-4 py-3 font-medium text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 border-b border-gray-100 dark:border-gray-600 ${
-                    item.color === 'purple'
+                    isCurrentPage(item.path)
+                      ? 'bg-blue-600 text-white'
+                      : item.color === 'purple'
                       ? '!text-purple-600 dark:!text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:bg-purple-50 dark:focus:bg-purple-900/20 hover:!text-purple-600 dark:hover:!text-purple-400 visited:!text-purple-600 dark:visited:!text-purple-400 active:!text-purple-600 dark:active:!text-purple-400'
                       : '!text-blue-500 dark:!text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-50 dark:focus:bg-blue-900/20 hover:!text-blue-500 dark:hover:!text-blue-400 visited:!text-blue-500 dark:visited:!text-blue-400 active:!text-blue-500 dark:active:!text-blue-400'
                   }`}
