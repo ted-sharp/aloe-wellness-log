@@ -1,12 +1,14 @@
+import type { GoalData } from '../types/goal';
 import type { Field, RecordItem } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { validateFieldArray, validateRecordArray } from '../utils/validation';
 
 const DB_NAME = 'aloe-wellness-log';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const RECORDS_STORE = 'records';
 const FIELDS_STORE = 'fields';
+const GOAL_STORE = 'goal';
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000; // 1秒
 
@@ -210,7 +212,6 @@ export function openDb(): Promise<IDBDatabase> {
             const recordStore = db.createObjectStore(RECORDS_STORE, {
               keyPath: 'id',
             });
-            // インデックスを追加（検索性能向上のため）
             recordStore.createIndex('dateIndex', 'date', { unique: false });
             recordStore.createIndex('fieldIdIndex', 'fieldId', {
               unique: false,
@@ -222,6 +223,9 @@ export function openDb(): Promise<IDBDatabase> {
               keyPath: 'fieldId',
             });
             fieldStore.createIndex('orderIndex', 'order', { unique: false });
+          }
+          if (!db.objectStoreNames.contains(GOAL_STORE)) {
+            db.createObjectStore(GOAL_STORE, { keyPath: 'id' });
           }
         };
 
@@ -664,4 +668,67 @@ export async function batchUpdateFields(fields: Field[]): Promise<void> {
     },
     fields.length
   );
+}
+
+// 目標データの保存
+export async function setGoalData(goal: GoalData): Promise<void> {
+  return trackDbOperation('set-goal', async () => {
+    return executeTransaction(
+      GOAL_STORE,
+      'readwrite',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<void>((resolve, reject) => {
+          const request = objectStore.put({ ...goal, id: 'singleton' });
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
+}
+
+// 目標データの取得
+export async function getGoalData(): Promise<GoalData | null> {
+  return trackDbOperation('get-goal', async () => {
+    return executeTransaction(
+      GOAL_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<GoalData | null>((resolve, reject) => {
+          const request = objectStore.get('singleton');
+          request.onsuccess = () => {
+            const data = request.result;
+            if (data && typeof data === 'object') {
+              // idを除外して返す
+              const { id: _id, ...goal } = data;
+              resolve(goal as GoalData);
+            } else {
+              resolve(null);
+            }
+          };
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
+}
+
+// 目標データの削除
+export async function clearGoalData(): Promise<void> {
+  return trackDbOperation('clear-goal', async () => {
+    return executeTransaction(
+      GOAL_STORE,
+      'readwrite',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<void>((resolve, reject) => {
+          const request = objectStore.delete('singleton');
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
 }

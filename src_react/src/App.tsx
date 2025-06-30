@@ -5,6 +5,7 @@ import Button from './components/Button';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import DailyRecord from './pages/DailyRecord';
+import GoalInput from './pages/GoalInput';
 import OtherRecord from './pages/OtherRecord';
 import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
@@ -83,6 +84,7 @@ function Navigation() {
     { path: '/daily', label: '日課', color: 'teal' },
     { path: '/other', label: 'その他', color: 'teal' },
     { path: '/graph', label: 'グラフ', color: 'blue' },
+    { path: '/goal', label: '目標', color: 'teal' },
     { path: '/export', label: '管理', color: 'purple' },
   ];
 
@@ -321,6 +323,14 @@ function App() {
         ) : (
           <Suspense fallback={<PageLoader pageName="日課" />}>
             <Routes>
+              <Route
+                path="/goal"
+                element={
+                  <Suspense fallback={<PageLoader pageName="目標" />}>
+                    <GoalInput />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/daily"
                 element={
