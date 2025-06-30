@@ -3,6 +3,7 @@ import { HiCheck, HiNoSymbol, HiTrash, HiXMark } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
+import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
 
 const formatDate = (date: Date) => {
@@ -33,6 +34,7 @@ const WeightRecord: React.FC = () => {
     records,
     loadRecords,
   } = useRecordsStore();
+  const { goal } = useGoalStore();
 
   // 新規項目追加用state
   const [showAddField, setShowAddField] = useState(false);
@@ -76,6 +78,24 @@ const WeightRecord: React.FC = () => {
     return `${h}:${m}`;
   };
 
+  // その日付の最新体重（記録があれば）
+  const latestWeightOfDay = (() => {
+    const weightRecords = records
+      .filter(
+        r =>
+          r.fieldId === 'weight' &&
+          r.date === recordDate &&
+          typeof r.value === 'number'
+      )
+      .sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+    return weightRecords.length > 0 ? Number(weightRecords[0].value) : null;
+  })();
+  // BMI計算
+  const bmi =
+    latestWeightOfDay && goal && goal.height
+      ? latestWeightOfDay / Math.pow(goal.height / 100, 2)
+      : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
       <DatePickerBar
@@ -93,6 +113,11 @@ const WeightRecord: React.FC = () => {
               className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
               aria-label="入力済み"
             />
+          )}
+          {bmi && (
+            <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
+              BMI {bmi.toFixed(1)}
+            </span>
           )}
         </span>
       </div>
