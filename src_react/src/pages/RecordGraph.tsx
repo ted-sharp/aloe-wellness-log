@@ -49,6 +49,7 @@ const RecordGraph: React.FC = () => {
       datetime: r.datetime,
       timestamp: new Date(r.datetime).getTime(),
       value: Number(r.value),
+      excluded: !!r.excludeFromGraph,
     }));
     const period = PERIODS[periodIdx];
     if (period.days && latestTimestamp) {
@@ -176,7 +177,16 @@ const RecordGraph: React.FC = () => {
               data={data}
               stroke="#38bdf8"
               strokeWidth={3}
-              dot={{ r: 4 }}
+              dot={({ cx, cy, payload }) => (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={4}
+                  fill={payload.excluded ? '#f87171' : '#38bdf8'}
+                  stroke="#fff"
+                  strokeWidth={1}
+                />
+              )}
             />
             {trendLine && (
               <Line
