@@ -96,6 +96,56 @@ const WeightRecord: React.FC = () => {
       ? latestWeightOfDay / Math.pow(goal.height / 100, 2)
       : null;
 
+  // BMIインジケーター定義（6段階）
+  const bmiBands = [
+    { min: 0, max: 18.5, color: '#6ec6f1', label: '低体重', range: '<18.5' },
+    {
+      min: 18.5,
+      max: 25,
+      color: '#7edfa0',
+      label: '普通体重',
+      range: '18.5-24.9',
+    },
+    {
+      min: 25,
+      max: 30,
+      color: '#b6d97a',
+      label: '肥満(1度)',
+      range: '25-29.9',
+    },
+    {
+      min: 30,
+      max: 35,
+      color: '#ffe066',
+      label: '肥満(2度)',
+      range: '30-34.9',
+    },
+    {
+      min: 35,
+      max: 40,
+      color: '#ff9800',
+      label: '肥満(3度)',
+      range: '35-39.9',
+    },
+    { min: 40, max: 100, color: '#f44336', label: '肥満(4度)', range: '40.0+' },
+  ];
+
+  // マーカー位置計算
+  const markerLeft = (() => {
+    if (bmi === null) return 0;
+    let total = 0;
+    for (let i = 0; i < bmiBands.length; i++) {
+      const b = bmiBands[i];
+      if (bmi < b.max) {
+        const bandWidth = 100 / bmiBands.length;
+        const ratio = (bmi - b.min) / (b.max - b.min);
+        return total + bandWidth * ratio;
+      }
+      total += 100 / bmiBands.length;
+    }
+    return 100;
+  })();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
       <DatePickerBar
@@ -121,6 +171,62 @@ const WeightRecord: React.FC = () => {
           )}
         </span>
       </div>
+      {/* BMIインジケーター */}
+      {bmi && goal && goal.height && (
+        <div className="w-full max-w-md mx-auto flex flex-col items-center mb-2">
+          <div
+            className="relative w-full h-8 flex rounded overflow-hidden shadow"
+            style={{ minWidth: 240 }}
+          >
+            {bmiBands.map(band => (
+              <div
+                key={band.label}
+                className="flex-1 flex flex-col items-center justify-center"
+                style={{ background: band.color, minWidth: 0 }}
+              >
+                <span
+                  className="text-[10px] font-bold text-gray-800 dark:text-gray-900 select-none"
+                  style={{ lineHeight: 1 }}
+                >
+                  {band.label}
+                </span>
+              </div>
+            ))}
+            {/* マーカー（帯の上・逆三角） */}
+            <div
+              className="absolute left-0 top-0 w-full pointer-events-none"
+              style={{ height: '100%' }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `calc(${markerLeft}% - 0.65em)`,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#222',
+                  fontSize: '1.5em',
+                  textShadow: '0 0 2px #fff, 0 0 2px #fff, 1px 1px 2px #0002',
+                  zIndex: 2,
+                }}
+                aria-label="現在のBMI位置"
+              >
+                ▼
+              </div>
+            </div>
+          </div>
+          <div className="w-full flex justify-between mt-1 px-1">
+            {bmiBands.map(band => (
+              <span
+                key={band.label + '-range'}
+                className="text-[10px] text-gray-700 dark:text-gray-200"
+                style={{ minWidth: 0 }}
+              >
+                {band.range}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
         <div className="flex flex-col gap-6 w-full max-w-md">
           {numberFields.map(field => {
