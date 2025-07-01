@@ -331,7 +331,7 @@ function App() {
   }, [fieldsOperation.loading, loadRecords]);
 
   return (
-    <div className="min-h-screen">
+    <div>
       <header role="banner">
         <Navigation />
       </header>

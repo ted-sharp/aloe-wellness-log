@@ -419,7 +419,7 @@ const DailyRecord: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="bg-transparent">
       {/* 日付ピッカー（共通コンポーネント） */}
       <DatePickerBar
         selectedDate={selectedDate}

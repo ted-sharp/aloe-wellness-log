@@ -332,7 +332,7 @@ export default function GoalInput() {
   }, [showAlcoholExamples]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start py-8 bg-transparent">
+    <div className="flex flex-col items-center justify-start py-8 bg-transparent">
       <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-white whitespace-nowrap">
         目標設定
       </h1>
