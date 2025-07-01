@@ -172,7 +172,7 @@ const initialFields: Field[] = [
   },
   {
     fieldId: 'smoke',
-    name: '禁酒',
+    name: '禁煙',
     type: 'boolean',
     order: 9,
     defaultDisplay: false,
