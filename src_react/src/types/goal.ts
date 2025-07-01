@@ -1,5 +1,6 @@
 // 目標データ型
 export type GoalData = {
+  gender?: 'male' | 'female' | 'unknown'; // 性別
   birthYear: number; // 生年（例: 1990）
   height: number; // 身長（cm）
   targetStart: string; // 目標開始日（YYYY-MM-DD）

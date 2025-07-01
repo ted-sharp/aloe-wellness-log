@@ -64,9 +64,19 @@ const alcoholExamples = [
   'ノンアルコール飲料にする',
 ];
 
+// 性別の選択肢
+const genderOptions = [
+  { value: 'male', label: '男性' },
+  { value: 'female', label: '女性' },
+  { value: 'unknown', label: '未回答' },
+];
+
 export default function GoalInput() {
   const { goal, setGoal, loadGoal } = useGoalStore();
   const { records } = useRecordsStore();
+  const [gender, setGender] = useState<'male' | 'female' | 'unknown'>(
+    'unknown'
+  );
   const [birthYear, setBirthYear] = useState('');
   const [height, setHeight] = useState('');
   const [targetStart, setTargetStart] = useState('');
@@ -91,6 +101,7 @@ export default function GoalInput() {
   useEffect(() => {
     loadGoal().then(() => {
       if (goal) {
+        setGender(goal.gender || 'unknown');
         setBirthYear(goal.birthYear.toString());
         setHeight(goal.height.toString());
         setTargetStart(goal.targetStart);
@@ -108,6 +119,7 @@ export default function GoalInput() {
 
   useEffect(() => {
     if (goal) {
+      setGender(goal.gender || 'unknown');
       setBirthYear(goal.birthYear.toString());
       setHeight(goal.height.toString());
       setTargetStart(goal.targetStart);
@@ -162,6 +174,7 @@ export default function GoalInput() {
   useEffect(() => {
     // すべての値が有効な場合のみ保存
     if (
+      gender &&
       birthYear &&
       height &&
       targetStart &&
@@ -170,6 +183,7 @@ export default function GoalInput() {
       !validate()
     ) {
       setGoal({
+        gender,
         birthYear: Number(birthYear),
         height: Number(height),
         targetStart,
@@ -183,6 +197,7 @@ export default function GoalInput() {
       });
     }
   }, [
+    gender,
     birthYear,
     height,
     targetStart,
@@ -322,6 +337,30 @@ export default function GoalInput() {
         目標設定
       </h1>
       <form className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 w-full max-w-md flex flex-col gap-4">
+        {/* 性別選択欄 */}
+        <label className="flex flex-col gap-1">
+          <span>性別</span>
+          <div className="flex gap-4 mt-1">
+            {genderOptions.map(opt => (
+              <label
+                key={opt.value}
+                className="flex items-center gap-1 text-base"
+              >
+                <input
+                  type="radio"
+                  name="gender"
+                  value={opt.value}
+                  checked={gender === opt.value}
+                  onChange={() =>
+                    setGender(opt.value as 'male' | 'female' | 'unknown')
+                  }
+                  className="accent-blue-500"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </label>
         <label className="flex flex-col gap-1">
           <span>生年（例: 1990）</span>
           <div className="flex items-center gap-2">
