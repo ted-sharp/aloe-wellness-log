@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HiCheck, HiNoSymbol, HiTrash, HiXMark } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import Button from '../components/Button';
@@ -34,7 +34,7 @@ const WeightRecord: React.FC = () => {
     records,
     loadRecords,
   } = useRecordsStore();
-  const { goal } = useGoalStore();
+  const { goal, loadGoal } = useGoalStore();
 
   // 新規項目追加用state
   const [showAddField, setShowAddField] = useState(false);
@@ -145,6 +145,13 @@ const WeightRecord: React.FC = () => {
     }
     return 100;
   })();
+
+  // goal（身長など）が未ロードなら自動でロード
+  useEffect(() => {
+    if (!goal || !goal.height) {
+      loadGoal();
+    }
+  }, [goal, loadGoal]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
