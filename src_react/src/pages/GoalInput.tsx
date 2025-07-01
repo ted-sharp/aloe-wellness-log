@@ -5,13 +5,6 @@ import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
 
 const currentYear = new Date().getFullYear();
-const todayStr = new Date().toISOString().slice(0, 10);
-
-function addMonths(dateStr: string, months: number) {
-  const d = dateStr ? new Date(dateStr) : new Date();
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().slice(0, 10);
-}
 
 // 運動目標の例リスト
 const exerciseExamples = [
@@ -79,6 +72,7 @@ export default function GoalInput() {
   );
   const [birthYear, setBirthYear] = useState('');
   const [height, setHeight] = useState('');
+  const [startWeight, setStartWeight] = useState('');
   const [targetStart, setTargetStart] = useState('');
   const [targetEnd, setTargetEnd] = useState('');
   const [targetWeight, setTargetWeight] = useState('');
@@ -104,6 +98,13 @@ export default function GoalInput() {
         setGender(goal.gender || 'unknown');
         setBirthYear(goal.birthYear.toString());
         setHeight(goal.height.toString());
+        setStartWeight(
+          goal.startWeight !== undefined
+            ? goal.startWeight.toString()
+            : latestWeight !== null
+            ? latestWeight.toString()
+            : ''
+        );
         setTargetStart(goal.targetStart);
         setTargetEnd(goal.targetEnd);
         setTargetWeight(goal.targetWeight.toString());
@@ -112,6 +113,8 @@ export default function GoalInput() {
         setSleepGoal(goal.sleepGoal || '');
         setSmokingGoal(goal.smokingGoal || '');
         setAlcoholGoal(goal.alcoholGoal || '');
+      } else {
+        setStartWeight(latestWeight !== null ? latestWeight.toString() : '');
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,6 +125,13 @@ export default function GoalInput() {
       setGender(goal.gender || 'unknown');
       setBirthYear(goal.birthYear.toString());
       setHeight(goal.height.toString());
+      setStartWeight(
+        goal.startWeight !== undefined
+          ? goal.startWeight.toString()
+          : latestWeight !== null
+          ? latestWeight.toString()
+          : ''
+      );
       setTargetStart(goal.targetStart);
       setTargetEnd(goal.targetEnd);
       setTargetWeight(goal.targetWeight.toString());
@@ -150,6 +160,14 @@ export default function GoalInput() {
     ) {
       return '身長は100～250cmの範囲で入力してください。';
     }
+    if (
+      !startWeight ||
+      isNaN(Number(startWeight)) ||
+      Number(startWeight) < 30 ||
+      Number(startWeight) > 200
+    ) {
+      return '開始体重は30～200kgの範囲で入力してください。';
+    }
     if (!targetStart || !/^\d{4}-\d{2}-\d{2}$/.test(targetStart)) {
       return '目標開始日はYYYY-MM-DD形式で入力してください。';
     }
@@ -177,6 +195,7 @@ export default function GoalInput() {
       gender &&
       birthYear &&
       height &&
+      startWeight &&
       targetStart &&
       targetEnd &&
       targetWeight &&
@@ -186,6 +205,7 @@ export default function GoalInput() {
         gender,
         birthYear: Number(birthYear),
         height: Number(height),
+        startWeight: Number(startWeight),
         targetStart,
         targetEnd,
         targetWeight: Number(targetWeight),
@@ -200,6 +220,7 @@ export default function GoalInput() {
     gender,
     birthYear,
     height,
+    startWeight,
     targetStart,
     targetEnd,
     targetWeight,
@@ -367,7 +388,7 @@ export default function GoalInput() {
               max={currentYear}
               value={birthYear}
               onChange={e => setBirthYear(e.target.value)}
-              className="border rounded px-3 py-2 text-base"
+              className="border rounded px-3 py-2 text-base w-32"
               required
               placeholder="例: 1990"
             />
@@ -406,7 +427,7 @@ export default function GoalInput() {
               max="250"
               value={height}
               onChange={e => setHeight(e.target.value)}
-              className="border rounded px-3 py-2 text-base"
+              className="border rounded px-3 py-2 text-base w-32"
               required
               placeholder="例: 165.0"
             />
@@ -437,6 +458,91 @@ export default function GoalInput() {
           </div>
         </label>
         <label className="flex flex-col gap-1">
+          <span>開始体重[kg] (例: 68.0)</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="30"
+              max="200"
+              step="0.1"
+              value={startWeight}
+              onChange={e => setStartWeight(e.target.value)}
+              className="border rounded px-3 py-2 text-base w-32"
+              required
+              placeholder="例: 68.0"
+            />
+            {latestWeight !== null && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setStartWeight(latestWeight.toString())}
+              >
+                最新体重
+              </Button>
+            )}
+          </div>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span>目標体重[kg] (例: 75.0)</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="30"
+              max="200"
+              step="0.1"
+              value={targetWeight}
+              onChange={e => setTargetWeight(e.target.value)}
+              className="border rounded px-3 py-2 text-base w-32"
+              required
+              placeholder="例: 75.0"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                if (startWeight && !isNaN(Number(startWeight))) {
+                  setTargetWeight(
+                    (Math.round((Number(startWeight) - 2) * 10) / 10).toString()
+                  );
+                }
+              }}
+            >
+              -2kg
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                if (startWeight && !isNaN(Number(startWeight))) {
+                  setTargetWeight(
+                    (Math.round((Number(startWeight) - 5) * 10) / 10).toString()
+                  );
+                }
+              }}
+            >
+              -5kg
+            </Button>
+          </div>
+        </label>
+        {/* 目標体重入力後に必要カロリー表示（目標体重の直後に移動） */}
+        {startWeight &&
+          targetWeight &&
+          !isNaN(Number(startWeight)) &&
+          !isNaN(Number(targetWeight)) &&
+          Number(targetWeight) < Number(startWeight) && (
+            <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+              あと{(Number(startWeight) - Number(targetWeight)).toFixed(1)}
+              kg減らすには約
+              {Math.round(
+                (Number(startWeight) - Number(targetWeight)) * 6500
+              ).toLocaleString()}
+              kcalの消費が必要です
+            </div>
+          )}
+        <label className="flex flex-col gap-1">
           <span>目標開始日</span>
           <div className="flex items-center gap-2">
             <input
@@ -450,7 +556,9 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => setTargetStart(todayStr)}
+              onClick={() =>
+                setTargetStart(new Date().toISOString().slice(0, 10))
+              }
             >
               今日
             </Button>
@@ -470,54 +578,48 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => setTargetEnd(addMonths(targetStart, 3))}
+              onClick={() => {
+                // 目標開始日から3か月後を自動入力
+                const d = targetStart ? new Date(targetStart) : new Date();
+                d.setMonth(d.getMonth() + 3);
+                setTargetEnd(d.toISOString().slice(0, 10));
+              }}
             >
               3か月後
             </Button>
           </div>
         </label>
-        <label className="flex flex-col gap-1">
-          <span>目標体重[kg] (例: 75.0)</span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="30"
-              max="200"
-              step="0.1"
-              value={targetWeight}
-              onChange={e => setTargetWeight(e.target.value)}
-              className="border rounded px-3 py-2 text-base"
-              required
-              placeholder="例: 75.0"
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() =>
-                latestWeight !== null &&
-                setTargetWeight(
-                  (Math.round((latestWeight - 2) * 10) / 10).toString()
-                )
-              }
-            >
-              -2kg
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() =>
-                latestWeight !== null &&
-                setTargetWeight(
-                  (Math.round((latestWeight - 5) * 10) / 10).toString()
-                )
-              }
-            >
-              -5kg
-            </Button>
-          </div>
-        </label>
+        {/* 目標終了日の下に一日あたり消費カロリーを表示 */}
+        {startWeight &&
+          targetWeight &&
+          targetStart &&
+          targetEnd &&
+          !isNaN(Number(startWeight)) &&
+          !isNaN(Number(targetWeight)) &&
+          Number(targetWeight) < Number(startWeight) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
+          new Date(targetEnd) >= new Date(targetStart) &&
+          (() => {
+            const totalCal =
+              (Number(startWeight) - Number(targetWeight)) * 6500;
+            const start = new Date(targetStart);
+            const end = new Date(targetEnd);
+            const days =
+              Math.floor(
+                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+              ) + 1;
+            if (days > 0) {
+              const perDay = Math.round(totalCal / days);
+              return (
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  期間中に一日あたり約{perDay.toLocaleString()}
+                  kcalの消費が必要です
+                </div>
+              );
+            }
+            return null;
+          })()}
         <label className="flex flex-col gap-1">
           <span>運動目標 (例: なるべく階段を使う)</span>
           <div className="flex items-center gap-2 relative">

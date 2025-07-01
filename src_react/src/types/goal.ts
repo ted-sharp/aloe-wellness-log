@@ -11,4 +11,5 @@ export type GoalData = {
   sleepGoal?: string; // 睡眠目標
   smokingGoal?: string; // 喫煙目標
   alcoholGoal?: string; // 飲酒目標
+  startWeight?: number; // 開始体重（kg）
 };
