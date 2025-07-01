@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { HiInformationCircle, HiXMark } from 'react-icons/hi2';
+import { HiSparkles, HiXMark } from 'react-icons/hi2';
 import Button from '../components/Button';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
@@ -15,48 +15,53 @@ function addMonths(dateStr: string, months: number) {
 
 // 運動目標の例リスト
 const exerciseExamples = [
+  'なるべく階段を使う',
   '通勤で早歩きする',
   '一駅歩く',
   '毎日30分歩く',
   '毎日5000歩歩く',
-  'なるべく階段を使う',
-  '毎週ジョギングする',
+  '毎日ラジオ体操をする',
+  '毎週ジョギングをする',
+  '毎週サイクリングをする',
 ];
 
 // 減食目標の例リスト
 const dietExamples = [
+  '清涼飲料水をお茶にする',
   '間食を控える',
   '夜食をやめる',
   '野菜を多く食べる',
+  '夜はお米を食べない',
   '毎食ご飯を半分にする',
-  '週に1回はノンフライデー',
+  'よく噛んで20分以上かける',
 ];
 
 // 睡眠目標の例リスト
 const sleepExamples = [
-  '23時までに就寝する',
   '7時間以上寝る',
+  '23時までに就寝する',
+  '就寝90分前に入浴し体温調節をする',
+  '寝室の温度を18–22 ℃に保つ',
+  '寝室の照明を300lx以下に落とす',
   '寝る前にスマホを見ない',
-  '毎日同じ時間に寝る',
-  '休日も同じ時間に起きる',
 ];
 
 // 喫煙目標の例リスト
 const smokingExamples = [
-  '1日○本までにする',
-  '禁煙外来に通う',
-  '1週間に1本ずつ減らす',
-  '会社では吸わない',
   '家では吸わない',
+  '会社では吸わない',
+  '電子タバコへ移行し本数を半減する',
+  '1週間に1本ずつ減らす',
+  '禁煙外来に通う',
 ];
 
 // 飲酒目標の例リスト
 const alcoholExamples = [
-  '週2回までにする',
-  '1日1杯までにする',
-  'ノンアルコール飲料を選ぶ',
-  '飲み会は月1回まで',
   '休肝日を作る',
+  '1日1杯までにする',
+  '週2回までにする',
+  '飲み会は月1回まで',
+  'ノンアルコール飲料にする',
 ];
 
 export default function GoalInput() {
@@ -455,10 +460,25 @@ export default function GoalInput() {
               variant="secondary"
               onClick={() =>
                 latestWeight !== null &&
-                setTargetWeight((latestWeight - 2).toString())
+                setTargetWeight(
+                  (Math.round((latestWeight - 2) * 10) / 10).toString()
+                )
               }
             >
               -2kg
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                latestWeight !== null &&
+                setTargetWeight(
+                  (Math.round((latestWeight - 5) * 10) / 10).toString()
+                )
+              }
+            >
+              -5kg
             </Button>
           </div>
         </label>
@@ -484,7 +504,7 @@ export default function GoalInput() {
                   setShowExerciseExamples(v => !v);
               }}
             >
-              <HiInformationCircle
+              <HiSparkles
                 className="w-8 h-8"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
@@ -551,7 +571,7 @@ export default function GoalInput() {
                   setShowDietExamples(v => !v);
               }}
             >
-              <HiInformationCircle
+              <HiSparkles
                 className="w-8 h-8"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
@@ -618,7 +638,7 @@ export default function GoalInput() {
                   setShowSleepExamples(v => !v);
               }}
             >
-              <HiInformationCircle
+              <HiSparkles
                 className="w-8 h-8"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
@@ -685,7 +705,7 @@ export default function GoalInput() {
                   setShowSmokingExamples(v => !v);
               }}
             >
-              <HiInformationCircle
+              <HiSparkles
                 className="w-8 h-8"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
@@ -752,7 +772,7 @@ export default function GoalInput() {
                   setShowAlcoholExamples(v => !v);
               }}
             >
-              <HiInformationCircle
+              <HiSparkles
                 className="w-8 h-8"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
