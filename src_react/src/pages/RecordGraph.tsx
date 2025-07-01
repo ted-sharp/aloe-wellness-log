@@ -173,6 +173,7 @@ const RecordGraph: React.FC = () => {
             <Line
               type="monotone"
               dataKey="value"
+              data={data}
               stroke="#38bdf8"
               strokeWidth={3}
               dot={{ r: 4 }}
