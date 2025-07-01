@@ -170,7 +170,41 @@ const RecordGraph: React.FC = () => {
               />
             ))}
             <YAxis domain={['auto', 'auto']} unit={weightField?.unit || 'kg'} />
-            <Tooltip />
+            <Tooltip
+              content={({ active, payload, label: _ }) => {
+                if (!active || !payload || !payload.length) return null;
+                // payload[0]はLineのデータ、payload[1]はtrendLine（存在すれば）
+                const point = payload[0]?.payload;
+                // formatDateTimeLabelはtimestampをMM/DD HH:mmに変換
+                return (
+                  <div
+                    style={{
+                      background: '#fff',
+                      border: '1px solid #ccc',
+                      padding: 8,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                      {formatDateTimeLabel(point.timestamp)}
+                    </div>
+                    {payload
+                      .filter(item => item.color !== '#f59e42')
+                      .map((item, idx) => (
+                        <div
+                          key={idx}
+                          style={{ color: item.color, fontSize: 14 }}
+                        >
+                          {typeof item.value === 'number'
+                            ? item.value.toFixed(2)
+                            : item.value}
+                          {weightField?.unit || 'kg'}
+                        </div>
+                      ))}
+                  </div>
+                );
+              }}
+            />
             <Line
               type="monotone"
               dataKey="value"
