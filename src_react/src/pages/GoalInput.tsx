@@ -8,25 +8,23 @@ const currentYear = new Date().getFullYear();
 
 // 運動目標の例リスト
 const exerciseExamples = [
+  '毎日ラジオ体操(第2まで)をする',
   'なるべく階段を使う',
   '通勤で早歩きする',
   '一駅歩く',
   '毎日30分歩く',
   '毎日5000歩歩く',
-  '毎日ラジオ体操をする',
-  '毎週ジョギングをする',
-  '毎週サイクリングをする',
+  '毎日ジョギングをする',
 ];
 
 // 減食目標の例リスト
 const dietExamples = [
-  '清涼飲料水をお茶にする',
-  '間食を控える',
-  '夜食をやめる',
+  '清涼飲料水を 0 cal にする',
+  '間食、夜食を控える',
   '野菜を多く食べる',
+  'よく噛んで20分以上かける',
   '夜はお米を食べない',
   '毎食ご飯を半分にする',
-  'よく噛んで20分以上かける',
 ];
 
 // 睡眠目標の例リスト
@@ -34,8 +32,8 @@ const sleepExamples = [
   '7時間以上寝る',
   '23時までに就寝する',
   '就寝90分前に入浴し体温調節をする',
-  '寝室の温度を18–22 ℃に保つ',
-  '寝室の照明を300lx以下に落とす',
+  '寝室の温度を 18–22 ℃ に保つ',
+  '寝室の照明を 300 lx 以下に落とす',
   '寝る前にスマホを見ない',
 ];
 
@@ -352,6 +350,9 @@ export default function GoalInput() {
     }
   }, [showAlcoholExamples]);
 
+  // 性別による1kgあたりのカロリー値
+  const kcalPerKg = gender === 'female' ? 7000 : 6500;
+
   return (
     <div className="flex flex-col items-center justify-start py-0 bg-transparent">
       <form className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 w-full max-w-md flex flex-col gap-4">
@@ -537,7 +538,7 @@ export default function GoalInput() {
               あと{(Number(startWeight) - Number(targetWeight)).toFixed(1)}
               kg減らすには約
               {Math.round(
-                (Number(startWeight) - Number(targetWeight)) * 6500
+                (Number(startWeight) - Number(targetWeight)) * kcalPerKg
               ).toLocaleString()}
               kcalの消費が必要です
             </div>
@@ -602,7 +603,7 @@ export default function GoalInput() {
           new Date(targetEnd) >= new Date(targetStart) &&
           (() => {
             const totalCal =
-              (Number(startWeight) - Number(targetWeight)) * 6500;
+              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
             const start = new Date(targetStart);
             const end = new Date(targetEnd);
             const days =
@@ -687,6 +688,38 @@ export default function GoalInput() {
             )}
           </div>
         </label>
+        {/* 運動目標の下に一日あたり消費カロリーの半分を表示 */}
+        {startWeight &&
+          targetWeight &&
+          targetStart &&
+          targetEnd &&
+          !isNaN(Number(startWeight)) &&
+          !isNaN(Number(targetWeight)) &&
+          Number(targetWeight) < Number(startWeight) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
+          new Date(targetEnd) >= new Date(targetStart) &&
+          (() => {
+            const totalCal =
+              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
+            const start = new Date(targetStart);
+            const end = new Date(targetEnd);
+            const days =
+              Math.floor(
+                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+              ) + 1;
+            if (days > 0) {
+              const perDay = Math.round(totalCal / days);
+              const halfPerDay = Math.round(perDay / 2);
+              return (
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  運動で一日あたり約{halfPerDay.toLocaleString()}
+                  kcalの消費を目標にしましょう。
+                </div>
+              );
+            }
+            return null;
+          })()}
         <label className="flex flex-col gap-1">
           <span>減食目標 (例: 間食を控える)</span>
           <div className="flex items-center gap-2 relative">
@@ -754,6 +787,38 @@ export default function GoalInput() {
             )}
           </div>
         </label>
+        {/* 減食目標の下に一日あたり消費カロリーの半分を表示 */}
+        {startWeight &&
+          targetWeight &&
+          targetStart &&
+          targetEnd &&
+          !isNaN(Number(startWeight)) &&
+          !isNaN(Number(targetWeight)) &&
+          Number(targetWeight) < Number(startWeight) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
+          new Date(targetEnd) >= new Date(targetStart) &&
+          (() => {
+            const totalCal =
+              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
+            const start = new Date(targetStart);
+            const end = new Date(targetEnd);
+            const days =
+              Math.floor(
+                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+              ) + 1;
+            if (days > 0) {
+              const perDay = Math.round(totalCal / days);
+              const halfPerDay = Math.round(perDay / 2);
+              return (
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  減食で一日あたり約{halfPerDay.toLocaleString()}
+                  kcalの消費を目標にしましょう。
+                </div>
+              );
+            }
+            return null;
+          })()}
         <label className="flex flex-col gap-1">
           <span>睡眠目標 (例: 23時までに就寝する)</span>
           <div className="flex items-center gap-2 relative">
@@ -762,7 +827,7 @@ export default function GoalInput() {
               value={sleepGoal}
               onChange={e => setSleepGoal(e.target.value)}
               className="border rounded px-3 py-2 text-base flex-1"
-              placeholder="例: 23時までに就寝する"
+              placeholder="例: 7時間以上寝る"
             />
             <span
               role="button"
@@ -821,6 +886,9 @@ export default function GoalInput() {
             )}
           </div>
         </label>
+        <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+          十分な睡眠(7時間以上)をとると痩せやすくなります。
+        </div>
         <label className="flex flex-col gap-1">
           <span>喫煙目標 (例: 1日○本までにする)</span>
           <div className="flex items-center gap-2 relative">
