@@ -154,7 +154,7 @@ const WeightRecord: React.FC = () => {
   }, [goal, loadGoal]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-transparent">
       <DatePickerBar
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}

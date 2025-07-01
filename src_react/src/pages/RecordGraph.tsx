@@ -121,7 +121,7 @@ const RecordGraph: React.FC = () => {
   }, [data]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 dark:from-gray-800 dark:to-gray-900 flex flex-col items-center justify-start py-8">
+    <div className="min-h-screen flex flex-col items-center justify-start py-8">
       <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-white whitespace-nowrap">
         体重グラフ
       </h1>

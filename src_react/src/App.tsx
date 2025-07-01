@@ -331,12 +331,12 @@ function App() {
   }, [fieldsOperation.loading, loadRecords]);
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="min-h-screen">
       <header role="banner">
         <Navigation />
       </header>
 
-      <main id="main-content" role="main" className="px-4" tabIndex={-1}>
+      <main id="main-content" role="main" tabIndex={-1}>
         {fieldsOperation &&
         recordsOperation &&
         (fieldsOperation.loading || recordsOperation.loading) ? (
