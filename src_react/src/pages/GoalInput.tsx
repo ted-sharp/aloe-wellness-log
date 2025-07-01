@@ -332,10 +332,7 @@ export default function GoalInput() {
   }, [showAlcoholExamples]);
 
   return (
-    <div className="flex flex-col items-center justify-start py-8 bg-transparent">
-      <h1 className="text-2xl sm:text-4xl font-bold mb-6 text-gray-800 dark:text-white whitespace-nowrap">
-        目標設定
-      </h1>
+    <div className="flex flex-col items-center justify-start py-0 bg-transparent">
       <form className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 w-full max-w-md flex flex-col gap-4">
         {/* 性別選択欄 */}
         <label className="flex flex-col gap-1">

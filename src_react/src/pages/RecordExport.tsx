@@ -3,7 +3,6 @@ import {
   HiArrowDownTray,
   HiCalendarDays,
   HiChartBarSquare,
-  HiClipboardDocumentList,
   HiDocument,
   HiExclamationTriangle,
   HiSparkles,
@@ -639,11 +638,7 @@ export default function RecordExport() {
   };
 
   return (
-    <div className="max-w-full sm:max-w-4xl mx-auto px-2 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-12">
-        データエクスポート
-      </h1>
-
+    <div className="max-w-full sm:max-w-4xl mx-auto sm:px-0">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
           データの詳細
@@ -664,13 +659,6 @@ export default function RecordExport() {
                   sortedRecords[0]?.date
                 }`
               : 'データなし'}
-          </p>
-          <p className="flex items-center gap-2">
-            <HiClipboardDocumentList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <strong className="text-gray-800 dark:text-white">
-              フィールド数
-            </strong>{' '}
-            すべての健康フィールド
           </p>
         </div>
       </div>
@@ -793,7 +781,7 @@ export default function RecordExport() {
               disabled={isGeneratingTestData}
               loading={isGeneratingTestData}
             >
-              テストデータを生成
+              テストデータ生成
             </Button>
             <Button
               variant="purple"
