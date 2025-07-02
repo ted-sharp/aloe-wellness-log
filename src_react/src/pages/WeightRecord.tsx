@@ -1,5 +1,23 @@
+import {
+  FloatingPortal,
+  flip,
+  offset,
+  shift,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+  useRole,
+} from '@floating-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { HiCheck, HiNoSymbol, HiTrash, HiXMark } from 'react-icons/hi2';
+import { FaEraser } from 'react-icons/fa';
+import {
+  HiCheck,
+  HiNoSymbol,
+  HiSparkles,
+  HiTrash,
+  HiXMark,
+} from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
@@ -171,6 +189,23 @@ const WeightRecord: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('weight_center_date', centerDate.toISOString());
   }, [centerDate]);
+
+  // スパークル定型文ドロップダウン用 floating-ui
+  const [open, setOpen] = useState(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open,
+    onOpenChange: setOpen,
+    middleware: [offset(6), flip(), shift()],
+    placement: 'bottom-end',
+  });
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const role = useRole(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    dismiss,
+    role,
+  ]);
 
   return (
     <div className="bg-transparent">
@@ -424,13 +459,73 @@ const WeightRecord: React.FC = () => {
                       children=""
                     />
                   </div>
-                  <textarea
-                    className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full mt-1"
-                    rows={1}
-                    value={newNote}
-                    onChange={e => setNewNote(e.target.value)}
-                    placeholder="補足・メモ（任意）"
-                  />
+                  <div className="relative w-full mt-1">
+                    <textarea
+                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-10"
+                      rows={1}
+                      value={newNote}
+                      onChange={e => setNewNote(e.target.value)}
+                      placeholder="補足・メモ（任意）"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      <div className="relative group">
+                        <div
+                          ref={refs.setReference}
+                          {...getReferenceProps({})}
+                          className="w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
+                          tabIndex={0}
+                          aria-label="定型文を挿入"
+                          onClick={() => setOpen(v => !v)}
+                        >
+                          <HiSparkles className="w-6 h-6" />
+                        </div>
+                        {open && (
+                          <FloatingPortal>
+                            <div
+                              ref={refs.setFloating}
+                              style={floatingStyles}
+                              {...getFloatingProps({
+                                className:
+                                  'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[120px] py-1',
+                              })}
+                            >
+                              {[
+                                '朝一',
+                                '朝食後',
+                                '昼食前',
+                                '昼食後',
+                                '夕食前',
+                                '夕食後',
+                                '運動後',
+                              ].map(option => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                                  onClick={() => {
+                                    setNewNote(
+                                      newNote ? newNote + ' ' + option : option
+                                    );
+                                    setOpen(false);
+                                  }}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
+                          </FloatingPortal>
+                        )}
+                      </div>
+                      <div
+                        className="w-6 h-6 flex items-center justify-center text-pink-300 hover:text-pink-500 transition-colors duration-150 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
+                        tabIndex={0}
+                        aria-label="メモを消去（消しゴム）"
+                        onClick={() => setNewNote('')}
+                      >
+                        <FaEraser className="w-6 h-6" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             );

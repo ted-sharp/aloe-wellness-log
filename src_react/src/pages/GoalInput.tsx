@@ -644,7 +644,7 @@ export default function GoalInput() {
               }}
             >
               <HiSparkles
-                className="w-8 h-8"
+                className="w-8 h-8 text-yellow-400"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
             </span>
@@ -743,7 +743,7 @@ export default function GoalInput() {
               }}
             >
               <HiSparkles
-                className="w-8 h-8"
+                className="w-8 h-8 text-yellow-400"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
             </span>
@@ -842,7 +842,7 @@ export default function GoalInput() {
               }}
             >
               <HiSparkles
-                className="w-8 h-8"
+                className="w-8 h-8 text-yellow-400"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
             </span>
@@ -912,7 +912,7 @@ export default function GoalInput() {
               }}
             >
               <HiSparkles
-                className="w-8 h-8"
+                className="w-8 h-8 text-yellow-400"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
             </span>
@@ -979,7 +979,7 @@ export default function GoalInput() {
               }}
             >
               <HiSparkles
-                className="w-8 h-8"
+                className="w-8 h-8 text-yellow-400"
                 style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
               />
             </span>
