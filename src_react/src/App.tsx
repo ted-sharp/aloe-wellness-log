@@ -149,7 +149,7 @@ function Navigation() {
                   ${
                     isCurrentPage(item.path)
                       ? 'bg-blue-600 text-white mobile-nav-current'
-                      : 'bg-gray-100 dark:bg-gray-700 text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800'
+                      : 'bg-gray-100 dark:bg-gray-700 text-blue-700 dark:text-white hover:bg-blue-100 dark:hover:bg-blue-800 mobile-nav-link'
                   }
                   ${idx === 0 ? 'rounded-l-xl' : ''}
                   ${idx === arr.length ? 'rounded-r-xl' : ''}

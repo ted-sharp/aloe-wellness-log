@@ -662,7 +662,7 @@ export default function GoalInput() {
                   <button
                     type="button"
                     aria-label="閉じる"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
                     onClick={() => setShowExerciseExamples(false)}
                   >
                     <HiXMark className="w-4 h-4" />
@@ -761,7 +761,7 @@ export default function GoalInput() {
                   <button
                     type="button"
                     aria-label="閉じる"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
                     onClick={() => setShowDietExamples(false)}
                   >
                     <HiXMark className="w-4 h-4" />
@@ -860,7 +860,7 @@ export default function GoalInput() {
                   <button
                     type="button"
                     aria-label="閉じる"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
                     onClick={() => setShowSleepExamples(false)}
                   >
                     <HiXMark className="w-4 h-4" />
@@ -930,7 +930,7 @@ export default function GoalInput() {
                   <button
                     type="button"
                     aria-label="閉じる"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
                     onClick={() => setShowSmokingExamples(false)}
                   >
                     <HiXMark className="w-4 h-4" />
@@ -997,7 +997,7 @@ export default function GoalInput() {
                   <button
                     type="button"
                     aria-label="閉じる"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
                     onClick={() => setShowAlcoholExamples(false)}
                   >
                     <HiXMark className="w-4 h-4" />

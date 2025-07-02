@@ -13,6 +13,9 @@
   #root {
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   }
+  .mobile-nav-link {
+    color: #fff !important;
+  }
 }
 
 @media (min-width: 640px) {

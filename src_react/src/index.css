@@ -369,3 +369,62 @@ abbr[title] {
   position: relative;
   z-index: 1;
 }
+
+@media (prefers-color-scheme: dark) {
+  .react-calendar {
+    background: #222 !important;
+    color: #fff !important;
+  }
+  .react-calendar__navigation {
+    background: #222 !important;
+    color: #fff !important;
+  }
+  .react-calendar__navigation button,
+  .react-calendar__navigation button.react-calendar__navigation__arrow,
+  .react-calendar__navigation button.react-calendar__navigation__prev2-button,
+  .react-calendar__navigation button.react-calendar__navigation__prev-button,
+  .react-calendar__navigation button.react-calendar__navigation__next-button,
+  .react-calendar__navigation button.react-calendar__navigation__next2-button {
+    background: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    color: #fff !important;
+  }
+  .react-calendar__navigation button:enabled:hover,
+  .react-calendar__navigation button:enabled:focus {
+    background: #444 !important;
+    background-color: #444 !important;
+  }
+  .react-calendar__tile {
+    background: none !important;
+    color: #fff !important;
+  }
+  .react-calendar__tile--now {
+    background: #333 !important;
+    color: #4caf50 !important;
+    border: 2px solid #4caf50 !important;
+  }
+  .react-calendar__tile--active {
+    background: #006edc !important;
+    color: #fff !important;
+  }
+  .react-calendar__tile--hasActive {
+    background: #005bb5 !important;
+    color: #fff !important;
+  }
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background: #444 !important;
+    color: #fff !important;
+  }
+  .react-calendar__month-view__days__day--weekend,
+  .react-calendar__tile[class*='sunday'],
+  .react-calendar__tile:nth-child(7n) {
+    color: #ff6b6b !important;
+  }
+  .react-calendar__tile[class*='saturday'],
+  .react-calendar__tile:nth-child(7n-1) {
+    color: #60a5fa !important;
+  }
+}

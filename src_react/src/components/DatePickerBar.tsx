@@ -231,13 +231,13 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
           aria-modal="true"
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-[95vw] max-w-md relative"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl pt-8 p-4 sm:pt-10 sm:p-6 w-[95vw] max-w-md relative"
             onClick={e => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setIsCalendarOpen(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+              className="absolute top-0 right-0 m-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-transparent shadow-none border-none rounded-full transition-colors focus:outline-none hover:bg-gray-200/60 dark:hover:bg-white/10"
               aria-label="閉じる"
             >
               <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -259,6 +259,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
               value={selectedDate}
               locale="ja-JP"
               className="w-full"
+              formatDay={(_locale, date) => date.getDate().toString()}
             />
           </div>
         </div>

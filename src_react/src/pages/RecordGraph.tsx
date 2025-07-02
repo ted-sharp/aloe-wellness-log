@@ -131,7 +131,7 @@ const RecordGraph: React.FC = () => {
               ${
                 periodIdx === i
                   ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white dark:bg-gray-700 text-blue-700 border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800'
+                  : 'bg-white dark:bg-gray-700 text-blue-700 dark:text-white border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800'
               }`}
             onClick={() => setPeriodIdx(i)}
           >
