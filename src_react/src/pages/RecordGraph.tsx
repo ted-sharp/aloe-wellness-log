@@ -83,6 +83,16 @@ const RecordGraph: React.FC = () => {
     return lines;
   }, [data]);
 
+  // X軸domain（日単位で固定）
+  const xAxisDomain = useMemo(() => {
+    if (!data.length) return ['auto', 'auto'];
+    const start = new Date(data[0].timestamp);
+    const end = new Date(data[data.length - 1].timestamp);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return [start.getTime(), end.getTime()];
+  }, [data]);
+
   // X軸ラベルをMM/DD HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
     const d = new Date(ts);
@@ -123,11 +133,11 @@ const RecordGraph: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent">
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-3 mb-4">
         {PERIODS.map((p, i) => (
           <button
             key={p.label}
-            className={`px-3 py-1 rounded-full border-2 text-sm font-bold transition-colors duration-100
+            className={`w-auto min-w-[64px] px-4 py-1 rounded-full border-2 text-xs sm:text-sm font-bold transition-colors duration-100
               ${
                 periodIdx === i
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -158,17 +168,18 @@ const RecordGraph: React.FC = () => {
             <XAxis
               dataKey="timestamp"
               type="number"
-              domain={['auto', 'auto']}
+              domain={xAxisDomain}
               tickFormatter={formatDateTimeLabel}
             />
-            {dayStartLines.map(ts => (
-              <ReferenceLine
-                key={ts}
-                x={ts}
-                stroke="#888"
-                strokeDasharray="2 2"
-              />
-            ))}
+            {periodIdx === 0 &&
+              dayStartLines.map(ts => (
+                <ReferenceLine
+                  key={ts}
+                  x={ts}
+                  stroke="#888"
+                  strokeDasharray="2 2"
+                />
+              ))}
             <YAxis domain={['auto', 'auto']} unit={weightField?.unit || 'kg'} />
             <Tooltip
               content={({ active, payload, label: _ }) => {
