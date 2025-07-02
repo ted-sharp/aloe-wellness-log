@@ -243,7 +243,7 @@ const RecordGraph: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent">
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="flex flex-wrap gap-3 mb-4 items-center w-full">
         {PERIODS.map((p, i) => (
           <button
             key={p.label}
@@ -258,7 +258,9 @@ const RecordGraph: React.FC = () => {
             {p.label}
           </button>
         ))}
-        <label className="flex items-center ml-4 cursor-pointer select-none text-sm font-bold">
+      </div>
+      <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
+        <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-4 py-0 rounded cursor-pointer select-none text-sm font-bold z-10">
           <input
             type="checkbox"
             className="form-checkbox accent-blue-600 mr-1"
@@ -267,8 +269,6 @@ const RecordGraph: React.FC = () => {
           />
           除外値も表示
         </label>
-      </div>
-      <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}
