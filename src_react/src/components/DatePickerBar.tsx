@@ -93,44 +93,6 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     };
   }, [centerDate, setCenterDate]);
 
-  // スクロールで中央に最も近い日付を自動選択
-  useEffect(() => {
-    const btns = btnsRef.current;
-    if (!btns) return;
-    let scrollTimeout: number | null = null;
-    const handleScroll = () => {
-      if (scrollTimeout) window.clearTimeout(scrollTimeout);
-      scrollTimeout = window.setTimeout(() => {
-        // 各日付ボタンの中心座標を取得
-        const btnEls = btns.querySelectorAll<HTMLButtonElement>(
-          'button[data-date-idx]'
-        );
-        const btnsRect = btns.getBoundingClientRect();
-        const centerX = btnsRect.left + btnsRect.width / 2;
-        let minDist = Infinity;
-        let nearestIdx = 0;
-        btnEls.forEach((el, idx) => {
-          const rect = el.getBoundingClientRect();
-          const elCenter = rect.left + rect.width / 2;
-          const dist = Math.abs(centerX - elCenter);
-          if (dist < minDist) {
-            minDist = dist;
-            nearestIdx = idx;
-          }
-        });
-        // そのidxの日付を選択
-        if (dateArray[nearestIdx]) {
-          setSelectedDate(dateArray[nearestIdx]);
-        }
-      }, 120);
-    };
-    btns.addEventListener('scroll', handleScroll);
-    return () => {
-      if (scrollTimeout) window.clearTimeout(scrollTimeout);
-      btns.removeEventListener('scroll', handleScroll);
-    };
-  }, [dateArray, setSelectedDate]);
-
   return (
     <div>
       <div

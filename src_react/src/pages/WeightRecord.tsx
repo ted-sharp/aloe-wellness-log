@@ -24,8 +24,14 @@ const formatLocalDateTime = (date: Date): string => {
 
 const WeightRecord: React.FC = () => {
   const today = new Date();
-  const [centerDate, setCenterDate] = useState<Date>(today);
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [centerDate, setCenterDate] = useState<Date>(() => {
+    const saved = localStorage.getItem('weight_center_date');
+    return saved ? new Date(saved) : today;
+  });
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = localStorage.getItem('weight_selected_date');
+    return saved ? new Date(saved) : today;
+  });
   const {
     fields,
     addRecord,
@@ -152,6 +158,19 @@ const WeightRecord: React.FC = () => {
       loadGoal();
     }
   }, [goal, loadGoal]);
+
+  useEffect(() => {
+    localStorage.setItem('weight_selected_date', selectedDate.toISOString());
+  }, [selectedDate]);
+
+  // selectedDateが変わったらcenterDateも追従
+  useEffect(() => {
+    setCenterDate(selectedDate);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    localStorage.setItem('weight_center_date', centerDate.toISOString());
+  }, [centerDate]);
 
   return (
     <div className="bg-transparent">
