@@ -508,7 +508,7 @@ const DailyRecord: React.FC = () => {
                     aria-pressed={value === true}
                     className="flex-1"
                   >
-                    あり
+                    達成
                   </Button>
                   <Button
                     variant={value === false ? 'primary' : 'secondary'}
@@ -528,7 +528,7 @@ const DailyRecord: React.FC = () => {
                     aria-pressed={value === false}
                     className="flex-1"
                   >
-                    なし
+                    未達
                   </Button>
                 </div>
               );
