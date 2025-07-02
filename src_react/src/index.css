@@ -325,16 +325,15 @@ button:focus-visible {
 
 .react-calendar__tile--now {
   background: #e8f5e8;
-  color: #2e7d32;
+  color: #2e7d32 !important;
   font-weight: bold;
   border: 2px solid #4caf50;
 }
 
-.react-calendar__tile--now:enabled:hover,
-.react-calendar__tile--now:enabled:focus {
-  background: #c8e6c9 !important;
-  color: #2e7d32 !important;
-  border: 2px solid #4caf50;
+.react-calendar__tile--now.react-calendar__tile--active {
+  background: #006edc !important;
+  color: #fff !important;
+  border: 2px solid #006edc !important;
 }
 
 .react-calendar__tile--hasActive {
@@ -347,8 +346,8 @@ button:focus-visible {
 }
 
 .react-calendar__tile--active {
-  background: #006edc;
-  color: white;
+  background: #006edc !important;
+  color: #fff !important;
 }
 
 .react-calendar__tile--active:enabled:hover,
