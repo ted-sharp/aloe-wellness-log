@@ -1,5 +1,16 @@
+import {
+  FloatingPortal,
+  flip,
+  offset,
+  shift,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+  useRole,
+} from '@floating-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { HiSparkles, HiXMark } from 'react-icons/hi2';
+import { HiSparkles } from 'react-icons/hi2';
 import Button from '../components/Button';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
@@ -62,6 +73,33 @@ const genderOptions = [
   { value: 'unknown', label: '未回答' },
 ];
 
+// --- 目標入力用 floating-ui スパークル共通フック ---
+function useSparkleDropdown() {
+  const [open, setOpen] = useState(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open,
+    onOpenChange: setOpen,
+    middleware: [offset(6), flip(), shift()],
+    placement: 'bottom-end',
+  });
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const role = useRole(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    click,
+    dismiss,
+    role,
+  ]);
+  return {
+    open,
+    setOpen,
+    refs,
+    floatingStyles,
+    getReferenceProps,
+    getFloatingProps,
+  };
+}
+
 export default function GoalInput() {
   const { goal, setGoal, loadGoal } = useGoalStore();
   const { records } = useRecordsStore();
@@ -89,6 +127,13 @@ export default function GoalInput() {
   const sleepExampleRef = useRef<HTMLDivElement | null>(null);
   const smokingExampleRef = useRef<HTMLDivElement | null>(null);
   const alcoholExampleRef = useRef<HTMLDivElement | null>(null);
+
+  // --- スパークル定型文ドロップダウン ---
+  const exerciseSparkle = useSparkleDropdown();
+  const dietSparkle = useSparkleDropdown();
+  const sleepSparkle = useSparkleDropdown();
+  const smokingSparkle = useSparkleDropdown();
+  const alcoholSparkle = useSparkleDropdown();
 
   useEffect(() => {
     loadGoal().then(() => {
@@ -623,68 +668,49 @@ export default function GoalInput() {
           })()}
         <label className="flex flex-col gap-1">
           <span>運動目標 (例: なるべく階段を使う)</span>
-          <div className="flex items-center gap-2 relative">
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={exerciseGoal}
               onChange={e => setExerciseGoal(e.target.value)}
-              className="border rounded px-3 py-2 text-base flex-1"
+              className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 毎日30分歩く"
             />
-            <span
-              role="button"
+            <div
+              ref={exerciseSparkle.refs.setReference}
+              {...exerciseSparkle.getReferenceProps({})}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
               tabIndex={0}
-              aria-label="運動目標の例を表示"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => setShowExerciseExamples(v => !v)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ')
-                  setShowExerciseExamples(v => !v);
-              }}
+              aria-label="定型文を挿入"
+              onClick={() => exerciseSparkle.setOpen(v => !v)}
             >
-              <HiSparkles
-                className="w-8 h-8 text-yellow-400"
-                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
-              />
-            </span>
-            {showExerciseExamples && (
-              <div
-                ref={exerciseExampleRef}
-                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
-                style={{ minWidth: '220px' }}
-                tabIndex={-1}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
-                    運動目標の例
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="閉じる"
-                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
-                    onClick={() => setShowExerciseExamples(false)}
-                  >
-                    <HiXMark className="w-4 h-4" />
-                  </button>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {exerciseExamples.map(ex => (
-                    <li key={ex}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
-                        onClick={() => {
-                          setExerciseGoal(ex);
-                          setShowExerciseExamples(false);
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    </li>
+              <HiSparkles className="w-6 h-6" />
+            </div>
+            {exerciseSparkle.open && (
+              <FloatingPortal>
+                <div
+                  ref={exerciseSparkle.refs.setFloating}
+                  style={exerciseSparkle.floatingStyles}
+                  {...exerciseSparkle.getFloatingProps({
+                    className:
+                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
+                  })}
+                >
+                  {exerciseExamples.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                      onClick={() => {
+                        setExerciseGoal(option);
+                        exerciseSparkle.setOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </FloatingPortal>
             )}
           </div>
         </label>
@@ -722,68 +748,49 @@ export default function GoalInput() {
           })()}
         <label className="flex flex-col gap-1">
           <span>減食目標 (例: 間食を控える)</span>
-          <div className="flex items-center gap-2 relative">
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={dietGoal}
               onChange={e => setDietGoal(e.target.value)}
-              className="border rounded px-3 py-2 text-base flex-1"
+              className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 間食を控える"
             />
-            <span
-              role="button"
+            <div
+              ref={dietSparkle.refs.setReference}
+              {...dietSparkle.getReferenceProps({})}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
               tabIndex={0}
-              aria-label="減食目標の例を表示"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => setShowDietExamples(v => !v)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ')
-                  setShowDietExamples(v => !v);
-              }}
+              aria-label="定型文を挿入"
+              onClick={() => dietSparkle.setOpen(v => !v)}
             >
-              <HiSparkles
-                className="w-8 h-8 text-yellow-400"
-                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
-              />
-            </span>
-            {showDietExamples && (
-              <div
-                ref={dietExampleRef}
-                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
-                style={{ minWidth: '220px' }}
-                tabIndex={-1}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
-                    減食目標の例
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="閉じる"
-                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
-                    onClick={() => setShowDietExamples(false)}
-                  >
-                    <HiXMark className="w-4 h-4" />
-                  </button>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {dietExamples.map(ex => (
-                    <li key={ex}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
-                        onClick={() => {
-                          setDietGoal(ex);
-                          setShowDietExamples(false);
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    </li>
+              <HiSparkles className="w-6 h-6" />
+            </div>
+            {dietSparkle.open && (
+              <FloatingPortal>
+                <div
+                  ref={dietSparkle.refs.setFloating}
+                  style={dietSparkle.floatingStyles}
+                  {...dietSparkle.getFloatingProps({
+                    className:
+                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
+                  })}
+                >
+                  {dietExamples.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                      onClick={() => {
+                        setDietGoal(option);
+                        dietSparkle.setOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </FloatingPortal>
             )}
           </div>
         </label>
@@ -821,68 +828,49 @@ export default function GoalInput() {
           })()}
         <label className="flex flex-col gap-1">
           <span>睡眠目標 (例: 23時までに就寝する)</span>
-          <div className="flex items-center gap-2 relative">
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={sleepGoal}
               onChange={e => setSleepGoal(e.target.value)}
-              className="border rounded px-3 py-2 text-base flex-1"
+              className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 7時間以上寝る"
             />
-            <span
-              role="button"
+            <div
+              ref={sleepSparkle.refs.setReference}
+              {...sleepSparkle.getReferenceProps({})}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
               tabIndex={0}
-              aria-label="睡眠目標の例を表示"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => setShowSleepExamples(v => !v)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ')
-                  setShowSleepExamples(v => !v);
-              }}
+              aria-label="定型文を挿入"
+              onClick={() => sleepSparkle.setOpen(v => !v)}
             >
-              <HiSparkles
-                className="w-8 h-8 text-yellow-400"
-                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
-              />
-            </span>
-            {showSleepExamples && (
-              <div
-                ref={sleepExampleRef}
-                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
-                style={{ minWidth: '220px' }}
-                tabIndex={-1}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
-                    睡眠目標の例
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="閉じる"
-                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
-                    onClick={() => setShowSleepExamples(false)}
-                  >
-                    <HiXMark className="w-4 h-4" />
-                  </button>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {sleepExamples.map(ex => (
-                    <li key={ex}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
-                        onClick={() => {
-                          setSleepGoal(ex);
-                          setShowSleepExamples(false);
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    </li>
+              <HiSparkles className="w-6 h-6" />
+            </div>
+            {sleepSparkle.open && (
+              <FloatingPortal>
+                <div
+                  ref={sleepSparkle.refs.setFloating}
+                  style={sleepSparkle.floatingStyles}
+                  {...sleepSparkle.getFloatingProps({
+                    className:
+                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
+                  })}
+                >
+                  {sleepExamples.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                      onClick={() => {
+                        setSleepGoal(option);
+                        sleepSparkle.setOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </FloatingPortal>
             )}
           </div>
         </label>
@@ -891,135 +879,97 @@ export default function GoalInput() {
         </div>
         <label className="flex flex-col gap-1">
           <span>喫煙目標 (例: 1日○本までにする)</span>
-          <div className="flex items-center gap-2 relative">
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={smokingGoal}
               onChange={e => setSmokingGoal(e.target.value)}
-              className="border rounded px-3 py-2 text-base flex-1"
+              className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 1日○本までにする"
             />
-            <span
-              role="button"
+            <div
+              ref={smokingSparkle.refs.setReference}
+              {...smokingSparkle.getReferenceProps({})}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
               tabIndex={0}
-              aria-label="喫煙目標の例を表示"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => setShowSmokingExamples(v => !v)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ')
-                  setShowSmokingExamples(v => !v);
-              }}
+              aria-label="定型文を挿入"
+              onClick={() => smokingSparkle.setOpen(v => !v)}
             >
-              <HiSparkles
-                className="w-8 h-8 text-yellow-400"
-                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
-              />
-            </span>
-            {showSmokingExamples && (
-              <div
-                ref={smokingExampleRef}
-                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
-                style={{ minWidth: '220px' }}
-                tabIndex={-1}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
-                    喫煙目標の例
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="閉じる"
-                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
-                    onClick={() => setShowSmokingExamples(false)}
-                  >
-                    <HiXMark className="w-4 h-4" />
-                  </button>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {smokingExamples.map(ex => (
-                    <li key={ex}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
-                        onClick={() => {
-                          setSmokingGoal(ex);
-                          setShowSmokingExamples(false);
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    </li>
+              <HiSparkles className="w-6 h-6" />
+            </div>
+            {smokingSparkle.open && (
+              <FloatingPortal>
+                <div
+                  ref={smokingSparkle.refs.setFloating}
+                  style={smokingSparkle.floatingStyles}
+                  {...smokingSparkle.getFloatingProps({
+                    className:
+                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
+                  })}
+                >
+                  {smokingExamples.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                      onClick={() => {
+                        setSmokingGoal(option);
+                        smokingSparkle.setOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </FloatingPortal>
             )}
           </div>
         </label>
         <label className="flex flex-col gap-1">
           <span>飲酒目標 (例: 週2回までにする)</span>
-          <div className="flex items-center gap-2 relative">
+          <div className="relative flex items-center gap-2">
             <input
               type="text"
               value={alcoholGoal}
               onChange={e => setAlcoholGoal(e.target.value)}
-              className="border rounded px-3 py-2 text-base flex-1"
+              className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 週2回までにする"
             />
-            <span
-              role="button"
+            <div
+              ref={alcoholSparkle.refs.setReference}
+              {...alcoholSparkle.getReferenceProps({})}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
               tabIndex={0}
-              aria-label="飲酒目標の例を表示"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer select-none"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => setShowAlcoholExamples(v => !v)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ')
-                  setShowAlcoholExamples(v => !v);
-              }}
+              aria-label="定型文を挿入"
+              onClick={() => alcoholSparkle.setOpen(v => !v)}
             >
-              <HiSparkles
-                className="w-8 h-8 text-yellow-400"
-                style={{ minHeight: '2.5rem', minWidth: '2.5rem' }}
-              />
-            </span>
-            {showAlcoholExamples && (
-              <div
-                ref={alcoholExampleRef}
-                className="absolute z-20 top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 flex flex-col gap-2"
-                style={{ minWidth: '220px' }}
-                tabIndex={-1}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">
-                    飲酒目標の例
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="閉じる"
-                    className="text-gray-400 bg-transparent rounded-full hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-white/10 focus:outline-none"
-                    onClick={() => setShowAlcoholExamples(false)}
-                  >
-                    <HiXMark className="w-4 h-4" />
-                  </button>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {alcoholExamples.map(ex => (
-                    <li key={ex}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-sm text-gray-700 dark:text-gray-100"
-                        onClick={() => {
-                          setAlcoholGoal(ex);
-                          setShowAlcoholExamples(false);
-                        }}
-                      >
-                        {ex}
-                      </button>
-                    </li>
+              <HiSparkles className="w-6 h-6" />
+            </div>
+            {alcoholSparkle.open && (
+              <FloatingPortal>
+                <div
+                  ref={alcoholSparkle.refs.setFloating}
+                  style={alcoholSparkle.floatingStyles}
+                  {...alcoholSparkle.getFloatingProps({
+                    className:
+                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
+                  })}
+                >
+                  {alcoholExamples.map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                      onClick={() => {
+                        setAlcoholGoal(option);
+                        alcoholSparkle.setOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </FloatingPortal>
             )}
           </div>
         </label>

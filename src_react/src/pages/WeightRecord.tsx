@@ -407,6 +407,7 @@ const WeightRecord: React.FC = () => {
                               await loadRecords();
                             }
                           }}
+                          placeholder="補足・メモ（任意）"
                         />
                       </div>
                     );
