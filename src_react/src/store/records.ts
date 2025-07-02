@@ -148,7 +148,7 @@ const initialFields: Field[] = [
   },
   {
     fieldId: 'exercise',
-    name: '運動(早歩き)',
+    name: '運動',
     type: 'boolean',
     order: 6,
     defaultDisplay: true,
@@ -156,7 +156,7 @@ const initialFields: Field[] = [
   },
   {
     fieldId: 'meal',
-    name: '減食',
+    name: '食事',
     type: 'boolean',
     order: 7,
     defaultDisplay: true,
@@ -164,7 +164,7 @@ const initialFields: Field[] = [
   },
   {
     fieldId: 'sleep',
-    name: '睡眠(早寝)',
+    name: '睡眠',
     type: 'boolean',
     order: 8,
     defaultDisplay: true,
