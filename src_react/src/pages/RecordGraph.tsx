@@ -18,6 +18,19 @@ const PERIODS = [
   { label: '全データ', days: null },
 ];
 
+// カラーパレット
+const STATUS_COLORS = {
+  exercise: '#38bdf8', // 青
+  meal: '#22c55e', // 緑
+  sleep: '#a21caf', // 紫
+  off: '#d1d5db', // グレー
+};
+const STATUS_LABELS = {
+  exercise: '運',
+  meal: '食',
+  sleep: '睡',
+};
+
 const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
@@ -93,6 +106,30 @@ const RecordGraph: React.FC = () => {
     return [start.getTime(), end.getTime()];
   }, [data]);
 
+  // X軸tick値（日付の00:00）
+  const xAxisTicks = useMemo(() => {
+    if (periodIdx !== 0 || !data.length) return undefined;
+    const start = new Date(data[0].timestamp);
+    const end = new Date(data[data.length - 1].timestamp);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const ticks: number[] = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      ticks.push(
+        new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate(),
+          0,
+          0,
+          0,
+          0
+        ).getTime()
+      );
+    }
+    return ticks;
+  }, [data, periodIdx]);
+
   // X軸ラベルをMM/DD HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
     const d = new Date(ts);
@@ -130,6 +167,79 @@ const RecordGraph: React.FC = () => {
       { timestamp: x2, value: a * x2 + b },
     ];
   }, [data]);
+
+  // 日付ごとの運動・減食・睡眠達成状況を抽出
+  const dailyStatus = useMemo(() => {
+    // { 'YYYY-MM-DD': { exercise: true/false, meal: true/false, sleep: true/false } }
+    const statusMap: Record<
+      string,
+      { exercise: boolean; meal: boolean; sleep: boolean }
+    > = {};
+    records.forEach(r => {
+      if (!['exercise', 'meal', 'sleep'].includes(r.fieldId)) return;
+      const date = r.date;
+      if (!statusMap[date])
+        statusMap[date] = { exercise: false, meal: false, sleep: false };
+      if (typeof r.value === 'boolean')
+        statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||= r.value;
+      if (typeof r.value === 'number')
+        statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||=
+          !!r.value;
+    });
+    return statusMap;
+  }, [records]);
+
+  type StatusKey = 'exercise' | 'meal' | 'sleep';
+  type CustomTickProps = {
+    x?: number;
+    y?: number;
+    payload: { value: number };
+  };
+  const STATUS_KEYS: StatusKey[] = ['exercise', 'meal', 'sleep'];
+  const CustomTick = (props: CustomTickProps) => {
+    const { x = 0, y = 0, payload } = props;
+    const ts = payload.value;
+    const d = new Date(ts);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(d.getDate()).padStart(2, '0')}`;
+    const status = dailyStatus[dateStr] || {
+      exercise: false,
+      meal: false,
+      sleep: false,
+    };
+    return (
+      <g>
+        <text x={x} y={y + 10} textAnchor="middle" fontSize="12">{`${
+          d.getMonth() + 1
+        }/${d.getDate()}`}</text>
+        {/* ドット群 */}
+        {STATUS_KEYS.map((key, idx) => (
+          <circle
+            key={key}
+            cx={x - 12 + idx * 12}
+            cy={y + 18}
+            r={4}
+            fill={status[key] ? STATUS_COLORS[key] : STATUS_COLORS.off}
+          />
+        ))}
+        {/* ラベル群 */}
+        {STATUS_KEYS.map((key, idx) => (
+          <text
+            key={key}
+            x={x - 12 + idx * 12}
+            y={y + 32}
+            textAnchor="middle"
+            fontSize="9"
+            fill="#888"
+          >
+            {STATUS_LABELS[key]}
+          </text>
+        ))}
+      </g>
+    );
+  };
 
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent">
@@ -169,7 +279,9 @@ const RecordGraph: React.FC = () => {
               dataKey="timestamp"
               type="number"
               domain={xAxisDomain}
-              tickFormatter={formatDateTimeLabel}
+              tick={periodIdx === 0 ? CustomTick : undefined}
+              tickFormatter={periodIdx === 0 ? undefined : formatDateTimeLabel}
+              ticks={xAxisTicks}
             />
             {periodIdx === 0 &&
               dayStartLines.map(ts => (
