@@ -135,7 +135,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     <div>
       <div
         ref={pickerRef}
-        className="w-full flex items-center justify-center py-6 bg-white/80 dark:bg-gray-900/80 shadow-md sticky top-0 z-10"
+        className="w-full flex items-center justify-center pt-2 pb-2 bg-white/80 dark:bg-gray-900/80 shadow-md sticky top-0 z-10"
       >
         <button
           type="button"
@@ -179,7 +179,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
               <React.Fragment key={formatDate(date)}>
                 {showMonth && (
                   <span
-                    className="flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs font-bold select-none cursor-default border border-gray-300 dark:border-gray-600"
+                    className="flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 m-1 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs font-bold select-none cursor-default border border-gray-300 dark:border-gray-600"
                     aria-hidden="true"
                   >
                     {date.getMonth() + 1}月
@@ -190,18 +190,22 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                   onClick={() => {
                     setSelectedDate(date);
                   }}
-                  className={`flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 rounded-xl border-2 transition-colors duration-150
+                  className={`flex flex-col items-center justify-center min-w-12 w-12 max-w-12 h-12 px-0 py-0 mt-2 mb-2 rounded-full transition-colors duration-150 shadow-md
                     ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600'
+                        ? 'bg-blue-600 text-white shadow-lg scale-105 z-10'
                         : isToday
-                        ? 'bg-blue-100 border-blue-300 text-blue-700'
-                        : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200'
                     }
                     hover:bg-blue-200 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400
-                    ${isCenter ? 'border-4 border-blue-400 z-10' : ''}`}
+                    ${isCenter && !isSelected ? 'scale-105' : ''}`}
+                  style={{
+                    position: 'relative',
+                    scrollSnapAlign: 'center',
+                    border: 'none',
+                  }}
                   aria-current={isSelected ? 'date' : undefined}
-                  style={{ position: 'relative', scrollSnapAlign: 'center' }}
                 >
                   <span className={`text-xs font-medium ${weekdayColor}`}>
                     {formatWeekday(date)}
@@ -209,7 +213,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                   <span className="text-lg font-bold">{formatDay(date)}</span>
                   {isRecorded && isRecorded(date) && (
                     <span
-                      className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-500 border border-white dark:border-gray-800"
+                      className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-green-500 border border-white dark:border-gray-800"
                       aria-label="記録済み"
                     />
                   )}
