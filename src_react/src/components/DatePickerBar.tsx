@@ -1,27 +1,19 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { HiCalendarDays } from 'react-icons/hi2';
 
 // 日付ユーティリティ
 const BUTTON_WIDTH = 56;
-const MIN_BUTTONS = 5;
-const MAX_BUTTONS = 21;
 const EXTRA_SCROLL_DAYS = 90; // 最低表示日数（片側）
 const SCROLL_EXPAND_CHUNK = 30; // 端に来たら追加する日数
 
-const getDateArray = (centerDate: Date, range: number) => {
+const getDateArray = (minDate: Date, maxDate: Date) => {
   const arr = [];
-  for (let i = -range; i <= range; i++) {
-    const d = new Date(centerDate);
-    d.setDate(centerDate.getDate() + i);
+  const d = new Date(minDate);
+  while (d <= maxDate) {
     arr.push(new Date(d));
+    d.setDate(d.getDate() + 1);
   }
   return arr;
 };
@@ -54,32 +46,25 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   today = new Date(),
   isRecorded,
 }) => {
-  const [buttonCount, setButtonCount] = useState<number>(MIN_BUTTONS);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const btnsRef = useRef<HTMLDivElement>(null);
-  const [expandDays, setExpandDays] = useState(EXTRA_SCROLL_DAYS);
+  const [minDate, setMinDate] = useState(() => {
+    const d = new Date(centerDate);
+    d.setDate(centerDate.getDate() - EXTRA_SCROLL_DAYS);
+    return d;
+  });
+  const [maxDate, setMaxDate] = useState(() => {
+    const d = new Date(centerDate);
+    d.setDate(centerDate.getDate() + EXTRA_SCROLL_DAYS);
+    return d;
+  });
   const lastEdgeRef = useRef<'left' | 'right' | null>(null);
   const prevWidthRef = useRef<number>(0);
   const [pendingCenterScroll, setPendingCenterScroll] = useState(false);
 
-  // 画面幅に応じてボタン数を再計算
-  const updateButtonCount = useCallback(() => {
-    const width = window.innerWidth;
-    const maxButtons = Math.floor((width - 64) / (BUTTON_WIDTH + 8));
-    setButtonCount(Math.max(MIN_BUTTONS, Math.min(MAX_BUTTONS, maxButtons)));
-  }, []);
-
-  useEffect(() => {
-    updateButtonCount();
-    window.addEventListener('resize', updateButtonCount);
-    return () => window.removeEventListener('resize', updateButtonCount);
-  }, [updateButtonCount]);
-
-  // 表示範囲を広げて水平方向にオーバーフローを確保（可視領域×3）
-  const range = Math.floor(buttonCount / 2);
-  const displayRange = Math.max(range * 3, expandDays); // 可視域×3 か expandDays の大きい方
-  const dateArray = getDateArray(centerDate, displayRange);
+  // minDate/maxDateでdateArray生成
+  const dateArray = getDateArray(minDate, maxDate);
 
   // ホイールで日付移動
   useEffect(() => {
@@ -159,7 +144,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     };
   }, [centerDate, setCenterDate]);
 
-  // スクロール端に達したら日付配列を前後に拡張
+  // スクロール端に達したらminDate/maxDateを拡張
   useEffect(() => {
     const btns = btnsRef.current;
     if (!btns) return;
@@ -170,13 +155,21 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
 
       // 右端
       if (scrollLeft + clientWidth + EDGE_THRESHOLD >= scrollWidth) {
-        setExpandDays(prev => prev + SCROLL_EXPAND_CHUNK);
+        setMaxDate(prev => {
+          const d = new Date(prev);
+          d.setDate(d.getDate() + SCROLL_EXPAND_CHUNK);
+          return d;
+        });
         lastEdgeRef.current = 'right';
         prevWidthRef.current = scrollWidth;
       }
       // 左端
       if (scrollLeft <= EDGE_THRESHOLD) {
-        setExpandDays(prev => prev + SCROLL_EXPAND_CHUNK);
+        setMinDate(prev => {
+          const d = new Date(prev);
+          d.setDate(d.getDate() - SCROLL_EXPAND_CHUNK);
+          return d;
+        });
         lastEdgeRef.current = 'left';
         prevWidthRef.current = scrollWidth;
       }
@@ -186,19 +179,23 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     return () => btns.removeEventListener('scroll', handleScrollEdge);
   }, []);
 
-  // 拡張後、左端追加の場合は scrollLeft を補正してジャンプを防止
-  useLayoutEffect(() => {
-    const btns = btnsRef.current;
-    if (!btns) return;
-    if (!lastEdgeRef.current) return;
-
-    const diff = btns.scrollWidth - prevWidthRef.current;
-    if (lastEdgeRef.current === 'left') {
-      btns.scrollLeft += diff;
+  // centerDateがminDate/maxDateを超えた場合も自動拡張
+  useEffect(() => {
+    if (centerDate < minDate) {
+      setMinDate(() => {
+        const d = new Date(centerDate);
+        d.setDate(centerDate.getDate() - EXTRA_SCROLL_DAYS);
+        return d;
+      });
     }
-    // 右端追加は位置変化しないため補正不要
-    lastEdgeRef.current = null;
-  }, [expandDays]);
+    if (centerDate > maxDate) {
+      setMaxDate(() => {
+        const d = new Date(centerDate);
+        d.setDate(centerDate.getDate() + EXTRA_SCROLL_DAYS);
+        return d;
+      });
+    }
+  }, [centerDate, minDate, maxDate]);
 
   // centerDate変更後、pendingCenterScroll時のみ中央スクロール補正
   useEffect(() => {
