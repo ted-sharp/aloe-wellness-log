@@ -43,5 +43,6 @@
   "related_applications": [],
   "edge_side_panel": {
     "preferred_width": 400
-  }
+  },
+  "display_override": ["window-controls-overlay", "standalone", "browser"]
 }
