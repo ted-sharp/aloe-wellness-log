@@ -168,7 +168,7 @@ const handleGlobalError = (error: ErrorEvent | PromiseRejectionEvent) => {
     const perfData = {
       timing: performance.timing,
       navigation: performance.navigation,
-      memory: (performance as any).memory,
+      memory: (performance as unknown as { memory?: unknown }).memory,
     };
 
     errorInfo.performance = perfData;
@@ -223,9 +223,60 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       .register(swPath)
       .then(reg => {
         console.log('🛡️ Service Worker registered:', reg);
+
+        // --- アップデート検知ロジック追加 ---
+        if (reg.waiting) {
+          showUpdateToast(reg);
+        }
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
+                showUpdateToast(reg);
+              }
+            });
+          }
+        });
       })
       .catch(err => {
         console.error('❌ Service Worker registration failed:', err);
       });
+  });
+}
+
+// --- アップデート通知Toast表示関数 ---
+function showUpdateToast(reg: ServiceWorkerRegistration) {
+  // 既存のToastContainerを利用
+  const toastRoot = document.createElement('div');
+  toastRoot.style.position = 'fixed';
+  toastRoot.style.bottom = '32px';
+  toastRoot.style.left = '50%';
+  toastRoot.style.transform = 'translateX(-50%)';
+  toastRoot.style.zIndex = '9999';
+  document.body.appendChild(toastRoot);
+
+  toastRoot.innerHTML = `
+    <div style="background:#059669;color:#fff;padding:16px 24px;border-radius:12px;box-shadow:0 2px 8px #0002;display:flex;align-items:center;gap:16px;font-size:1rem;">
+      <span>新しいバージョンがあります。<br>再読み込みで最新に更新できます。</span>
+      <button id="sw-update-btn" style="background:#fff;color:#059669;font-weight:bold;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;">再読み込み</button>
+    </div>
+  `;
+  const btn = toastRoot.querySelector('#sw-update-btn') as HTMLButtonElement;
+  btn.onclick = () => {
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+    window.location.reload();
+  };
+}
+
+// Service WorkerからのskipWaitingメッセージ受信対応（sw.js側も要対応）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
   });
 }
