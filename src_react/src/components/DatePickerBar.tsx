@@ -323,6 +323,22 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
               onChange={date => {
                 setSelectedDate(date as Date);
                 setCenterDate(date as Date);
+                setTimeout(() => {
+                  // スクロール位置を中央に補正
+                  const btns = btnsRef.current;
+                  if (!btns) return;
+                  const target = btns.querySelector<HTMLButtonElement>(
+                    `button[data-date='${formatDate(date as Date)}']`
+                  );
+                  if (!target) return;
+                  const containerRect = btns.getBoundingClientRect();
+                  const targetRect = target.getBoundingClientRect();
+                  const offset =
+                    targetRect.left +
+                    targetRect.width / 2 -
+                    (containerRect.left + containerRect.width / 2);
+                  btns.scrollBy({ left: offset, behavior: 'smooth' });
+                }, 0);
                 setIsCalendarOpen(false);
               }}
               value={selectedDate}
