@@ -336,6 +336,7 @@ const RecordGraph: React.FC = () => {
               strokeWidth={3}
               dot={({ cx, cy, payload }) => (
                 <circle
+                  key={payload?.timestamp ?? `${cx}-${cy}`}
                   cx={cx}
                   cy={cy}
                   r={4}
