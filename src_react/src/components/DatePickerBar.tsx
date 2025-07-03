@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { HiCalendarDays } from 'react-icons/hi2';
@@ -226,6 +226,18 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     };
     tryScroll();
   }, [centerDate, pendingCenterScroll]);
+
+  // minDate/maxDate拡張時のscrollLeft補正（左端のみ）
+  useLayoutEffect(() => {
+    const btns = btnsRef.current;
+    if (!btns) return;
+    if (!lastEdgeRef.current) return;
+    const diff = btns.scrollWidth - prevWidthRef.current;
+    if (lastEdgeRef.current === 'left' && diff > 0) {
+      btns.scrollLeft += diff;
+    }
+    lastEdgeRef.current = null;
+  }, [minDate, maxDate]);
 
   return (
     <div>
