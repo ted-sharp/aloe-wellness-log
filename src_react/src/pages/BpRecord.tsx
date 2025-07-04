@@ -50,7 +50,7 @@ const formatLocalDateTime = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-const OtherRecord: React.FC = () => {
+const BpRecord: React.FC = () => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(today);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
@@ -75,7 +75,7 @@ const OtherRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const otherFields = useMemo(
+  const bpFields = useMemo(
     () =>
       isEditMode
         ? fields
@@ -97,10 +97,10 @@ const OtherRecord: React.FC = () => {
     [fields, isEditMode]
   );
   const [editFields, setEditFields] = useState(() =>
-    otherFields.map(f => ({ ...f }))
+    bpFields.map(f => ({ ...f }))
   );
   const [editOrder, setEditOrder] = useState(() =>
-    otherFields.map(f => f.fieldId)
+    bpFields.map(f => f.fieldId)
   );
   const [editDelete, setEditDelete] = useState<string[]>([]);
 
@@ -117,7 +117,7 @@ const OtherRecord: React.FC = () => {
   const recordTime = formatLocalTime(selectedDate);
 
   // 既存記録の取得
-  const getOtherRecord = (fieldId: string) =>
+  const getBpRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
 
   // 入力値ローカルstate
@@ -125,12 +125,12 @@ const OtherRecord: React.FC = () => {
   useEffect(() => {
     // 日付変更やレコード更新時に既存値を反映
     const newValues: Record<string, string> = {};
-    otherFields.forEach(f => {
-      const rec = getOtherRecord(f.fieldId);
+    bpFields.forEach(f => {
+      const rec = getBpRecord(f.fieldId);
       newValues[f.fieldId] = rec ? String(rec.value) : '';
     });
     setInputValues(newValues);
-  }, [fields, isEditMode, records, recordDate, otherFields]);
+  }, [fields, isEditMode, records, recordDate, bpFields]);
 
   // 保存
   const handleSave = async (fieldId: string) => {
@@ -138,7 +138,7 @@ const OtherRecord: React.FC = () => {
     if (!value) return;
     const numValue = Number(value);
     if (isNaN(numValue)) return;
-    const rec = getOtherRecord(fieldId);
+    const rec = getBpRecord(fieldId);
     if (rec) {
       await updateRecord({ ...rec, value: numValue });
     } else {
@@ -156,7 +156,7 @@ const OtherRecord: React.FC = () => {
   };
   // 削除
   const handleDelete = async (fieldId: string) => {
-    const rec = getOtherRecord(fieldId);
+    const rec = getBpRecord(fieldId);
     if (rec) {
       await deleteRecord(rec.id);
       await loadRecords();
@@ -197,15 +197,15 @@ const OtherRecord: React.FC = () => {
   // 編集モード切替時に最新フィールドで初期化
   useEffect(() => {
     if (isEditMode) {
-      const allOtherFields = fields
+      const allBpFields = fields
         .filter(f => f.type === 'number' && f.scope === 'bp')
         .slice()
         .sort((a, b) => {
           if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
           return a.fieldId.localeCompare(b.fieldId);
         });
-      setEditFields(allOtherFields.map(f => ({ ...f })));
-      setEditOrder(allOtherFields.map(f => f.fieldId));
+      setEditFields(allBpFields.map(f => ({ ...f })));
+      setEditOrder(allBpFields.map(f => f.fieldId));
       setEditDelete([]);
     }
   }, [isEditMode, fields]);
@@ -450,7 +450,7 @@ const OtherRecord: React.FC = () => {
     return records.some(
       r =>
         r.date === formatDate(date) &&
-        otherFields.some(f => f.fieldId === r.fieldId)
+        bpFields.some(f => f.fieldId === r.fieldId)
     );
   };
 
@@ -522,7 +522,7 @@ const OtherRecord: React.FC = () => {
               </SortableContext>
             </DndContext>
           ) : (
-            otherFields.map(field => {
+            bpFields.map(field => {
               const value = inputValues[field.fieldId] ?? '';
               return (
                 <div
@@ -681,4 +681,4 @@ const OtherRecord: React.FC = () => {
   );
 };
 
-export default OtherRecord;
+export default BpRecord;
