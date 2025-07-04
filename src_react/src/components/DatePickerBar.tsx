@@ -66,20 +66,17 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   // minDate/maxDateでdateArray生成
   const dateArray = getDateArray(minDate, maxDate);
 
-  // ホイールで日付移動
+  // ホイールで横スクロール（縦ホイールを横スクロールに変換）
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.deltaY < 0) {
-        const d = new Date(centerDate);
-        d.setDate(centerDate.getDate() + 1);
-        setCenterDate(d);
-      } else if (e.deltaY > 0) {
-        const d = new Date(centerDate);
-        d.setDate(centerDate.getDate() - 1);
-        setCenterDate(d);
+      const btns = btnsRef.current;
+      if (!btns) return;
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        // 縦ホイールを横スクロールに変換
+        btns.scrollLeft += e.deltaY;
+        e.preventDefault();
       }
+      // 横ホイールやshift+ホイールは標準挙動
     };
     const picker = pickerRef.current;
     const btns = btnsRef.current;
@@ -90,7 +87,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
       if (picker) picker.removeEventListener('wheel', handleWheel);
       if (btns) btns.removeEventListener('wheel', handleWheel);
     };
-  }, [centerDate, setCenterDate]);
+  }, []);
 
   // ------------------------------
   // タッチ（フリック）操作で日付移動
@@ -289,6 +286,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                   <span
                     className="flex flex-col items-center justify-center min-w-14 w-14 max-w-14 h-14 px-0 py-0 m-1 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-xs font-bold select-none cursor-default border border-gray-300 dark:border-gray-600"
                     aria-hidden="true"
+                    style={{ scrollSnapAlign: 'center' }}
                   >
                     {date.getMonth() + 1}月
                   </span>
