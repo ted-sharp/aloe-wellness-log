@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface TipsModalProps {
   open: boolean;
@@ -7,6 +7,14 @@ interface TipsModalProps {
 }
 
 const TipsModal: React.FC<TipsModalProps> = ({ open, onClose, tipText }) => {
+  const [disableTips, setDisableTips] = useState(false);
+  useEffect(() => {
+    setDisableTips(localStorage.getItem('disableTips') === '1');
+  }, [open]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDisableTips(e.target.checked);
+    localStorage.setItem('disableTips', e.target.checked ? '1' : '0');
+  };
   if (!open) return null;
   return (
     <div
@@ -23,6 +31,21 @@ const TipsModal: React.FC<TipsModalProps> = ({ open, onClose, tipText }) => {
         </h2>
         <div className="text-gray-700 dark:text-gray-200 mb-6 text-left whitespace-pre-line">
           {tipText}
+        </div>
+        <div className="flex items-center mt-2">
+          <input
+            id="modal-disable-tips-checkbox"
+            type="checkbox"
+            className="mr-2 w-5 h-5 accent-purple-600"
+            checked={disableTips}
+            onChange={handleChange}
+          />
+          <label
+            htmlFor="modal-disable-tips-checkbox"
+            className="text-sm text-gray-800 dark:text-gray-200 select-none cursor-pointer"
+          >
+            今後TIPSを自動表示しない
+          </label>
         </div>
       </div>
     </div>

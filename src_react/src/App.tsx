@@ -349,7 +349,8 @@ function App() {
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const lastTipsDate = localStorage.getItem('lastTipsDate');
-    if (lastTipsDate !== todayStr) {
+    const disableTips = localStorage.getItem('disableTips') === '1';
+    if (!disableTips && lastTipsDate !== todayStr) {
       showTipsModal();
     }
   }, []);

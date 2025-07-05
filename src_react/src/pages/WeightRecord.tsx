@@ -460,7 +460,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         setNewTime(getCurrentTimeString());
                         setNewNote('');
                         await loadRecords();
-                        if (showTipsModal) showTipsModal();
+                        const disableTips =
+                          localStorage.getItem('disableTips') === '1';
+                        if (!disableTips && showTipsModal) showTipsModal();
                       }}
                       children=""
                     />
