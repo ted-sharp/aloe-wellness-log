@@ -241,6 +241,52 @@ const RecordGraph: React.FC = () => {
     );
   };
 
+  // 日課達成率計算用
+  const getPeriodDateList = () => {
+    if (!records.length) return [];
+    let fromDate: Date | null = null;
+    let toDate: Date | null = null;
+    if (PERIODS[periodIdx].days && latestTimestamp) {
+      toDate = new Date(latestTimestamp);
+      fromDate = new Date(latestTimestamp);
+      fromDate.setDate(toDate.getDate() - PERIODS[periodIdx].days + 1);
+    }
+    // 全データの場合は記録の最初と最後
+    if (!fromDate || !toDate) {
+      return [];
+    }
+    const list: string[] = [];
+    const d = new Date(fromDate);
+    while (d <= toDate) {
+      list.push(
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          '0'
+        )}-${String(d.getDate()).padStart(2, '0')}`
+      );
+      d.setDate(d.getDate() + 1);
+    }
+    return list;
+  };
+
+  const getStatusStats = (key: StatusKey) => {
+    const dateList = getPeriodDateList();
+    let total = 0;
+    let success = 0;
+    dateList.forEach(date => {
+      const status = dailyStatus[date];
+      if (typeof status?.[key] === 'boolean') {
+        total++;
+        if (status[key]) success++;
+      }
+    });
+    return {
+      total,
+      success,
+      percent: total > 0 ? Math.round((success / total) * 100) : 0,
+    };
+  };
+
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent">
       <div className="flex flex-wrap gap-3 mb-4 items-center w-full">
@@ -361,6 +407,20 @@ const RecordGraph: React.FC = () => {
             )}
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      {/* グラフ下部に日課達成率を表示 */}
+      <div className="w-full flex flex-wrap justify-center gap-6 mt-4 mb-2">
+        {STATUS_KEYS.map(key => {
+          const stats = getStatusStats(key);
+          return (
+            <div key={key} className="text-xs text-gray-500">
+              {STATUS_LABELS[key]}：
+              {stats.total > 0
+                ? `${stats.percent}%（${stats.success}/${stats.total}日）`
+                : '記録なし'}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
