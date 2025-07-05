@@ -432,7 +432,7 @@ function App() {
                   </Suspense>
                 }
               />
-              <Route path="*" element={<Navigate to="/daily" replace />} />
+              <Route path="*" element={<Navigate to="/weight" replace />} />
             </Routes>
           </Suspense>
         )}
