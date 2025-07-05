@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import DatePickerBar from '../components/DatePickerBar';
 import { useRecordsStore } from '../store/records';
 
 const PERIODS = [
@@ -35,6 +36,8 @@ const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [centerDate, setCenterDate] = useState(new Date());
 
   // 体重フィールドIDを取得
   const weightField = fields.find(f => f.fieldId === 'weight');
@@ -288,7 +291,10 @@ const RecordGraph: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start py-4 bg-transparent">
+    <div
+      className="flex flex-col items-center justify-start py-4 bg-transparent"
+      data-testid="record-graph"
+    >
       <div className="flex flex-wrap gap-3 mb-4 items-center w-full">
         {PERIODS.map((p, i) => (
           <button
@@ -422,6 +428,13 @@ const RecordGraph: React.FC = () => {
           );
         })}
       </div>
+      <DatePickerBar
+        data-testid="date-picker"
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        centerDate={centerDate}
+        setCenterDate={setCenterDate}
+      />
     </div>
   );
 };

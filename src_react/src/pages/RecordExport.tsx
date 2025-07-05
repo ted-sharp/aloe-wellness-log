@@ -689,6 +689,7 @@ export default function RecordExport({
             icon={HiDocument}
             onClick={handleExportCSV}
             fullWidth={false}
+            data-testid="download-csv-btn"
           >
             CSV形式でエクスポート
           </Button>
@@ -698,6 +699,7 @@ export default function RecordExport({
             icon={HiDocument}
             onClick={handleExportJSON}
             fullWidth={false}
+            data-testid="download-json-btn"
           >
             JSON形式でエクスポート
           </Button>

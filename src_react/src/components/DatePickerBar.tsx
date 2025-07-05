@@ -237,7 +237,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   }, [minDate, maxDate]);
 
   return (
-    <div>
+    <div data-testid="date-picker">
       <div
         ref={pickerRef}
         className="w-full flex items-center justify-center pt-2 pb-2 bg-white/80 dark:bg-gray-900/80 shadow-md sticky top-0 z-10"

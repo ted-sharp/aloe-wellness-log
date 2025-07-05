@@ -306,6 +306,7 @@ const DailyRecord: React.FC = () => {
                 ? 'border-gray-200 dark:border-gray-600 text-gray-400 bg-gray-50 dark:bg-gray-800'
                 : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
             }`}
+            data-testid={`daily-input-${field.fieldId}`}
           />
         ) : (
           <span
@@ -334,6 +335,7 @@ const DailyRecord: React.FC = () => {
           }}
           className="text-red-500 hover:text-red-700 p-2"
           aria-label="削除"
+          data-testid={`delete-btn-${field.fieldId}`}
         >
           <HiTrash className="w-6 h-6" />
         </button>
@@ -350,6 +352,7 @@ const DailyRecord: React.FC = () => {
               ? '表示項目にする'
               : '非表示項目にする'
           }
+          data-testid={`toggle-btn-${field.fieldId}`}
         >
           {field.defaultDisplay === false ? (
             <HiEyeSlash className="w-6 h-6" />
@@ -456,6 +459,7 @@ const DailyRecord: React.FC = () => {
         centerDate={centerDate}
         setCenterDate={setCenterDate}
         isRecorded={isRecorded}
+        data-testid="date-picker"
       />
       {/* タイトル：日付ピッカー下・左上 */}
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
@@ -538,6 +542,7 @@ const DailyRecord: React.FC = () => {
                       }}
                       aria-pressed={value === true}
                       className="flex-1"
+                      data-testid={`daily-input-${field.fieldId}`}
                     >
                       達成
                     </Button>
@@ -558,6 +563,7 @@ const DailyRecord: React.FC = () => {
                       }}
                       aria-pressed={value === false}
                       className="flex-1"
+                      data-testid={`daily-input-${field.fieldId}`}
                     >
                       未達
                     </Button>
@@ -585,6 +591,7 @@ const DailyRecord: React.FC = () => {
                   className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   placeholder="新しい項目名"
                   maxLength={20}
+                  data-testid="daily-input-2"
                 />
                 <Button
                   variant="primary"
@@ -593,6 +600,7 @@ const DailyRecord: React.FC = () => {
                   aria-label="保存"
                   onClick={handleAddField}
                   disabled={!newFieldName.trim()}
+                  data-testid="save-btn"
                 >
                   {''}
                 </Button>
@@ -617,6 +625,7 @@ const DailyRecord: React.FC = () => {
                 icon={HiPlus}
                 fullWidth
                 onClick={() => setShowAddField(true)}
+                data-testid="add-btn"
               >
                 新規項目
               </Button>

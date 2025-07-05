@@ -516,6 +516,7 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base w-32"
               required
               placeholder="例: 68.0"
+              data-testid="goal-weight-input"
             />
             {latestWeight !== null && (
               <Button
@@ -973,6 +974,14 @@ export default function GoalInput() {
             )}
           </div>
         </label>
+        <Button
+          type="submit"
+          size="lg"
+          variant="primary"
+          data-testid="save-btn"
+        >
+          保存
+        </Button>
       </form>
     </div>
   );

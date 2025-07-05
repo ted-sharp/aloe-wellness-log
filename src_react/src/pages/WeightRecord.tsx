@@ -220,6 +220,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         centerDate={centerDate}
         setCenterDate={setCenterDate}
         isRecorded={isRecorded}
+        data-testid="date-picker"
       />
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
@@ -354,6 +355,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                                 await loadRecords();
                               }
                             }}
+                            data-testid="weight-input"
                           />
                           <div className="flex gap-1 ml-auto">
                             <Button
@@ -475,8 +477,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                           localStorage.getItem('disableTips') === '1';
                         if (!disableTips && showTipsModal) showTipsModal();
                       }}
-                      children=""
-                    />
+                      data-testid="save-btn"
+                    >
+                      {''}
+                    </Button>
                   </div>
                   <div className="relative w-full mt-1">
                     <textarea

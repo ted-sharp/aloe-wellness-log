@@ -457,6 +457,7 @@ const BpRecord: React.FC = () => {
   return (
     <div className="bg-transparent">
       <DatePickerBar
+        data-testid="date-picker"
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
         centerDate={centerDate}
@@ -565,6 +566,7 @@ const BpRecord: React.FC = () => {
                       placeholder={
                         field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
                       }
+                      data-testid={`${field.fieldId}-input`}
                     />
                     {field.unit && (
                       <span className="ml-2 text-gray-500 dark:text-gray-300 whitespace-nowrap shrink-0 overflow-hidden">
@@ -607,6 +609,7 @@ const BpRecord: React.FC = () => {
                   aria-label="保存"
                   onClick={handleAddField}
                   disabled={!newFieldName.trim()}
+                  data-testid="save-btn"
                 >
                   {''}
                 </Button>
