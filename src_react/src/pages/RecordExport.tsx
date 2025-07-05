@@ -70,7 +70,11 @@ function toCSV(
     .join('\r\n');
 }
 
-export default function RecordExport() {
+export default function RecordExport({
+  showTipsModal,
+}: {
+  showTipsModal?: () => void;
+}) {
   const {
     records,
     fields,
@@ -793,6 +797,15 @@ export default function RecordExport() {
               loading={isGeneratingTestData}
             >
               体重テストデータ生成
+            </Button>
+            <Button
+              variant="purple"
+              size="lg"
+              icon={HiSparkles}
+              onClick={() => showTipsModal && showTipsModal()}
+              fullWidth={false}
+            >
+              TIPSを表示
             </Button>
           </div>
         </div>

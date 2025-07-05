@@ -286,10 +286,14 @@ function App() {
     loadRecords,
   } = useRecordsStore();
   const [tipsModalOpen, setTipsModalOpen] = useState(false);
-  const tipText = tipsList[Math.floor(Math.random() * tipsList.length)];
+  const [tipText, setTipText] = useState('');
 
-  // デバッグ用: 必ずTIPSを表示するフラグ
-  const tipsDebugAlwaysShow = true; // ←trueで常時表示
+  // tips表示用関数
+  const showTipsModal = () => {
+    const randomTip = tipsList[Math.floor(Math.random() * tipsList.length)];
+    setTipText(randomTip);
+    setTipsModalOpen(true);
+  };
 
   useEffect(() => {
     try {
@@ -337,6 +341,7 @@ function App() {
     }
   }, [fieldsOperation.loading, loadRecords]);
 
+  // 初回マウント時のtips表示（デバッグ用）
   useEffect(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -344,8 +349,8 @@ function App() {
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const lastTipsDate = localStorage.getItem('lastTipsDate');
-    if (tipsDebugAlwaysShow || lastTipsDate !== todayStr) {
-      setTipsModalOpen(true);
+    if (lastTipsDate !== todayStr) {
+      showTipsModal();
     }
   }, []);
 
@@ -398,7 +403,7 @@ function App() {
                 path="/weight"
                 element={
                   <Suspense fallback={<PageLoader pageName="体重" />}>
-                    <WeightRecord />
+                    <WeightRecord showTipsModal={showTipsModal} />
                   </Suspense>
                 }
               />
@@ -422,7 +427,7 @@ function App() {
                 path="/export"
                 element={
                   <Suspense fallback={<PageLoader pageName="管理" />}>
-                    <RecordExport />
+                    <RecordExport showTipsModal={showTipsModal} />
                   </Suspense>
                 }
               />

@@ -40,7 +40,11 @@ const formatLocalDateTime = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-const WeightRecord: React.FC = () => {
+interface WeightRecordProps {
+  showTipsModal?: () => void;
+}
+
+const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(() => {
     const saved = localStorage.getItem('weight_center_date');
@@ -456,6 +460,7 @@ const WeightRecord: React.FC = () => {
                         setNewTime(getCurrentTimeString());
                         setNewNote('');
                         await loadRecords();
+                        if (showTipsModal) showTipsModal();
                       }}
                       children=""
                     />
