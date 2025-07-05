@@ -475,7 +475,23 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         await loadRecords();
                         const disableTips =
                           localStorage.getItem('disableTips') === '1';
-                        if (!disableTips && showTipsModal) showTipsModal();
+                        // 本日TIPS表示済みかチェック
+                        const today = new Date();
+                        const yyyy = today.getFullYear();
+                        const mm = String(today.getMonth() + 1).padStart(
+                          2,
+                          '0'
+                        );
+                        const dd = String(today.getDate()).padStart(2, '0');
+                        const todayStr = `${yyyy}-${mm}-${dd}`;
+                        const lastTipsDate =
+                          localStorage.getItem('lastTipsDate');
+                        if (
+                          !disableTips &&
+                          lastTipsDate !== todayStr &&
+                          showTipsModal
+                        )
+                          showTipsModal();
                       }}
                       data-testid="save-btn"
                     >

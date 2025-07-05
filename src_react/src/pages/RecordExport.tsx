@@ -93,14 +93,6 @@ export default function RecordExport({
   // エラーテスト用の状態
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
-  // TIPS自動表示無効化設定
-  const [disableTips, setDisableTips] = useState(() => {
-    return localStorage.getItem('disableTips') === '1';
-  });
-  useEffect(() => {
-    localStorage.setItem('disableTips', disableTips ? '1' : '0');
-  }, [disableTips]);
-
   // エラーテスト用: レンダリング時にエラーを投げる
   if (errorToThrow) {
     throw errorToThrow;
@@ -750,23 +742,17 @@ export default function RecordExport({
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">
-          TIPS自動表示設定
+          TIPS
         </h2>
-        <div className="flex items-center">
-          <input
-            id="disable-tips-checkbox"
-            type="checkbox"
-            className="mr-2 w-5 h-5 accent-purple-600"
-            checked={disableTips}
-            onChange={e => setDisableTips(e.target.checked)}
-          />
-          <label
-            htmlFor="disable-tips-checkbox"
-            className="text-base text-gray-800 dark:text-gray-200 select-none cursor-pointer"
-          >
-            TIPSを自動表示しない
-          </label>
-        </div>
+        <Button
+          variant="purple"
+          size="lg"
+          icon={HiSparkles}
+          onClick={() => showTipsModal && showTipsModal()}
+          fullWidth={true}
+        >
+          TIPSを表示
+        </Button>
       </div>
 
       {/* テストデータ生成セクション（開発環境のみ表示） */}
@@ -828,15 +814,6 @@ export default function RecordExport({
               loading={isGeneratingTestData}
             >
               体重テストデータ生成
-            </Button>
-            <Button
-              variant="purple"
-              size="lg"
-              icon={HiSparkles}
-              onClick={() => showTipsModal && showTipsModal()}
-              fullWidth={false}
-            >
-              TIPSを表示
             </Button>
           </div>
         </div>
