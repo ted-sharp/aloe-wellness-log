@@ -4,6 +4,8 @@ import './App.css';
 import Button from './components/Button';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
+import TipsModal from './components/TipsModal';
+import tipsList from './data/tips';
 import BpRecord from './pages/BpRecord';
 import DailyRecord from './pages/DailyRecord';
 import GoalInput from './pages/GoalInput';
@@ -283,6 +285,11 @@ function App() {
     recordsOperation,
     loadRecords,
   } = useRecordsStore();
+  const [tipsModalOpen, setTipsModalOpen] = useState(false);
+  const tipText = tipsList[Math.floor(Math.random() * tipsList.length)];
+
+  // デバッグ用: 必ずTIPSを表示するフラグ
+  const tipsDebugAlwaysShow = true; // ←trueで常時表示
 
   useEffect(() => {
     try {
@@ -330,8 +337,35 @@ function App() {
     }
   }, [fieldsOperation.loading, loadRecords]);
 
+  useEffect(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    const lastTipsDate = localStorage.getItem('lastTipsDate');
+    if (tipsDebugAlwaysShow || lastTipsDate !== todayStr) {
+      setTipsModalOpen(true);
+    }
+  }, []);
+
+  const handleCloseTips = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    localStorage.setItem('lastTipsDate', todayStr);
+    setTipsModalOpen(false);
+  };
+
   return (
     <div>
+      <TipsModal
+        open={tipsModalOpen}
+        onClose={handleCloseTips}
+        tipText={tipText}
+      />
       <header role="banner">
         <Navigation />
       </header>
