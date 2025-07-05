@@ -418,6 +418,35 @@ const DailyRecord: React.FC = () => {
     );
   }, []);
 
+  const getRecent14Days = () => {
+    const days: string[] = [];
+    const today = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      days.push(formatDate(d));
+    }
+    return days.reverse();
+  };
+
+  const getFieldSuccessStats = (fieldId: string) => {
+    const days = getRecent14Days();
+    let total = 0;
+    let success = 0;
+    days.forEach(date => {
+      const rec = records.find(r => r.fieldId === fieldId && r.date === date);
+      if (typeof rec?.value === 'boolean') {
+        total++;
+        if (rec.value === true) success++;
+      }
+    });
+    return {
+      total,
+      success,
+      percent: total > 0 ? Math.round((success / total) * 100) : 0,
+    };
+  };
+
   return (
     <div className="bg-transparent">
       {/* 日付ピッカー（共通コンポーネント） */}
@@ -482,54 +511,63 @@ const DailyRecord: React.FC = () => {
           ) : (
             boolFields.map(field => {
               const value = getBoolValue(field.fieldId);
+              const stats = getFieldSuccessStats(field.fieldId);
               return (
                 <div
                   key={field.fieldId}
-                  className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4"
+                  className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-2"
                 >
-                  <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
-                    {field.name}
-                  </span>
-                  <Button
-                    variant={value === true ? 'primary' : 'secondary'}
-                    size="md"
-                    onClick={async () => {
-                      if (value === true) {
-                        // あり→未選択（解除）
-                        const rec = getBoolRecord(field.fieldId);
-                        if (rec) {
-                          await deleteRecord(rec.id);
-                          await loadRecords();
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
+                      {field.name}
+                    </span>
+                    <Button
+                      variant={value === true ? 'primary' : 'secondary'}
+                      size="md"
+                      onClick={async () => {
+                        if (value === true) {
+                          // あり→未選択（解除）
+                          const rec = getBoolRecord(field.fieldId);
+                          if (rec) {
+                            await deleteRecord(rec.id);
+                            await loadRecords();
+                          }
+                        } else {
+                          await handleBoolInput(field.fieldId, true);
                         }
-                      } else {
-                        await handleBoolInput(field.fieldId, true);
-                      }
-                    }}
-                    aria-pressed={value === true}
-                    className="flex-1"
-                  >
-                    達成
-                  </Button>
-                  <Button
-                    variant={value === false ? 'primary' : 'secondary'}
-                    size="md"
-                    onClick={async () => {
-                      if (value === false) {
-                        // なし→未選択（解除）
-                        const rec = getBoolRecord(field.fieldId);
-                        if (rec) {
-                          await deleteRecord(rec.id);
-                          await loadRecords();
+                      }}
+                      aria-pressed={value === true}
+                      className="flex-1"
+                    >
+                      達成
+                    </Button>
+                    <Button
+                      variant={value === false ? 'primary' : 'secondary'}
+                      size="md"
+                      onClick={async () => {
+                        if (value === false) {
+                          // なし→未選択（解除）
+                          const rec = getBoolRecord(field.fieldId);
+                          if (rec) {
+                            await deleteRecord(rec.id);
+                            await loadRecords();
+                          }
+                        } else {
+                          await handleBoolInput(field.fieldId, false);
                         }
-                      } else {
-                        await handleBoolInput(field.fieldId, false);
-                      }
-                    }}
-                    aria-pressed={value === false}
-                    className="flex-1"
-                  >
-                    未達
-                  </Button>
+                      }}
+                      aria-pressed={value === false}
+                      className="flex-1"
+                    >
+                      未達
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    直近2週間の達成率：
+                    {stats.total > 0
+                      ? `${stats.percent}%（${stats.success}/${stats.total}日）`
+                      : '記録なし'}
+                  </div>
                 </div>
               );
             })
