@@ -119,7 +119,7 @@ function Navigation() {
                   : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
               } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               aria-current={isCurrentPage(item.path) ? 'page' : undefined}
-              aria-label="メインへ移動"
+              aria-label={item.label}
             >
               {item.label}
               {isCurrentPage(item.path) && (
@@ -209,7 +209,7 @@ function Navigation() {
                       : '!text-blue-500 dark:!text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-50 dark:focus:bg-blue-900/20 hover:!text-blue-500 dark:hover:!text-blue-400 visited:!text-blue-500 dark:visited:!text-blue-400 active:!text-blue-500 dark:active:!text-blue-400'
                   }`}
                   aria-current={isCurrentPage(item.path) ? 'page' : undefined}
-                  aria-label="メインへ移動"
+                  aria-label={item.label}
                 >
                   {item.label}
                   {isCurrentPage(item.path) && (
