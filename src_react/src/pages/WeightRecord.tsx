@@ -25,6 +25,9 @@ import DatePickerBar from '../components/DatePickerBar';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
 
+// 共通キー定数を追加
+const SELECTED_DATE_KEY = 'shared_selected_date';
+
 const formatDate = (date: Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
     2,
@@ -48,11 +51,11 @@ interface WeightRecordProps {
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(() => {
-    const saved = localStorage.getItem('weight_selected_date');
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
     return saved ? new Date(saved) : today;
   });
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    const saved = localStorage.getItem('weight_selected_date');
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
     return saved ? new Date(saved) : today;
   });
   const {
@@ -183,7 +186,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   }, [goal, loadGoal]);
 
   useEffect(() => {
-    localStorage.setItem('weight_selected_date', selectedDate.toISOString());
+    localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
   }, [selectedDate]);
 
   // selectedDateが変わったらcenterDateも追従

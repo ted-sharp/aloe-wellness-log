@@ -50,10 +50,19 @@ const formatLocalDateTime = (date: Date): string => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
+// 共通キー定数を追加
+const SELECTED_DATE_KEY = 'shared_selected_date';
+
 const BpRecord: React.FC = () => {
   const today = new Date();
-  const [centerDate, setCenterDate] = useState<Date>(today);
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [centerDate, setCenterDate] = useState<Date>(() => {
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
+    return saved ? new Date(saved) : today;
+  });
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
+    return saved ? new Date(saved) : today;
+  });
   const {
     fields,
     addRecord,
@@ -453,6 +462,10 @@ const BpRecord: React.FC = () => {
         bpFields.some(f => f.fieldId === r.fieldId)
     );
   };
+
+  useEffect(() => {
+    localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
+  }, [selectedDate]);
 
   return (
     <div className="bg-transparent">
