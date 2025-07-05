@@ -1,29 +1,36 @@
 # 🌿 アロエ健康管理ログ
 
-体重、血圧、運動記録などを日々記録できるWebアプリケーションです。
-データはブラウザ内（IndexedDB）に保存され、バックエンドサーバーは不要です。
+体重・血圧・運動・食事・睡眠などを日々記録できる、完全ローカル型の健康管理 PWA アプリです。
+データはブラウザ内（IndexedDB）に保存され、サーバー不要・プライバシー重視でご利用いただけます。
 
-## ✨ 特徴
+---
 
-- **📝 柔軟な記録入力**: 体重、血圧、心拍数、体温、運動・食事・睡眠の有無など
-- **📊 カスタマイズ可能**: 記録項目の追加・編集・並び替えが可能
-- **📈 データ可視化**: グラフやカレンダーでの記録表示
-- **💾 完全ローカル**: データはブラウザ内に保存（プライベート保護）
-- **📱 レスポンシブ**: PC・タブレット・スマートフォン対応
-- **📤 データエクスポート**: CSV/JSON形式でのデータ出力
+## ✨ 主な特徴
+
+- **📝 柔軟な記録入力**: 体重・血圧・心拍数・体温・運動・食事・睡眠・喫煙・飲酒など
+- **📊 カスタマイズ可能**: 記録項目の追加・編集・並び替え・一時非表示
+- **📈 データ可視化**: グラフ・カレンダー・一覧表示
+- **💾 完全ローカル保存**: IndexedDB 利用、バックエンド不要
+- **📱 モバイルファースト/レスポンシブ**: 全デバイス最適化
+- **🦾 アクセシビリティ強化**: WCAG 2.1 AA 準拠、スクリーンリーダー・キーボード操作対応
+- **📤 データエクスポート**: CSV/JSON 形式で出力
+- **🛡️ PWA 対応**: オフライン動作・インストール可
+
+---
 
 ## 🚀 クイックスタート
 
 ### 必要環境
-- Node.js 18以上
+
+- Node.js 18 以上
 - yarn（推奨）または npm
 
-### インストール
+### インストール・起動
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-username/aloe-wellness-log.git
-cd aloe-wellness-log/aloe-wellness-log-react
+git clone https://github.com/ted-sharp/aloe-wellness-log.git
+cd aloe-wellness-log/src_react
 
 # 依存関係をインストール
 yarn install
@@ -44,105 +51,156 @@ yarn build
 yarn preview
 ```
 
-## 📖 使い方
+- GitHub Pages デプロイ: `yarn deploy`（docs/配下に出力）
+- 本番 URL: https://ted-sharp.github.io/aloe-wellness-log/
 
-### 基本的な操作
+---
 
-1. **記録入力**: 体重や血圧などの健康データを入力
-2. **記録一覧**: 過去の記録を時系列で確認
-3. **グラフ表示**: データの推移をグラフで可視化
-4. **カレンダー**: 日付別の記録状況を確認
-5. **データ管理**: エクスポート・インポート・削除
+## 📲 PWA インストール方法・推奨ブラウザ
 
-### カスタマイズ
+- Chrome/Edge/Firefox/Safari（最新版）で PWA としてインストール可能
+- アドレスバーの「インストール」アイコン、または「ホーム画面に追加」から
+- iOS は Safari の共有メニュー →「ホーム画面に追加」
+- アプリ内の「PWA インストール」ボタンも利用可（一部ブラウザのみ）
+- [PWA インストールガイド](../doc/PWAインストールガイド.md) も参照
 
-- **項目追加**: 記録したい項目を自由に追加可能
-- **項目編集**: 既存項目の名前や単位を変更
-- **表示順序**: ドラッグ&ドロップで項目の並び順を変更
-- **表示/非表示**: 不要な項目を一時的に非表示に設定
+### 既知の制限
 
-## 🏗️ 技術仕様
+- iOS/Safari は一部 PWA 機能に制限あり
+- Firefox モバイルはインストール UI が非表示の場合あり
+- Service Worker/manifest の詳細は`public/`配下を参照
 
-### 技術スタック
-- **フロントエンド**: React 19 + TypeScript
-- **状態管理**: Zustand
+---
+
+## 🦾 アクセシビリティ
+
+- WCAG 2.1 AA 準拠
+- スクリーンリーダー完全対応（NVDA/JAWS/VoiceOver 等）
+- 全機能キーボード操作可（Tab/Escape/Enter/Space/矢印キー）
+- フォーカストラップ・ライブリージョン・aria 属性徹底
+- prefers-reduced-motion/ハイコントラスト/ダークモード自動対応
+- [アクセシビリティ強化実装報告](../doc/アクセシビリティ強化実装完了_健康管理アプリ.md) も参照
+
+---
+
+## 📱 レスポンシブ・モバイルファースト
+
+- Tailwind CSS 4 のモバイルファースト設計
+- iOS/Android 推奨タッチサイズ・フォントサイズ最適化
+- 全ページでスマホ・タブレット・PC に最適化
+- [レスポンシブ対応詳細](../doc/レスポンシブ対応改善_モバイルファースト実装_2024-12-26.md) も参照
+
+---
+
+## 🏗️ 技術スタック
+
+- **フロントエンド**: React 18 + TypeScript
+- **状態管理**: Zustand 5
 - **スタイリング**: Tailwind CSS 4
-- **データベース**: IndexedDB（ブラウザ内）
-- **ビルドツール**: Vite
-- **テスト**: Playwright（E2E）
+- **ルーティング**: React Router 7
+- **グラフ/カレンダー**: Recharts, react-calendar
+- **ドラッグ&ドロップ**: dnd-kit
+- **データベース**: IndexedDB（ローカル保存）
+- **ビルド**: Vite 6
+- **テスト**: Playwright（E2E）, Vitest（ユニット）
 
-### アーキテクチャ
-- **縦持ちデータ構造**: 柔軟な項目追加に対応
-- **型安全設計**: TypeScriptによる堅牢な型管理
-- **コンポーネント駆動**: 再利用可能なUI部品
-- **統一エラーハンドリング**: 一貫したエラー処理とユーザー通知
+---
 
-## 🧪 テスト
+## 🧪 テスト・品質保証
 
 ```bash
-# E2Eテストを実行
+# ユニットテスト（Vitest）
 yarn test
-
-# テストをUI付きで実行
+# E2Eテスト（Playwright）
+yarn test:e2e
+# テストUI
 yarn test:ui
-
-# ブラウザを表示してテスト
-yarn test:headed
+# ブラウザ表示でE2E
+yarn test:e2e:headed
 ```
 
-## 📊 データ形式
+- 主要ユーザーフローの E2E 自動テストを網羅
+- アクセシビリティ自動/手動テスト推奨
+- 既知の問題: WebKit 系（Mobile Safari 等）で一部テストが動作しない場合あり（Chrome/Edge/Firefox は完全動作）
 
-### 記録データ (RecordItem)
+---
+
+## 📊 データ仕様・カスタマイズ
+
+### 記録データ（RecordItem）
+
 ```typescript
 {
-  id: string;           // 一意識別子
-  date: string;         // "YYYY-MM-DD"
-  time: string;         // "HH:mm"
-  datetime: string;     // ISO8601形式
-  fieldId: string;      // 項目識別子
+  id: string; // 一意識別子
+  date: string; // "YYYY-MM-DD"
+  time: string; // "HH:mm"
+  datetime: string; // ISO8601形式
+  fieldId: string; // 項目識別子
   value: number | string | boolean; // 記録値
 }
 ```
 
-### 記録項目 (Field)
+### 記録項目（Field）
+
 ```typescript
 {
   fieldId: string;      // 項目識別子
   name: string;         // 表示名
-  unit?: string;        // 単位（オプション）
-  type: 'number' | 'string' | 'boolean'; // データ型
+  unit?: string;        // 単位
+  type: 'number' | 'string' | 'boolean';
   order?: number;       // 表示順序
-  defaultDisplay?: boolean; // デフォルト表示フラグ
+  defaultDisplay?: boolean; // デフォルト表示
 }
 ```
 
+### 初期項目・カスタマイズ
+
+- `src/store/records.ts`の`initialFields`で初期項目を定義
+- `defaultDisplay: true`はデフォルト表示、`false`は一時表示（記録後自動非表示）
+- 項目追加・編集・並び替え・非表示はアプリ UI から自由に可能
+
+### データエクスポート/インポート
+
+- 記録データは CSV/JSON 形式でエクスポート可
+- バックアップ/リストアはエクスポート/インポート画面から
+- データは全て IndexedDB にローカル保存
+
+---
+
 ## 🎨 カスタマイズ
 
-### テーマ設定
-Tailwind CSSの設定を変更することで、色やスタイルをカスタマイズできます。
+- Tailwind CSS の設定で色・スタイル変更可
+- 初期項目は`src/store/records.ts`の`initialFields`を編集
+- テーマ・ダークモードは OS 設定に自動追従
 
-### 初期項目の変更
-`src/store/records.ts`の`initialFields`配列を編集することで、初期項目を変更できます。
+---
 
 ## 🤝 コントリビューション
 
-1. フォークを作成
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+1. フォーク作成
+2. フィーチャーブランチ作成 (`git checkout -b feature/your-feature`)
+3. 変更をコミット (`git commit -m 'Add your feature'`)
+4. ブランチにプッシュ (`git push origin feature/your-feature`)
+5. プルリクエスト作成
+
+- バグ報告・要望は[GitHub Issues](https://github.com/ted-sharp/aloe-wellness-log/issues)へ
+
+---
 
 ## 📝 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は [LICENSE](../LICENSE) ファイルをご覧ください。
+MIT License（[LICENSE](../LICENSE)参照）
 
-## 🐛 バグ報告・機能要望
+---
 
-[GitHub Issues](https://github.com/your-username/aloe-wellness-log/issues) にてバグ報告や機能要望をお受けしています。
+## 🙏 謝辞・依存 OSS
 
-## 🙏 謝辞
+- React, Vite, TypeScript, Tailwind CSS, Zustand, React Router, Recharts, react-calendar, Heroicons, dnd-kit, Headless UI ほか
 
-このプロジェクトは以下のオープンソースプロジェクトに依存しています：
-- React・Vite・TypeScript・Tailwind CSS
-- Zustand・React Router・Recharts・React Calendar
-- Heroicons・dnd kit・Headless UI
+---
+
+## 📚 参考ドキュメント
+
+- [PWA インストールガイド](../doc/PWAインストールガイド.md)
+- [アクセシビリティ強化実装報告](../doc/アクセシビリティ強化実装完了_健康管理アプリ.md)
+- [レスポンシブ対応詳細](../doc/レスポンシブ対応改善_モバイルファースト実装_2024-12-26.md)
