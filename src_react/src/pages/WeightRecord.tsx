@@ -462,13 +462,13 @@ const WeightRecord: React.FC = () => {
                   </div>
                   <div className="relative w-full mt-1">
                     <textarea
-                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-10"
+                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-16"
                       rows={1}
                       value={newNote}
                       onChange={e => setNewNote(e.target.value)}
                       placeholder="補足・メモ（任意）"
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                       <div className="relative group">
                         <div
                           ref={refs.setReference}
