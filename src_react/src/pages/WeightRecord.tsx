@@ -48,7 +48,7 @@ interface WeightRecordProps {
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(() => {
-    const saved = localStorage.getItem('weight_center_date');
+    const saved = localStorage.getItem('weight_selected_date');
     return saved ? new Date(saved) : today;
   });
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -191,10 +191,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     setCenterDate(selectedDate);
   }, [selectedDate]);
 
-  useEffect(() => {
-    localStorage.setItem('weight_center_date', centerDate.toISOString());
-  }, [centerDate]);
-
   // スパークル定型文ドロップダウン用 floating-ui
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
@@ -212,6 +208,11 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     role,
   ]);
 
+  // DatePickerBarに渡す直前
+  useEffect(() => {
+    // No need to log here as per the new code instructions
+  }, [centerDate, selectedDate]);
+
   return (
     <div className="bg-transparent">
       <DatePickerBar
@@ -219,6 +220,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         setSelectedDate={setSelectedDate}
         centerDate={centerDate}
         setCenterDate={setCenterDate}
+        today={today}
         isRecorded={isRecorded}
         data-testid="date-picker"
       />

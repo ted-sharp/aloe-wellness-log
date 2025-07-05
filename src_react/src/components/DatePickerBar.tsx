@@ -110,24 +110,18 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
       const touch = e.changedTouches[0];
       const diffX = touch.clientX - startX;
       const diffY = touch.clientY - startY;
-
       const THRESHOLD = 30;
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > THRESHOLD) {
-        // 1 ボタン幅 + gap（概算）あたりを 1 日とみなして移動量を算定
-        const DAY_PIXEL = BUTTON_WIDTH + 8; // gap-1 は 0.25rem ≒ 4px, 余裕を見て 8
+        const DAY_PIXEL = BUTTON_WIDTH + 8;
         const daysMove = Math.round(Math.abs(diffX) / DAY_PIXEL) || 1;
-
         const newDate = new Date(centerDate);
         if (diffX < 0) {
-          // 左フリック → 未来へ daysMove 日
           newDate.setDate(centerDate.getDate() + daysMove);
         } else {
-          // 右フリック → 過去へ daysMove 日
           newDate.setDate(centerDate.getDate() - daysMove);
         }
         setCenterDate(newDate);
       }
-
       startX = null;
       startY = null;
     };
