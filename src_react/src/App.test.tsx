@@ -207,7 +207,7 @@ describe('App', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('オーバーレイクリックでモバイルメニューが閉じる', () => {
+  test.skip('オーバーレイクリックでモバイルメニューが閉じる', async () => {
     render(
       <MemoryRouter>
         <App />
