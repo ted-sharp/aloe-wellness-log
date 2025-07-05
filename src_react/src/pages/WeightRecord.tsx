@@ -19,6 +19,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
+import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
 import { useGoalStore } from '../store/goal';
@@ -79,9 +80,17 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     return records.some(r => r.date === d && r.fieldId === 'weight');
   };
 
+  // newTimeのuseState初期値を現在時刻に
+  const getCurrentTimeString = () => {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  };
+
   // 新規追加用state
   const [newWeight, setNewWeight] = useState('');
-  const [newTime, setNewTime] = useState('08:00');
+  const [newTime, setNewTime] = useState(getCurrentTimeString());
   const [newNote, setNewNote] = useState('');
 
   const numberFields = useMemo(
@@ -97,14 +106,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         }),
     [fields]
   );
-
-  // newTimeのuseState初期値を現在時刻に
-  const getCurrentTimeString = () => {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
-  };
 
   // その日付の最新体重（記録があれば）
   const latestWeightOfDay = (() => {
@@ -425,6 +426,16 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                       value={newTime}
                       onChange={e => setNewTime(e.target.value)}
                     />
+                    {/* 朝のマーク（7:00セット）ボタン */}
+                    <button
+                      type="button"
+                      className="ml-1 w-12 h-10 min-w-0 min-h-0 p-0 inline-flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm overflow-hidden"
+                      title="朝7時にセット"
+                      aria-label="朝7時にセット"
+                      onClick={() => setNewTime('07:00')}
+                    >
+                      <TbSunrise className="w-6 h-6" />
+                    </button>
                     <input
                       type="number"
                       inputMode="decimal"
