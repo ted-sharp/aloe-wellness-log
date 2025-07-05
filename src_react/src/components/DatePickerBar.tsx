@@ -63,6 +63,11 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   const prevWidthRef = useRef<number>(0);
   const [pendingCenterScroll, setPendingCenterScroll] = useState(false);
 
+  // 初回マウント時に中央スクロール補正フラグを立てる
+  useEffect(() => {
+    setPendingCenterScroll(true);
+  }, []);
+
   // minDate/maxDateでdateArray生成
   const dateArray = getDateArray(minDate, maxDate);
 
