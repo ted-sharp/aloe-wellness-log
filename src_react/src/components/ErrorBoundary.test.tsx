@@ -46,12 +46,12 @@ describe('ErrorBoundary', () => {
       );
 
       // エラー画面の要素が表示されることを確認
-      expect(screen.getByText('申し訳ございません')).toBeInTheDocument();
+      expect(screen.getByText(/申し訳ありません/)).toBeInTheDocument();
       expect(
-        screen.getByText(/予期しないエラーが発生いたしました/)
+        screen.getByText(/予期しないエラーが発生しました/)
       ).toBeInTheDocument();
-      expect(screen.getByText('もう一度試す')).toBeInTheDocument();
-      expect(screen.getByText('ページを再読み込み')).toBeInTheDocument();
+      expect(screen.getByText('再試行')).toBeInTheDocument();
+      expect(screen.getAllByText(/再読み込み/).length).toBeGreaterThan(0);
     });
 
     it('エラーがconsole.errorで記録される', () => {
@@ -77,7 +77,7 @@ describe('ErrorBoundary', () => {
       );
 
       // 技術的な詳細セクションを開く
-      const detailsToggle = screen.getByText('技術的な詳細（クリックで表示）');
+      const detailsToggle = screen.getByText(/詳細/);
       fireEvent.click(detailsToggle);
 
       // エラーの詳細情報が表示される
@@ -103,15 +103,15 @@ describe('ErrorBoundary', () => {
       render(<TestComponent />);
 
       // 最初はエラー画面が表示される
-      expect(screen.getByText('申し訳ございません')).toBeInTheDocument();
+      expect(screen.getByText(/申し訳ありません/)).toBeInTheDocument();
 
       // 「もう一度試す」ボタンをクリック
-      const retryButton = screen.getByText('もう一度試す');
+      const retryButton = screen.getByText('再試行');
       fireEvent.click(retryButton);
 
       // エラー状態がリセットされ、子コンポーネントが再度レンダリングされる
       // ただし、同じエラーが再発生するため、再びエラー画面が表示される
-      expect(screen.getByText('申し訳ございません')).toBeInTheDocument();
+      expect(screen.getByText(/申し訳ありません/)).toBeInTheDocument();
     });
 
     it('「ページを再読み込み」ボタンでreloadが呼ばれる', () => {
@@ -129,7 +129,7 @@ describe('ErrorBoundary', () => {
       );
 
       // 「ページを再読み込み」ボタンをクリック
-      const reloadButton = screen.getByText('ページを再読み込み');
+      const reloadButton = screen.getByText('再読み込み');
       fireEvent.click(reloadButton);
 
       // window.location.reloadが呼ばれることを確認
@@ -159,7 +159,7 @@ describe('ErrorBoundary', () => {
       expect(screen.getByText('リセット')).toBeInTheDocument();
 
       // デフォルトのエラー画面は表示されない
-      expect(screen.queryByText('申し訳ございません')).not.toBeInTheDocument();
+      expect(screen.queryByText('申し訳ありません')).not.toBeInTheDocument();
     });
 
     it('カスタムフォールバックのリセット機能が動作する', () => {

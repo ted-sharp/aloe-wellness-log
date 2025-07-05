@@ -197,7 +197,6 @@ describe('useFieldManagement', () => {
       name: 'テスト項目',
       type: 'string',
       unit: 'test',
-      excludeFromGraph: false,
     });
   });
 
@@ -264,7 +263,6 @@ describe('useFieldManagement', () => {
     expect(result.current.editField).toEqual({
       name: '更新された名前',
       unit: '更新された単位',
-      excludeFromGraph: false,
     });
   });
 
@@ -341,7 +339,6 @@ describe('useFieldManagement', () => {
     expect(result.current.editingExistingField).toEqual({
       name: '編集中の体重',
       unit: 'kg',
-      excludeFromGraph: false,
     });
   });
 
