@@ -205,6 +205,35 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeBmi]);
 
+  // 体重差分カウントアップ用state
+  const [animatedDiff, setAnimatedDiff] = useState(0);
+  useEffect(() => {
+    if (
+      goal &&
+      goal.startWeight !== undefined &&
+      latestWeightOfDay !== null &&
+      latestWeightOfDay - goal.startWeight < 0
+    ) {
+      const diff = latestWeightOfDay - goal.startWeight;
+      const start = 0;
+      const duration = 800;
+      const startTime = performance.now();
+      function animate(now: number) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        setAnimatedDiff(start + (diff - start) * progress);
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setAnimatedDiff(diff);
+        }
+      }
+      requestAnimationFrame(animate);
+    } else {
+      setAnimatedDiff(0);
+    }
+  }, [goal, latestWeightOfDay]);
+
   // goal（身長など）が未ロードなら自動でロード
   useEffect(() => {
     if (!goal || !goal.height) {
@@ -276,14 +305,29 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             />
           )}
           {bmi !== null && goal && goal.height && (
-            <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-              BMI {animatedBmi.toFixed(1)}
+            <span
+              className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle"
+              style={{
+                display: 'inline-block',
+                minWidth: '4.2em',
+                textAlign: 'right',
+              }}
+            >
+              BMI{' '}
+              <span
+                style={{
+                  display: 'inline-block',
+                  minWidth: '3ch',
+                  textAlign: 'right',
+                }}
+              >
+                {animatedBmi.toFixed(1)}
+              </span>
               {/* トロフィーと体重差分表示 */}
               {goal.startWeight !== undefined &&
                 latestWeightOfDay !== null &&
                 latestWeightOfDay - goal.startWeight < 0 &&
                 (() => {
-                  const diff = latestWeightOfDay - goal.startWeight;
                   return (
                     <span
                       className="ml-3 align-middle inline-flex items-center"
@@ -298,7 +342,16 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         }}
                       />
                       <span className="font-bold" style={{ color: '#FFD700' }}>
-                        {diff.toFixed(1)}kg
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            minWidth: '2.4em',
+                            textAlign: 'right',
+                          }}
+                        >
+                          {animatedDiff.toFixed(1)}
+                        </span>
+                        kg
                       </span>
                     </span>
                   );
