@@ -755,6 +755,13 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             )}
           </div>
         )}
+        {/* 体重測定タイミングの注意事項（カード直下・隙間最小） */}
+        <div className="w-full max-w-md mx-auto mb-2 px-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400 text-yellow-800 dark:text-yellow-100 p-3 rounded shadow-sm text-sm text-left">
+            <strong>【ワンポイント】</strong>{' '}
+            体重はできるだけ毎日同じタイミング（例：朝起きてトイレ後、食事前など）で測ると、日々の変化がより正確にわかります。
+          </div>
+        </div>
       </div>
     </div>
   );
