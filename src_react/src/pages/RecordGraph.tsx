@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
   Line,
@@ -26,9 +27,9 @@ const STATUS_COLORS = {
   off: '#d1d5db', // グレー
 };
 const STATUS_LABELS = {
-  exercise: '運',
-  meal: '食',
-  sleep: '睡',
+  exercise: '🏃',
+  meal: '🍽',
+  sleep: '🛌',
 };
 
 // Tooltip用の型定義
@@ -256,43 +257,11 @@ const RecordGraph: React.FC = () => {
     const { x = 0, y = 0, payload } = props;
     const ts = payload.value;
     const d = new Date(ts);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}-${String(d.getDate()).padStart(2, '0')}`;
-    const status = dailyStatus[dateStr] || {
-      exercise: false,
-      meal: false,
-      sleep: false,
-    };
     return (
       <g>
         <text x={x} y={y + 10} textAnchor="middle" fontSize="12">{`${
           d.getMonth() + 1
         }/${d.getDate()}`}</text>
-        {/* ドット群 */}
-        {STATUS_KEYS.map((key, idx) => (
-          <circle
-            key={key}
-            cx={x - 12 + idx * 12}
-            cy={y + 18}
-            r={4}
-            fill={status[key] ? STATUS_COLORS[key] : STATUS_COLORS.off}
-          />
-        ))}
-        {/* ラベル群 */}
-        {STATUS_KEYS.map((key, idx) => (
-          <text
-            key={key}
-            x={x - 12 + idx * 12}
-            y={y + 32}
-            textAnchor="middle"
-            fontSize="9"
-            fill="#888"
-          >
-            {STATUS_LABELS[key]}
-          </text>
-        ))}
       </g>
     );
   };
@@ -401,9 +370,21 @@ const RecordGraph: React.FC = () => {
             <Tooltip
               content={({ active, payload, label: _ }) => {
                 if (!active || !payload || !payload.length) return null;
-                // payload[0]はLineのデータ、payload[1]はtrendLine（存在すれば）
                 const point = payload[0]?.payload;
-                // formatDateTimeLabelはtimestampをMM/DD HH:mmに変換
+                // 日付取得
+                const ts = point?.timestamp;
+                const d = ts ? new Date(ts) : null;
+                const dateStr = d
+                  ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+                      2,
+                      '0'
+                    )}-${String(d.getDate()).padStart(2, '0')}`
+                  : '';
+                const status = dailyStatus[dateStr] || {
+                  exercise: false,
+                  meal: false,
+                  sleep: false,
+                };
                 return (
                   <div
                     style={{
@@ -434,6 +415,57 @@ const RecordGraph: React.FC = () => {
                           {weightField?.unit || 'kg'}
                         </div>
                       ))}
+                    <div style={{ marginTop: 6, fontSize: 13 }}>
+                      {(() => {
+                        const statusList = [
+                          { key: 'exercise', label: '🏃‍♂️' },
+                          { key: 'meal', label: '🍽' },
+                          { key: 'sleep', label: '🛌' },
+                        ];
+                        return statusList.map(({ key, label }) => {
+                          const rec = records.find(
+                            r => r.fieldId === key && r.date === dateStr
+                          );
+                          if (rec === undefined) return null; // 入力がなければ非表示
+                          if (typeof rec.value === 'boolean') {
+                            return (
+                              <span
+                                key={key}
+                                style={{
+                                  marginRight: 8,
+                                  verticalAlign: 'middle',
+                                  fontSize: '1.1em',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                {label}
+                                {rec.value ? (
+                                  <HiCheck
+                                    style={{
+                                      color: '#38bdf8',
+                                      fontSize: '1.3em',
+                                      marginLeft: 2,
+                                      verticalAlign: 'middle',
+                                    }}
+                                  />
+                                ) : (
+                                  <HiXMark
+                                    style={{
+                                      color: '#bbb',
+                                      fontSize: '1.3em',
+                                      marginLeft: 2,
+                                      verticalAlign: 'middle',
+                                    }}
+                                  />
+                                )}
+                              </span>
+                            );
+                          }
+                          return null;
+                        });
+                      })()}
+                    </div>
                   </div>
                 );
               }}

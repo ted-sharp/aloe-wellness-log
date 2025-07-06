@@ -55,6 +55,7 @@ const baseFieldStructure = [
   },
   {
     fieldId: 'exercise',
+    name: '運動🏃‍♂️',
     type: 'boolean' as const,
     order: 6,
     defaultDisplay: true,
@@ -62,6 +63,7 @@ const baseFieldStructure = [
   },
   {
     fieldId: 'meal',
+    name: '食事🍽',
     type: 'boolean' as const,
     order: 7,
     defaultDisplay: true,
@@ -69,6 +71,7 @@ const baseFieldStructure = [
   },
   {
     fieldId: 'sleep',
+    name: '睡眠🛌',
     type: 'boolean' as const,
     order: 8,
     defaultDisplay: true,
