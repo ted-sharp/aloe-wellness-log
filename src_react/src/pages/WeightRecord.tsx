@@ -10,7 +10,7 @@ import {
   useRole,
 } from '@floating-ui/react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaEraser } from 'react-icons/fa';
+import { FaEraser, FaTrophy } from 'react-icons/fa';
 import {
   HiCheck,
   HiNoSymbol,
@@ -278,6 +278,31 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
           {bmi !== null && goal && goal.height && (
             <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
               BMI {animatedBmi.toFixed(1)}
+              {/* トロフィーと体重差分表示 */}
+              {goal.startWeight !== undefined &&
+                latestWeightOfDay !== null &&
+                latestWeightOfDay - goal.startWeight < 0 &&
+                (() => {
+                  const diff = latestWeightOfDay - goal.startWeight;
+                  return (
+                    <span
+                      className="ml-3 align-middle inline-flex items-center"
+                      title="開始体重との差分"
+                    >
+                      <FaTrophy
+                        className="inline-block mr-1"
+                        style={{
+                          color: '#FFD700',
+                          fontSize: '1.1em',
+                          verticalAlign: 'middle',
+                        }}
+                      />
+                      <span className="font-bold" style={{ color: '#FFD700' }}>
+                        {diff.toFixed(1)}kg
+                      </span>
+                    </span>
+                  );
+                })()}
             </span>
           )}
         </span>
