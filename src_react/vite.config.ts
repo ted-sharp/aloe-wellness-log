@@ -131,9 +131,8 @@ export default defineConfig(({ mode, command }) => {
       terserOptions: isProduction
         ? {
             compress: {
-              drop_console: false, // console.logを本番環境で削除
-              drop_debugger: false,
-              pure_funcs: ['console.log', 'console.warn'], // より詳細な除去設定
+              drop_console: true,
+              drop_debugger: true,
             },
             mangle: {
               safari10: true, // Safari 10対応
