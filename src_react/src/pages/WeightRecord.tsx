@@ -128,6 +128,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
       ? latestWeightOfDay / Math.pow(goal.height / 100, 2)
       : null;
 
+  // bmiをnumber型で保証する変数
+  const safeBmi = typeof bmi === 'number' && !isNaN(bmi) ? bmi : 0;
+
   // BMIインジケーター定義（6段階）
   const bmiBands = [
     { min: 0, max: 18.5, color: '#6ec6f1', label: '低体重', range: '<18.5' },
@@ -177,6 +180,30 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     }
     return 100;
   })();
+
+  // BMIカウントアップ用state
+  const [animatedBmi, setAnimatedBmi] = useState(0);
+
+  // BMIカウントアップアニメーション
+  useEffect(() => {
+    if (typeof bmi !== 'number' || isNaN(bmi)) return;
+    const start = 0;
+    const duration = 800; // ms
+    const startTime = performance.now();
+
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimatedBmi(start + (safeBmi - start) * progress);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setAnimatedBmi(safeBmi);
+      }
+    }
+    requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safeBmi]);
 
   // goal（身長など）が未ロードなら自動でロード
   useEffect(() => {
@@ -248,9 +275,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               aria-label="入力済み"
             />
           )}
-          {bmi && (
+          {bmi !== null && goal && goal.height && (
             <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-              BMI {bmi.toFixed(1)}
+              BMI {animatedBmi.toFixed(1)}
             </span>
           )}
         </span>
