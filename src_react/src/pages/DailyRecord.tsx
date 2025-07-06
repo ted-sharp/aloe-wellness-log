@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaFire } from 'react-icons/fa';
 import {
   HiBars3,
   HiCheck,
@@ -538,6 +539,31 @@ const DailyRecord: React.FC = () => {
     };
   };
 
+  // 連続達成日数（streak）を計算
+  const calcStreak = (baseDate: Date) => {
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() - i);
+      const dateStr = formatDate(d);
+      const hasAny = fields
+        .filter(f => f.scope === 'daily')
+        .some(f =>
+          records.some(
+            r =>
+              r.fieldId === f.fieldId && r.date === dateStr && r.value === true
+          )
+        );
+      if (hasAny) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+  const streak = calcStreak(selectedDate);
+
   useEffect(() => {
     localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
   }, [selectedDate]);
@@ -562,6 +588,19 @@ const DailyRecord: React.FC = () => {
               className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
               aria-label="入力済み"
             />
+          )}
+          {/* 連続達成バッジ */}
+          {streak > 0 && (
+            <span
+              className="ml-3 px-2 py-0.5 rounded-full bg-orange-500 text-white text-xs font-bold inline-flex items-center"
+              title="連続達成日数"
+            >
+              <FaFire
+                className="inline-block mr-1"
+                style={{ fontSize: '1em' }}
+              />
+              {streak}日継続中
+            </span>
           )}
         </span>
       </div>
