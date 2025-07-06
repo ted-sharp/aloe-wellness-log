@@ -51,6 +51,85 @@ const formatLocalDateTime = (date: Date): string => {
 // 共通キー定数を追加
 const SELECTED_DATE_KEY = 'shared_selected_date';
 
+// 達成率カウントアップ用カスタムフック
+function useAnimatedNumber(target: number, duration: number = 800) {
+  const [animated, setAnimated] = React.useState(0);
+  React.useEffect(() => {
+    if (typeof target !== 'number' || isNaN(target)) return;
+    const start = 0;
+    const startTime = performance.now();
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimated(start + (target - start) * progress);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setAnimated(target);
+      }
+    }
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+  return animated;
+}
+
+// 達成率アニメーション表示用コンポーネント
+function DailyAchievementItem({
+  field,
+  value,
+  stats,
+  onAchieve,
+  onUnachieve,
+}: any) {
+  const animatedPercent = useAnimatedNumber(stats.percent);
+  return (
+    <div className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-2">
+      <div className="flex items-center gap-4">
+        <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
+          {field.name}
+        </span>
+        <Button
+          variant={value === true ? 'primary' : 'secondary'}
+          size="md"
+          onClick={onAchieve}
+          aria-pressed={value === true}
+          className="flex-1"
+          data-testid={`daily-input-${field.fieldId}`}
+        >
+          達成
+        </Button>
+        <Button
+          variant={value === false ? 'primary' : 'secondary'}
+          size="md"
+          onClick={onUnachieve}
+          aria-pressed={value === false}
+          className="flex-1"
+          data-testid={`daily-input-${field.fieldId}`}
+        >
+          未達
+        </Button>
+      </div>
+      <div className="text-xs text-gray-500 mt-1">
+        <span className="text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
+          直近2週間の達成率：
+        </span>
+        {stats.total > 0 ? (
+          <>
+            <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
+              {animatedPercent.toFixed(0)}%
+            </span>
+            <span className="ml-2 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
+              （{stats.success}/{stats.total}日）
+            </span>
+          </>
+        ) : (
+          '記録なし'
+        )}
+      </div>
+    </div>
+  );
+}
+
 const DailyRecord: React.FC = () => {
   const today = new Date();
   const [centerDate, setCenterDate] = useState<Date>(() => {
@@ -530,64 +609,34 @@ const DailyRecord: React.FC = () => {
               const value = getBoolValue(field.fieldId);
               const stats = getFieldSuccessStats(field.fieldId);
               return (
-                <div
+                <DailyAchievementItem
                   key={field.fieldId}
-                  className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-2"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
-                      {field.name}
-                    </span>
-                    <Button
-                      variant={value === true ? 'primary' : 'secondary'}
-                      size="md"
-                      onClick={async () => {
-                        if (value === true) {
-                          // あり→未選択（解除）
-                          const rec = getBoolRecord(field.fieldId);
-                          if (rec) {
-                            await deleteRecord(rec.id);
-                            await loadRecords();
-                          }
-                        } else {
-                          await handleBoolInput(field.fieldId, true);
-                        }
-                      }}
-                      aria-pressed={value === true}
-                      className="flex-1"
-                      data-testid={`daily-input-${field.fieldId}`}
-                    >
-                      達成
-                    </Button>
-                    <Button
-                      variant={value === false ? 'primary' : 'secondary'}
-                      size="md"
-                      onClick={async () => {
-                        if (value === false) {
-                          // なし→未選択（解除）
-                          const rec = getBoolRecord(field.fieldId);
-                          if (rec) {
-                            await deleteRecord(rec.id);
-                            await loadRecords();
-                          }
-                        } else {
-                          await handleBoolInput(field.fieldId, false);
-                        }
-                      }}
-                      aria-pressed={value === false}
-                      className="flex-1"
-                      data-testid={`daily-input-${field.fieldId}`}
-                    >
-                      未達
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    直近2週間の達成率：
-                    {stats.total > 0
-                      ? `${stats.percent}%（${stats.success}/${stats.total}日）`
-                      : '記録なし'}
-                  </div>
-                </div>
+                  field={field}
+                  value={value}
+                  stats={stats}
+                  onAchieve={async () => {
+                    if (value === true) {
+                      const rec = getBoolRecord(field.fieldId);
+                      if (rec) {
+                        await deleteRecord(rec.id);
+                        await loadRecords();
+                      }
+                    } else {
+                      await handleBoolInput(field.fieldId, true);
+                    }
+                  }}
+                  onUnachieve={async () => {
+                    if (value === false) {
+                      const rec = getBoolRecord(field.fieldId);
+                      if (rec) {
+                        await deleteRecord(rec.id);
+                        await loadRecords();
+                      }
+                    } else {
+                      await handleBoolInput(field.fieldId, false);
+                    }
+                  }}
+                />
               );
             })
           )}

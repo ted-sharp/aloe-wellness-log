@@ -9,7 +9,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import DatePickerBar from '../components/DatePickerBar';
 import { useRecordsStore } from '../store/records';
 
 const PERIODS = [
@@ -38,12 +37,60 @@ interface TooltipItem {
   value?: number | string;
 }
 
+// 達成率カウントアップ用カスタムフック
+function useAnimatedNumber(target: number, duration: number = 800) {
+  const [animated, setAnimated] = React.useState(0);
+  React.useEffect(() => {
+    if (typeof target !== 'number' || isNaN(target)) return;
+    const start = 0;
+    const startTime = performance.now();
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimated(start + (target - start) * progress);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setAnimated(target);
+      }
+    }
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+  return animated;
+}
+
+// グラフ下部の達成率アニメーション表示用コンポーネント
+function GraphAchievementItem({
+  label,
+  stats,
+}: {
+  label: string;
+  stats: { total: number; success: number; percent: number };
+}) {
+  const animatedPercent = useAnimatedNumber(stats.percent);
+  return (
+    <div className="text-xs text-blue-700 dark:text-blue-200 whitespace-nowrap font-semibold">
+      <span className="text-sm sm:text-base align-middle">{label}:</span>
+      {stats.total > 0 ? (
+        <>
+          <span className="ml-1 sm:ml-2 text-sm sm:text-base align-middle">
+            {animatedPercent.toFixed(0)}%
+          </span>
+          <span className="ml-1 sm:ml-2 text-sm sm:text-base align-middle">
+            ({stats.success}/{stats.total}日)
+          </span>
+        </>
+      ) : (
+        '記録なし'
+      )}
+    </div>
+  );
+}
+
 const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [centerDate, setCenterDate] = useState(new Date());
 
   // 体重フィールドIDを取得
   const weightField = fields.find(f => f.fieldId === 'weight');
@@ -428,26 +475,18 @@ const RecordGraph: React.FC = () => {
         </ResponsiveContainer>
       </div>
       {/* グラフ下部に日課達成率を表示 */}
-      <div className="w-full flex flex-wrap justify-center gap-6 mt-4 mb-2">
+      <div className="w-full flex flex-wrap justify-center gap-2 sm:gap-6 mt-4 mb-2">
         {STATUS_KEYS.map(key => {
           const stats = getStatusStats(key);
           return (
-            <div key={key} className="text-xs text-gray-500">
-              {STATUS_LABELS[key]}：
-              {stats.total > 0
-                ? `${stats.percent}%（${stats.success}/${stats.total}日）`
-                : '記録なし'}
-            </div>
+            <GraphAchievementItem
+              key={key}
+              label={STATUS_LABELS[key]}
+              stats={stats}
+            />
           );
         })}
       </div>
-      <DatePickerBar
-        data-testid="date-picker"
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        centerDate={centerDate}
-        setCenterDate={setCenterDate}
-      />
     </div>
   );
 };
