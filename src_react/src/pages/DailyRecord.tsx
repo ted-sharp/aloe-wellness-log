@@ -563,6 +563,7 @@ const DailyRecord: React.FC = () => {
     return streak;
   };
   const streak = calcStreak(selectedDate);
+  const animatedStreak = useAnimatedNumber(streak);
 
   useEffect(() => {
     localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
@@ -599,7 +600,16 @@ const DailyRecord: React.FC = () => {
                 className="inline-block mr-1"
                 style={{ fontSize: '1em' }}
               />
-              {streak}日継続中
+              <span
+                style={{
+                  display: 'inline-block',
+                  minWidth: '3ch',
+                  textAlign: 'right',
+                }}
+              >
+                {animatedStreak.toFixed(0)}
+              </span>
+              日継続中
             </span>
           )}
         </span>
