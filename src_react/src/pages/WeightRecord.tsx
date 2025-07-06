@@ -317,8 +317,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               <span
                 style={{
                   display: 'inline-block',
-                  minWidth: '3ch',
+                  minWidth: '3.5ch',
                   textAlign: 'right',
+                  fontFamily: 'monospace',
                 }}
               >
                 {animatedBmi.toFixed(1)}
@@ -345,8 +346,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         <span
                           style={{
                             display: 'inline-block',
-                            minWidth: '2.4em',
+                            minWidth: '2.8em',
                             textAlign: 'right',
+                            fontFamily: 'monospace',
                           }}
                         >
                           {animatedDiff.toFixed(1)}

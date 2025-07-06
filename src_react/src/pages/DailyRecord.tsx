@@ -117,10 +117,20 @@ function DailyAchievementItem({
         {stats.total > 0 ? (
           <>
             <span className="ml-4 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-              {animatedPercent.toFixed(0)}%
+              <span
+                style={{
+                  display: 'inline-block',
+                  minWidth: '3ch',
+                  textAlign: 'right',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {animatedPercent.toFixed(0)}
+              </span>
+              %
             </span>
             <span className="ml-2 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-              （{stats.success}/{stats.total}日）
+              ({stats.success}/{stats.total}日)
             </span>
           </>
         ) : (
