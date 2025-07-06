@@ -19,13 +19,6 @@ const PERIODS = [
   { label: '全データ', days: null },
 ];
 
-// カラーパレット
-const STATUS_COLORS = {
-  exercise: '#38bdf8', // 青
-  meal: '#22c55e', // 緑
-  sleep: '#a21caf', // 紫
-  off: '#d1d5db', // グレー
-};
 const STATUS_LABELS = {
   exercise: '🏃',
   meal: '🍽',
@@ -380,11 +373,6 @@ const RecordGraph: React.FC = () => {
                       '0'
                     )}-${String(d.getDate()).padStart(2, '0')}`
                   : '';
-                const status = dailyStatus[dateStr] || {
-                  exercise: false,
-                  meal: false,
-                  sleep: false,
-                };
                 return (
                   <div
                     style={{
