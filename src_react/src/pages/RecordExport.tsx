@@ -93,6 +93,10 @@ export default function RecordExport({
   // エラーテスト用の状態
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
+  // 既存データのdatetime一括修正
+  const [fixStatus, setFixStatus] = useState<string | null>(null);
+  const [isFixing, setIsFixing] = useState(false);
+
   // エラーテスト用: レンダリング時にエラーを投げる
   if (errorToThrow) {
     throw errorToThrow;
@@ -433,7 +437,7 @@ export default function RecordExport({
         const timeStr = `${hours.toString().padStart(2, '0')}:${minutes
           .toString()
           .padStart(2, '0')}`;
-        const datetimeStr = `${dateStr} ${timeStr}`;
+        const datetimeStr = `${dateStr}T${timeStr}:00`;
 
         // ランダムな項目を選択（visibleFieldsのみ対象）
         const randomField =
@@ -570,7 +574,7 @@ export default function RecordExport({
         const dateStr = `${year}-${month}-${day}`;
         // 時刻は毎日8:00固定
         const timeStr = '08:00';
-        const datetimeStr = `${dateStr} ${timeStr}`;
+        const datetimeStr = `${dateStr}T${timeStr}:00`;
         // 体重を徐々に減少させつつ±2kgの範囲でランダム変動
         const trend = (daysBack - i) * 0.05; // 1日あたり0.05kg減少
         const randomDelta = (Math.random() - 0.5) * 2; // -2〜+2kg（1日あたりの変化幅を±2に制限）
@@ -638,6 +642,31 @@ export default function RecordExport({
     );
     if (isConfirmed) {
       generateWeightTestData();
+    }
+  };
+
+  // 既存データのdatetime一括修正
+  const handleFixAllDatetime = async () => {
+    setIsFixing(true);
+    setFixStatus('修正中...');
+    try {
+      let fixed = 0;
+      for (const rec of records) {
+        if (rec.date && rec.time) {
+          const expected = `${rec.date}T${rec.time}:00`;
+          if (rec.datetime !== expected) {
+            await addRecord({ ...rec, datetime: expected });
+            fixed++;
+          }
+        }
+      }
+      await loadRecords();
+      setFixStatus(`✅ 修正完了: ${fixed}件修正しました`);
+    } catch (e) {
+      setFixStatus('❌ 修正中にエラーが発生しました');
+    } finally {
+      setIsFixing(false);
+      setTimeout(() => setFixStatus(null), 4000);
     }
   };
 
@@ -940,7 +969,7 @@ export default function RecordExport({
         </div>
       )}
 
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl shadow-md p-6">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-2xl shadow-md p-6 mb-8">
         <h2 className="text-2xl font-semibold text-red-800 dark:text-red-400 mb-6 flex items-center gap-2">
           <HiExclamationTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
           危険ゾーン
@@ -959,6 +988,43 @@ export default function RecordExport({
         >
           すべてのデータを削除
         </Button>
+      </div>
+
+      {/* 既存データ一括修正カード（危険ゾーンのさらに下） */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl shadow-md p-6 mt-8">
+        <h2 className="text-xl font-semibold text-yellow-800 dark:text-yellow-400 mb-4 flex items-center gap-2">
+          <HiExclamationTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
+          既存データのdatetime一括修正（危険・一時的）
+        </h2>
+        <div className="mb-4 text-left">
+          <p className="text-base text-yellow-700 dark:text-yellow-300 mb-2">
+            既存の全レコードについて、date＋timeからdatetimeを再生成して一括修正します。
+            <br />
+            ※一時的な救済用です。通常利用時は不要です。
+          </p>
+        </div>
+        <Button
+          variant="warning"
+          size="lg"
+          icon={HiExclamationTriangle}
+          onClick={handleFixAllDatetime}
+          fullWidth={false}
+          disabled={isFixing}
+          loading={isFixing}
+        >
+          既存データのdatetime一括修正
+        </Button>
+        {fixStatus && (
+          <div className="mt-4">
+            {fixStatus.includes('✅') ? (
+              <SuccessMessage message={fixStatus.replace('✅ ', '')} />
+            ) : fixStatus.includes('❌') ? (
+              <ErrorMessage message={fixStatus.replace('❌ ', '')} />
+            ) : (
+              <InfoMessage message={fixStatus} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

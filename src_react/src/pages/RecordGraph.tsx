@@ -32,6 +32,12 @@ const STATUS_LABELS = {
   sleep: '睡',
 };
 
+// Tooltip用の型定義
+interface TooltipItem {
+  color?: string;
+  value?: number | string;
+}
+
 const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
@@ -361,10 +367,15 @@ const RecordGraph: React.FC = () => {
                     }}
                   >
                     <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                      {formatDateTimeLabel(point.timestamp)}
+                      {(() => {
+                        type Pt = { timestamp: number };
+                        return point
+                          ? formatDateTimeLabel((point as Pt).timestamp)
+                          : '';
+                      })()}
                     </div>
-                    {payload
-                      .filter(item => item.color !== '#f59e42')
+                    {((payload ?? []) as TooltipItem[])
+                      .filter(item => item && item.color !== '#f59e42')
                       .map((item, idx) => (
                         <div
                           key={idx}
@@ -397,6 +408,7 @@ const RecordGraph: React.FC = () => {
                   strokeWidth={1}
                 />
               )}
+              activeDot={false}
             />
             {trendLine && (
               <Line
@@ -406,6 +418,7 @@ const RecordGraph: React.FC = () => {
                 stroke="#f59e42"
                 strokeWidth={3}
                 dot={false}
+                activeDot={false}
                 isAnimationActive={false}
                 strokeDasharray="6 6"
                 legendType="none"

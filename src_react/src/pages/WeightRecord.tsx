@@ -216,6 +216,18 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     // No need to log here as per the new code instructions
   }, [centerDate, selectedDate]);
 
+  // 選択日と時刻文字列(HH:mm)からローカル日時文字列を生成
+  const buildDateTimeString = (
+    date: Date | string,
+    timeStr: string
+  ): string => {
+    const d =
+      typeof date === 'string' ? new Date(date) : new Date(date.getTime());
+    const [h, m] = timeStr.split(':').map(Number);
+    d.setHours(h || 0, m || 0, 0, 0);
+    return formatLocalDateTime(d);
+  };
+
   return (
     <div className="bg-transparent">
       <DatePickerBar
@@ -334,6 +346,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                                 await updateRecord({
                                   ...rec,
                                   time: e.target.value,
+                                  datetime: buildDateTimeString(
+                                    rec.date,
+                                    e.target.value
+                                  ),
                                 });
                                 await loadRecords();
                               }
@@ -356,6 +372,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                                 await updateRecord({
                                   ...rec,
                                   value: Number(e.target.value),
+                                  datetime: buildDateTimeString(
+                                    rec.date,
+                                    rec.time || '00:00'
+                                  ),
                                 });
                                 await loadRecords();
                               }
@@ -471,7 +491,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                           value: Number(newWeight),
                           date: recordDate,
                           time: newTime,
-                          datetime: formatLocalDateTime(new Date()),
+                          datetime: buildDateTimeString(selectedDate, newTime),
                           note: newNote,
                         });
                         setNewWeight('');
