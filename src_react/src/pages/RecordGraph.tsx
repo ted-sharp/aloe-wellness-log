@@ -318,7 +318,7 @@ const RecordGraph: React.FC = () => {
         ))}
       </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
-        <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-4 py-0 rounded cursor-pointer select-none text-sm font-bold z-10">
+        <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
           <input
             type="checkbox"
             className="form-checkbox accent-blue-600 mr-1"
