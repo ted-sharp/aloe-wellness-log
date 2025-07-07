@@ -10,6 +10,7 @@ const RECORDS_STORE = 'records';
 const FIELDS_STORE = 'fields';
 const GOAL_STORE = 'goal';
 const WEIGHT_RECORDS_STORE = 'weight_records';
+const BP_RECORDS_STORE = 'bp_records';
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000; // 1秒
 
@@ -238,6 +239,13 @@ export function openDb(): Promise<IDBDatabase> {
               'excludeFromGraph',
               { unique: false }
             );
+          }
+          if (!db.objectStoreNames.contains(BP_RECORDS_STORE)) {
+            const bpStore = db.createObjectStore(BP_RECORDS_STORE, {
+              keyPath: 'id',
+            });
+            bpStore.createIndex('dateIndex', 'date', { unique: false });
+            bpStore.createIndex('fieldIdIndex', 'fieldId', { unique: false });
           }
         };
 
@@ -892,4 +900,103 @@ export async function migrateWeightRecordsV1ToV2(): Promise<number> {
     await addWeightRecord(rec);
   }
   return v2Records.length;
+}
+
+// 新しい血圧記録（V2）の追加
+export async function addBpRecord(
+  record: import('../types/record').BpRecordV2
+): Promise<void> {
+  return trackDbOperation(
+    'add-bp-record',
+    async () => {
+      return executeTransaction(
+        BP_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい血圧記録（V2）の全件取得
+export async function getAllBpRecords(): Promise<
+  import('../types/record').BpRecordV2[]
+> {
+  return trackDbOperation('get-all-bp-records', async () => {
+    return executeTransaction(
+      BP_RECORDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<import('../types/record').BpRecordV2[]>(
+          (resolve, reject) => {
+            const request = objectStore.getAll();
+            request.onsuccess = () => {
+              const data = request.result;
+              if (Array.isArray(data)) {
+                resolve(data as import('../types/record').BpRecordV2[]);
+              } else {
+                resolve([]);
+              }
+            };
+            request.onerror = () => reject(classifyDbError(request.error));
+          }
+        );
+      }
+    );
+  });
+}
+
+// 新しい血圧記録（V2）の更新
+export async function updateBpRecord(
+  record: import('../types/record').BpRecordV2
+): Promise<void> {
+  return trackDbOperation(
+    'update-bp-record',
+    async () => {
+      return executeTransaction(
+        BP_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい血圧記録（V2）の削除
+export async function deleteBpRecord(id: string): Promise<void> {
+  return trackDbOperation(
+    'delete-bp-record',
+    async () => {
+      return executeTransaction(
+        BP_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
 }

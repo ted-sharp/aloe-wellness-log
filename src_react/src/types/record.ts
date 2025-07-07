@@ -87,3 +87,14 @@ export type WeightRecordV2 = {
   note?: string | null;
   excludeFromGraph?: boolean;
 };
+
+// 新しい血圧記録（V2）型
+export type BpRecordV2 = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  systolic: number; // 収縮期血圧
+  diastolic: number; // 拡張期血圧
+  heartRate?: number | null; // 心拍数（任意）
+  note?: string | null;
+};
