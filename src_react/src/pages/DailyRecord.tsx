@@ -575,6 +575,26 @@ const DailyRecord: React.FC = () => {
   const streak = calcStreak(selectedDate);
   const animatedStreak = useAnimatedNumber(streak);
 
+  // 累計達成日数（どれかの日課が達成された日数）
+  const calcTotalAchievedDays = () => {
+    // 日付ごとに1つでも達成があればカウント
+    const dailyFieldIds = fields
+      .filter(f => f.scope === 'daily')
+      .map(f => f.fieldId);
+    const dateSet = new Set(records.map(r => r.date));
+    let count = 0;
+    dateSet.forEach(date => {
+      const hasAny = dailyFieldIds.some(fieldId =>
+        records.some(
+          r => r.fieldId === fieldId && r.date === date && r.value === true
+        )
+      );
+      if (hasAny) count++;
+    });
+    return count;
+  };
+  const totalAchievedDays = calcTotalAchievedDays();
+
   useEffect(() => {
     localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
   }, [selectedDate]);
@@ -600,16 +620,36 @@ const DailyRecord: React.FC = () => {
               aria-label="入力済み"
             />
           )}
-          {/* 連続達成バッジ */}
-          {streak > 0 && (
+          {/* 連続達成バッジ＋累計達成バッジ（常に両方表示） */}
+          <span className="inline-flex items-center">
+            {streak > 0 && (
+              <span
+                className="ml-3 px-2 py-0.5 rounded-full bg-orange-500 text-white text-xs font-bold inline-flex items-center"
+                title="連続達成日数"
+              >
+                <FaFire
+                  className="inline-block mr-1"
+                  style={{ fontSize: '1em' }}
+                />
+                <span
+                  style={{
+                    display: 'inline-block',
+                    minWidth: '3ch',
+                    textAlign: 'right',
+                  }}
+                >
+                  {animatedStreak.toFixed(0)}
+                </span>
+                日継続中
+              </span>
+            )}
             <span
-              className="ml-3 px-2 py-0.5 rounded-full bg-orange-500 text-white text-xs font-bold inline-flex items-center"
-              title="連続達成日数"
+              className="ml-3 px-2 py-0.5 rounded-full bg-blue-500 text-white text-xs font-bold inline-flex items-center"
+              title="累計達成日数"
             >
-              <FaFire
-                className="inline-block mr-1"
-                style={{ fontSize: '1em' }}
-              />
+              <span className="inline-block mr-1" style={{ fontSize: '1em' }}>
+                🏅
+              </span>
               <span
                 style={{
                   display: 'inline-block',
@@ -617,11 +657,11 @@ const DailyRecord: React.FC = () => {
                   textAlign: 'right',
                 }}
               >
-                {animatedStreak.toFixed(0)}
+                {totalAchievedDays}
               </span>
-              日継続中
+              日達成
             </span>
-          )}
+          </span>
         </span>
       </div>
       {/* メインコンテンツ */}
