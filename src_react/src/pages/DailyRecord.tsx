@@ -551,19 +551,22 @@ const DailyRecord: React.FC = () => {
 
   // 連続達成日数（streak）を計算
   const calcStreak = (baseDate: Date) => {
+    if (records.length === 0) return 0;
+    const dailyFieldIds = fields
+      .filter(f => f.scope === 'daily')
+      .map(f => f.fieldId);
+    // 記録が存在する日付をbaseDateまで逆順でソート
+    const dateSet = new Set(records.map(r => r.date));
+    const allDates = Array.from(dateSet)
+      .filter(date => new Date(date) <= baseDate)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     let streak = 0;
-    for (let i = 0; i < 365; i++) {
-      const d = new Date(baseDate);
-      d.setDate(baseDate.getDate() - i);
-      const dateStr = formatDate(d);
-      const hasAny = fields
-        .filter(f => f.scope === 'daily')
-        .some(f =>
-          records.some(
-            r =>
-              r.fieldId === f.fieldId && r.date === dateStr && r.value === true
-          )
-        );
+    for (const dateStr of allDates) {
+      const hasAny = dailyFieldIds.some(fieldId =>
+        records.some(
+          r => r.fieldId === fieldId && r.date === dateStr && r.value === true
+        )
+      );
       if (hasAny) {
         streak++;
       } else {
@@ -572,28 +575,36 @@ const DailyRecord: React.FC = () => {
     }
     return streak;
   };
-  const streak = calcStreak(selectedDate);
+  const streak = calcStreak(selectedDate) + 1;
   const animatedStreak = useAnimatedNumber(streak);
 
-  // 累計達成日数（どれかの日課が達成された日数）
-  const calcTotalAchievedDays = () => {
-    // 日付ごとに1つでも達成があればカウント
+  // baseDateまでの累計達成日数をカウントできるように修正
+  const calcTotalAchievedDays = (baseDate: Date) => {
     const dailyFieldIds = fields
       .filter(f => f.scope === 'daily')
       .map(f => f.fieldId);
-    const dateSet = new Set(records.map(r => r.date));
+    if (records.length === 0) return 0;
+    const dates = records.map(r => r.date).sort();
+    const firstDate = new Date(dates[0]);
+    const endDate = baseDate;
     let count = 0;
-    dateSet.forEach(date => {
+    for (
+      let d = new Date(firstDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dateStr = formatDate(d);
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
-          r => r.fieldId === fieldId && r.date === date && r.value === true
+          r => r.fieldId === fieldId && r.date === dateStr && r.value === true
         )
       );
       if (hasAny) count++;
-    });
+    }
     return count;
   };
-  const totalAchievedDays = calcTotalAchievedDays();
+  const totalAchievedDays = calcTotalAchievedDays(selectedDate);
+  const animatedTotalAchievedDays = useAnimatedNumber(totalAchievedDays);
 
   useEffect(() => {
     localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
@@ -622,7 +633,7 @@ const DailyRecord: React.FC = () => {
           )}
           {/* 連続達成バッジ＋累計達成バッジ（常に両方表示） */}
           <span className="inline-flex items-center">
-            {streak > 0 && (
+            {streak >= 2 && (
               <span
                 className="ml-3 px-2 py-0.5 rounded-full bg-orange-500 text-white text-xs font-bold inline-flex items-center"
                 title="連続達成日数"
@@ -657,7 +668,7 @@ const DailyRecord: React.FC = () => {
                   textAlign: 'right',
                 }}
               >
-                {totalAchievedDays}
+                {animatedTotalAchievedDays.toFixed(0)}
               </span>
               日達成
             </span>
