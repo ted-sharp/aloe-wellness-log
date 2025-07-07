@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
 
 const PERIODS = [
@@ -83,6 +84,7 @@ function GraphAchievementItem({
 
 const RecordGraph: React.FC = () => {
   const { records, fields } = useRecordsStore();
+  const { goal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
 
@@ -494,16 +496,56 @@ const RecordGraph: React.FC = () => {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      {/* グラフ下部に日課達成率を表示 */}
-      <div className="w-full flex flex-wrap justify-center gap-2 sm:gap-6 mt-4 mb-2">
-        {STATUS_KEYS.map(key => {
+      {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
+      <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
+        {(['exercise', 'meal', 'sleep'] as const).map(key => {
           const stats = getStatusStats(key);
+          let goalText = '';
+          if (goal) {
+            if (key === 'exercise' && goal.exerciseGoal)
+              goalText = `${goal.exerciseGoal}`;
+            if (key === 'meal' && goal.dietGoal) goalText = `${goal.dietGoal}`;
+            if (key === 'sleep' && goal.sleepGoal)
+              goalText = `${goal.sleepGoal}`;
+          }
+          const icon = STATUS_LABELS[key] ?? '';
+          if (!stats) {
+            return (
+              <div
+                key={key}
+                className="flex items-baseline text-xs sm:text-base text-blue-700 dark:text-blue-200 font-semibold whitespace-nowrap"
+              >
+                <span className="inline-block min-w-[2em] text-center">
+                  {icon}
+                </span>
+                <span className="inline-block min-w-[7em]">記録なし</span>
+                {goalText && (
+                  <span className="ml-0 text-gray-500 dark:text-gray-300 text-xs sm:text-sm font-normal">
+                    {goalText}
+                  </span>
+                )}
+              </div>
+            );
+          }
           return (
-            <GraphAchievementItem
+            <div
               key={key}
-              label={STATUS_LABELS[key]}
-              stats={stats}
-            />
+              className="flex items-baseline text-xs sm:text-base text-blue-700 dark:text-blue-200 font-semibold whitespace-nowrap"
+            >
+              <span className="inline-block min-w-[2em] text-center">
+                {icon}
+              </span>
+              <span className="inline-block min-w-[7em]">
+                {stats.total > 0
+                  ? `${stats.percent}% (${stats.success}/${stats.total}日)`
+                  : '記録なし'}
+              </span>
+              {goalText && (
+                <span className="ml-0 text-gray-500 dark:text-gray-300 text-xs sm:text-sm font-normal">
+                  {goalText}
+                </span>
+              )}
+            </div>
           );
         })}
       </div>
