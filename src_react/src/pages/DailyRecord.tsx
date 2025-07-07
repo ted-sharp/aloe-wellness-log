@@ -606,6 +606,20 @@ const DailyRecord: React.FC = () => {
   const totalAchievedDays = calcTotalAchievedDays(selectedDate);
   const animatedTotalAchievedDays = useAnimatedNumber(totalAchievedDays);
 
+  // 日付ごとの状態を判定（入力なし: 'none', 1つでも達成: 'green', 入力あり全て未達: 'red'）
+  const getDateStatus = (date: Date): 'none' | 'green' | 'red' => {
+    const d = formatDate(date);
+    const dailyFieldIds = fields
+      .filter(f => f.scope === 'daily')
+      .map(f => f.fieldId);
+    const recs = records.filter(
+      r => r.date === d && dailyFieldIds.includes(r.fieldId)
+    );
+    if (recs.length === 0) return 'none';
+    const hasAchieve = recs.some(r => r.value === true);
+    return hasAchieve ? 'green' : 'red';
+  };
+
   useEffect(() => {
     localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
   }, [selectedDate]);
@@ -618,7 +632,7 @@ const DailyRecord: React.FC = () => {
         setSelectedDate={setSelectedDate}
         centerDate={centerDate}
         setCenterDate={setCenterDate}
-        isRecorded={isRecorded}
+        getDateStatus={getDateStatus}
         data-testid="date-picker"
       />
       {/* タイトル：日付ピッカー下・左上 */}

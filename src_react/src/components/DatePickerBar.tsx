@@ -36,6 +36,7 @@ export interface DatePickerBarProps {
   setCenterDate: (date: Date) => void;
   today?: Date;
   isRecorded?: (date: Date) => boolean;
+  getDateStatus?: (date: Date) => 'none' | 'green' | 'red';
 }
 
 const DatePickerBar: React.FC<DatePickerBarProps> = ({
@@ -45,6 +46,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   setCenterDate,
   today = new Date(),
   isRecorded,
+  getDateStatus,
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -279,6 +281,11 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                 ? 'text-blue-500'
                 : '';
             const isCenter = formatDate(date) === formatDate(centerDate);
+            const status = getDateStatus
+              ? getDateStatus(date)
+              : isRecorded && isRecorded(date)
+              ? 'green'
+              : 'none';
             return (
               <React.Fragment key={formatDate(date)}>
                 {showMonth && (
@@ -317,12 +324,15 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                     {formatWeekday(date)}
                   </span>
                   <span className="text-lg font-bold">{formatDay(date)}</span>
-                  {isRecorded && isRecorded(date) && (
-                    <span
-                      className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-green-500 border border-white dark:border-gray-800"
-                      aria-label="記録済み"
-                    />
-                  )}
+                  <span
+                    className={`inline-block w-2 h-2 rounded-full ${
+                      status === 'green'
+                        ? 'bg-green-500'
+                        : status === 'red'
+                        ? 'bg-red-500'
+                        : ''
+                    }`}
+                  ></span>
                 </button>
               </React.Fragment>
             );
