@@ -15,6 +15,7 @@ import {
   InfoMessage,
   SuccessMessage,
 } from '../components/StatusMessage';
+import { migrateWeightRecordsV1ToV2 } from '../db/indexedDb';
 import { useRecordsStore } from '../store/records';
 import type { RecordItem } from '../types/record';
 import { isDev } from '../utils/devTools';
@@ -1025,6 +1026,33 @@ export default function RecordExport({
             )}
           </div>
         )}
+      </div>
+
+      {/* 体重データV2移行ボタン（管理者用・最下部） */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl shadow-md p-6 mt-8">
+        <h2 className="text-xl font-semibold text-blue-800 dark:text-blue-400 mb-4 flex items-center gap-2">
+          <HiSparkles className="w-5 h-5 text-blue-600 dark:text-blue-500" />
+          体重データV2移行（管理者用）
+        </h2>
+        <div className="mb-4 text-left">
+          <p className="text-base text-blue-700 dark:text-blue-300 mb-2">
+            既存の体重データ（V1）を新しい体重テーブル（V2）へ一括移行します。
+            <br />
+            ※通常利用時は不要です。管理者のみご利用ください。
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          size="lg"
+          icon={HiSparkles}
+          onClick={async () => {
+            const count = await migrateWeightRecordsV1ToV2();
+            window.alert(`体重データ移行が完了しました（${count}件）`);
+          }}
+          fullWidth={false}
+        >
+          体重データV2へ移行（管理者用）
+        </Button>
       </div>
     </div>
   );

@@ -1,14 +1,15 @@
 import type { GoalData } from '../types/goal';
-import type { Field, RecordItem } from '../types/record';
+import type { Field, RecordItem, WeightRecordV2 } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
 import { validateFieldArray, validateRecordArray } from '../utils/validation';
 
 const DB_NAME = 'aloe-wellness-log';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const RECORDS_STORE = 'records';
 const FIELDS_STORE = 'fields';
 const GOAL_STORE = 'goal';
+const WEIGHT_RECORDS_STORE = 'weight_records';
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000; // 1秒
 
@@ -226,6 +227,17 @@ export function openDb(): Promise<IDBDatabase> {
           }
           if (!db.objectStoreNames.contains(GOAL_STORE)) {
             db.createObjectStore(GOAL_STORE, { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains(WEIGHT_RECORDS_STORE)) {
+            const weightStore = db.createObjectStore(WEIGHT_RECORDS_STORE, {
+              keyPath: 'id',
+            });
+            weightStore.createIndex('dateIndex', 'date', { unique: false });
+            weightStore.createIndex(
+              'excludeFromGraphIndex',
+              'excludeFromGraph',
+              { unique: false }
+            );
           }
         };
 
@@ -731,4 +743,153 @@ export async function clearGoalData(): Promise<void> {
       }
     );
   });
+}
+
+// 新しい体重記録（V2）の追加
+export async function addWeightRecord(record: WeightRecordV2): Promise<void> {
+  return trackDbOperation(
+    'add-weight-record',
+    async () => {
+      return executeTransaction(
+        WEIGHT_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい体重記録（V2）の全件取得
+export async function getAllWeightRecords(): Promise<WeightRecordV2[]> {
+  return trackDbOperation('get-all-weight-records', async () => {
+    return executeTransaction(
+      WEIGHT_RECORDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<WeightRecordV2[]>((resolve, reject) => {
+          const request = objectStore.getAll();
+          request.onsuccess = () => {
+            const data = request.result;
+            if (Array.isArray(data)) {
+              resolve(data as WeightRecordV2[]);
+            } else {
+              resolve([]);
+            }
+          };
+          request.onerror = () => reject(classifyDbError(request.error));
+        });
+      }
+    );
+  });
+}
+
+// 新しい体重記録（V2）の更新
+export async function updateWeightRecord(
+  record: WeightRecordV2
+): Promise<void> {
+  return trackDbOperation(
+    'update-weight-record',
+    async () => {
+      return executeTransaction(
+        WEIGHT_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい体重記録（V2）の削除
+export async function deleteWeightRecord(id: string): Promise<void> {
+  return trackDbOperation(
+    'delete-weight-record',
+    async () => {
+      return executeTransaction(
+        WEIGHT_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// V1→V2体重データ移行ユーティリティ
+export async function migrateWeightRecordsV1ToV2(): Promise<number> {
+  // 1. 既存のrecordsストアから体重関連データを取得
+  const allRecords = await getAllRecords();
+  // 2. weight系fieldIdのみ抽出
+  const weightFieldIds = ['weight', 'body_fat', 'waist', 'note'];
+  type GroupKey = string; // `${date}_${time}`
+  const grouped: Record<GroupKey, Partial<WeightRecordV2>> = {};
+  for (const rec of allRecords) {
+    if (!weightFieldIds.includes(rec.fieldId)) continue;
+    const key = `${rec.date}_${rec.time}`;
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: crypto.randomUUID(),
+        date: rec.date,
+        time: rec.time,
+      };
+    }
+    switch (rec.fieldId) {
+      case 'weight':
+        grouped[key].weight =
+          typeof rec.value === 'number' ? rec.value : undefined;
+        break;
+      case 'body_fat':
+        grouped[key].bodyFat = typeof rec.value === 'number' ? rec.value : null;
+        break;
+      case 'waist':
+        grouped[key].waist = typeof rec.value === 'number' ? rec.value : null;
+        break;
+      case 'note':
+        grouped[key].note = typeof rec.value === 'string' ? rec.value : null;
+        break;
+    }
+    if (rec.excludeFromGraph) grouped[key].excludeFromGraph = true;
+    if (rec.note && !grouped[key].note) grouped[key].note = rec.note;
+  }
+  // 3. weight必須でV2型に変換
+  const v2Records: WeightRecordV2[] = Object.values(grouped)
+    .filter(r => typeof r.weight === 'number' && r.date && r.time)
+    .map(r => ({
+      id: r.id!,
+      date: r.date!,
+      time: r.time!,
+      weight: r.weight!,
+      bodyFat: r.bodyFat ?? null,
+      waist: r.waist ?? null,
+      note: r.note ?? null,
+      excludeFromGraph: r.excludeFromGraph ?? false,
+    }));
+  // 4. 新ストアへ一括保存
+  for (const rec of v2Records) {
+    await addWeightRecord(rec);
+  }
+  return v2Records.length;
 }

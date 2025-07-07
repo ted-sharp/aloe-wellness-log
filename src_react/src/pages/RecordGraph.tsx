@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
@@ -10,8 +10,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
+import type { WeightRecordV2 } from '../types/record';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
@@ -91,29 +93,36 @@ const RecordGraph: React.FC = () => {
   // 体重フィールドIDを取得
   const weightField = fields.find(f => f.fieldId === 'weight');
 
-  // 最新データの日付を取得
+  // V2体重データ取得
+  const [weightRecords, setWeightRecords] = React.useState<WeightRecordV2[]>(
+    []
+  );
+  useEffect(() => {
+    getAllWeightRecords().then(setWeightRecords);
+  }, []);
+  // 最新データの日付を取得（V2体重のみ）
   const latestTimestamp = useMemo(() => {
-    if (!records.length) return null;
-    const filtered = records.filter(r => r.fieldId === 'weight' && r.datetime);
-    if (!filtered.length) return null;
-    return Math.max(...filtered.map(r => new Date(r.datetime).getTime()));
-  }, [records]);
-
-  // 期間に応じたデータを抽出
+    if (!weightRecords.length) return 0;
+    return Math.max(
+      ...weightRecords.map(r => new Date(`${r.date}T${r.time}`).getTime())
+    );
+  }, [weightRecords]);
+  // 期間に応じた体重データを抽出（V2体重のみ）
   const data = useMemo(() => {
-    const filtered = records
+    const filtered = weightRecords
       .filter(
         r =>
-          r.fieldId === 'weight' &&
-          typeof r.value === 'number' &&
-          (showExcluded || !r.excludeFromGraph) &&
-          r.datetime
+          typeof r.weight === 'number' && (showExcluded || !r.excludeFromGraph)
       )
-      .sort((a, b) => (a.datetime || '').localeCompare(b.datetime || ''));
+      .sort((a, b) => {
+        const adt = new Date(`${a.date}T${a.time}`).getTime();
+        const bdt = new Date(`${b.date}T${b.time}`).getTime();
+        return adt - bdt;
+      });
     let mapped = filtered.map(r => ({
-      datetime: r.datetime,
-      timestamp: new Date(r.datetime).getTime(),
-      value: Number(r.value),
+      datetime: `${r.date}T${r.time}`,
+      timestamp: new Date(`${r.date}T${r.time}`).getTime(),
+      value: Number(r.weight),
       excluded: !!r.excludeFromGraph,
     }));
     const period = PERIODS[periodIdx];
@@ -122,7 +131,7 @@ const RecordGraph: React.FC = () => {
       mapped = mapped.filter(d => d.timestamp >= from);
     }
     return mapped;
-  }, [records, periodIdx, latestTimestamp, showExcluded]);
+  }, [weightRecords, periodIdx, latestTimestamp, showExcluded]);
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {

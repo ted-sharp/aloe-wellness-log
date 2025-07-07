@@ -75,3 +75,15 @@ export type RecordError = {
   fieldId?: string;
   timestamp: string;
 };
+
+// 新しい体重記録（V2）型
+export type WeightRecordV2 = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  weight: number;
+  bodyFat?: number | null;
+  waist?: number | null;
+  note?: string | null;
+  excludeFromGraph?: boolean;
+};

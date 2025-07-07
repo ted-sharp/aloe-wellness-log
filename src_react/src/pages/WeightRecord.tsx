@@ -1,29 +1,18 @@
-import {
-  FloatingPortal,
-  flip,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useRole,
-} from '@floating-ui/react';
-import React, { useEffect, useMemo, useState } from 'react';
-import { FaEraser, FaTrophy } from 'react-icons/fa';
-import {
-  HiCheck,
-  HiNoSymbol,
-  HiSparkles,
-  HiTrash,
-  HiXMark,
-} from 'react-icons/hi2';
+import React, { useEffect, useState } from 'react';
+import { FaTrophy } from 'react-icons/fa';
+import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
+import {
+  addWeightRecord,
+  deleteWeightRecord,
+  getAllWeightRecords,
+  updateWeightRecord,
+} from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
-import { useRecordsStore } from '../store/records';
+import type { WeightRecordV2 } from '../types/record';
 
 // 共通キー定数を追加
 const SELECTED_DATE_KEY = 'shared_selected_date';
@@ -58,21 +47,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     const saved = localStorage.getItem(SELECTED_DATE_KEY);
     return saved ? new Date(saved) : today;
   });
-  const {
-    fields,
-    addRecord,
-    updateRecord,
-    deleteRecord,
-    records,
-    loadRecords,
-  } = useRecordsStore();
   const { goal, loadGoal } = useGoalStore();
-
-  // 新規項目追加用state
-  const [showAddField, setShowAddField] = useState(false);
-  const [newFieldName, setNewFieldName] = useState('');
-  const [newFieldUnit, setNewFieldUnit] = useState('');
-  const [addFieldError, setAddFieldError] = useState('');
 
   // 日付・時刻文字列
   const recordDate = formatDate(selectedDate);
@@ -80,7 +55,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   // その日付にfieldId==='weight'の記録が1つでもあればtrue
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
-    return records.some(r => r.date === d && r.fieldId === 'weight');
+    return weightRecords.some(r => r.date === d);
   };
 
   // newTimeのuseState初期値を現在時刻に
@@ -95,43 +70,42 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const [newWeight, setNewWeight] = useState('');
   const [newTime, setNewTime] = useState(getCurrentTimeString());
   const [newNote, setNewNote] = useState('');
+  const [newExcludeFromGraph, setNewExcludeFromGraph] = useState(false);
 
-  const numberFields = useMemo(
-    () =>
-      fields
-        .filter(
-          f => f.type === 'number' && f.scope === 'weight' && f.defaultDisplay
-        )
-        .slice()
-        .sort((a, b) => {
-          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-          return a.fieldId.localeCompare(b.fieldId);
-        }),
-    [fields]
+  const [weightRecords, setWeightRecords] = useState<WeightRecordV2[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // データ取得
+  useEffect(() => {
+    const fetchRecords = async () => {
+      setLoading(true);
+      const all = await getAllWeightRecords();
+      setWeightRecords(all);
+      setLoading(false);
+    };
+    fetchRecords();
+  }, []);
+
+  // recordsOfDayの定義をlatestWeightOfDayより前に移動
+  const recordsOfDay: WeightRecordV2[] = weightRecords.filter(
+    r => r.date === recordDate
   );
 
   // その日付の最新体重（記録があれば）
   const latestWeightOfDay = (() => {
-    const weightRecords = records
-      .filter(
-        r =>
-          r.fieldId === 'weight' &&
-          r.date === recordDate &&
-          typeof r.value === 'number'
-      )
-      .sort((a, b) => (b.time || '').localeCompare(a.time || ''));
-    return weightRecords.length > 0 ? Number(weightRecords[0].value) : null;
+    if (recordsOfDay.length === 0) return null;
+    const sorted = [...recordsOfDay].sort((a, b) =>
+      (b.time || '').localeCompare(a.time || '')
+    );
+    return sorted.length > 0 ? Number(sorted[0].weight) : null;
   })();
+
   // BMI計算
   const bmi =
     latestWeightOfDay && goal && goal.height
       ? latestWeightOfDay / Math.pow(goal.height / 100, 2)
       : null;
-
-  // bmiをnumber型で保証する変数
   const safeBmi = typeof bmi === 'number' && !isNaN(bmi) ? bmi : 0;
-
-  // BMIインジケーター定義（6段階）
   const bmiBands = [
     { min: 0, max: 18.5, color: '#6ec6f1', label: '低体重', range: '<18.5' },
     {
@@ -164,8 +138,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     },
     { min: 40, max: 100, color: '#f44336', label: '肥満(4度)', range: '40.0+' },
   ];
-
-  // マーカー位置計算
   const markerLeft = (() => {
     if (bmi === null) return 0;
     let total = 0;
@@ -180,17 +152,12 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     }
     return 100;
   })();
-
-  // BMIカウントアップ用state
   const [animatedBmi, setAnimatedBmi] = useState(0);
-
-  // BMIカウントアップアニメーション
   useEffect(() => {
     if (typeof bmi !== 'number' || isNaN(bmi)) return;
     const start = 0;
     const duration = 800; // ms
     const startTime = performance.now();
-
     function animate(now: number) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -204,8 +171,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     requestAnimationFrame(animate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeBmi]);
-
-  // 体重差分カウントアップ用state
   const [animatedDiff, setAnimatedDiff] = useState(0);
   useEffect(() => {
     if (
@@ -252,20 +217,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
 
   // スパークル定型文ドロップダウン用 floating-ui
   const [open, setOpen] = useState(false);
-  const { refs, floatingStyles, context } = useFloating({
-    open,
-    onOpenChange: setOpen,
-    middleware: [offset(6), flip(), shift()],
-    placement: 'bottom-end',
-  });
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
-  const role = useRole(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-    role,
-  ]);
+  // floating-uiの分割代入は未使用のため削除
 
   // DatePickerBarに渡す直前
   useEffect(() => {
@@ -282,6 +234,39 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     const [h, m] = timeStr.split(':').map(Number);
     d.setHours(h || 0, m || 0, 0, 0);
     return formatLocalDateTime(d);
+  };
+
+  const handleAdd = async () => {
+    if (!newWeight) return;
+    const rec: WeightRecordV2 = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      date: recordDate,
+      time: newTime,
+      weight: Number(newWeight),
+      note: newNote || null,
+      excludeFromGraph: newExcludeFromGraph,
+    };
+    await addWeightRecord(rec);
+    setNewWeight('');
+    setNewNote('');
+    setNewExcludeFromGraph(false);
+    setNewTime(getCurrentTimeString());
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
+    if (showTipsModal) showTipsModal();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('本当に削除しますか？')) return;
+    await deleteWeightRecord(id);
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
+  };
+
+  const handleUpdate = async (rec: WeightRecordV2) => {
+    await updateWeightRecord(rec);
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
   };
 
   return (
@@ -420,343 +405,129 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
       )}
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
         <div className="flex flex-col gap-6 w-full max-w-md">
-          {numberFields.map(field => {
-            // 同日・同項目の全記録を取得
-            const recordsOfDay = records
-              .filter(r => r.fieldId === field.fieldId && r.date === recordDate)
-              .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-
-            return (
-              <div
-                key={field.fieldId}
-                className="flex flex-col gap-4 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4"
-              >
-                <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em] mb-2">
-                  {field.name}
-                </span>
-                {/* 既存記録リスト */}
-                {recordsOfDay.length > 0 &&
-                  recordsOfDay.map(rec => {
-                    return (
-                      <div
-                        key={rec.id}
-                        className="flex flex-col gap-1 w-full relative"
-                      >
-                        {/* 1行目: 時刻・体重・操作ボタン群 */}
-                        <div className="flex items-center gap-2 w-full">
-                          <input
-                            type="time"
-                            className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
-                            defaultValue={rec.time || '08:00'}
-                            onBlur={async e => {
-                              if (e.target.value !== rec.time) {
-                                await updateRecord({
-                                  ...rec,
-                                  time: e.target.value,
-                                  datetime: buildDateTimeString(
-                                    rec.date,
-                                    e.target.value
-                                  ),
-                                });
-                                await loadRecords();
-                              }
-                            }}
-                          />
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            step="0.1"
-                            min="0"
-                            className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
-                            defaultValue={
-                              typeof rec.value === 'string' ||
-                              typeof rec.value === 'number'
-                                ? rec.value
-                                : ''
-                            }
-                            onBlur={async e => {
-                              if (Number(e.target.value) !== rec.value) {
-                                await updateRecord({
-                                  ...rec,
-                                  value: Number(e.target.value),
-                                  datetime: buildDateTimeString(
-                                    rec.date,
-                                    rec.time || '00:00'
-                                  ),
-                                });
-                                await loadRecords();
-                              }
-                            }}
-                            data-testid="weight-input"
-                          />
-                          <div className="flex gap-1 ml-auto">
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              icon={HiTrash}
-                              aria-label="削除"
-                              onClick={async () => {
-                                if (window.confirm('本当に削除しますか？')) {
-                                  await deleteRecord(rec.id);
-                                  await loadRecords();
-                                }
-                              }}
-                              children=""
-                            />
-                            <Button
-                              variant={
-                                rec.excludeFromGraph === true
-                                  ? 'secondary'
-                                  : 'sky'
-                              }
-                              size="sm"
-                              aria-label={
-                                rec.excludeFromGraph === true
-                                  ? 'グラフ除外'
-                                  : 'グラフ表示'
-                              }
-                              onClick={async () => {
-                                await updateRecord({
-                                  ...rec,
-                                  excludeFromGraph: !rec.excludeFromGraph,
-                                });
-                                await loadRecords();
-                              }}
-                            >
-                              <span className="relative inline-block w-5 h-5">
-                                <PiChartLineDown className="w-5 h-5 text-white" />
-                                {rec.excludeFromGraph === true && (
-                                  <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                )}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                        {/* 2行目: note欄 */}
-                        <textarea
-                          className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full mt-1"
-                          rows={1}
-                          defaultValue={rec.note || ''}
-                          onBlur={async e => {
-                            if ((e.target.value || '') !== (rec.note || '')) {
-                              await updateRecord({
-                                ...rec,
-                                note: e.target.value,
-                              });
-                              await loadRecords();
-                            }
-                          }}
-                          placeholder="補足・メモ（任意）"
-                        />
-                      </div>
-                    );
-                  })}
-                {/* 新規追加欄 */}
-                <div className="flex flex-col gap-1 w-full mt-2">
-                  <div className="flex items-center gap-2 w-full">
-                    <input
-                      type="time"
-                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
-                      value={newTime}
-                      onChange={e => setNewTime(e.target.value)}
-                    />
-                    {/* 朝のマーク（7:00セット）ボタン */}
-                    <button
-                      type="button"
-                      className="ml-1 w-12 h-10 min-w-0 min-h-0 p-0 inline-flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm overflow-hidden"
-                      title="朝7時にセット"
-                      aria-label="朝7時にセット"
-                      onClick={() => setNewTime('07:00')}
-                    >
-                      <TbSunrise className="w-6 h-6" />
-                    </button>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.1"
-                      min="0"
-                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
-                      value={newWeight}
-                      onChange={e => setNewWeight(e.target.value)}
-                      placeholder={
-                        field.unit ? `例: 0.0 (${field.unit})` : '例: 0.0'
-                      }
-                    />
-                    <Button
-                      variant="success"
-                      size="sm"
-                      icon={HiCheck}
-                      aria-label="保存"
-                      className="ml-auto"
-                      onClick={async () => {
-                        if (!newWeight) return;
-                        await addRecord({
-                          id: `${Date.now()}-${Math.random()
-                            .toString(36)
-                            .substr(2, 9)}`,
-                          fieldId: field.fieldId,
-                          value: Number(newWeight),
-                          date: recordDate,
-                          time: newTime,
-                          datetime: buildDateTimeString(selectedDate, newTime),
-                          note: newNote,
-                        });
-                        setNewWeight('');
-                        setNewTime(getCurrentTimeString());
-                        setNewNote('');
-                        await loadRecords();
-                        const disableTips =
-                          localStorage.getItem('disableTips') === '1';
-                        // 本日TIPS表示済みかチェック
-                        const today = new Date();
-                        const yyyy = today.getFullYear();
-                        const mm = String(today.getMonth() + 1).padStart(
-                          2,
-                          '0'
-                        );
-                        const dd = String(today.getDate()).padStart(2, '0');
-                        const todayStr = `${yyyy}-${mm}-${dd}`;
-                        const lastTipsDate =
-                          localStorage.getItem('lastTipsDate');
-                        if (
-                          !disableTips &&
-                          lastTipsDate !== todayStr &&
-                          showTipsModal
-                        )
-                          showTipsModal();
-                      }}
-                      data-testid="save-btn"
-                    >
-                      {''}
-                    </Button>
-                  </div>
-                  <div className="relative w-full mt-1">
-                    <textarea
-                      className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-16"
-                      rows={1}
-                      value={newNote}
-                      onChange={e => setNewNote(e.target.value)}
-                      placeholder="補足・メモ（任意）"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                      <div className="relative group">
-                        <div
-                          ref={refs.setReference}
-                          {...getReferenceProps({})}
-                          className="w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-                          tabIndex={0}
-                          aria-label="定型文を挿入"
-                          onClick={() => setOpen(v => !v)}
-                        >
-                          <HiSparkles className="w-6 h-6" />
-                        </div>
-                        {open && (
-                          <FloatingPortal>
-                            <div
-                              ref={refs.setFloating}
-                              style={floatingStyles}
-                              {...getFloatingProps({
-                                className:
-                                  'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[120px] py-1',
-                              })}
-                            >
-                              {[
-                                '朝一',
-                                '朝食後',
-                                '昼食前',
-                                '昼食後',
-                                '夕食前',
-                                '夕食後',
-                                '運動後',
-                              ].map(option => (
-                                <button
-                                  key={option}
-                                  type="button"
-                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                                  onClick={() => {
-                                    setNewNote(
-                                      newNote ? newNote + ' ' + option : option
-                                    );
-                                    setOpen(false);
-                                  }}
-                                >
-                                  {option}
-                                </button>
-                              ))}
-                            </div>
-                          </FloatingPortal>
-                        )}
-                      </div>
-                      <div
-                        className="w-6 h-6 flex items-center justify-center text-pink-300 hover:text-pink-500 transition-colors duration-150 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-                        tabIndex={0}
-                        aria-label="メモを消去（消しゴム）"
-                        onClick={() => setNewNote('')}
-                      >
-                        <FaEraser className="w-6 h-6" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          {recordsOfDay.map(rec => (
+            <div
+              key={rec.id}
+              className="flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4"
+            >
+              <div className="flex items-center gap-2 w-full">
+                <input
+                  type="time"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
+                  value={rec.time}
+                  onChange={e => handleUpdate({ ...rec, time: e.target.value })}
+                />
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
+                  value={rec.weight}
+                  onChange={e =>
+                    handleUpdate({ ...rec, weight: Number(e.target.value) })
+                  }
+                  placeholder="体重(kg)"
+                />
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon={HiTrash}
+                  aria-label="削除"
+                  onClick={() => handleDelete(rec.id)}
+                >
+                  {''}
+                </Button>
+                <Button
+                  variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
+                  size="sm"
+                  aria-label={
+                    rec.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'
+                  }
+                  onClick={() =>
+                    handleUpdate({
+                      ...rec,
+                      excludeFromGraph: !rec.excludeFromGraph,
+                    })
+                  }
+                >
+                  {''}
+                  <span className="relative inline-block w-5 h-5">
+                    <PiChartLineDown className="w-5 h-5 text-white" />
+                    {rec.excludeFromGraph && (
+                      <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    )}
+                  </span>
+                </Button>
               </div>
-            );
-          })}
+              <textarea
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full mt-1"
+                value={rec.note ?? ''}
+                onChange={e => handleUpdate({ ...rec, note: e.target.value })}
+                placeholder="補足・メモ（任意）"
+              />
+            </div>
+          ))}
         </div>
         {/* 新規項目追加ボタンとフォーム（編集モード時のみ） */}
-        {showAddField && (
-          <div className="w-full max-w-md mt-6 mb-2">
-            <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+        <div className="w-full max-w-md mt-6 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2 w-full">
               <input
-                type="text"
-                value={newFieldName}
-                onChange={e => setNewFieldName(e.target.value)}
-                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="新しい項目名"
-                maxLength={20}
+                type="time"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
+                value={newTime}
+                onChange={e => setNewTime(e.target.value)}
               />
+              <button
+                type="button"
+                className="ml-1 w-12 h-10 min-w-0 min-h-0 p-0 inline-flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm overflow-hidden"
+                title="朝7時にセット"
+                aria-label="朝7時にセット"
+                onClick={() => setNewTime('07:00')}
+              >
+                <TbSunrise className="w-6 h-6" />
+              </button>
               <input
-                type="text"
-                value={newFieldUnit}
-                onChange={e => setNewFieldUnit(e.target.value)}
-                className="w-20 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="単位"
-                maxLength={10}
+                type="number"
+                inputMode="decimal"
+                step="0.1"
+                min="0"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[7em]"
+                value={newWeight}
+                onChange={e => setNewWeight(e.target.value)}
+                placeholder="体重(kg)"
               />
               <Button
-                variant="primary"
-                size="md"
+                variant="success"
+                size="sm"
                 icon={HiCheck}
                 aria-label="保存"
-                onClick={async () => {
-                  setShowAddField(false);
-                  setNewFieldName('');
-                  setNewFieldUnit('');
-                  setAddFieldError('');
-                }}
-                disabled={!newFieldName.trim()}
-              >
-                {''}
-              </Button>
-              <Button
-                variant="secondary"
-                size="md"
-                icon={HiXMark}
-                aria-label="キャンセル"
-                onClick={() => {
-                  setShowAddField(false);
-                  setNewFieldName('');
-                  setNewFieldUnit('');
-                  setAddFieldError('');
-                }}
+                className="ml-auto"
+                onClick={handleAdd}
+                data-testid="save-btn"
               >
                 {''}
               </Button>
             </div>
-            {addFieldError && (
-              <div className="text-red-500 text-sm mt-1">{addFieldError}</div>
-            )}
+            <div className="relative w-full mt-1">
+              <textarea
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-16"
+                rows={1}
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder="補足・メモ（任意）"
+              />
+              <label className="flex items-center gap-1 ml-2">
+                <input
+                  type="checkbox"
+                  checked={newExcludeFromGraph}
+                  onChange={e => setNewExcludeFromGraph(e.target.checked)}
+                />
+                <span className="text-xs">グラフ除外</span>
+              </label>
+            </div>
           </div>
-        )}
+        </div>
         {/* 体重測定タイミングの注意事項（カード直下・隙間最小） */}
         <div className="w-full max-w-md mx-auto mb-2 px-4">
           <div className="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400 text-yellow-800 dark:text-yellow-100 p-3 rounded shadow-sm text-sm text-left">
