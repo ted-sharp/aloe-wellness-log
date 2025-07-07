@@ -11,6 +11,8 @@ const FIELDS_STORE = 'fields';
 const GOAL_STORE = 'goal';
 const WEIGHT_RECORDS_STORE = 'weight_records';
 const BP_RECORDS_STORE = 'bp_records';
+const DAILY_RECORDS_STORE = 'daily_records';
+const DAILY_FIELDS_STORE = 'daily_fields';
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 1000; // 1秒
 
@@ -246,6 +248,12 @@ export function openDb(): Promise<IDBDatabase> {
             });
             bpStore.createIndex('dateIndex', 'date', { unique: false });
             bpStore.createIndex('fieldIdIndex', 'fieldId', { unique: false });
+          }
+          if (!db.objectStoreNames.contains(DAILY_RECORDS_STORE)) {
+            db.createObjectStore(DAILY_RECORDS_STORE, { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains(DAILY_FIELDS_STORE)) {
+            db.createObjectStore(DAILY_FIELDS_STORE, { keyPath: 'fieldId' });
           }
         };
 
@@ -999,4 +1007,236 @@ export async function deleteBpRecord(id: string): Promise<void> {
     },
     1
   );
+}
+
+// 新しい日課レコードの追加
+export async function addDailyRecord(
+  record: import('../types/record').DailyRecordV2
+): Promise<void> {
+  return trackDbOperation(
+    'add-daily-record',
+    async () => {
+      return executeTransaction(
+        DAILY_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい日課レコードの全件取得
+export async function getAllDailyRecords(): Promise<
+  import('../types/record').DailyRecordV2[]
+> {
+  return trackDbOperation('get-all-daily-records', async () => {
+    return executeTransaction(
+      DAILY_RECORDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<import('../types/record').DailyRecordV2[]>(
+          (resolve, reject) => {
+            const request = objectStore.getAll();
+            request.onsuccess = () => {
+              const data = request.result;
+              if (Array.isArray(data)) {
+                resolve(data as import('../types/record').DailyRecordV2[]);
+              } else {
+                resolve([]);
+              }
+            };
+            request.onerror = () => reject(classifyDbError(request.error));
+          }
+        );
+      }
+    );
+  });
+}
+
+// 新しい日課レコードの更新
+export async function updateDailyRecord(
+  record: import('../types/record').DailyRecordV2
+): Promise<void> {
+  return trackDbOperation(
+    'update-daily-record',
+    async () => {
+      return executeTransaction(
+        DAILY_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(record);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい日課レコードの削除
+export async function deleteDailyRecord(id: string): Promise<void> {
+  return trackDbOperation(
+    'delete-daily-record',
+    async () => {
+      return executeTransaction(
+        DAILY_RECORDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい日課フィールドの追加
+export async function addDailyField(
+  field: import('../types/record').DailyFieldV2
+): Promise<void> {
+  return trackDbOperation(
+    'add-daily-field',
+    async () => {
+      return executeTransaction(
+        DAILY_FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(field);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい日課フィールドの全件取得
+export async function getAllDailyFields(): Promise<
+  import('../types/record').DailyFieldV2[]
+> {
+  return trackDbOperation('get-all-daily-fields', async () => {
+    return executeTransaction(
+      DAILY_FIELDS_STORE,
+      'readonly',
+      async (_transaction, store) => {
+        const objectStore = store as IDBObjectStore;
+        return new Promise<import('../types/record').DailyFieldV2[]>(
+          (resolve, reject) => {
+            const request = objectStore.getAll();
+            request.onsuccess = () => {
+              const data = request.result;
+              if (Array.isArray(data)) {
+                resolve(data as import('../types/record').DailyFieldV2[]);
+              } else {
+                resolve([]);
+              }
+            };
+            request.onerror = () => reject(classifyDbError(request.error));
+          }
+        );
+      }
+    );
+  });
+}
+
+// 新しい日課フィールドの更新
+export async function updateDailyField(
+  field: import('../types/record').DailyFieldV2
+): Promise<void> {
+  return trackDbOperation(
+    'update-daily-field',
+    async () => {
+      return executeTransaction(
+        DAILY_FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.put(field);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 新しい日課フィールドの削除
+export async function deleteDailyField(fieldId: string): Promise<void> {
+  return trackDbOperation(
+    'delete-daily-field',
+    async () => {
+      return executeTransaction(
+        DAILY_FIELDS_STORE,
+        'readwrite',
+        async (_transaction, store) => {
+          const objectStore = store as IDBObjectStore;
+          return new Promise<void>((resolve, reject) => {
+            const request = objectStore.delete(fieldId);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(classifyDbError(request.error));
+          });
+        }
+      );
+    },
+    1
+  );
+}
+
+// 日課データV1→V2移行
+export async function migrateDailyRecordsV1ToV2(): Promise<number> {
+  // 1. 既存のrecordsストアから日課関連データを取得
+  const allRecords = await getAllRecords();
+  // 2. daily系fieldIdのみ抽出（boolean/number型でscope: 'daily'のもの）
+  const allFields = await getAllFields();
+  const dailyFieldIds = allFields
+    .filter(f => f.scope === 'daily')
+    .map(f => f.fieldId);
+  // 3. V2型に変換
+  const v2Records = allRecords
+    .filter(r => dailyFieldIds.includes(r.fieldId))
+    .map(r => ({
+      id: r.id,
+      date: r.date,
+      fieldId: r.fieldId,
+      value:
+        typeof r.value === 'boolean' ? (r.value ? 1 : 0) : Number(r.value) || 0,
+    }));
+  // 4. V2フィールドも移行
+  const v2Fields = allFields
+    .filter(f => f.scope === 'daily')
+    .map(f => ({
+      fieldId: f.fieldId,
+      name: f.name,
+      order: f.order ?? 0,
+      display: f.defaultDisplay !== false,
+    }));
+  // 5. 新ストアへ一括保存
+  for (const f of v2Fields) await addDailyField(f);
+  for (const r of v2Records) await addDailyRecord(r);
+  return v2Records.length;
 }

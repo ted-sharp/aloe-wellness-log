@@ -98,3 +98,19 @@ export type BpRecordV2 = {
   heartRate?: number | null; // 心拍数（任意）
   note?: string | null;
 };
+
+// 新しい日課レコード型（V2）
+export type DailyRecordV2 = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  fieldId: string;
+  value: number;
+};
+
+// 新しい日課フィールド型（V2）
+export type DailyFieldV2 = {
+  fieldId: string;
+  name: string;
+  order: number;
+  display: boolean;
+};
