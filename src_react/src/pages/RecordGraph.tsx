@@ -36,7 +36,7 @@ interface TooltipItem {
 
 const RecordGraph: React.FC = () => {
   const { fields } = useRecordsStore();
-  const { goal } = useGoalStore();
+  const { goal, loadGoal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
   const [dailyRecords, setDailyRecords] = React.useState<DailyRecordV2[]>([]);
@@ -257,6 +257,10 @@ const RecordGraph: React.FC = () => {
   useEffect(() => {
     getAllDailyRecords().then(setDailyRecords);
   }, []);
+
+  useEffect(() => {
+    loadGoal();
+  }, [loadGoal]);
 
   return (
     <div
