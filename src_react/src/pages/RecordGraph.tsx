@@ -258,7 +258,7 @@ const RecordGraph: React.FC = () => {
     let success = 0;
     dateList.forEach(date => {
       const status = dailyStatus[date];
-      if (typeof status?.[key] === 'boolean') {
+      if (status && typeof status[key] === 'boolean') {
         total++;
         if (status[key]) success++;
       }

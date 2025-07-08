@@ -717,21 +717,27 @@ const DailyRecord: React.FC = () => {
                   stats={stats}
                   onAchieve={async () => {
                     if (value === true) {
+                      // 達成状態なら未入力（記録削除）
                       const rec = getBoolRecord(field.fieldId);
                       if (rec) {
                         await deleteDailyRecord(rec.id);
+                        await loadRecords();
                       }
                     } else {
+                      // 未入力または未達なら達成（value=1）
                       await handleBoolInput(field.fieldId, true);
                     }
                   }}
                   onUnachieve={async () => {
                     if (value === false) {
+                      // 未達状態なら未入力（記録削除）
                       const rec = getBoolRecord(field.fieldId);
                       if (rec) {
                         await deleteDailyRecord(rec.id);
+                        await loadRecords();
                       }
                     } else {
+                      // 未入力または達成なら未達（value=0）
                       await handleBoolInput(field.fieldId, false);
                     }
                   }}
