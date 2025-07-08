@@ -10,10 +10,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { getAllWeightRecords } from '../db/indexedDb';
+import { getAllDailyRecords, getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
-import type { WeightRecordV2 } from '../types/record';
+import type { DailyRecordV2, WeightRecordV2 } from '../types/record';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
@@ -85,10 +85,11 @@ function GraphAchievementItem({
 }
 
 const RecordGraph: React.FC = () => {
-  const { records, fields } = useRecordsStore();
+  const { fields } = useRecordsStore();
   const { goal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
+  const [dailyRecords, setDailyRecords] = React.useState<DailyRecordV2[]>([]);
 
   // 体重フィールドIDを取得
   const weightField = fields.find(f => f.fieldId === 'weight');
@@ -231,24 +232,20 @@ const RecordGraph: React.FC = () => {
 
   // 日付ごとの運動・減食・睡眠達成状況を抽出
   const dailyStatus = useMemo(() => {
-    // { 'YYYY-MM-DD': { exercise: true/false, meal: true/false, sleep: true/false } }
     const statusMap: Record<
       string,
       { exercise: boolean; meal: boolean; sleep: boolean }
     > = {};
-    records.forEach(r => {
+    dailyRecords.forEach(r => {
       if (!['exercise', 'meal', 'sleep'].includes(r.fieldId)) return;
       const date = r.date;
       if (!statusMap[date])
         statusMap[date] = { exercise: false, meal: false, sleep: false };
-      if (typeof r.value === 'boolean')
-        statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||= r.value;
-      if (typeof r.value === 'number')
-        statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||=
-          !!r.value;
+      statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||=
+        r.value === 1;
     });
     return statusMap;
-  }, [records]);
+  }, [dailyRecords]);
 
   type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
@@ -272,28 +269,36 @@ const RecordGraph: React.FC = () => {
 
   // 日課達成率計算用
   const getPeriodDateList = () => {
-    if (!records.length) return [];
+    if (!dailyRecords.length) return [];
     let fromDate: Date | null = null;
     let toDate: Date | null = null;
     if (PERIODS[periodIdx].days && latestTimestamp) {
       toDate = new Date(latestTimestamp);
       fromDate = new Date(latestTimestamp);
       fromDate.setDate(toDate.getDate() - PERIODS[periodIdx].days + 1);
+    } else if (dailyRecords.length > 0) {
+      // 全データの場合は記録の最初と最後
+      const sorted = [...dailyRecords].sort((a, b) =>
+        a.date.localeCompare(b.date)
+      );
+      fromDate = new Date(sorted[0].date);
+      toDate = new Date(sorted[sorted.length - 1].date);
     }
-    // 全データの場合は記録の最初と最後
     if (!fromDate || !toDate) {
       return [];
     }
     const list: string[] = [];
-    const d = new Date(fromDate);
-    while (d <= toDate) {
-      list.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-          2,
-          '0'
-        )}-${String(d.getDate()).padStart(2, '0')}`
-      );
-      d.setDate(d.getDate() + 1);
+    if (fromDate && toDate) {
+      const d = new Date(fromDate);
+      while (d <= toDate) {
+        list.push(
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+            2,
+            '0'
+          )}-${String(d.getDate()).padStart(2, '0')}`
+        );
+        d.setDate(d.getDate() + 1);
+      }
     }
     return list;
   };
@@ -315,6 +320,10 @@ const RecordGraph: React.FC = () => {
       percent: total > 0 ? Math.round((success / total) * 100) : 0,
     };
   };
+
+  useEffect(() => {
+    getAllDailyRecords().then(setDailyRecords);
+  }, []);
 
   return (
     <div
@@ -422,46 +431,43 @@ const RecordGraph: React.FC = () => {
                           { key: 'sleep', label: '🛌' },
                         ];
                         return statusList.map(({ key, label }) => {
-                          const rec = records.find(
+                          const rec = dailyRecords.find(
                             r => r.fieldId === key && r.date === dateStr
                           );
                           if (rec === undefined) return null; // 入力がなければ非表示
-                          if (typeof rec.value === 'boolean') {
-                            return (
-                              <span
-                                key={key}
-                                style={{
-                                  marginRight: 8,
-                                  verticalAlign: 'middle',
-                                  fontSize: '1.1em',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                {label}
-                                {rec.value ? (
-                                  <HiCheck
-                                    style={{
-                                      color: '#38bdf8',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                ) : (
-                                  <HiXMark
-                                    style={{
-                                      color: '#bbb',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                )}
-                              </span>
-                            );
-                          }
-                          return null;
+                          return (
+                            <span
+                              key={key}
+                              style={{
+                                marginRight: 8,
+                                verticalAlign: 'middle',
+                                fontSize: '1.1em',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              {label}
+                              {rec.value === 1 ? (
+                                <HiCheck
+                                  style={{
+                                    color: '#38bdf8',
+                                    fontSize: '1.3em',
+                                    marginLeft: 2,
+                                    verticalAlign: 'middle',
+                                  }}
+                                />
+                              ) : (
+                                <HiXMark
+                                  style={{
+                                    color: '#bbb',
+                                    fontSize: '1.3em',
+                                    marginLeft: 2,
+                                    verticalAlign: 'middle',
+                                  }}
+                                />
+                              )}
+                            </span>
+                          );
                         });
                       })()}
                     </div>
