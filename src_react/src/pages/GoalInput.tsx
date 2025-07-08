@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { HiSparkles } from 'react-icons/hi2';
 import Button from '../components/Button';
+import { getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
 import { useRecordsStore } from '../store/records';
 
@@ -127,6 +128,7 @@ export default function GoalInput() {
   const sleepExampleRef = useRef<HTMLDivElement | null>(null);
   const smokingExampleRef = useRef<HTMLDivElement | null>(null);
   const alcoholExampleRef = useRef<HTMLDivElement | null>(null);
+  const [latestWeight, setLatestWeight] = useState<number | null>(null);
 
   // --- スパークル定型文ドロップダウン ---
   const exerciseSparkle = useSparkleDropdown();
@@ -134,6 +136,23 @@ export default function GoalInput() {
   const sleepSparkle = useSparkleDropdown();
   const smokingSparkle = useSparkleDropdown();
   const alcoholSparkle = useSparkleDropdown();
+
+  useEffect(() => {
+    // V2体重データから最新体重を取得
+    getAllWeightRecords().then(records => {
+      if (records.length > 0) {
+        // 日付+時刻で降順ソート
+        const sorted = [...records].sort((a, b) => {
+          const adt = new Date(`${a.date}T${a.time}`).getTime();
+          const bdt = new Date(`${b.date}T${b.time}`).getTime();
+          return bdt - adt;
+        });
+        setLatestWeight(sorted[0].weight);
+      } else {
+        setLatestWeight(null);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     loadGoal().then(() => {
@@ -161,7 +180,7 @@ export default function GoalInput() {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [latestWeight]);
 
   useEffect(() => {
     if (goal) {
@@ -184,7 +203,7 @@ export default function GoalInput() {
       setSmokingGoal(goal.smokingGoal || '');
       setAlcoholGoal(goal.alcoholGoal || '');
     }
-  }, [goal]);
+  }, [goal, latestWeight]);
 
   const validate = () => {
     if (
@@ -278,19 +297,6 @@ export default function GoalInput() {
   const yearFromAge = (age: number) => (currentYear - age).toString();
   // 身長の+5/-5
   const heightNum = Number(height) || 170;
-
-  // 最新体重取得
-  const latestWeight = (() => {
-    const weightRecords = records
-      .filter(r => r.fieldId === 'weight' && typeof r.value === 'number')
-      .sort((a, b) => {
-        // datetime優先、なければdate+time降順
-        const adt = a.datetime || `${a.date}T${a.time}`;
-        const bdt = b.datetime || `${b.date}T${b.time}`;
-        return bdt.localeCompare(adt);
-      });
-    return weightRecords.length > 0 ? Number(weightRecords[0].value) : null;
-  })();
 
   // フォーム外クリックでポップアップを閉じる処理（useEffectで）
   useEffect(() => {
