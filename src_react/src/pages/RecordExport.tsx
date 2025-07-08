@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   HiArrowDownTray,
-  HiCalendarDays,
   HiChartBarSquare,
   HiDocument,
   HiExclamationTriangle,
@@ -16,10 +15,14 @@ import {
   SuccessMessage,
 } from '../components/StatusMessage';
 import {
+  addBpRecord,
   addDailyField,
   addDailyRecord,
+  addWeightRecord,
+  getAllBpRecords,
   getAllDailyFields,
   getAllDailyRecords,
+  getAllWeightRecords,
   migrateDailyRecordsV1ToV2,
   migrateWeightRecordsV1ToV2,
 } from '../db/indexedDb';
@@ -101,13 +104,51 @@ export default function RecordExport({
   // エラーテスト用の状態
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
-  // 既存データのdatetime一括修正
-  const [fixStatus, setFixStatus] = useState<string | null>(null);
-  const [isFixing, setIsFixing] = useState(false);
-
   // 日課データ移行処理
   const [migrateStatus, setMigrateStatus] = useState<string | null>(null);
   const [isMigrating, setIsMigrating] = useState(false);
+
+  // 体重・日課・血圧レコード数
+  const [weightCount, setWeightCount] = useState<number>(0);
+  const [dailyCount, setDailyCount] = useState<number>(0);
+  const [bpCount, setBpCount] = useState<number>(0);
+  // 期間（最小・最大日付）
+  const [weightPeriod, setWeightPeriod] = useState<string>('');
+  const [dailyPeriod, setDailyPeriod] = useState<string>('');
+  const [bpPeriod, setBpPeriod] = useState<string>('');
+
+  useEffect(() => {
+    // 体重
+    getAllWeightRecords().then(recs => {
+      setWeightCount(recs.length);
+      if (recs.length > 0) {
+        const dates = recs.map(r => r.date).sort();
+        setWeightPeriod(`${dates[0]} 〜 ${dates[dates.length - 1]}`);
+      } else {
+        setWeightPeriod('データなし');
+      }
+    });
+    // 日課
+    getAllDailyRecords().then(recs => {
+      setDailyCount(recs.length);
+      if (recs.length > 0) {
+        const dates = recs.map(r => r.date).sort();
+        setDailyPeriod(`${dates[0]} 〜 ${dates[dates.length - 1]}`);
+      } else {
+        setDailyPeriod('データなし');
+      }
+    });
+    // 血圧
+    getAllBpRecords().then(recs => {
+      setBpCount(recs.length);
+      if (recs.length > 0) {
+        const dates = recs.map(r => r.date).sort();
+        setBpPeriod(`${dates[0]} 〜 ${dates[dates.length - 1]}`);
+      } else {
+        setBpPeriod('データなし');
+      }
+    });
+  }, []);
 
   // エラーテスト用: レンダリング時にエラーを投げる
   if (errorToThrow) {
@@ -411,153 +452,6 @@ export default function RecordExport({
     }
   };
 
-  // テストデータ生成関数
-  const generateTestData = async () => {
-    setTestDataStatus('テストデータを生成中...');
-    setIsGeneratingTestData(true);
-    setTestDataProgress(0);
-
-    try {
-      await loadFields(); // 最新の項目を取得
-
-      // defaultDisplay===falseの項目は除外
-      const visibleFields = fields.filter(f => f.defaultDisplay !== false);
-
-      if (visibleFields.length === 0) {
-        throw new Error(
-          '表示対象のフィールドが存在しません。初期化してください。'
-        );
-      }
-
-      const dataCount = 100; // 生成するデータ数
-      const daysBack = 180; // 過去6か月分（約180日）
-      let createdCount = 0;
-
-      for (let i = 0; i < dataCount; i++) {
-        // ランダムな日付を生成（過去30日以内）
-        const randomDaysAgo = Math.floor(Math.random() * daysBack);
-        const date = new Date();
-        date.setDate(date.getDate() - randomDaysAgo);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
-
-        // ランダムな時刻を生成
-        const hours = Math.floor(Math.random() * 24);
-        const minutes = Math.floor(Math.random() * 60);
-        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes
-          .toString()
-          .padStart(2, '0')}`;
-        const datetimeStr = `${dateStr}T${timeStr}:00`;
-
-        // ランダムな項目を選択（visibleFieldsのみ対象）
-        const randomField =
-          visibleFields[Math.floor(Math.random() * visibleFields.length)];
-
-        // 項目の型に応じてランダムな値を生成
-        let value: string | number | boolean;
-
-        if (randomField.type === 'boolean') {
-          value = Math.random() > 0.5;
-        } else if (randomField.type === 'number') {
-          // 項目に応じて適切な数値範囲を設定
-          if (randomField.fieldId === 'weight') {
-            value = Math.round((50 + Math.random() * 50) * 10) / 10; // 50-100kg
-          } else if (randomField.fieldId === 'systolic_bp') {
-            value = Math.round(90 + Math.random() * 60); // 90-150mmHg
-          } else if (randomField.fieldId === 'diastolic_bp') {
-            value = Math.round(60 + Math.random() * 40); // 60-100mmHg
-          } else if (randomField.fieldId === 'heart_rate') {
-            value = Math.round(60 + Math.random() * 60); // 60-120bpm
-          } else if (randomField.fieldId === 'body_temperature') {
-            value = Math.round((35.5 + Math.random() * 2) * 10) / 10; // 35.5-37.5℃
-          } else {
-            value = Math.round(Math.random() * 100 * 10) / 10; // デフォルト: 0-100
-          }
-        } else {
-          // string型の場合
-          if (randomField.fieldId === 'notes') {
-            const sampleNotes = [
-              'Feeling good today',
-              'A bit tired',
-              'Refreshed after exercise',
-              'Food was delicious',
-              'Want to sleep early',
-              'Great weather, feeling refreshed',
-              'Busy day at work',
-              'Nice weekend break',
-              '',
-            ];
-            value = sampleNotes[Math.floor(Math.random() * sampleNotes.length)];
-          } else {
-            value = `Test value ${Math.floor(Math.random() * 1000)}`;
-          }
-        }
-
-        // 一意なIDを生成
-        const uniqueId = `test_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-
-        const testRecord = {
-          id: uniqueId,
-          date: dateStr,
-          time: timeStr,
-          datetime: datetimeStr,
-          fieldId: randomField.fieldId,
-          value: value,
-        };
-
-        try {
-          await addRecord(testRecord);
-          createdCount++;
-        } catch (error) {
-          console.warn('テストレコードの追加をスキップ:', testRecord.id, error);
-        }
-
-        // 進捗を更新
-        const progress = ((i + 1) / dataCount) * 100;
-        setTestDataProgress(progress);
-
-        // 進捗を表示（10件ごと）
-        if ((i + 1) % 10 === 0) {
-          setTestDataStatus(`テストデータを生成中... ${i + 1}/${dataCount}`);
-        }
-      }
-
-      await loadRecords();
-      setTestDataStatus(`✅ ${createdCount}テストデータを生成しました`);
-      setTimeout(() => {
-        setTestDataStatus(null);
-        setTestDataProgress(0);
-      }, 3000);
-    } catch (error) {
-      console.error('Test data generation error:', error);
-      setTestDataStatus(
-        `❌ テストデータの生成に失敗しました: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
-      setTimeout(() => {
-        setTestDataStatus(null);
-        setTestDataProgress(0);
-      }, 5000);
-    } finally {
-      setIsGeneratingTestData(false);
-    }
-  };
-
-  const handleGenerateTestData = () => {
-    const isConfirmed = window.confirm(
-      '本当にテストデータを生成してもよろしいですか？'
-    );
-
-    if (isConfirmed) {
-      generateTestData();
-    }
-  };
-
   // 体重専用テストデータ生成関数
   const generateWeightTestData = async () => {
     setTestDataStatus('体重テストデータを生成中...');
@@ -603,12 +497,10 @@ export default function RecordExport({
           id: uniqueId,
           date: dateStr,
           time: timeStr,
-          datetime: datetimeStr,
-          fieldId: weightField.fieldId,
-          value: weight,
+          weight: weight,
         };
         try {
-          await addRecord(testRecord);
+          await addWeightRecord(testRecord);
           createdCount++;
         } catch (error) {
           console.warn(
@@ -657,28 +549,87 @@ export default function RecordExport({
     }
   };
 
-  // 既存データのdatetime一括修正
-  const handleFixAllDatetime = async () => {
-    setIsFixing(true);
-    setFixStatus('修正中...');
+  // 日課テストデータ生成関数（V2）
+  const generateDailyTestData = async () => {
+    setTestDataStatus('日課テストデータを生成中...');
+    setIsGeneratingTestData(true);
+    setTestDataProgress(0);
     try {
-      let fixed = 0;
-      for (const rec of records) {
-        if (rec.date && rec.time) {
-          const expected = `${rec.date}T${rec.time}:00`;
-          if (rec.datetime !== expected) {
-            await addRecord({ ...rec, datetime: expected });
-            fixed++;
-          }
+      await loadFields();
+      const dailyFields = fields.filter(f => f.scope === 'daily');
+      if (dailyFields.length === 0) {
+        throw new Error('日課フィールドが見つかりません。');
+      }
+      const dataCount = 100;
+      let createdCount = 0;
+      for (let i = 0; i < dataCount; i++) {
+        // ランダムな日付
+        const randomDaysAgo = Math.floor(Math.random() * 180);
+        const date = new Date();
+        date.setDate(date.getDate() - randomDaysAgo);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        // ランダムなフィールド
+        const randomField =
+          dailyFields[Math.floor(Math.random() * dailyFields.length)];
+        // ランダムな値（0 or 1）
+        const value = Math.random() > 0.5 ? 1 : 0;
+        const uniqueId = `test_daily_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        const testRecord = {
+          id: uniqueId,
+          date: dateStr,
+          fieldId: randomField.fieldId,
+          value,
+        };
+        try {
+          await addDailyRecord(testRecord);
+          createdCount++;
+        } catch (error) {
+          console.warn(
+            '日課テストレコードの追加をスキップ:',
+            testRecord.id,
+            error
+          );
+        }
+        const progress = ((i + 1) / dataCount) * 100;
+        setTestDataProgress(progress);
+        if ((i + 1) % 10 === 0) {
+          setTestDataStatus(
+            `日課テストデータを生成中... ${i + 1}/${dataCount}`
+          );
         }
       }
-      await loadRecords();
-      setFixStatus(`✅ 修正完了: ${fixed}件修正しました`);
-    } catch (e) {
-      setFixStatus('❌ 修正中にエラーが発生しました');
+      setTestDataStatus(`✅ 日課テストデータ${createdCount}件を生成しました`);
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 3000);
+    } catch (error) {
+      console.error('日課テストデータ生成エラー:', error);
+      setTestDataStatus(
+        `❌ 日課テストデータの生成に失敗しました: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 5000);
     } finally {
-      setIsFixing(false);
-      setTimeout(() => setFixStatus(null), 4000);
+      setIsGeneratingTestData(false);
+    }
+  };
+
+  const handleGenerateDailyTestData = () => {
+    const isConfirmed = window.confirm(
+      '本当に日課テストデータを生成してもよろしいですか？'
+    );
+    if (isConfirmed) {
+      generateDailyTestData();
     }
   };
 
@@ -735,6 +686,92 @@ export default function RecordExport({
     }
   };
 
+  // 血圧テストデータ生成関数（V2）
+  const generateBpTestData = async () => {
+    setTestDataStatus('血圧テストデータを生成中...');
+    setIsGeneratingTestData(true);
+    setTestDataProgress(0);
+    try {
+      const dataCount = 100;
+      let createdCount = 0;
+      for (let i = 0; i < dataCount; i++) {
+        // ランダムな日付
+        const randomDaysAgo = Math.floor(Math.random() * 180);
+        const date = new Date();
+        date.setDate(date.getDate() - randomDaysAgo);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        // ランダムな時刻
+        const hours = Math.floor(Math.random() * 24);
+        const minutes = Math.floor(Math.random() * 60);
+        const timeStr = `${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}`;
+        // ランダムな血圧値
+        const systolic = Math.round(90 + Math.random() * 60); // 90-150
+        const diastolic = Math.round(60 + Math.random() * 40); // 60-100
+        const heartRate = Math.round(60 + Math.random() * 60); // 60-120
+        const uniqueId = `test_bp_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        const testRecord = {
+          id: uniqueId,
+          date: dateStr,
+          time: timeStr,
+          systolic,
+          diastolic,
+          heartRate,
+        };
+        try {
+          await addBpRecord(testRecord);
+          createdCount++;
+        } catch (error) {
+          console.warn(
+            '血圧テストレコードの追加をスキップ:',
+            testRecord.id,
+            error
+          );
+        }
+        const progress = ((i + 1) / dataCount) * 100;
+        setTestDataProgress(progress);
+        if ((i + 1) % 10 === 0) {
+          setTestDataStatus(
+            `血圧テストデータを生成中... ${i + 1}/${dataCount}`
+          );
+        }
+      }
+      setTestDataStatus(`✅ 血圧テストデータ${createdCount}件を生成しました`);
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 3000);
+    } catch (error) {
+      console.error('血圧テストデータ生成エラー:', error);
+      setTestDataStatus(
+        `❌ 血圧テストデータの生成に失敗しました: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
+      setTimeout(() => {
+        setTestDataStatus(null);
+        setTestDataProgress(0);
+      }, 5000);
+    } finally {
+      setIsGeneratingTestData(false);
+    }
+  };
+
+  const handleGenerateBpTestData = () => {
+    const isConfirmed = window.confirm(
+      '本当に血圧テストデータを生成してもよろしいですか？'
+    );
+    if (isConfirmed) {
+      generateBpTestData();
+    }
+  };
+
   return (
     <div className="max-w-full sm:max-w-4xl mx-auto sm:px-0">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
@@ -745,18 +782,32 @@ export default function RecordExport({
           <p className="flex items-center gap-2">
             <HiChartBarSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <strong className="text-gray-800 dark:text-white">
-              総レコード数
+              体重レコード数
             </strong>{' '}
-            {sortedRecords.length}
+            {weightCount}
+            <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">
+              {weightPeriod}
+            </span>
           </p>
           <p className="flex items-center gap-2">
-            <HiCalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <strong className="text-gray-800 dark:text-white">期間</strong>{' '}
-            {sortedRecords.length > 0
-              ? `${sortedRecords[sortedRecords.length - 1]?.date} 〜 ${
-                  sortedRecords[0]?.date
-                }`
-              : 'データなし'}
+            <HiChartBarSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <strong className="text-gray-800 dark:text-white">
+              日課レコード数
+            </strong>{' '}
+            {dailyCount}
+            <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">
+              {dailyPeriod}
+            </span>
+          </p>
+          <p className="flex items-center gap-2">
+            <HiChartBarSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <strong className="text-gray-800 dark:text-white">
+              血圧レコード数
+            </strong>{' '}
+            {bpCount}
+            <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">
+              {bpPeriod}
+            </span>
           </p>
         </div>
       </div>
@@ -891,17 +942,6 @@ export default function RecordExport({
               variant="purple"
               size="lg"
               icon={HiSparkles}
-              onClick={handleGenerateTestData}
-              fullWidth={false}
-              disabled={isGeneratingTestData}
-              loading={isGeneratingTestData}
-            >
-              テストデータ生成
-            </Button>
-            <Button
-              variant="purple"
-              size="lg"
-              icon={HiSparkles}
               onClick={handleGenerateWeightTestData}
               fullWidth={false}
               disabled={isGeneratingTestData}
@@ -910,27 +950,27 @@ export default function RecordExport({
               体重テストデータ生成
             </Button>
             <Button
-              variant="teal"
+              variant="purple"
               size="lg"
               icon={HiSparkles}
-              onClick={handleMigrateDaily}
+              onClick={handleGenerateDailyTestData}
               fullWidth={false}
-              disabled={isMigrating}
-              loading={isMigrating}
+              disabled={isGeneratingTestData}
+              loading={isGeneratingTestData}
             >
-              日課データ移行
+              日課テストデータ生成
             </Button>
-            {migrateStatus && (
-              <div className="mt-2">
-                {migrateStatus.includes('✅') ? (
-                  <SuccessMessage message={migrateStatus.replace('✅ ', '')} />
-                ) : migrateStatus.includes('❌') ? (
-                  <ErrorMessage message={migrateStatus.replace('❌ ', '')} />
-                ) : (
-                  <InfoMessage message={migrateStatus} />
-                )}
-              </div>
-            )}
+            <Button
+              variant="purple"
+              size="lg"
+              icon={HiSparkles}
+              onClick={handleGenerateBpTestData}
+              fullWidth={false}
+              disabled={isGeneratingTestData}
+              loading={isGeneratingTestData}
+            >
+              血圧テストデータ生成
+            </Button>
           </div>
         </div>
       )}
@@ -1075,43 +1115,6 @@ export default function RecordExport({
         >
           すべてのデータを削除
         </Button>
-      </div>
-
-      {/* 既存データ一括修正カード（危険ゾーンのさらに下） */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl shadow-md p-6 mt-8">
-        <h2 className="text-xl font-semibold text-yellow-800 dark:text-yellow-400 mb-4 flex items-center gap-2">
-          <HiExclamationTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
-          既存データのdatetime一括修正（危険・一時的）
-        </h2>
-        <div className="mb-4 text-left">
-          <p className="text-base text-yellow-700 dark:text-yellow-300 mb-2">
-            既存の全レコードについて、date＋timeからdatetimeを再生成して一括修正します。
-            <br />
-            ※一時的な救済用です。通常利用時は不要です。
-          </p>
-        </div>
-        <Button
-          variant="warning"
-          size="lg"
-          icon={HiExclamationTriangle}
-          onClick={handleFixAllDatetime}
-          fullWidth={false}
-          disabled={isFixing}
-          loading={isFixing}
-        >
-          既存データのdatetime一括修正
-        </Button>
-        {fixStatus && (
-          <div className="mt-4">
-            {fixStatus.includes('✅') ? (
-              <SuccessMessage message={fixStatus.replace('✅ ', '')} />
-            ) : fixStatus.includes('❌') ? (
-              <ErrorMessage message={fixStatus.replace('❌ ', '')} />
-            ) : (
-              <InfoMessage message={fixStatus} />
-            )}
-          </div>
-        )}
       </div>
 
       {/* 体重データV2移行ボタン（管理者用・最下部） */}
