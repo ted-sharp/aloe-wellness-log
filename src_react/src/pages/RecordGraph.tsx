@@ -180,23 +180,6 @@ const RecordGraph: React.FC = () => {
     ];
   }, [data]);
 
-  // 日付ごとの運動・減食・睡眠達成状況を抽出
-  const dailyStatus = useMemo(() => {
-    const statusMap: Record<
-      string,
-      { exercise: boolean; meal: boolean; sleep: boolean }
-    > = {};
-    dailyRecords.forEach(r => {
-      if (!['exercise', 'meal', 'sleep'].includes(r.fieldId)) return;
-      const date = r.date;
-      if (!statusMap[date])
-        statusMap[date] = { exercise: false, meal: false, sleep: false };
-      statusMap[date][r.fieldId as 'exercise' | 'meal' | 'sleep'] ||=
-        r.value === 1;
-    });
-    return statusMap;
-  }, [dailyRecords]);
-
   type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
     x?: number;
