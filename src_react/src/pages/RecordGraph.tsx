@@ -257,10 +257,11 @@ const RecordGraph: React.FC = () => {
     let total = 0;
     let success = 0;
     dateList.forEach(date => {
-      const status = dailyStatus[date];
-      if (status && typeof status[key] === 'boolean') {
+      // その日付・keyのレコードが存在するか
+      const rec = dailyRecords.find(r => r.fieldId === key && r.date === date);
+      if (rec && (rec.value === 1 || rec.value === 0)) {
         total++;
-        if (status[key]) success++;
+        if (rec.value === 1) success++;
       }
     });
     return {
