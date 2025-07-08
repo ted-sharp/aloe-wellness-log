@@ -27,7 +27,7 @@ import {
   migrateWeightRecordsV1ToV2,
 } from '../db/indexedDb';
 import { useRecordsStore } from '../store/records';
-import type { DailyFieldV2, DailyRecordV2, RecordItem } from '../types/record';
+import type { DailyFieldV2, DailyRecordV2 } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
 
@@ -170,42 +170,103 @@ export default function RecordExport({
     return result;
   })();
 
-  const handleExportJSON = () => {
-    const json = JSON.stringify(sortedRecords, null, 2);
+  // V2形式エクスポート
+  const handleExportJSON = async () => {
+    const [weightRecords, bpRecords, dailyRecords, dailyFields] =
+      await Promise.all([
+        getAllWeightRecords(),
+        getAllBpRecords(),
+        getAllDailyRecords(),
+        getAllDailyFields(),
+      ]);
+    const exportData = {
+      weightRecords,
+      bpRecords,
+      dailyRecords,
+      dailyFields,
+    };
+    const json = JSON.stringify(exportData, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `records-${formatDateForFilename(new Date())}.json`;
+    a.download = `records-v2-${formatDateForFilename(new Date())}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  // インポート処理
+  // V2/V1自動判別インポート
   const handleImport = async (file: File) => {
     setImportStatus('データをインポート中...');
     try {
       const text = await file.text();
-      const records: RecordItem[] = JSON.parse(text);
-      if (!Array.isArray(records)) {
-        throw new Error('JSON file format is incorrect');
-      }
-      for (const record of records) {
-        if (!record.id || !record.date || !record.time || !record.fieldId) {
-          throw new Error('Data is missing required fields');
-        }
+      const data = JSON.parse(text);
+      let v2Data: {
+        weightRecords: any[];
+        bpRecords: any[];
+        dailyRecords: any[];
+        dailyFields: any[];
+      };
+      if (Array.isArray(data)) {
+        // V1形式（RecordItem[]）
+        v2Data = {
+          weightRecords: [],
+          bpRecords: [],
+          dailyRecords: data,
+          dailyFields: [],
+        };
+      } else if (
+        data &&
+        typeof data === 'object' &&
+        Array.isArray(data.weightRecords) &&
+        Array.isArray(data.bpRecords) &&
+        Array.isArray(data.dailyRecords) &&
+        Array.isArray(data.dailyFields)
+      ) {
+        // V2形式
+        v2Data = data;
+      } else {
+        throw new Error('JSON file format is incorrect (V1/V2)');
       }
       let importCount = 0;
-      for (const record of records) {
+      // 体重
+      for (const rec of v2Data.weightRecords) {
         try {
-          await addRecord(record);
+          await addWeightRecord(rec);
           importCount++;
         } catch (error) {
-          console.warn('Skipping record addition:', record.id, error);
+          console.warn('Skipping weight record:', rec.id, error);
+        }
+      }
+      // 血圧
+      for (const rec of v2Data.bpRecords) {
+        try {
+          await addBpRecord(rec);
+          importCount++;
+        } catch (error) {
+          console.warn('Skipping bp record:', rec.id, error);
+        }
+      }
+      // 日課フィールド
+      for (const field of v2Data.dailyFields) {
+        try {
+          await addDailyField(field);
+        } catch (error) {
+          console.warn('Skipping daily field:', field.fieldId, error);
+        }
+      }
+      // 日課レコード
+      for (const rec of v2Data.dailyRecords) {
+        try {
+          await addDailyRecord(rec);
+          importCount++;
+        } catch (error) {
+          console.warn('Skipping daily record:', rec.id, error);
         }
       }
       await loadRecords();
-      setImportStatus(`✅ ${importCount}データをインポートしました`);
+      await loadFields();
+      setImportStatus(`✅ ${importCount}件のデータをインポートしました`);
       setTimeout(() => setImportStatus(null), 3000);
     } catch (error) {
       const errorInstance =
@@ -624,7 +685,7 @@ export default function RecordExport({
           データのエクスポート
         </h2>
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-          データをJSON形式でエクスポートします。
+          体重・血圧・日課（記録・項目）すべてを1つのJSONファイル（V2形式）でエクスポートします。
         </div>
         <div className="flex flex-col gap-4 mb-6">
           <Button
@@ -645,7 +706,7 @@ export default function RecordExport({
           データのインポート
         </h2>
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-          データをJSON形式でインポートします。
+          体重・血圧・日課（記録・項目）すべてを1つのJSONファイル（V2形式）または旧V1形式（RecordItem[]配列）でインポートできます。
         </div>
 
         {importStatus && (

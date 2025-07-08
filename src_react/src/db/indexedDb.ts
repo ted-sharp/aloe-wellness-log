@@ -587,31 +587,56 @@ export async function deleteAllFields(): Promise<void> {
 export async function deleteAllData(): Promise<void> {
   return trackDbOperation('delete-all-data', async () => {
     return executeTransaction(
-      [RECORDS_STORE, FIELDS_STORE],
+      [
+        RECORDS_STORE,
+        FIELDS_STORE,
+        WEIGHT_RECORDS_STORE,
+        BP_RECORDS_STORE,
+        DAILY_RECORDS_STORE,
+        DAILY_FIELDS_STORE,
+      ],
       'readwrite',
       async (_transaction, stores) => {
-        const [recordStore, fieldStore] = stores as IDBObjectStore[];
-
+        const [
+          recordStore,
+          fieldStore,
+          weightStore,
+          bpStore,
+          dailyRecordStore,
+          dailyFieldStore,
+        ] = stores as IDBObjectStore[];
         return new Promise<void>((resolve, reject) => {
           let completedOperations = 0;
-          const totalOperations = 2;
-
+          const totalOperations = 6;
           const checkCompletion = () => {
             completedOperations++;
             if (completedOperations === totalOperations) {
               resolve();
             }
           };
-
           const recordRequest = recordStore.clear();
           recordRequest.onsuccess = checkCompletion;
           recordRequest.onerror = () =>
             reject(classifyDbError(recordRequest.error));
-
           const fieldRequest = fieldStore.clear();
           fieldRequest.onsuccess = checkCompletion;
           fieldRequest.onerror = () =>
             reject(classifyDbError(fieldRequest.error));
+          const weightRequest = weightStore.clear();
+          weightRequest.onsuccess = checkCompletion;
+          weightRequest.onerror = () =>
+            reject(classifyDbError(weightRequest.error));
+          const bpRequest = bpStore.clear();
+          bpRequest.onsuccess = checkCompletion;
+          bpRequest.onerror = () => reject(classifyDbError(bpRequest.error));
+          const dailyRecordRequest = dailyRecordStore.clear();
+          dailyRecordRequest.onsuccess = checkCompletion;
+          dailyRecordRequest.onerror = () =>
+            reject(classifyDbError(dailyRecordRequest.error));
+          const dailyFieldRequest = dailyFieldStore.clear();
+          dailyFieldRequest.onsuccess = checkCompletion;
+          dailyFieldRequest.onerror = () =>
+            reject(classifyDbError(dailyFieldRequest.error));
         });
       }
     );
