@@ -120,6 +120,5 @@ test.describe('健康管理アプリ現行画面 E2E', () => {
     await page.goto('/export');
     await waitForOverlayToDisappear(page);
     await expect(page.getByTestId('download-json-btn')).toBeVisible();
-    await expect(page.getByTestId('download-csv-btn')).toBeVisible();
   });
 });

@@ -41,46 +41,6 @@ function formatDateForFilename(date: Date) {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
-function toCSV(
-  records: RecordItem[],
-  fields: { fieldId: string; name: string }[],
-  t: (key: string) => string
-) {
-  const header = [
-    'id',
-    'date',
-    'time',
-    'datetime',
-    'fieldId',
-    'fieldName',
-    'value',
-  ];
-  const rows = records.map(rec => {
-    const field = fields.find(f => f.fieldId === rec.fieldId);
-    return [
-      rec.id,
-      rec.date,
-      rec.time,
-      rec.datetime,
-      rec.fieldId,
-      field ? field.name : '',
-      typeof rec.value === 'boolean'
-        ? rec.value
-          ? t('fields.yes')
-          : t('fields.no')
-        : rec.value,
-    ];
-  });
-  return [header, ...rows]
-    .map(row =>
-      row
-        .map(String)
-        .map(s => `"${s.replace(/"/g, '""')}"`)
-        .join(',')
-    )
-    .join('\r\n');
-}
-
 export default function RecordExport({
   showTipsModal,
 }: {
@@ -210,17 +170,6 @@ export default function RecordExport({
     return result;
   })();
 
-  const handleExportCSV = () => {
-    const csv = toCSV(sortedRecords, fields, t => t);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `records-${formatDateForFilename(new Date())}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const handleExportJSON = () => {
     const json = JSON.stringify(sortedRecords, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -232,151 +181,20 @@ export default function RecordExport({
     URL.revokeObjectURL(url);
   };
 
-  // CSVパース関数
-  const parseCSV = (csvText: string): RecordItem[] => {
-    // 改行文字を統一（\r\n や \r を \n に統一）
-    const normalizedText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    const lines = normalizedText.trim().split('\n');
-
-    if (lines.length < 2)
-      throw new Error('CSVファイルが空または形式が正しくありません');
-
-    // CSVの行をパースする関数（カンマ区切りだがダブルクォート内のカンマは無視）
-    const parseCSVLine = (line: string): string[] => {
-      const result: string[] = [];
-      let current = '';
-      let inQuotes = false;
-      let i = 0;
-
-      while (i < line.length) {
-        const char = line[i];
-
-        if (char === '"') {
-          if (inQuotes && line[i + 1] === '"') {
-            // エスケープされたダブルクォート
-            current += '"';
-            i += 2;
-          } else {
-            // クォートの開始または終了
-            inQuotes = !inQuotes;
-            i++;
-          }
-        } else if (char === ',' && !inQuotes) {
-          // カンマ区切り（クォート外）
-          result.push(current);
-          current = '';
-          i++;
-        } else {
-          current += char;
-          i++;
-        }
-      }
-
-      result.push(current);
-      return result;
-    };
-
-    const header = parseCSVLine(lines[0]);
-
-    const expectedHeader = [
-      'id',
-      'date',
-      'time',
-      'datetime',
-      'fieldId',
-      'fieldName',
-      'value',
-    ];
-
-    if (!expectedHeader.every(col => header.includes(col))) {
-      console.error('Expected headers:', expectedHeader);
-      console.error('Actual headers:', header);
-      throw new Error(
-        `CSV file format is incorrect. Required columns: ${expectedHeader.join(
-          ', '
-        )}`
-      );
-    }
-
-    const records: RecordItem[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      try {
-        // 空行をスキップ
-        if (!lines[i].trim()) continue;
-
-        const values = parseCSVLine(lines[i]);
-
-        // 列数チェック
-        if (values.length !== header.length) {
-          console.warn(
-            `Row ${i}: 列数が一致しません (expected: ${header.length}, actual: ${values.length})`
-          );
-          continue;
-        }
-
-        const record: RecordItem = {
-          id: values[header.indexOf('id')],
-          date: values[header.indexOf('date')],
-          time: values[header.indexOf('time')],
-          datetime: values[header.indexOf('datetime')],
-          fieldId: values[header.indexOf('fieldId')],
-          value: values[header.indexOf('value')],
-        };
-
-        // 必須フィールドのチェック
-        if (!record.id || !record.date || !record.time || !record.fieldId) {
-          console.warn(`Row ${i}: 必須項目が不足`, record);
-          continue;
-        }
-
-        // boolean値の変換
-        if (record.value === 'yes' || record.value === 'あり') {
-          record.value = true;
-        } else if (record.value === 'no' || record.value === 'なし') {
-          record.value = false;
-        } else if (!isNaN(Number(record.value)) && record.value !== '') {
-          record.value = Number(record.value);
-        }
-
-        records.push(record);
-      } catch (error) {
-        console.error(`Row ${i} parsing error:`, error);
-        throw new Error(
-          `${i}行目の処理でエラーが発生しました: ${
-            error instanceof Error ? error.message : '不明なエラー'
-          }`
-        );
-      }
-    }
-
-    return records;
-  };
-
   // インポート処理
-  const handleImport = async (file: File, format: 'csv' | 'json') => {
+  const handleImport = async (file: File) => {
     setImportStatus('データをインポート中...');
-
     try {
       const text = await file.text();
-      let records: RecordItem[];
-
-      if (format === 'json') {
-        records = JSON.parse(text);
-        if (!Array.isArray(records)) {
-          throw new Error('JSON file format is incorrect');
-        }
-      } else {
-        records = parseCSV(text);
+      const records: RecordItem[] = JSON.parse(text);
+      if (!Array.isArray(records)) {
+        throw new Error('JSON file format is incorrect');
       }
-
-      // データ検証
       for (const record of records) {
         if (!record.id || !record.date || !record.time || !record.fieldId) {
           throw new Error('Data is missing required fields');
         }
       }
-
-      // インポート実行
       let importCount = 0;
       for (const record of records) {
         try {
@@ -386,7 +204,6 @@ export default function RecordExport({
           console.warn('Skipping record addition:', record.id, error);
         }
       }
-
       await loadRecords();
       setImportStatus(`✅ ${importCount}データをインポートしました`);
       setTimeout(() => setImportStatus(null), 3000);
@@ -394,7 +211,6 @@ export default function RecordExport({
       const errorInstance =
         error instanceof Error ? error : new Error('Unknown error');
       console.error('Import error:', errorInstance);
-
       setImportStatus(
         `❌ データのインポートに失敗しました: ${errorInstance.message}`
       );
@@ -405,24 +221,15 @@ export default function RecordExport({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // 拡張子で自動判別
       const fileName = file.name.toLowerCase();
-      let format: 'csv' | 'json';
-
-      if (fileName.endsWith('.csv')) {
-        format = 'csv';
-      } else if (fileName.endsWith('.json')) {
-        format = 'json';
-      } else {
+      if (!fileName.endsWith('.json')) {
         setImportStatus('サポートされていないファイル形式です');
         setTimeout(() => setImportStatus(null), 3000);
         event.target.value = '';
         return;
       }
-
-      handleImport(file, format);
+      handleImport(file);
     }
-    // input要素をリセット
     event.target.value = '';
   };
 
@@ -817,19 +624,9 @@ export default function RecordExport({
           データのエクスポート
         </h2>
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-          データをCSVまたはJSON形式でエクスポートします。
+          データをJSON形式でエクスポートします。
         </div>
         <div className="flex flex-col gap-4 mb-6">
-          <Button
-            variant="purple"
-            size="lg"
-            icon={HiDocument}
-            onClick={handleExportCSV}
-            fullWidth={false}
-            data-testid="download-csv-btn"
-          >
-            CSV形式でエクスポート
-          </Button>
           <Button
             variant="purple"
             size="lg"
@@ -848,7 +645,7 @@ export default function RecordExport({
           データのインポート
         </h2>
         <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-          データをCSVまたはJSON形式でインポートします。
+          データをJSON形式でインポートします。
         </div>
 
         {importStatus && (
@@ -869,7 +666,7 @@ export default function RecordExport({
           <div>
             <input
               type="file"
-              accept=".csv,.json"
+              accept=".json"
               onChange={handleFileSelect}
               className="hidden"
               id="data-import"

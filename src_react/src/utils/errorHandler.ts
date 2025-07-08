@@ -76,11 +76,7 @@ export function classifyError(error: unknown): AppError {
     }
 
     // パース関連エラー
-    if (
-      message.includes('parse') ||
-      message.includes('json') ||
-      message.includes('csv')
-    ) {
+    if (message.includes('parse') || message.includes('json')) {
       return {
         type: ErrorType.PARSE,
         message: 'データの解析でエラーが発生しました',

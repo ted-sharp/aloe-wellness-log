@@ -177,7 +177,6 @@ export function categorizeError(
   if (
     message.includes('parse') ||
     message.includes('json') ||
-    message.includes('csv') ||
     message.includes('validation')
   ) {
     return ErrorCategory.DATA_PROCESSING;
