@@ -23,15 +23,6 @@ const formatDate = (date: Date) => {
     '0'
   )}-${String(date.getDate()).padStart(2, '0')}`;
 };
-const formatLocalDateTime = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-};
 
 interface WeightRecordProps {
   showTipsModal?: () => void;
@@ -73,15 +64,12 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const [newExcludeFromGraph, setNewExcludeFromGraph] = useState(false);
 
   const [weightRecords, setWeightRecords] = useState<WeightRecordV2[]>([]);
-  const [loading, setLoading] = useState(false);
 
   // データ取得
   useEffect(() => {
     const fetchRecords = async () => {
-      setLoading(true);
       const all = await getAllWeightRecords();
       setWeightRecords(all);
-      setLoading(false);
     };
     fetchRecords();
   }, []);
@@ -215,26 +203,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     setCenterDate(selectedDate);
   }, [selectedDate]);
 
-  // スパークル定型文ドロップダウン用 floating-ui
-  const [open, setOpen] = useState(false);
-  // floating-uiの分割代入は未使用のため削除
-
   // DatePickerBarに渡す直前
   useEffect(() => {
     // No need to log here as per the new code instructions
   }, [centerDate, selectedDate]);
-
-  // 選択日と時刻文字列(HH:mm)からローカル日時文字列を生成
-  const buildDateTimeString = (
-    date: Date | string,
-    timeStr: string
-  ): string => {
-    const d =
-      typeof date === 'string' ? new Date(date) : new Date(date.getTime());
-    const [h, m] = timeStr.split(':').map(Number);
-    d.setHours(h || 0, m || 0, 0, 0);
-    return formatLocalDateTime(d);
-  };
 
   const handleAdd = async () => {
     if (!newWeight) return;

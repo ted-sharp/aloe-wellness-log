@@ -27,7 +27,6 @@ import {
   migrateWeightRecordsV1ToV2,
 } from '../db/indexedDb';
 import { useRecordsStore } from '../store/records';
-import type { DailyFieldV2, DailyRecordV2 } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
 
@@ -53,7 +52,6 @@ export default function RecordExport({
     loadFields,
     deleteAllData,
     initializeFields,
-    addRecord,
   } = useRecordsStore();
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [testDataStatus, setTestDataStatus] = useState<string | null>(null);
@@ -63,10 +61,6 @@ export default function RecordExport({
 
   // エラーテスト用の状態
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
-
-  // 日課データ移行処理
-  const [migrateStatus, setMigrateStatus] = useState<string | null>(null);
-  const [isMigrating, setIsMigrating] = useState(false);
 
   // 体重・日課・血圧レコード数
   const [weightCount, setWeightCount] = useState<number>(0);
@@ -148,27 +142,6 @@ export default function RecordExport({
     testDataProgress,
     isGeneratingTestData,
   ]);
-
-  // 日付・時刻で降順ソート（新しい順）（パフォーマンス監視付き）
-  const sortedRecords = (() => {
-    const startTime = performance.now();
-    const result = [...records].sort((a, b) => {
-      const aKey = `${a.date} ${a.time}`;
-      const bKey = `${b.date} ${b.time}`;
-      return bKey.localeCompare(aKey);
-    });
-
-    const duration = performance.now() - startTime;
-    if (isDev && duration > 10) {
-      console.warn(
-        `🐌 Slow record sorting: ${duration.toFixed(2)}ms for ${
-          records.length
-        } records`
-      );
-    }
-
-    return result;
-  })();
 
   // V2形式エクスポート
   const handleExportJSON = async () => {
@@ -331,7 +304,6 @@ export default function RecordExport({
         const dateStr = `${year}-${month}-${day}`;
         // 時刻は毎日8:00固定
         const timeStr = '08:00';
-        const datetimeStr = `${dateStr}T${timeStr}:00`;
         // 体重を徐々に減少させつつ±2kgの範囲でランダム変動
         const trend = (daysBack - i) * 0.05; // 1日あたり0.05kg減少
         const randomDelta = (Math.random() - 0.5) * 2; // -2〜+2kg（1日あたりの変化幅を±2に制限）
@@ -481,59 +453,6 @@ export default function RecordExport({
     );
     if (isConfirmed) {
       generateDailyTestData();
-    }
-  };
-
-  // 日課データ移行処理
-  const handleMigrateDaily = async () => {
-    setMigrateStatus('日課データを移行中...');
-    setIsMigrating(true);
-    try {
-      // 既存のdaily系フィールドを抽出
-      const dailyFields = fields.filter(f => f.scope === 'daily');
-      // V2フィールド型に変換
-      const v2Fields: DailyFieldV2[] = dailyFields.map(f => ({
-        fieldId: f.fieldId,
-        name: f.name,
-        order: f.order ?? 0,
-        display: f.defaultDisplay !== false,
-      }));
-      // 既存のdailyレコードを抽出
-      const dailyFieldIds = new Set(v2Fields.map(f => f.fieldId));
-      const dailyRecords = records.filter(r => dailyFieldIds.has(r.fieldId));
-      // V2レコード型に変換（boolean→number変換）
-      const v2Records: DailyRecordV2[] = dailyRecords.map(r => ({
-        id: r.id,
-        date: r.date,
-        fieldId: r.fieldId,
-        value:
-          typeof r.value === 'boolean'
-            ? r.value
-              ? 1
-              : 0
-            : Number(r.value) || 0,
-      }));
-      // 既存V2フィールド・レコードを一旦全削除（重複防止）
-      const oldFields = await getAllDailyFields();
-      for (const f of oldFields)
-        await addDailyField({ ...f, name: f.name + ' (old)', display: false });
-      const oldRecords = await getAllDailyRecords();
-      for (const r of oldRecords)
-        await addDailyRecord({ ...r, id: r.id + '_old' });
-      // V2フィールド・レコードを追加
-      for (const f of v2Fields) await addDailyField(f);
-      for (const r of v2Records) await addDailyRecord(r);
-      setMigrateStatus(
-        `✅ 日課フィールド${v2Fields.length}件・レコード${v2Records.length}件を移行しました`
-      );
-      setTimeout(() => setMigrateStatus(null), 4000);
-    } catch (error) {
-      setMigrateStatus(
-        `❌ 移行失敗: ${error instanceof Error ? error.message : error}`
-      );
-      setTimeout(() => setMigrateStatus(null), 5000);
-    } finally {
-      setIsMigrating(false);
     }
   };
 
@@ -997,17 +916,6 @@ export default function RecordExport({
             日課データV2へ移行（管理者用）
           </Button>
         </div>
-        {migrateStatus && (
-          <div className="mt-2">
-            {migrateStatus.includes('✅') ? (
-              <SuccessMessage message={migrateStatus.replace('✅ ', '')} />
-            ) : migrateStatus.includes('❌') ? (
-              <ErrorMessage message={migrateStatus.replace('❌ ', '')} />
-            ) : (
-              <InfoMessage message={migrateStatus} />
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

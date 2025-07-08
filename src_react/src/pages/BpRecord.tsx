@@ -20,16 +20,6 @@ const formatDate = (date: Date) => {
   )}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
-const formatLocalDateTime = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-};
-
 const getCurrentTimeString = () => {
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
@@ -57,15 +47,12 @@ const BpRecord: React.FC = () => {
   const [newNote, setNewNote] = useState('');
 
   const [bpRecords, setBpRecords] = useState<BpRecordV2[]>([]);
-  const [loading, setLoading] = useState(false);
 
   // データ取得
   useEffect(() => {
     const fetchRecords = async () => {
-      setLoading(true);
       const all = await getAllBpRecords();
       setBpRecords(all);
-      setLoading(false);
     };
     fetchRecords();
   }, []);

@@ -34,56 +34,6 @@ interface TooltipItem {
   value?: number | string;
 }
 
-// 達成率カウントアップ用カスタムフック
-function useAnimatedNumber(target: number, duration: number = 800) {
-  const [animated, setAnimated] = React.useState(0);
-  React.useEffect(() => {
-    if (typeof target !== 'number' || isNaN(target)) return;
-    const start = 0;
-    const startTime = performance.now();
-    function animate(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      setAnimated(start + (target - start) * progress);
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setAnimated(target);
-      }
-    }
-    requestAnimationFrame(animate);
-  }, [target, duration]);
-  return animated;
-}
-
-// グラフ下部の達成率アニメーション表示用コンポーネント
-function GraphAchievementItem({
-  label,
-  stats,
-}: {
-  label: string;
-  stats: { total: number; success: number; percent: number };
-}) {
-  const animatedPercent = useAnimatedNumber(stats.percent);
-  return (
-    <div className="text-xs text-blue-700 dark:text-blue-200 whitespace-nowrap font-semibold">
-      <span className="text-sm sm:text-base align-middle">{label}:</span>
-      {stats.total > 0 ? (
-        <>
-          <span className="ml-1 sm:ml-2 text-sm sm:text-base align-middle">
-            {animatedPercent.toFixed(0)}%
-          </span>
-          <span className="ml-1 sm:ml-2 text-sm sm:text-base align-middle">
-            ({stats.success}/{stats.total}日)
-          </span>
-        </>
-      ) : (
-        '記録なし'
-      )}
-    </div>
-  );
-}
-
 const RecordGraph: React.FC = () => {
   const { fields } = useRecordsStore();
   const { goal } = useGoalStore();
@@ -253,7 +203,6 @@ const RecordGraph: React.FC = () => {
     y?: number;
     payload: { value: number };
   };
-  const STATUS_KEYS: StatusKey[] = ['exercise', 'meal', 'sleep'];
   const CustomTick = (props: CustomTickProps) => {
     const { x = 0, y = 0, payload } = props;
     const ts = payload.value;
