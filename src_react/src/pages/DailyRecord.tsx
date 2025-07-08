@@ -27,7 +27,17 @@ import {
 } from 'react-icons/hi2';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
-import { useRecordsStore } from '../store/records';
+import {
+  addDailyField,
+  addDailyRecord,
+  deleteDailyField,
+  deleteDailyRecord,
+  getAllDailyFields,
+  getAllDailyRecords,
+  updateDailyField,
+  updateDailyRecord,
+} from '../db/indexedDb';
+import type { DailyFieldV2 } from '../types/record';
 
 /**
  * 毎日記録ページ（今後実装予定）
@@ -38,15 +48,6 @@ const formatDate = (date: Date) => {
     2,
     '0'
   )}-${String(date.getDate()).padStart(2, '0')}`;
-};
-const formatLocalDateTime = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
 // 共通キー定数を追加
@@ -152,19 +153,6 @@ const DailyRecord: React.FC = () => {
     return saved ? new Date(saved) : today;
   });
 
-  const {
-    fields,
-    addRecord,
-    updateRecord,
-    deleteRecord,
-    records,
-    addField,
-    loadRecords,
-    deleteField,
-    updateField,
-    loadFields,
-  } = useRecordsStore();
-
   // 新規項目追加用state
   const [showAddField, setShowAddField] = useState(false);
   const [newFieldName, setNewFieldName] = useState('');
@@ -172,24 +160,16 @@ const DailyRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
+  const [fields, setFields] = useState<DailyFieldV2[]>([]);
+  const [records, setRecords] = useState<any[]>([]);
   const boolFields = isEditMode
-    ? fields
-        .filter(f => f.type === 'boolean')
-        .slice()
-        .sort((a, b) => {
-          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-          return a.fieldId.localeCompare(b.fieldId);
-        })
+    ? fields.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     : fields
-        .filter(f => f.type === 'boolean' && f.defaultDisplay)
-        .slice()
-        .sort((a, b) => {
-          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-          return a.fieldId.localeCompare(b.fieldId);
-        });
-  const [editFields, setEditFields] = useState(() =>
-    boolFields.map(f => ({ ...f }))
-  );
+        .filter(f =>
+          'display' in f ? (f as DailyFieldV2).display !== false : true
+        )
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const [editFields, setEditFields] = useState<DailyFieldV2[]>([]);
   const [editOrder, setEditOrder] = useState(() =>
     boolFields.map(f => f.fieldId)
   );
@@ -200,50 +180,52 @@ const DailyRecord: React.FC = () => {
 
   // 日付・時刻文字列
   const recordDate = formatDate(selectedDate);
-  const formatLocalTime = (date: Date): string => {
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
-  const recordTime = formatLocalTime(selectedDate);
 
   // 既存記録の取得
   const getBoolRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
   const getBoolValue = (fieldId: string): boolean | undefined => {
     const rec = getBoolRecord(fieldId);
-    return typeof rec?.value === 'boolean' ? rec.value : undefined;
+    return typeof rec?.value === 'number' ? rec.value === 1 : undefined;
   };
   // 日付ごとの記録済み判定（scope: 'daily'で絞り込み）
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
-    const dailyFieldIds = fields
-      .filter(f => f.scope === 'daily')
-      .map(f => f.fieldId);
+    const dailyFieldIds = fields.map(f => f.fieldId);
     return records.some(r => r.date === d && dailyFieldIds.includes(r.fieldId));
   };
+  // V2 APIでfields/recordsを取得
+  const loadFields = React.useCallback(async () => {
+    const fs = await getAllDailyFields();
+    setFields(fs);
+  }, []);
+  const loadRecords = React.useCallback(async () => {
+    const rs = await getAllDailyRecords();
+    setRecords(rs);
+  }, []);
+
+  // 初回マウント時に必ずロード
+  React.useEffect(() => {
+    loadFields();
+    loadRecords();
+  }, [loadFields, loadRecords]);
+
   // ボタン押下時の保存/切替/解除処理
   const handleBoolInput = async (fieldId: string, value: boolean) => {
     const rec = getBoolRecord(fieldId);
-    if (rec && rec.value === value) {
-      // 同じ値を押したら記録削除
-      await deleteRecord(rec.id);
+    if (rec && (rec.value === 1) === value) {
+      await deleteDailyRecord(rec.id);
       await loadRecords();
     } else if (rec) {
-      // 異なる値なら上書き
-      await updateRecord({ ...rec, value });
+      await updateDailyRecord({ ...rec, value: value ? 1 : 0 });
       await loadRecords();
     } else {
-      // 新規追加
-      const now = new Date();
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      await addRecord({
+      await addDailyRecord({
         id,
         fieldId,
-        value,
         date: recordDate,
-        time: recordTime,
-        datetime: formatLocalDateTime(now),
+        value: value ? 1 : 0,
       });
       await loadRecords();
     }
@@ -256,7 +238,6 @@ const DailyRecord: React.FC = () => {
       setAddFieldError('項目名を入力してください');
       return;
     }
-    // 重複チェック
     if (fields.some(f => f.name === name)) {
       setAddFieldError('同じ名前の項目が既に存在します');
       return;
@@ -264,18 +245,16 @@ const DailyRecord: React.FC = () => {
     const fieldId = `custom_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 6)}`;
-    const newField = {
+    const newField: DailyFieldV2 = {
       fieldId,
       name,
-      type: 'boolean' as const,
       order: (fields.length + 1) * 10,
-      defaultDisplay: true,
-      scope: 'daily' as const,
+      display: true,
     };
-    await addField(newField);
-    // 編集モード中なら即時ローカルstateにも反映
+    await addDailyField(newField);
+    await loadFields();
     if (isEditMode) {
-      setEditFields(fields => [...fields, { ...newField }]);
+      setEditFields(fields => [...fields, newField]);
       setEditOrder(order => [...order, fieldId]);
     }
     setShowAddField(false);
@@ -285,20 +264,26 @@ const DailyRecord: React.FC = () => {
   // 編集モード切替時に最新フィールドで初期化
   useEffect(() => {
     if (isEditMode) {
-      // 編集時は全bool型項目
-      const allBoolFields = fields
-        .filter(f => f.type === 'boolean')
+      const allFields = fields
         .slice()
-        .sort((a, b) => {
-          if (a.order !== b.order) return (a.order ?? 0) - (b.order ?? 0);
-          return a.fieldId.localeCompare(b.fieldId);
-        });
-      setEditFields(allBoolFields.map(f => ({ ...f })));
-      setEditOrder(allBoolFields.map(f => f.fieldId));
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      setEditFields(
+        allFields.map(f => ({
+          fieldId: f.fieldId,
+          name: f.name,
+          order: f.order ?? 0,
+          display:
+            'display' in f
+              ? (f as DailyFieldV2).display
+              : typeof (f as any).defaultDisplay === 'boolean'
+              ? (f as any).defaultDisplay
+              : true,
+        }))
+      );
+      setEditOrder(allFields.map(f => f.fieldId));
       setEditDelete([]);
     }
-    // isEditModeがfalseになるときは何もしない
-  }, [isEditMode]);
+  }, [isEditMode, fields]);
 
   // 編集モード用の追加state
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
@@ -330,7 +315,7 @@ const DailyRecord: React.FC = () => {
     onToggleDisplay,
     inputRef,
   }: {
-    field: (typeof editFields)[number];
+    field: DailyFieldV2;
     isEditing: boolean;
     onStartEdit: () => void;
     onEndEdit: () => void;
@@ -367,7 +352,7 @@ const DailyRecord: React.FC = () => {
         ref={setNodeRef}
         style={style}
         className={`flex items-center gap-2 rounded-xl shadow p-4 mb-2 transition-colors ${
-          field.defaultDisplay === false
+          field.display === false
             ? 'bg-gray-100 dark:bg-gray-700 text-gray-400'
             : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'
         }`}
@@ -401,7 +386,7 @@ const DailyRecord: React.FC = () => {
               }
             }}
             className={`flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg font-semibold min-w-[5em] bg-inherit ${
-              field.defaultDisplay === false
+              field.display === false
                 ? 'border-gray-200 dark:border-gray-600 text-gray-400 bg-gray-50 dark:bg-gray-800'
                 : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
             }`}
@@ -442,18 +427,16 @@ const DailyRecord: React.FC = () => {
           type="button"
           onClick={onToggleDisplay}
           className={`p-2 ${
-            field.defaultDisplay === false
+            field.display === false
               ? 'text-gray-400 hover:text-blue-400'
               : 'text-blue-500 hover:text-blue-700'
           }`}
           aria-label={
-            field.defaultDisplay === false
-              ? '表示項目にする'
-              : '非表示項目にする'
+            field.display === false ? '表示項目にする' : '非表示項目にする'
           }
           data-testid={`toggle-btn-${field.fieldId}`}
         >
-          {field.defaultDisplay === false ? (
+          {field.display === false ? (
             <HiEyeSlash className="w-6 h-6" />
           ) : (
             <HiEye className="w-6 h-6" />
@@ -477,13 +460,13 @@ const DailyRecord: React.FC = () => {
   const handleEditSave = async () => {
     // 削除
     for (const delId of editDelete) {
-      await deleteField(delId);
+      await deleteDailyField(delId);
     }
     // 並び替え・名称変更
     for (let i = 0; i < editOrder.length; ++i) {
       const f = editFields.find(f => f.fieldId === editOrder[i]);
       if (f) {
-        await updateField({ ...f, order: i * 10 });
+        await updateDailyField({ ...f, order: i * 10 });
       }
     }
     await loadFields();
@@ -515,7 +498,7 @@ const DailyRecord: React.FC = () => {
   const handleToggleDisplay = useCallback((fieldId: string) => {
     setEditFields(fields =>
       fields.map(f =>
-        f.fieldId === fieldId ? { ...f, defaultDisplay: !f.defaultDisplay } : f
+        f.fieldId === fieldId ? { ...f, display: !f.display } : f
       )
     );
   }, []);
@@ -537,9 +520,9 @@ const DailyRecord: React.FC = () => {
     let success = 0;
     days.forEach(date => {
       const rec = records.find(r => r.fieldId === fieldId && r.date === date);
-      if (typeof rec?.value === 'boolean') {
+      if (typeof rec?.value === 'number') {
         total++;
-        if (rec.value === true) success++;
+        if (rec.value === 1) success++;
       }
     });
     return {
@@ -552,9 +535,7 @@ const DailyRecord: React.FC = () => {
   // 連続達成日数（streak）を計算
   const calcStreak = (baseDate: Date) => {
     if (records.length === 0) return 0;
-    const dailyFieldIds = fields
-      .filter(f => f.scope === 'daily')
-      .map(f => f.fieldId);
+    const dailyFieldIds = fields.map(f => f.fieldId);
     // 記録が存在する日付をbaseDateまで逆順でソート
     const dateSet = new Set(records.map(r => r.date));
     const allDates = Array.from(dateSet)
@@ -564,7 +545,7 @@ const DailyRecord: React.FC = () => {
     for (const dateStr of allDates) {
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
-          r => r.fieldId === fieldId && r.date === dateStr && r.value === true
+          r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
         )
       );
       if (hasAny) {
@@ -580,9 +561,7 @@ const DailyRecord: React.FC = () => {
 
   // baseDateまでの累計達成日数をカウントできるように修正
   const calcTotalAchievedDays = (baseDate: Date) => {
-    const dailyFieldIds = fields
-      .filter(f => f.scope === 'daily')
-      .map(f => f.fieldId);
+    const dailyFieldIds = fields.map(f => f.fieldId);
     if (records.length === 0) return 0;
     const dates = records.map(r => r.date).sort();
     const firstDate = new Date(dates[0]);
@@ -596,7 +575,7 @@ const DailyRecord: React.FC = () => {
       const dateStr = formatDate(d);
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
-          r => r.fieldId === fieldId && r.date === dateStr && r.value === true
+          r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
         )
       );
       if (hasAny) count++;
@@ -609,14 +588,12 @@ const DailyRecord: React.FC = () => {
   // 日付ごとの状態を判定（入力なし: 'none', 1つでも達成: 'green', 入力あり全て未達: 'red'）
   const getDateStatus = (date: Date): 'none' | 'green' | 'red' => {
     const d = formatDate(date);
-    const dailyFieldIds = fields
-      .filter(f => f.scope === 'daily')
-      .map(f => f.fieldId);
+    const dailyFieldIds = fields.map(f => f.fieldId);
     const recs = records.filter(
       r => r.date === d && dailyFieldIds.includes(r.fieldId)
     );
     if (recs.length === 0) return 'none';
-    const hasAchieve = recs.some(r => r.value === true);
+    const hasAchieve = recs.some(r => r.value === 1);
     return hasAchieve ? 'green' : 'red';
   };
 
@@ -742,8 +719,7 @@ const DailyRecord: React.FC = () => {
                     if (value === true) {
                       const rec = getBoolRecord(field.fieldId);
                       if (rec) {
-                        await deleteRecord(rec.id);
-                        await loadRecords();
+                        await deleteDailyRecord(rec.id);
                       }
                     } else {
                       await handleBoolInput(field.fieldId, true);
@@ -753,8 +729,7 @@ const DailyRecord: React.FC = () => {
                     if (value === false) {
                       const rec = getBoolRecord(field.fieldId);
                       if (rec) {
-                        await deleteRecord(rec.id);
-                        await loadRecords();
+                        await deleteDailyRecord(rec.id);
                       }
                     } else {
                       await handleBoolInput(field.fieldId, false);
