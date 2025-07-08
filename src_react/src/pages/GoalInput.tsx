@@ -20,7 +20,7 @@ const currentYear = new Date().getFullYear();
 
 // 運動目標の例リスト
 const exerciseExamples = [
-  '毎日ラジオ体操(第2まで)をする',
+  '毎日ラジオ体操(第1,2)をする',
   'なるべく階段を使う',
   '通勤で早歩きする',
   '一駅歩く',
@@ -745,7 +745,7 @@ export default function GoalInput() {
               const perDay = Math.round(totalCal / days);
               const halfPerDay = Math.round(perDay / 2);
               return (
-                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold">
                   運動で一日あたり約{halfPerDay.toLocaleString()}
                   kcalの消費を目標にしましょう。
                 </div>
@@ -753,6 +753,9 @@ export default function GoalInput() {
             }
             return null;
           })()}
+        <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+          簡単に取り組める日常の動作の延長が効果的です。
+        </div>
         <label className="flex flex-col gap-1">
           <span>減食目標 (例: 間食を控える)</span>
           <div className="relative flex items-center gap-2">
@@ -825,7 +828,7 @@ export default function GoalInput() {
               const perDay = Math.round(totalCal / days);
               const halfPerDay = Math.round(perDay / 2);
               return (
-                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold">
                   減食で一日あたり約{halfPerDay.toLocaleString()}
                   kcalの消費を目標にしましょう。
                 </div>
@@ -833,6 +836,9 @@ export default function GoalInput() {
             }
             return null;
           })()}
+        <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+          カロリーコントロールが一番効果があります。
+        </div>
         <label className="flex flex-col gap-1">
           <span>睡眠目標 (例: 23時までに就寝する)</span>
           <div className="relative flex items-center gap-2">
