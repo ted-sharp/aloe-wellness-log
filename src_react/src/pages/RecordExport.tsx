@@ -23,8 +23,7 @@ import {
   getAllDailyFields,
   getAllDailyRecords,
   getAllWeightRecords,
-  migrateDailyRecordsV1ToV2,
-  migrateWeightRecordsV1ToV2,
+  
 } from '../db/indexedDb';
 import { useRecordsStore } from '../store/records';
 import { isDev } from '../utils/devTools';
@@ -46,12 +45,7 @@ export default function RecordExport({
   showTipsModal?: () => void;
 }) {
   const {
-    records,
-    fields,
-    loadRecords,
-    loadFields,
     deleteAllData,
-    initializeFields,
   } = useRecordsStore();
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [testDataStatus, setTestDataStatus] = useState<string | null>(null);
@@ -123,8 +117,7 @@ export default function RecordExport({
 
     const logPerformanceInfo = () => {
       console.group('🔍 RecordExport Performance Info');
-      console.log(`📊 Total Records: ${records.length}`);
-      console.log(`📊 Total Fields: ${fields.length}`);
+      
       console.log(`📊 Import Status: ${importStatus || 'none'}`);
       console.log(`📊 Test Data Status: ${testDataStatus || 'none'}`);
       console.log(`📊 Test Data Progress: ${testDataProgress}%`);
@@ -135,8 +128,7 @@ export default function RecordExport({
     const timeout = setTimeout(logPerformanceInfo, 2000);
     return () => clearTimeout(timeout);
   }, [
-    records.length,
-    fields.length,
+    
     importStatus,
     testDataStatus,
     testDataProgress,
@@ -220,8 +212,7 @@ export default function RecordExport({
           console.warn('Skipping daily record:', rec.id, error);
         }
       }
-      await loadRecords();
-      await loadFields();
+      
       setImportStatus(`✅ ${importCount}件のデータをインポートしました`);
       setTimeout(() => setImportStatus(null), 3000);
     } catch (error) {
@@ -263,10 +254,7 @@ export default function RecordExport({
       if (doubleConfirm) {
         try {
           await deleteAllData();
-          // 初期項目を再度作成
-          await initializeFields();
-          await loadFields();
-          await loadRecords();
+          
           alert('すべてのデータを削除しました');
         } catch (error) {
           console.error('Delete error:', error);
@@ -282,13 +270,7 @@ export default function RecordExport({
     setIsGeneratingTestData(true);
     setTestDataProgress(0);
     try {
-      await loadFields();
-      const weightField = fields.find(
-        f => f.fieldId === 'weight' && f.defaultDisplay !== false
-      );
-      if (!weightField) {
-        throw new Error('体重フィールドが見つかりません。');
-      }
+      
       const daysBack = 180; // 180日分
       const baseWeight = 75; // 初期体重
       const minWeight = 50;
@@ -341,7 +323,7 @@ export default function RecordExport({
           );
         }
       }
-      await loadRecords();
+      
       setTestDataStatus(`✅ 体重テストデータ${createdCount}件を生成しました`);
       setTimeout(() => {
         setTestDataStatus(null);
@@ -378,11 +360,7 @@ export default function RecordExport({
     setIsGeneratingTestData(true);
     setTestDataProgress(0);
     try {
-      await loadFields();
-      const dailyFields = fields.filter(f => f.scope === 'daily');
-      if (dailyFields.length === 0) {
-        throw new Error('日課フィールドが見つかりません。');
-      }
+      
       const dataCount = 100;
       let createdCount = 0;
       for (let i = 0; i < dataCount; i++) {
@@ -395,8 +373,7 @@ export default function RecordExport({
         const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
         // ランダムなフィールド
-        const randomField =
-          dailyFields[Math.floor(Math.random() * dailyFields.length)];
+        const fieldId = 'exercise';
         // ランダムな値（0 or 1）
         const value = Math.random() > 0.5 ? 1 : 0;
         const uniqueId = `test_daily_${Date.now()}_${Math.random()
@@ -405,7 +382,7 @@ export default function RecordExport({
         const testRecord = {
           id: uniqueId,
           date: dateStr,
-          fieldId: randomField.fieldId,
+          fieldId: fieldId,
           value,
         };
         try {
@@ -877,46 +854,7 @@ export default function RecordExport({
         </Button>
       </div>
 
-      {/* 体重データV2移行ボタン（管理者用・最下部） */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-2xl shadow-md p-6 mt-8">
-        <h2 className="text-xl font-semibold text-blue-800 dark:text-blue-400 mb-4 flex items-center gap-2">
-          <HiSparkles className="w-5 h-5 text-blue-600 dark:text-blue-500" />
-          データV2移行（管理者用）
-        </h2>
-        <div className="mb-4 text-left">
-          <p className="text-base text-blue-700 dark:text-blue-300 mb-2">
-            既存の体重データ（V1）・日課データ（V1）を新しいテーブル（V2）へ一括移行します。
-            <br />
-            ※通常利用時は不要です。管理者のみご利用ください。
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            variant="primary"
-            size="lg"
-            icon={HiSparkles}
-            onClick={async () => {
-              const count = await migrateWeightRecordsV1ToV2();
-              window.alert(`体重データ移行が完了しました（${count}件）`);
-            }}
-            fullWidth={false}
-          >
-            体重データV2へ移行（管理者用）
-          </Button>
-          <Button
-            variant="teal"
-            size="lg"
-            icon={HiSparkles}
-            onClick={async () => {
-              const count = await migrateDailyRecordsV1ToV2();
-              window.alert(`日課データ移行が完了しました（${count}件）`);
-            }}
-            fullWidth={false}
-          >
-            日課データV2へ移行（管理者用）
-          </Button>
-        </div>
-      </div>
+      
     </div>
   );
 }

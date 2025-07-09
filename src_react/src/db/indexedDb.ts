@@ -1,13 +1,12 @@
 import type { GoalData } from '../types/goal';
-import type { Field, RecordItem, WeightRecordV2 } from '../types/record';
+import type { WeightRecordV2 } from '../types/record';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
-import { validateFieldArray, validateRecordArray } from '../utils/validation';
+
 
 const DB_NAME = 'aloe-wellness-log';
 const DB_VERSION = 4;
-const RECORDS_STORE = 'records';
-const FIELDS_STORE = 'fields';
+
 const GOAL_STORE = 'goal';
 const WEIGHT_RECORDS_STORE = 'weight_records';
 const BP_RECORDS_STORE = 'bp_records';
@@ -177,31 +176,7 @@ async function withRetry<T>(
   throw lastError!;
 }
 
-function validateRecords(data: unknown[]): RecordItem[] {
-  const validationResult = validateRecordArray(data);
 
-  if (!validationResult.isValid) {
-    console.warn(
-      'レコードデータのバリデーションエラー:',
-      validationResult.errors
-    );
-  }
-
-  return validationResult.data || [];
-}
-
-function validateFields(data: unknown[]): Field[] {
-  const validationResult = validateFieldArray(data);
-
-  if (!validationResult.isValid) {
-    console.warn(
-      'フィールドデータのバリデーションエラー:',
-      validationResult.errors
-    );
-  }
-
-  return validationResult.data || [];
-}
 
 // データベース接続（リトライ機能付き）
 export function openDb(): Promise<IDBDatabase> {
@@ -212,22 +187,6 @@ export function openDb(): Promise<IDBDatabase> {
 
         request.onupgradeneeded = () => {
           const db = request.result;
-          if (!db.objectStoreNames.contains(RECORDS_STORE)) {
-            const recordStore = db.createObjectStore(RECORDS_STORE, {
-              keyPath: 'id',
-            });
-            recordStore.createIndex('dateIndex', 'date', { unique: false });
-            recordStore.createIndex('fieldIdIndex', 'fieldId', {
-              unique: false,
-            });
-            recordStore.createIndex('scopeIndex', 'scope', { unique: false });
-          }
-          if (!db.objectStoreNames.contains(FIELDS_STORE)) {
-            const fieldStore = db.createObjectStore(FIELDS_STORE, {
-              keyPath: 'fieldId',
-            });
-            fieldStore.createIndex('orderIndex', 'order', { unique: false });
-          }
           if (!db.objectStoreNames.contains(GOAL_STORE)) {
             db.createObjectStore(GOAL_STORE, { keyPath: 'id' });
           }
@@ -361,366 +320,6 @@ async function executeTransaction<T>(
       }
     });
   });
-}
-
-// 記録データの追加（既存の場合は更新）
-export async function addRecord(record: RecordItem): Promise<void> {
-  return trackDbOperation(
-    'add-record',
-    async () => {
-      return executeTransaction(
-        RECORDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.put(record);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// 記録データの全件取得
-export async function getAllRecords(): Promise<RecordItem[]> {
-  return trackDbOperation('get-all-records', async () => {
-    return executeTransaction(
-      RECORDS_STORE,
-      'readonly',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<RecordItem[]>((resolve, reject) => {
-          const request = objectStore.getAll();
-          request.onsuccess = () => {
-            const data = request.result;
-            if (Array.isArray(data)) {
-              const validRecords = validateRecords(data);
-              resolve(validRecords);
-            } else {
-              resolve([]);
-            }
-          };
-          request.onerror = () => reject(classifyDbError(request.error));
-        });
-      }
-    );
-  });
-}
-
-// 記録項目の追加
-export async function addField(field: Field): Promise<void> {
-  return trackDbOperation(
-    'add-field',
-    async () => {
-      return executeTransaction(
-        FIELDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.put(field); // addをputに変更
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// 記録項目の全件取得
-export async function getAllFields(): Promise<Field[]> {
-  return trackDbOperation('get-all-fields', async () => {
-    return executeTransaction(
-      FIELDS_STORE,
-      'readonly',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<Field[]>((resolve, reject) => {
-          const request = objectStore.getAll();
-          request.onsuccess = () => {
-            const data = request.result;
-            if (Array.isArray(data)) {
-              const validFields = validateFields(data);
-              resolve(validFields);
-            } else {
-              resolve([]);
-            }
-          };
-          request.onerror = () => reject(classifyDbError(request.error));
-        });
-      }
-    );
-  });
-}
-
-// 記録項目の更新
-export async function updateField(field: Field): Promise<void> {
-  return trackDbOperation(
-    'update-field',
-    async () => {
-      return executeTransaction(
-        FIELDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.put(field);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// 記録データの更新
-export async function updateRecord(record: RecordItem): Promise<void> {
-  return trackDbOperation(
-    'update-record',
-    async () => {
-      return executeTransaction(
-        RECORDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.put(record);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// 記録データの削除
-export async function deleteRecord(id: string): Promise<void> {
-  return trackDbOperation(
-    'delete-record',
-    async () => {
-      return executeTransaction(
-        RECORDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.delete(id);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// フィールド（項目）の削除
-export async function deleteField(fieldId: string): Promise<void> {
-  return trackDbOperation(
-    'delete-field',
-    async () => {
-      return executeTransaction(
-        FIELDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-          return new Promise<void>((resolve, reject) => {
-            const request = objectStore.delete(fieldId);
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(classifyDbError(request.error));
-          });
-        }
-      );
-    },
-    1
-  );
-}
-
-// 全記録データの削除
-export async function deleteAllRecords(): Promise<void> {
-  return trackDbOperation('delete-all-records', async () => {
-    return executeTransaction(
-      RECORDS_STORE,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.clear();
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(classifyDbError(request.error));
-        });
-      }
-    );
-  });
-}
-
-// 全項目データの削除
-export async function deleteAllFields(): Promise<void> {
-  return trackDbOperation('delete-all-fields', async () => {
-    return executeTransaction(
-      FIELDS_STORE,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.clear();
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(classifyDbError(request.error));
-        });
-      }
-    );
-  });
-}
-
-// 全データ削除（記録と項目の両方）
-export async function deleteAllData(): Promise<void> {
-  return trackDbOperation('delete-all-data', async () => {
-    return executeTransaction(
-      [
-        RECORDS_STORE,
-        FIELDS_STORE,
-        WEIGHT_RECORDS_STORE,
-        BP_RECORDS_STORE,
-        DAILY_RECORDS_STORE,
-        DAILY_FIELDS_STORE,
-      ],
-      'readwrite',
-      async (_transaction, stores) => {
-        const [
-          recordStore,
-          fieldStore,
-          weightStore,
-          bpStore,
-          dailyRecordStore,
-          dailyFieldStore,
-        ] = stores as IDBObjectStore[];
-        return new Promise<void>((resolve, reject) => {
-          let completedOperations = 0;
-          const totalOperations = 6;
-          const checkCompletion = () => {
-            completedOperations++;
-            if (completedOperations === totalOperations) {
-              resolve();
-            }
-          };
-          const recordRequest = recordStore.clear();
-          recordRequest.onsuccess = checkCompletion;
-          recordRequest.onerror = () =>
-            reject(classifyDbError(recordRequest.error));
-          const fieldRequest = fieldStore.clear();
-          fieldRequest.onsuccess = checkCompletion;
-          fieldRequest.onerror = () =>
-            reject(classifyDbError(fieldRequest.error));
-          const weightRequest = weightStore.clear();
-          weightRequest.onsuccess = checkCompletion;
-          weightRequest.onerror = () =>
-            reject(classifyDbError(weightRequest.error));
-          const bpRequest = bpStore.clear();
-          bpRequest.onsuccess = checkCompletion;
-          bpRequest.onerror = () => reject(classifyDbError(bpRequest.error));
-          const dailyRecordRequest = dailyRecordStore.clear();
-          dailyRecordRequest.onsuccess = checkCompletion;
-          dailyRecordRequest.onerror = () =>
-            reject(classifyDbError(dailyRecordRequest.error));
-          const dailyFieldRequest = dailyFieldStore.clear();
-          dailyFieldRequest.onsuccess = checkCompletion;
-          dailyFieldRequest.onerror = () =>
-            reject(classifyDbError(dailyFieldRequest.error));
-        });
-      }
-    );
-  });
-}
-
-// バッチ操作：複数のレコードを一度に追加/更新
-export async function batchUpdateRecords(records: RecordItem[]): Promise<void> {
-  return trackDbOperation(
-    'batch-update-records',
-    async () => {
-      return executeTransaction(
-        RECORDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-
-          return new Promise<void>((resolve, reject) => {
-            let completedOperations = 0;
-            const totalOperations = records.length;
-
-            if (totalOperations === 0) {
-              resolve();
-              return;
-            }
-
-            const checkCompletion = () => {
-              completedOperations++;
-              if (completedOperations === totalOperations) {
-                resolve();
-              }
-            };
-
-            for (const record of records) {
-              const request = objectStore.put(record);
-              request.onsuccess = checkCompletion;
-              request.onerror = () => reject(classifyDbError(request.error));
-            }
-          });
-        }
-      );
-    },
-    records.length
-  );
-}
-
-// バッチ操作：複数のフィールドを一度に追加/更新
-export async function batchUpdateFields(fields: Field[]): Promise<void> {
-  return trackDbOperation(
-    'batch-update-fields',
-    async () => {
-      return executeTransaction(
-        FIELDS_STORE,
-        'readwrite',
-        async (_transaction, store) => {
-          const objectStore = store as IDBObjectStore;
-
-          return new Promise<void>((resolve, reject) => {
-            let completedOperations = 0;
-            const totalOperations = fields.length;
-
-            if (totalOperations === 0) {
-              resolve();
-              return;
-            }
-
-            const checkCompletion = () => {
-              completedOperations++;
-              if (completedOperations === totalOperations) {
-                resolve();
-              }
-            };
-
-            for (const field of fields) {
-              const request = objectStore.put(field);
-              request.onsuccess = checkCompletion;
-              request.onerror = () => reject(classifyDbError(request.error));
-            }
-          });
-        }
-      );
-    },
-    fields.length
-  );
 }
 
 // 目標データの保存
@@ -879,61 +478,7 @@ export async function deleteWeightRecord(id: string): Promise<void> {
   );
 }
 
-// V1→V2体重データ移行ユーティリティ
-export async function migrateWeightRecordsV1ToV2(): Promise<number> {
-  // 1. 既存のrecordsストアから体重関連データを取得
-  const allRecords = await getAllRecords();
-  // 2. weight系fieldIdのみ抽出
-  const weightFieldIds = ['weight', 'body_fat', 'waist', 'note'];
-  type GroupKey = string; // `${date}_${time}`
-  const grouped: Record<GroupKey, Partial<WeightRecordV2>> = {};
-  for (const rec of allRecords) {
-    if (!weightFieldIds.includes(rec.fieldId)) continue;
-    const key = `${rec.date}_${rec.time}`;
-    if (!grouped[key]) {
-      grouped[key] = {
-        id: crypto.randomUUID(),
-        date: rec.date,
-        time: rec.time,
-      };
-    }
-    switch (rec.fieldId) {
-      case 'weight':
-        grouped[key].weight =
-          typeof rec.value === 'number' ? rec.value : undefined;
-        break;
-      case 'body_fat':
-        grouped[key].bodyFat = typeof rec.value === 'number' ? rec.value : null;
-        break;
-      case 'waist':
-        grouped[key].waist = typeof rec.value === 'number' ? rec.value : null;
-        break;
-      case 'note':
-        grouped[key].note = typeof rec.value === 'string' ? rec.value : null;
-        break;
-    }
-    if (rec.excludeFromGraph) grouped[key].excludeFromGraph = true;
-    if (rec.note && !grouped[key].note) grouped[key].note = rec.note;
-  }
-  // 3. weight必須でV2型に変換
-  const v2Records: WeightRecordV2[] = Object.values(grouped)
-    .filter(r => typeof r.weight === 'number' && r.date && r.time)
-    .map(r => ({
-      id: r.id!,
-      date: r.date!,
-      time: r.time!,
-      weight: r.weight!,
-      bodyFat: r.bodyFat ?? null,
-      waist: r.waist ?? null,
-      note: r.note ?? null,
-      excludeFromGraph: r.excludeFromGraph ?? false,
-    }));
-  // 4. 新ストアへ一括保存
-  for (const rec of v2Records) {
-    await addWeightRecord(rec);
-  }
-  return v2Records.length;
-}
+
 
 // 新しい血圧記録（V2）の追加
 export async function addBpRecord(
@@ -1232,36 +777,58 @@ export async function deleteDailyField(fieldId: string): Promise<void> {
   );
 }
 
-// 日課データV1→V2移行
-export async function migrateDailyRecordsV1ToV2(): Promise<number> {
-  // 1. 既存のrecordsストアから日課関連データを取得
-  const allRecords = await getAllRecords();
-  // 2. daily系fieldIdのみ抽出（boolean/number型でscope: 'daily'のもの）
-  const allFields = await getAllFields();
-  const dailyFieldIds = allFields
-    .filter(f => f.scope === 'daily')
-    .map(f => f.fieldId);
-  // 3. V2型に変換
-  const v2Records = allRecords
-    .filter(r => dailyFieldIds.includes(r.fieldId))
-    .map(r => ({
-      id: r.id,
-      date: r.date,
-      fieldId: r.fieldId,
-      value:
-        typeof r.value === 'boolean' ? (r.value ? 1 : 0) : Number(r.value) || 0,
-    }));
-  // 4. V2フィールドも移行
-  const v2Fields = allFields
-    .filter(f => f.scope === 'daily')
-    .map(f => ({
-      fieldId: f.fieldId,
-      name: f.name,
-      order: f.order ?? 0,
-      display: f.defaultDisplay !== false,
-    }));
-  // 5. 新ストアへ一括保存
-  for (const f of v2Fields) await addDailyField(f);
-  for (const r of v2Records) await addDailyRecord(r);
-  return v2Records.length;
+// 全データ削除（記録と項目の両方）
+export async function deleteAllData(): Promise<void> {
+  return trackDbOperation('delete-all-data', async () => {
+    return executeTransaction(
+      [
+        GOAL_STORE,
+        WEIGHT_RECORDS_STORE,
+        BP_RECORDS_STORE,
+        DAILY_RECORDS_STORE,
+        DAILY_FIELDS_STORE,
+      ],
+      'readwrite',
+      async (_transaction, stores) => {
+        const [
+          goalStore,
+          weightStore,
+          bpStore,
+          dailyRecordStore,
+          dailyFieldStore,
+        ] = stores as IDBObjectStore[];
+        return new Promise<void>((resolve, reject) => {
+          let completedOperations = 0;
+          const totalOperations = 5;
+          const checkCompletion = () => {
+            completedOperations++;
+            if (completedOperations === totalOperations) {
+              resolve();
+            }
+          };
+          const goalRequest = goalStore.clear();
+          goalRequest.onsuccess = checkCompletion;
+          goalRequest.onerror = () =>
+            reject(classifyDbError(goalRequest.error));
+          const weightRequest = weightStore.clear();
+          weightRequest.onsuccess = checkCompletion;
+          weightRequest.onerror = () =>
+            reject(classifyDbError(weightRequest.error));
+          const bpRequest = bpStore.clear();
+          bpRequest.onsuccess = checkCompletion;
+          bpRequest.onerror = () => reject(classifyDbError(bpRequest.error));
+          const dailyRecordRequest = dailyRecordStore.clear();
+          dailyRecordRequest.onsuccess = checkCompletion;
+          dailyRecordRequest.onerror = () =>
+            reject(classifyDbError(dailyRecordRequest.error));
+          const dailyFieldRequest = dailyFieldStore.clear();
+          dailyFieldRequest.onsuccess = checkCompletion;
+          dailyFieldRequest.onerror = () =>
+            reject(classifyDbError(dailyFieldRequest.error));
+        });
+      }
+    );
+  });
 }
+
+

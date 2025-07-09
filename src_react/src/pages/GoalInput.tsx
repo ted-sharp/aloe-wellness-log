@@ -14,7 +14,7 @@ import { HiSparkles } from 'react-icons/hi2';
 import Button from '../components/Button';
 import { getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
-import { useRecordsStore } from '../store/records';
+
 
 const currentYear = new Date().getFullYear();
 
@@ -103,7 +103,7 @@ function useSparkleDropdown() {
 
 export default function GoalInput() {
   const { goal, setGoal, loadGoal } = useGoalStore();
-  const { records } = useRecordsStore();
+  
   const [gender, setGender] = useState<'male' | 'female' | 'unknown'>(
     'unknown'
   );

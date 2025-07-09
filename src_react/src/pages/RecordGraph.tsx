@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { getAllDailyRecords, getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
-import { useRecordsStore } from '../store/records';
+
 import type { DailyRecordV2, WeightRecordV2 } from '../types/record';
 
 const PERIODS = [
@@ -35,14 +35,13 @@ interface TooltipItem {
 }
 
 const RecordGraph: React.FC = () => {
-  const { fields } = useRecordsStore();
+  
   const { goal, loadGoal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
   const [dailyRecords, setDailyRecords] = React.useState<DailyRecordV2[]>([]);
 
-  // 体重フィールドIDを取得
-  const weightField = fields.find(f => f.fieldId === 'weight');
+  
 
   // V2体重データ取得
   const [weightRecords, setWeightRecords] = React.useState<WeightRecordV2[]>(
@@ -62,7 +61,7 @@ const RecordGraph: React.FC = () => {
   const data = useMemo(() => {
     const filtered = weightRecords
       .filter(
-        r =>
+        (r: WeightRecordV2) =>
           typeof r.weight === 'number' && (showExcluded || !r.excludeFromGraph)
       )
       .sort((a, b) => {
@@ -316,7 +315,7 @@ const RecordGraph: React.FC = () => {
                   strokeDasharray="2 2"
                 />
               ))}
-            <YAxis domain={['auto', 'auto']} unit={weightField?.unit || 'kg'} />
+            <YAxis domain={['auto', 'auto']} unit={'kg'} />
             <Tooltip
               content={({ active, payload, label: _ }) => {
                 if (!active || !payload || !payload.length) return null;
@@ -357,7 +356,7 @@ const RecordGraph: React.FC = () => {
                           {typeof item.value === 'number'
                             ? item.value.toFixed(2)
                             : item.value}
-                          {weightField?.unit || 'kg'}
+                          {'kg'}
                         </div>
                       ))}
                     <div style={{ marginTop: 6, fontSize: 13 }}>

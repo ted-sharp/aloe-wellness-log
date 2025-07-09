@@ -12,15 +12,7 @@ import GoalInput from './pages/GoalInput';
 import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
-import {
-  debugLog,
-  detectReactDevTools,
-  exposeDevTools,
-  isDev,
-  perfEnd,
-  perfStart,
-  showDevWarnings,
-} from './utils/devTools';
+import { isDev } from './utils/devTools';
 
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {
@@ -68,7 +60,7 @@ function Navigation() {
     };
   }, [isMenuOpen]);
 
-  // モバイルメニューのbody overflow制御（SortModalとの競合を防ぐ）
+  // モバイルメニューのbody overflow制御
   useEffect(() => {
     if (isMenuOpen) {
       // メニューが開いている時のみbody scrollを制御
@@ -245,10 +237,10 @@ function Navigation() {
 }
 
 const RecordExport = lazy(() => {
-  perfStart('RecordExport-load');
+  
   return import('./pages/RecordExport')
     .then(module => {
-      perfEnd('RecordExport-load');
+      
       return module;
     })
     .catch(error => {
@@ -278,13 +270,7 @@ const RecordExport = lazy(() => {
 });
 
 function App() {
-  const {
-    initializeFields,
-    loadFields,
-    fieldsOperation,
-    recordsOperation,
-    loadRecords,
-  } = useRecordsStore();
+  const { } = useRecordsStore();
   const [tipsModalOpen, setTipsModalOpen] = useState(false);
   const [tipText, setTipText] = useState('');
 
@@ -295,51 +281,7 @@ function App() {
     setTipsModalOpen(true);
   };
 
-  useEffect(() => {
-    try {
-      if (isDev) {
-        perfStart('App-initialization');
-        debugLog('🚀 App initialization started');
-      }
-
-      // 開発ツールの初期化（エラーが発生しても続行）
-      if (isDev) {
-        try {
-          exposeDevTools();
-          detectReactDevTools();
-          showDevWarnings();
-        } catch (devError) {
-          console.warn('⚠️ Development tools initialization failed:', devError);
-        }
-      }
-
-      // 初回マウント時のみfields初期化→ロード
-      initializeFields().then(() => {
-        loadFields();
-      });
-
-      if (isDev) {
-        perfEnd('App-initialization');
-        debugLog('✅ App initialization completed');
-      }
-    } catch (error) {
-      console.error('❌ App initialization failed:', error);
-      // エラーが発生してもアプリは動作させる
-      try {
-        // フォールバックとして既存の初期化を使用
-        initializeFields();
-      } catch (fallbackError) {
-        console.error('❌ Fallback initialization also failed:', fallbackError);
-      }
-    }
-  }, [initializeFields, loadFields]);
-
-  // fieldsの初期化が終わったらrecordsもロード
-  useEffect(() => {
-    if (!fieldsOperation.loading) {
-      loadRecords();
-    }
-  }, [fieldsOperation.loading, loadRecords]);
+  
 
   // 初回マウント時のtips表示（デバッグ用）
   useEffect(() => {
@@ -377,11 +319,7 @@ function App() {
       </header>
 
       <main id="main-content" role="main" tabIndex={-1}>
-        {fieldsOperation &&
-        recordsOperation &&
-        (fieldsOperation.loading || recordsOperation.loading) ? (
-          <PageLoader pageName="初期化中" />
-        ) : (
+
           <Suspense fallback={<PageLoader pageName="日課" />}>
             <Routes>
               <Route
@@ -435,7 +373,6 @@ function App() {
               <Route path="*" element={<Navigate to="/weight" replace />} />
             </Routes>
           </Suspense>
-        )}
       </main>
     </div>
   );
