@@ -204,6 +204,29 @@ const DailyRecord: React.FC = () => {
     setRecords(rs);
   }, []);
 
+  // 初期日課項目（運動・食事・睡眠・喫煙・飲酒）
+  const DEFAULT_DAILY_FIELDS: DailyFieldV2[] = [
+    { fieldId: 'exercise', name: '運動', order: 10, display: true },
+    { fieldId: 'meal', name: '食事', order: 20, display: true },
+    { fieldId: 'sleep', name: '睡眠', order: 30, display: true },
+    { fieldId: 'smoke', name: '喫煙', order: 40, display: false },
+    { fieldId: 'alcohol', name: '飲酒', order: 50, display: false },
+  ];
+
+  // 初回のみ、日課項目が空なら自動投入
+  useEffect(() => {
+    (async () => {
+      const fs = await getAllDailyFields();
+      if (!fs || fs.length === 0) {
+        for (const field of DEFAULT_DAILY_FIELDS) {
+          await addDailyField(field);
+        }
+        // 再取得して反映
+        setFields(await getAllDailyFields());
+      }
+    })();
+  }, []);
+
   // 初回マウント時に必ずロード
   React.useEffect(() => {
     loadFields();
