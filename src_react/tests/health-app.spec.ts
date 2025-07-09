@@ -20,6 +20,7 @@ test.describe('健康管理アプリ現行画面 E2E', () => {
     await page.reload();
     await waitForOverlayToDisappear(page);
     await page.waitForSelector('main', { state: 'attached', timeout: 10000 });
+    await expect(page.getByTestId('page-loader')).toBeHidden();
   });
 
   test('体重記録画面の主要UIが表示される', async ({ page }) => {

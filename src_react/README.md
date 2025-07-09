@@ -127,36 +127,10 @@ yarn test:e2e:headed
 
 ## 📊 データ仕様・カスタマイズ
 
-### 記録データ（RecordItem）
 
-```typescript
-{
-  id: string; // 一意識別子
-  date: string; // "YYYY-MM-DD"
-  time: string; // "HH:mm"
-  datetime: string; // ISO8601形式
-  fieldId: string; // 項目識別子
-  value: number | string | boolean; // 記録値
-}
-```
-
-### 記録項目（Field）
-
-```typescript
-{
-  fieldId: string;      // 項目識別子
-  name: string;         // 表示名
-  unit?: string;        // 単位
-  type: 'number' | 'string' | 'boolean';
-  order?: number;       // 表示順序
-  defaultDisplay?: boolean; // デフォルト表示
-}
-```
 
 ### 初期項目・カスタマイズ
 
-- `src/store/records.ts`の`initialFields`で初期項目を定義
-- `defaultDisplay: true`はデフォルト表示、`false`は一時表示（記録後自動非表示）
 - 項目追加・編集・並び替え・非表示はアプリ UI から自由に可能
 
 ### データエクスポート/インポート
@@ -164,6 +138,59 @@ yarn test:e2e:headed
 - 記録データは CSV/JSON 形式でエクスポート可
 - バックアップ/リストアはエクスポート/インポート画面から
 - データは全て IndexedDB にローカル保存
+
+### V2 データ仕様
+
+#### 体重記録 (WeightRecordV2)
+
+```typescript
+export type WeightRecordV2 = {
+  id: string; // 一意識別子
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  weight: number;
+  bodyFat?: number | null;
+  waist?: number | null;
+  note?: string | null;
+  excludeFromGraph?: boolean;
+};
+```
+
+#### 血圧記録 (BpRecordV2)
+
+```typescript
+export type BpRecordV2 = {
+  id: string; // 一意識別子
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  systolic: number; // 収縮期血圧
+  diastolic: number; // 拡張期血圧
+  heartRate?: number | null; // 心拍数（任意）
+  note?: string | null;
+};
+```
+
+#### 日課記録 (DailyRecordV2)
+
+```typescript
+export type DailyRecordV2 = {
+  id: string; // 一意識別子
+  date: string; // YYYY-MM-DD
+  fieldId: string;
+  value: number; // 0: 未達成, 1: 達成
+};
+```
+
+#### 日課項目 (DailyFieldV2)
+
+```typescript
+export type DailyFieldV2 = {
+  fieldId: string;
+  name: string;
+  order: number;
+  display: boolean;
+};
+```
 
 ---
 

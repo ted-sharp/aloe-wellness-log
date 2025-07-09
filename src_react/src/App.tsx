@@ -13,6 +13,7 @@ import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
 import { isDev } from './utils/devTools';
+import * as db from './db/indexedDb';
 
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {
@@ -273,6 +274,7 @@ function App() {
   const { } = useRecordsStore();
   const [tipsModalOpen, setTipsModalOpen] = useState(false);
   const [tipText, setTipText] = useState('');
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
 
   // tips表示用関数
   const showTipsModal = () => {
@@ -280,6 +282,38 @@ function App() {
     setTipText(randomTip);
     setTipsModalOpen(true);
   };
+
+  // データ初期化
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        // 日課フィールドの初期化
+        const baseDailyFieldStructure = [
+          { fieldId: 'exercise', name: '運動', order: 6, display: true },
+          { fieldId: 'meal', name: '食事', order: 7, display: true },
+          { fieldId: 'sleep', name: '睡眠', order: 8, display: true },
+          { fieldId: 'smoke', name: '喫煙', order: 9, display: false },
+          { fieldId: 'alcohol', name: '飲酒', order: 10, display: false },
+        ];
+
+        const existingDailyFields = await db.getAllDailyFields();
+        if (existingDailyFields.length === 0) {
+          for (const field of baseDailyFieldStructure) {
+            await db.addDailyField(field);
+          }
+        }
+
+        // ここで他のV2レコードのロードも追加可能
+
+        setIsDataInitialized(true);
+      } catch (error) {
+        console.error('データ初期化エラー:', error);
+        // エラー発生時でもアプリは動作させるが、初期化フラグは立てない
+      }
+    };
+
+    initializeData();
+  }, []);
 
   
 
@@ -319,7 +353,9 @@ function App() {
       </header>
 
       <main id="main-content" role="main" tabIndex={-1}>
-
+        {!isDataInitialized ? (
+          <PageLoader pageName="データ初期化中" />
+        ) : (
           <Suspense fallback={<PageLoader pageName="日課" />}>
             <Routes>
               <Route
@@ -373,6 +409,7 @@ function App() {
               <Route path="*" element={<Navigate to="/weight" replace />} />
             </Routes>
           </Suspense>
+        )}
       </main>
     </div>
   );

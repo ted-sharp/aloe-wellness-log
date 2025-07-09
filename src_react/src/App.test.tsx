@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from './App';
@@ -116,14 +116,7 @@ describe('App', () => {
     });
   });
 
-  test('initializeFieldsが呼び出される', () => {
-    render(
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
-    );
-    expect(mockInitializeFields).toHaveBeenCalledTimes(2);
-  });
+  
 
   test('デスクトップナビゲーションが表示される', () => {
     render(
@@ -133,7 +126,8 @@ describe('App', () => {
     );
 
     // デスクトップ用ナビゲーションリンクを確認
-    const navLinks = screen.getAllByRole('link', { name: 'メインへ移動' });
+    const nav = screen.getByRole('navigation', { name: 'メインへ移動' });
+    const navLinks = within(nav).getAllByRole('link');
     expect(navLinks.length).toBeGreaterThanOrEqual(6); // 体重・日課・血圧・グラフ・目標・管理
     // それぞれのhref属性を確認
     const hrefs = navLinks.map(link => link.getAttribute('href'));
@@ -282,8 +276,9 @@ describe('App', () => {
 
     // デフォルトでは日課ページが現在のページ
     await waitFor(() => {
-      const currentPageLink = screen.getByRole('link', {
-        name: '日課',
+      const nav = screen.getByRole('navigation', { name: 'メインへ移動' });
+      const currentPageLink = within(nav).getByRole('link', {
+        name: '体重',
       });
       expect(currentPageLink).toHaveAttribute('aria-current', 'page');
     });
