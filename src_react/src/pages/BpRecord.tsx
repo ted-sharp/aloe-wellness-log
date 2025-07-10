@@ -138,11 +138,11 @@ const BpRecord: React.FC = () => {
       {/* --- 血圧基準範囲帯（収縮期・拡張期） --- */}
       <BpBands recordsOfDay={recordsOfDay} />
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
-        <div className="flex flex-col gap-6 w-full max-w-md">
+        <div className="flex flex-col gap-2 w-full max-w-md">
           {recordsOfDay.map(rec => (
             <div
               key={rec.id}
-              className="flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4"
+              className="flex flex-col gap-2 bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0"
             >
               <div className="flex items-center w-full">
                 <input
@@ -163,42 +163,36 @@ const BpRecord: React.FC = () => {
                   {''}
                 </Button>
               </div>
-              <textarea
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full"
-                value={rec.note ?? ''}
-                onChange={e => handleUpdate({ ...rec, note: e.target.value })}
-                placeholder="補足・メモ（任意）"
-              />
               <div className="flex items-center gap-2 w-full">
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[6em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                   value={rec.systolic}
                   onChange={e =>
                     handleUpdate({ ...rec, systolic: Number(e.target.value) })
                   }
                   placeholder="収縮期"
                 />
-                <span className="text-gray-500">/</span>
+                <span className="ml-0 mr-3 text-gray-500">mmHg</span>
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[6em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                   value={rec.diastolic}
                   onChange={e =>
                     handleUpdate({ ...rec, diastolic: Number(e.target.value) })
                   }
                   placeholder="拡張期"
                 />
-                <span className="text-gray-500">/</span>
+                <span className="ml-0 mr-3 text-gray-500">mmHg</span>
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[5em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                   value={rec.heartRate ?? ''}
                   onChange={e =>
                     handleUpdate({
@@ -208,13 +202,20 @@ const BpRecord: React.FC = () => {
                   }
                   placeholder="脈拍"
                 />
+                <span className="ml-0 mr-3 text-gray-500">bpm</span>
               </div>
+              <textarea
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-10 mb-0"
+                value={rec.note ?? ''}
+                onChange={e => handleUpdate({ ...rec, note: e.target.value })}
+                placeholder="補足・メモ（任意）"
+              />
             </div>
           ))}
         </div>
         {/* 新規項目追加フォーム */}
-        <div className="w-full max-w-md mt-6 mb-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4 flex flex-col gap-2">
+        <div className="w-full max-w-md mt-2 mb-0">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0 flex flex-col gap-2">
             <div className="flex items-center w-full">
               <input
                 type="time"
@@ -224,7 +225,7 @@ const BpRecord: React.FC = () => {
               />
               <button
                 type="button"
-                className="ml-1 w-12 h-10 min-w-0 min-h-0 p-0 inline-flex items-center justify-center rounded-full bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm overflow-hidden"
+                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150 ml-1"
                 title="朝7時にセット"
                 aria-label="朝7時にセット"
                 onClick={() => setNewTime('07:00')}
@@ -245,44 +246,44 @@ const BpRecord: React.FC = () => {
                 {''}
               </Button>
             </div>
-            <textarea
-              className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full"
-              rows={1}
-              value={newNote}
-              onChange={e => setNewNote(e.target.value)}
-              placeholder="補足・メモ（任意）"
-            />
             <div className="flex items-center gap-2 w-full">
               <input
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[6em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                 value={newSystolic}
                 onChange={e => setNewSystolic(e.target.value)}
                 placeholder="収縮期"
               />
-              <span className="text-gray-500">/</span>
+              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
               <input
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[6em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                 value={newDiastolic}
                 onChange={e => setNewDiastolic(e.target.value)}
                 placeholder="拡張期"
               />
-              <span className="text-gray-500">/</span>
+              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
               <input
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[5em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
                 value={newHeartRate}
                 onChange={e => setNewHeartRate(e.target.value)}
                 placeholder="脈拍"
               />
+              <span className="ml-0 mr-3 text-gray-500">bpm</span>
             </div>
+            <textarea
+              className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-10 mb-0"
+              value={newNote}
+              onChange={e => setNewNote(e.target.value)}
+              placeholder="補足・メモ（任意）"
+            />
           </div>
         </div>
       </div>
