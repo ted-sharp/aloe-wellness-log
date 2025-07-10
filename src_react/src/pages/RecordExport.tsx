@@ -23,7 +23,6 @@ import {
   getAllDailyFields,
   getAllDailyRecords,
   getAllWeightRecords,
-  
 } from '../db/indexedDb';
 import { useRecordsStore } from '../store/records';
 import { isDev } from '../utils/devTools';
@@ -44,9 +43,7 @@ export default function RecordExport({
 }: {
   showTipsModal?: () => void;
 }) {
-  const {
-    deleteAllData,
-  } = useRecordsStore();
+  const { deleteAllData } = useRecordsStore();
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [testDataStatus, setTestDataStatus] = useState<string | null>(null);
   const [testDataProgress, setTestDataProgress] = useState<number>(0);
@@ -117,7 +114,7 @@ export default function RecordExport({
 
     const logPerformanceInfo = () => {
       console.group('🔍 RecordExport Performance Info');
-      
+
       console.log(`📊 Import Status: ${importStatus || 'none'}`);
       console.log(`📊 Test Data Status: ${testDataStatus || 'none'}`);
       console.log(`📊 Test Data Progress: ${testDataProgress}%`);
@@ -127,13 +124,7 @@ export default function RecordExport({
 
     const timeout = setTimeout(logPerformanceInfo, 2000);
     return () => clearTimeout(timeout);
-  }, [
-    
-    importStatus,
-    testDataStatus,
-    testDataProgress,
-    isGeneratingTestData,
-  ]);
+  }, [importStatus, testDataStatus, testDataProgress, isGeneratingTestData]);
 
   // V2形式エクスポート
   const handleExportJSON = async () => {
@@ -212,7 +203,7 @@ export default function RecordExport({
           console.warn('Skipping daily record:', rec.id, error);
         }
       }
-      
+
       setImportStatus(`✅ ${importCount}件のデータをインポートしました`);
       setTimeout(() => setImportStatus(null), 3000);
     } catch (error) {
@@ -254,7 +245,7 @@ export default function RecordExport({
       if (doubleConfirm) {
         try {
           await deleteAllData();
-          
+
           alert('すべてのデータを削除しました');
         } catch (error) {
           console.error('Delete error:', error);
@@ -270,7 +261,6 @@ export default function RecordExport({
     setIsGeneratingTestData(true);
     setTestDataProgress(0);
     try {
-      
       const daysBack = 180; // 180日分
       const baseWeight = 75; // 初期体重
       const minWeight = 50;
@@ -303,6 +293,16 @@ export default function RecordExport({
           date: dateStr,
           time: timeStr,
           weight: weight,
+          bodyFat:
+            Math.random() > 0.2
+              ? Math.round((15 + Math.random() * 20) * 10) / 10
+              : null, // 15〜35%くらい
+          waist:
+            Math.random() > 0.2
+              ? Math.round((65 + Math.random() * 25) * 10) / 10
+              : null, // 65〜90cmくらい
+          note: Math.random() > 0.7 ? 'テストメモ' : null,
+          excludeFromGraph: Math.random() > 0.5 ? true : false,
         };
         try {
           await addWeightRecord(testRecord);
@@ -323,7 +323,7 @@ export default function RecordExport({
           );
         }
       }
-      
+
       setTestDataStatus(`✅ 体重テストデータ${createdCount}件を生成しました`);
       setTimeout(() => {
         setTestDataStatus(null);
@@ -360,9 +360,9 @@ export default function RecordExport({
     setIsGeneratingTestData(true);
     setTestDataProgress(0);
     try {
-      
       const dataCount = 100;
       let createdCount = 0;
+      const fieldIds = ['exercise', 'meal', 'sleep'];
       for (let i = 0; i < dataCount; i++) {
         // ランダムな日付
         const randomDaysAgo = Math.floor(Math.random() * 180);
@@ -372,34 +372,36 @@ export default function RecordExport({
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
-        // ランダムなフィールド
-        const fieldId = 'exercise';
-        // ランダムな値（0 or 1）
-        const value = Math.random() > 0.5 ? 1 : 0;
-        const uniqueId = `test_daily_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        const testRecord = {
-          id: uniqueId,
-          date: dateStr,
-          fieldId: fieldId,
-          value,
-        };
-        try {
-          await addDailyRecord(testRecord);
-          createdCount++;
-        } catch (error) {
-          console.warn(
-            '日課テストレコードの追加をスキップ:',
-            testRecord.id,
-            error
-          );
+        for (const fieldId of fieldIds) {
+          // ランダムな値（0 or 1）
+          const value = Math.random() > 0.5 ? 1 : 0;
+          const uniqueId = `test_daily_${fieldId}_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
+          const testRecord = {
+            id: uniqueId,
+            date: dateStr,
+            fieldId: fieldId,
+            value,
+          };
+          try {
+            await addDailyRecord(testRecord);
+            createdCount++;
+          } catch (error) {
+            console.warn(
+              '日課テストレコードの追加をスキップ:',
+              testRecord.id,
+              error
+            );
+          }
         }
         const progress = ((i + 1) / dataCount) * 100;
         setTestDataProgress(progress);
         if ((i + 1) % 10 === 0) {
           setTestDataStatus(
-            `日課テストデータを生成中... ${i + 1}/${dataCount}`
+            `日課テストデータを生成中... ${(i + 1) * fieldIds.length}/${
+              dataCount * fieldIds.length
+            }`
           );
         }
       }
@@ -853,8 +855,6 @@ export default function RecordExport({
           すべてのデータを削除
         </Button>
       </div>
-
-      
     </div>
   );
 }
