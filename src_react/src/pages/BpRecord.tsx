@@ -305,7 +305,7 @@ type BpBand = {
 const systolicBands: BpBand[] = [
   { min: 0, max: 90, color: '#6ec6f1', label: '低', range: '<90' },
   { min: 90, max: 120, color: '#7edfa0', label: '正常', range: '90-119' },
-  { min: 120, max: 130, color: '#ffe066', label: '正常高値', range: '120-129' },
+  { min: 120, max: 130, color: '#e6f7b2', label: '正常高値', range: '120-129' },
   { min: 130, max: 140, color: '#fff59d', label: '高値', range: '130-139' },
   { min: 140, max: 160, color: '#ffb74d', label: 'Ⅰ度', range: '140-159' },
   { min: 160, max: 180, color: '#ff7043', label: 'Ⅱ度', range: '160-179' },
