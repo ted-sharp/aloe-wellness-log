@@ -34,14 +34,14 @@ interface TooltipItem {
   value?: number | string;
 }
 
+// 曜日配列を追加
+const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
+
 const RecordGraph: React.FC = () => {
-  
   const { goal, loadGoal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
   const [dailyRecords, setDailyRecords] = React.useState<DailyRecordV2[]>([]);
-
-  
 
   // V2体重データ取得
   const [weightRecords, setWeightRecords] = React.useState<WeightRecordV2[]>(
@@ -141,14 +141,15 @@ const RecordGraph: React.FC = () => {
     return ticks;
   }, [data, periodIdx]);
 
-  // X軸ラベルをMM/DD HH:mm形式で表示
+  // X軸ラベルをMM/DD(曜) HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
     const d = new Date(ts);
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     const hh = String(d.getHours()).padStart(2, '0');
     const min = String(d.getMinutes()).padStart(2, '0');
-    return `${mm}/${dd} ${hh}:${min}`;
+    const weekday = WEEKDAYS_JP[d.getDay()];
+    return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
   };
 
   // 回帰直線（傾向線）の計算
@@ -189,11 +190,12 @@ const RecordGraph: React.FC = () => {
     const { x = 0, y = 0, payload } = props;
     const ts = payload.value;
     const d = new Date(ts);
+    const weekday = WEEKDAYS_JP[d.getDay()];
     return (
       <g>
         <text x={x} y={y + 10} textAnchor="middle" fontSize="12">{`${
           d.getMonth() + 1
-        }/${d.getDate()}`}</text>
+        }/${d.getDate()}(${weekday})`}</text>
       </g>
     );
   };
@@ -341,9 +343,28 @@ const RecordGraph: React.FC = () => {
                     <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                       {(() => {
                         type Pt = { timestamp: number };
-                        return point
-                          ? formatDateTimeLabel((point as Pt).timestamp)
-                          : '';
+                        if (
+                          !payload ||
+                          !Array.isArray(payload) ||
+                          payload.length === 0
+                        )
+                          return '';
+                        const pt = payload[0]?.payload;
+                        if (
+                          !pt ||
+                          typeof pt !== 'object' ||
+                          pt === null ||
+                          !('timestamp' in pt)
+                        )
+                          return '';
+                        const ts = (pt as Pt).timestamp;
+                        const d = new Date(ts);
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const hh = String(d.getHours()).padStart(2, '0');
+                        const min = String(d.getMinutes()).padStart(2, '0');
+                        const weekday = WEEKDAYS_JP[d.getDay()];
+                        return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
                       })()}
                     </div>
                     {((payload ?? []) as TooltipItem[])
