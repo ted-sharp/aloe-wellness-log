@@ -813,7 +813,7 @@ const DailyRecord: React.FC = () => {
         </div>
         {/* 新規項目追加ボタンとフォーム（編集モード時のみ） */}
         {isEditMode && (
-          <div className="w-full max-w-md mt-2 mb-1">
+          <div className="w-full max-w-md mt-2 mb-2">
             {showAddField ? (
               <div className="flex items-center gap-1 mb-1 bg-white dark:bg-gray-800 rounded-xl shadow p-2">
                 <input
@@ -868,7 +868,7 @@ const DailyRecord: React.FC = () => {
           </div>
         )}
         {/* 編集モード切替・保存・キャンセルボタン */}
-        <div className="w-full max-w-md mt-2">
+        <div className="w-full max-w-md mt-2 mb-2">
           {isEditMode ? (
             <div className="flex gap-1">
               <Button
@@ -902,8 +902,14 @@ const DailyRecord: React.FC = () => {
             </Button>
           )}
         </div>
+        {/* 日課ワンポイントアドバイス */}
+        <div className="w-full max-w-md mx-auto mb-2 px-4">
+          <div className="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400 text-yellow-800 dark:text-yellow-100 p-3 rounded shadow-sm text-sm text-left">
+            <strong>【ワンポイント】</strong>{' '}
+            日課は毎日少しずつでも続けることが大切です。完璧を目指さず、できた日を積み重ねましょう。少しでもやったら微達成として記録しましょう。
+          </div>
+        </div>
       </div>
-      {/* カレンダーモーダルはDatePickerBarに移譲 */}
     </div>
   );
 };
