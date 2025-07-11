@@ -614,14 +614,20 @@ const DailyRecord: React.FC = () => {
       d.setDate(d.getDate() - 1)
     ) {
       const dateStr = formatDate(d);
+      // その日に1つでも value > 0（達成または少し達成）があるか
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
-          r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
+          r =>
+            r.fieldId === fieldId &&
+            r.date === dateStr &&
+            typeof r.value === 'number' &&
+            r.value > 0
         )
       );
       if (hasAny) {
         streak++;
       } else {
+        // 未達成または未入力でストップ
         break;
       }
     }
