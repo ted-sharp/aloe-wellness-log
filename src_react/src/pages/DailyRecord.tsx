@@ -87,7 +87,7 @@ function DailyAchievementItem({
   const animatedPercent = useAnimatedNumber(stats.percent);
   return (
     <div className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1">
         <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
           {field.name}
         </span>
@@ -109,7 +109,7 @@ function DailyAchievementItem({
           className="flex-1"
           data-testid={`daily-input-${field.fieldId}-partial`}
         >
-          少し達成
+          微達成
         </Button>
         <Button
           variant={value === 0 ? 'primary' : 'secondary'}
