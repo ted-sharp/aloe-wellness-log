@@ -169,31 +169,31 @@ const BpRecord: React.FC = () => {
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                   value={rec.systolic}
                   onChange={e =>
                     handleUpdate({ ...rec, systolic: Number(e.target.value) })
                   }
-                  placeholder="収縮期"
+                  placeholder="収縮"
                 />
                 <span className="ml-0 mr-3 text-gray-500">mmHg</span>
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                   value={rec.diastolic}
                   onChange={e =>
                     handleUpdate({ ...rec, diastolic: Number(e.target.value) })
                   }
-                  placeholder="拡張期"
+                  placeholder="拡張"
                 />
                 <span className="ml-0 mr-3 text-gray-500">mmHg</span>
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-base placeholder-gray-400"
                   value={rec.heartRate ?? ''}
                   onChange={e =>
                     handleUpdate({
@@ -261,27 +261,27 @@ const BpRecord: React.FC = () => {
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                 value={newSystolic}
                 onChange={e => setNewSystolic(e.target.value)}
-                placeholder="収縮期"
+                placeholder="収縮"
               />
               <span className="ml-0 mr-3 text-gray-500">mmHg</span>
               <input
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                 value={newDiastolic}
                 onChange={e => setNewDiastolic(e.target.value)}
-                placeholder="拡張期"
+                placeholder="拡張"
               />
               <span className="ml-0 mr-3 text-gray-500">mmHg</span>
               <input
                 type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em]"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-base placeholder-gray-400"
                 value={newHeartRate}
                 onChange={e => setNewHeartRate(e.target.value)}
                 placeholder="脈拍"

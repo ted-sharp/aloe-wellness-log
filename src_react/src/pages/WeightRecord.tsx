@@ -486,7 +486,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                   value={rec.weight}
                   onChange={e =>
                     handleUpdate({ ...rec, weight: Number(e.target.value) })
@@ -498,7 +498,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-xs placeholder-gray-400"
                   value={rec.bodyFat ?? ''}
                   onChange={e =>
                     handleUpdate({
@@ -514,7 +514,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   type="number"
                   step="0.1"
                   min="0"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                   value={rec.waist ?? ''}
                   onChange={e =>
                     handleUpdate({
@@ -599,7 +599,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 inputMode="decimal"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                 value={newWeight}
                 onChange={e => setNewWeight(e.target.value)}
                 placeholder="体重"
@@ -610,7 +610,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 inputMode="decimal"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-xs placeholder-gray-400"
                 value={newBodyFat}
                 onChange={e => setNewBodyFat(e.target.value)}
                 placeholder="体脂肪"
@@ -621,7 +621,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 inputMode="decimal"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20"
+                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
                 value={newWaist}
                 onChange={e => setNewWaist(e.target.value)}
                 placeholder="腹囲"
