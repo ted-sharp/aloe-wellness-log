@@ -86,7 +86,7 @@ function DailyAchievementItem({
 }: any) {
   const animatedPercent = useAnimatedNumber(stats.percent);
   return (
-    <div className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-2">
+    <div className="flex flex-col gap-1 bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
       <div className="flex items-center gap-4">
         <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 min-w-[5em]">
           {field.name}
@@ -711,7 +711,7 @@ const DailyRecord: React.FC = () => {
       </div>
       {/* メインコンテンツ */}
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
-        <div className="flex flex-col gap-6 w-full max-w-md">
+        <div className="flex flex-col gap-1 w-full max-w-md">
           {isEditMode ? (
             <DndContext
               sensors={sensors}
@@ -774,9 +774,9 @@ const DailyRecord: React.FC = () => {
         </div>
         {/* 新規項目追加ボタンとフォーム（編集モード時のみ） */}
         {isEditMode && (
-          <div className="w-full max-w-md mt-6 mb-2">
+          <div className="w-full max-w-md mt-2 mb-1">
             {showAddField ? (
-              <div className="flex items-center gap-2 mb-2 bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+              <div className="flex items-center gap-1 mb-1 bg-white dark:bg-gray-800 rounded-xl shadow p-2">
                 <input
                   type="text"
                   value={newFieldName}
@@ -829,9 +829,9 @@ const DailyRecord: React.FC = () => {
           </div>
         )}
         {/* 編集モード切替・保存・キャンセルボタン */}
-        <div className="w-full max-w-md mt-6">
+        <div className="w-full max-w-md mt-2">
           {isEditMode ? (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button
                 variant="success"
                 size="md"
