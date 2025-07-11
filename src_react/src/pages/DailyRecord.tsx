@@ -565,7 +565,7 @@ const DailyRecord: React.FC = () => {
       const rec = records.find(r => r.fieldId === fieldId && r.date === date);
       if (typeof rec?.value === 'number') {
         total++;
-        if (rec.value === 1 || rec.value === 0.5) success++;
+        if (rec.value > 0) success++;
       }
     });
     return {
@@ -653,7 +653,11 @@ const DailyRecord: React.FC = () => {
       const dateStr = formatDate(d);
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
-          r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
+          r =>
+            r.fieldId === fieldId &&
+            r.date === dateStr &&
+            typeof r.value === 'number' &&
+            r.value > 0
         )
       );
       if (hasAny) count++;
