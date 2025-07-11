@@ -576,16 +576,44 @@ const DailyRecord: React.FC = () => {
   };
 
   // 連続達成日数（streak）を計算
+  // const calcStreak = (baseDate: Date) => {
+  //   if (records.length === 0) return 0;
+  //   const dailyFieldIds = fields.map(f => f.fieldId);
+  //   // 記録が存在する日付をbaseDateまで逆順でソート
+  //   const dateSet = new Set(records.map(r => r.date));
+  //   const allDates = Array.from(dateSet)
+  //     .filter(date => new Date(date) <= baseDate)
+  //     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  //   let streak = 0;
+  //   for (const dateStr of allDates) {
+  //     const hasAny = dailyFieldIds.some(fieldId =>
+  //       records.some(
+  //         r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
+  //       )
+  //     );
+  //     if (hasAny) {
+  //       streak++;
+  //     } else {
+  //       break;
+  //     }
+  //   }
+  //   return streak;
+  // };
+  // 修正版: 抜けなし連続達成日数を厳密にカウント
   const calcStreak = (baseDate: Date) => {
     if (records.length === 0) return 0;
     const dailyFieldIds = fields.map(f => f.fieldId);
-    // 記録が存在する日付をbaseDateまで逆順でソート
-    const dateSet = new Set(records.map(r => r.date));
-    const allDates = Array.from(dateSet)
-      .filter(date => new Date(date) <= baseDate)
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    const allDates = records.map(r => r.date).sort();
+    if (allDates.length === 0) return 0;
+    const firstDate = new Date(allDates[0]);
+    const endDate = baseDate;
     let streak = 0;
-    for (const dateStr of allDates) {
+    for (
+      let d = new Date(endDate);
+      d >= firstDate;
+      d.setDate(d.getDate() - 1)
+    ) {
+      const dateStr = formatDate(d);
       const hasAny = dailyFieldIds.some(fieldId =>
         records.some(
           r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
@@ -597,9 +625,10 @@ const DailyRecord: React.FC = () => {
         break;
       }
     }
-    return streak;
+    // 1日だけの場合は0とする
+    return streak > 1 ? streak : 0;
   };
-  const streak = calcStreak(selectedDate) + 1;
+  const streak = calcStreak(selectedDate);
   const animatedStreak = useAnimatedNumber(streak);
 
   // baseDateまでの累計達成日数をカウントできるように修正
