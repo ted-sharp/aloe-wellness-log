@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HiCheck, HiTrash } from 'react-icons/hi2';
+import { MdFlashOn } from 'react-icons/md';
 import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
@@ -216,7 +217,7 @@ const BpRecord: React.FC = () => {
         {/* 新規項目追加フォーム */}
         <div className="w-full max-w-md mt-2 mb-0">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0 flex flex-col gap-2">
-            <div className="flex items-center w-full">
+            <div className="flex items-center w-full gap-2">
               <input
                 type="time"
                 className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
@@ -225,12 +226,21 @@ const BpRecord: React.FC = () => {
               />
               <button
                 type="button"
-                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150 ml-1"
+                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
                 title="朝7時にセット"
                 aria-label="朝7時にセット"
                 onClick={() => setNewTime('07:00')}
               >
                 <TbSunrise className="w-6 h-6" />
+              </button>
+              <button
+                type="button"
+                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
+                title="現在時刻にセット"
+                aria-label="現在時刻にセット"
+                onClick={() => setNewTime(getCurrentTimeString())}
+              >
+                <MdFlashOn className="w-6 h-6" />
               </button>
               <div className="flex-1" />
               <Button

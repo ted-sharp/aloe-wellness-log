@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { FaTrophy } from 'react-icons/fa';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
-import { MdAutoAwesome } from 'react-icons/md';
+import { MdAutoAwesome, MdFlashOn } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
 import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
@@ -555,6 +555,15 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   onClick={() => setNewTime('07:00')}
                 >
                   <TbSunrise className="w-6 h-6" />
+                </button>
+                <button
+                  type="button"
+                  className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
+                  title="現在時刻にセット"
+                  aria-label="現在時刻にセット"
+                  onClick={() => setNewTime(getCurrentTimeString())}
+                >
+                  <MdFlashOn className="w-6 h-6" />
                 </button>
               </div>
               <div className="flex items-center gap-2">
