@@ -197,7 +197,13 @@ export default function RecordExport({
       // 日課レコード
       for (const rec of data.dailyRecords) {
         try {
-          await addDailyRecord(rec);
+          // valueが0, 0.5, 1以外の場合は0に矯正し、型を明示
+          let safeValue: 0 | 0.5 | 1 = 0;
+          if (rec.value === 1) safeValue = 1;
+          else if (rec.value === 0.5) safeValue = 0.5;
+          // それ以外は0
+          const { id, date, fieldId } = rec;
+          await addDailyRecord({ id, date, fieldId, value: safeValue });
           importCount++;
         } catch (error) {
           console.warn('Skipping daily record:', rec.id, error);
@@ -382,7 +388,7 @@ export default function RecordExport({
             id: uniqueId,
             date: dateStr,
             fieldId: fieldId,
-            value,
+            value: value as 0 | 0.5 | 1,
           };
           try {
             await addDailyRecord(testRecord);

@@ -1,5 +1,3 @@
-
-
 // 日付フォーマット型
 export type DateString = `${number}-${number}-${number}`; // YYYY-MM-DD
 export type TimeString = `${number}:${number}`; // HH:mm
@@ -57,7 +55,7 @@ export type DailyRecordV2 = {
   id: string;
   date: string; // YYYY-MM-DD
   fieldId: string;
-  value: number;
+  value: 0 | 0.5 | 1; // 0:未達成, 0.5:少し達成, 1:達成
 };
 
 // 新しい日課フィールド型（V2）

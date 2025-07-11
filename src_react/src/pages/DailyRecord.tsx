@@ -81,6 +81,7 @@ function DailyAchievementItem({
   value,
   stats,
   onAchieve,
+  onPartial,
   onUnachieve,
 }: any) {
   const animatedPercent = useAnimatedNumber(stats.percent);
@@ -91,22 +92,32 @@ function DailyAchievementItem({
           {field.name}
         </span>
         <Button
-          variant={value === true ? 'primary' : 'secondary'}
+          variant={value === 1 ? 'primary' : 'secondary'}
           size="md"
           onClick={onAchieve}
-          aria-pressed={value === true}
+          aria-pressed={value === 1}
           className="flex-1"
-          data-testid={`daily-input-${field.fieldId}`}
+          data-testid={`daily-input-${field.fieldId}-achieve`}
         >
           達成
         </Button>
         <Button
-          variant={value === false ? 'primary' : 'secondary'}
+          variant={value === 0.5 ? 'primary' : 'secondary'}
+          size="md"
+          onClick={onPartial}
+          aria-pressed={value === 0.5}
+          className="flex-1"
+          data-testid={`daily-input-${field.fieldId}-partial`}
+        >
+          少し達成
+        </Button>
+        <Button
+          variant={value === 0 ? 'primary' : 'secondary'}
           size="md"
           onClick={onUnachieve}
-          aria-pressed={value === false}
+          aria-pressed={value === 0}
           className="flex-1"
-          data-testid={`daily-input-${field.fieldId}`}
+          data-testid={`daily-input-${field.fieldId}-unachieve`}
         >
           未達
         </Button>
@@ -184,9 +195,14 @@ const DailyRecord: React.FC = () => {
   // 既存記録の取得
   const getBoolRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
-  const getBoolValue = (fieldId: string): boolean | undefined => {
+  const getAchievementValue = (fieldId: string): 0 | 0.5 | 1 | undefined => {
     const rec = getBoolRecord(fieldId);
-    return typeof rec?.value === 'number' ? rec.value === 1 : undefined;
+    if (typeof rec?.value === 'number') {
+      if (rec.value === 1) return 1;
+      if (rec.value === 0.5) return 0.5;
+      if (rec.value === 0) return 0;
+    }
+    return undefined;
   };
   // 日付ごとの記録済み判定（scope: 'daily'で絞り込み）
   const isRecorded = (date: Date) => {
@@ -234,13 +250,16 @@ const DailyRecord: React.FC = () => {
   }, [loadFields, loadRecords]);
 
   // ボタン押下時の保存/切替/解除処理
-  const handleBoolInput = async (fieldId: string, value: boolean) => {
+  const handleAchievementInput = async (
+    fieldId: string,
+    value: 0 | 0.5 | 1
+  ) => {
     const rec = getBoolRecord(fieldId);
-    if (rec && (rec.value === 1) === value) {
+    if (rec && rec.value === value) {
       await deleteDailyRecord(rec.id);
       await loadRecords();
     } else if (rec) {
-      await updateDailyRecord({ ...rec, value: value ? 1 : 0 });
+      await updateDailyRecord({ ...rec, value });
       await loadRecords();
     } else {
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -248,7 +267,7 @@ const DailyRecord: React.FC = () => {
         id,
         fieldId,
         date: recordDate,
-        value: value ? 1 : 0,
+        value,
       });
       await loadRecords();
     }
@@ -537,6 +556,7 @@ const DailyRecord: React.FC = () => {
     return days.reverse();
   };
 
+  // getFieldSuccessStats: 0.5も1カウントとして扱う
   const getFieldSuccessStats = (fieldId: string) => {
     const days = getRecent14Days();
     let total = 0;
@@ -545,7 +565,7 @@ const DailyRecord: React.FC = () => {
       const rec = records.find(r => r.fieldId === fieldId && r.date === date);
       if (typeof rec?.value === 'number') {
         total++;
-        if (rec.value === 1) success++;
+        if (rec.value === 1 || rec.value === 0.5) success++;
       }
     });
     return {
@@ -608,7 +628,7 @@ const DailyRecord: React.FC = () => {
   const totalAchievedDays = calcTotalAchievedDays(selectedDate);
   const animatedTotalAchievedDays = useAnimatedNumber(totalAchievedDays);
 
-  // 日付ごとの状態を判定（入力なし: 'none', 1つでも達成: 'green', 入力あり全て未達: 'red'）
+  // 日付ごとの状態を判定（入力なし: 'none', 1つでも達成または少し達成: 'green', 入力あり全て未達: 'red'）
   const getDateStatus = (date: Date): 'none' | 'green' | 'red' => {
     const d = formatDate(date);
     const dailyFieldIds = fields.map(f => f.fieldId);
@@ -616,7 +636,7 @@ const DailyRecord: React.FC = () => {
       r => r.date === d && dailyFieldIds.includes(r.fieldId)
     );
     if (recs.length === 0) return 'none';
-    const hasAchieve = recs.some(r => r.value === 1);
+    const hasAchieve = recs.some(r => r.value === 1 || r.value === 0.5);
     return hasAchieve ? 'green' : 'red';
   };
 
@@ -730,7 +750,7 @@ const DailyRecord: React.FC = () => {
             </DndContext>
           ) : (
             boolFields.map(field => {
-              const value = getBoolValue(field.fieldId);
+              const value = getAchievementValue(field.fieldId);
               const stats = getFieldSuccessStats(field.fieldId);
               return (
                 <DailyAchievementItem
@@ -739,30 +759,13 @@ const DailyRecord: React.FC = () => {
                   value={value}
                   stats={stats}
                   onAchieve={async () => {
-                    if (value === true) {
-                      // 達成状態なら未入力（記録削除）
-                      const rec = getBoolRecord(field.fieldId);
-                      if (rec) {
-                        await deleteDailyRecord(rec.id);
-                        await loadRecords();
-                      }
-                    } else {
-                      // 未入力または未達なら達成（value=1）
-                      await handleBoolInput(field.fieldId, true);
-                    }
+                    await handleAchievementInput(field.fieldId, 1);
+                  }}
+                  onPartial={async () => {
+                    await handleAchievementInput(field.fieldId, 0.5);
                   }}
                   onUnachieve={async () => {
-                    if (value === false) {
-                      // 未達状態なら未入力（記録削除）
-                      const rec = getBoolRecord(field.fieldId);
-                      if (rec) {
-                        await deleteDailyRecord(rec.id);
-                        await loadRecords();
-                      }
-                    } else {
-                      // 未入力または達成なら未達（value=0）
-                      await handleBoolInput(field.fieldId, false);
-                    }
+                    await handleAchievementInput(field.fieldId, 0);
                   }}
                 />
               );
