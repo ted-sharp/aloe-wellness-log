@@ -284,6 +284,35 @@ const RecordGraph: React.FC = () => {
           </button>
         ))}
       </div>
+      {/* 目標線・傾向線の凡例 */}
+      <div className="flex gap-4 items-center mb-2">
+        <span className="flex items-center text-sm font-semibold">
+          <span
+            style={{
+              display: 'inline-block',
+              width: 18,
+              height: 6,
+              background: '#f59e42',
+              borderRadius: 2,
+              marginRight: 6,
+            }}
+          />
+          目標
+        </span>
+        <span className="flex items-center text-sm font-semibold">
+          <span
+            style={{
+              display: 'inline-block',
+              width: 18,
+              height: 6,
+              background: '#22c55e',
+              borderRadius: 2,
+              marginRight: 6,
+            }}
+          />
+          傾向
+        </span>
+      </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
         <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
           <input
@@ -318,6 +347,56 @@ const RecordGraph: React.FC = () => {
                 />
               ))}
             <YAxis domain={['auto', 'auto']} unit={'kg'} />
+            {/* 目標体重線（傾きあり・表示期間でクリップ） */}
+            {(() => {
+              if (!goal) return null;
+              const hasStart =
+                typeof goal.startWeight === 'number' &&
+                isFinite(goal.startWeight);
+              const hasTarget =
+                typeof goal.targetWeight === 'number' &&
+                isFinite(goal.targetWeight);
+              const hasStartDate =
+                typeof goal.targetStart === 'string' &&
+                !isNaN(Date.parse(goal.targetStart));
+              const hasEndDate =
+                typeof goal.targetEnd === 'string' &&
+                !isNaN(Date.parse(goal.targetEnd));
+              if (!hasStart || !hasTarget || !hasStartDate || !hasEndDate)
+                return null;
+              const x1 = Date.parse(goal.targetStart);
+              const y1 = goal.startWeight!;
+              const x2 = Date.parse(goal.targetEnd);
+              const y2 = goal.targetWeight!;
+              if (x1 >= x2) return null;
+              // グラフの表示範囲
+              const [domainStart, domainEnd] = xAxisDomain as [number, number];
+              // 目標線の描画区間（表示範囲と目標期間の重なり）
+              const lineStart = Math.max(x1, domainStart);
+              const lineEnd = Math.min(x2, domainEnd);
+              if (lineStart > lineEnd) return null; // 重なりなし
+              // 線の両端のy値を直線式で計算
+              const getY = (x: number) =>
+                y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
+              const targetLineData = [
+                { timestamp: lineStart, value: getY(lineStart) },
+                { timestamp: lineEnd, value: getY(lineEnd) },
+              ];
+              return (
+                <Line
+                  type="linear"
+                  data={targetLineData}
+                  dataKey="value"
+                  stroke="#f59e42"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  strokeDasharray="4 2"
+                  legendType="none"
+                />
+              );
+            })()}
             <Tooltip
               content={({ active, payload, label: _ }) => {
                 if (!active || !payload || !payload.length) return null;
@@ -368,7 +447,12 @@ const RecordGraph: React.FC = () => {
                       })()}
                     </div>
                     {((payload ?? []) as TooltipItem[])
-                      .filter(item => item && item.color !== '#f59e42')
+                      .filter(
+                        item =>
+                          item &&
+                          item.color !== '#f59e42' &&
+                          item.color !== '#22c55e'
+                      )
                       .map((item, idx) => (
                         <div
                           key={idx}
@@ -456,7 +540,7 @@ const RecordGraph: React.FC = () => {
                 type="linear"
                 data={trendLine}
                 dataKey="value"
-                stroke="#f59e42"
+                stroke="#22c55e"
                 strokeWidth={3}
                 dot={false}
                 activeDot={false}
