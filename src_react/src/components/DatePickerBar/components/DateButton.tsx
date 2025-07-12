@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { DateItem } from '../types';
+import type { DateItem } from '../types';
 import { formatDate, formatDay, formatWeekday } from '../../../utils/dateUtils';
 
 interface DateButtonProps {

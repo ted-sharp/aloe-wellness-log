@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { HiArrowUpTray, HiExclamationTriangle, HiArrowDownTray, HiFolder } from 'react-icons/hi2';
+import { HiExclamationTriangle, HiArrowDownTray, HiFolder } from 'react-icons/hi2';
 import Button from './Button';
 import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 import {

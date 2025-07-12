@@ -1,4 +1,4 @@
-import { DateStatus, WeekdayColor } from './constants';
+import type { DateStatus, WeekdayColor } from './constants';
 
 // DatePickerBarのProps型定義
 export interface DatePickerBarProps {
@@ -36,3 +36,6 @@ export interface DateRange {
   minDate: Date;
   maxDate: Date;
 }
+
+// スクロール方向の型定義
+export type ScrollDirection = 'left' | 'right';

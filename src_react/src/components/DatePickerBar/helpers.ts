@@ -1,6 +1,7 @@
-import { DATE_PICKER_CONFIG, WEEKDAY_COLORS, DateStatus, WeekdayColor } from './constants';
-import { DateItem, DateRange } from './types';
-import { formatDate, formatDay, formatWeekday } from '../../utils/dateUtils';
+import { DATE_PICKER_CONFIG, WEEKDAY_COLORS } from './constants';
+import type { DateStatus, WeekdayColor } from './constants';
+import type { DateItem, DateRange } from './types';
+import { formatDate } from '../../utils/dateUtils';
 
 /**
  * 日付範囲を生成する
@@ -66,7 +67,7 @@ export const createDateItems = (
     
     const prevDate = index > 0 ? dateArray[index - 1] : null;
     const showMonth = index === 0 || 
-      (prevDate && date.getMonth() !== prevDate.getMonth());
+      (prevDate ? date.getMonth() !== prevDate.getMonth() : false);
     
     const dayOfWeek = date.getDay();
     const weekdayColor = getWeekdayColor(dayOfWeek);

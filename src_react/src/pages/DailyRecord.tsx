@@ -55,7 +55,7 @@ const DailyRecord: React.FC = () => {
     setCenterDate,
     today,
     recordDate,
-    isRecorded: isRecordedByHook,
+    // isRecorded: isRecordedByHook,
   } = useDateSelection({
     records,
     getRecordDate: (record) => record.date,

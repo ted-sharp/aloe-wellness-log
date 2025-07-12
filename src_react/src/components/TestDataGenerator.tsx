@@ -5,7 +5,6 @@ import ProgressBar from './ProgressBar';
 import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 import {
   addBpRecord,
-  addDailyField,
   addDailyRecord,
   addWeightRecord,
   getAllBpRecords,

@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { ja } from 'date-fns/locale';
-import { DatePickerBarProps } from '../types';
+import type { DatePickerBarProps } from '../types';
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -96,26 +96,23 @@ const CalendarModalComponent: React.FC<CalendarModalProps> = ({
             caption_label: `${
               getDefaultClassNames().caption_label
             } text-lg font-medium text-gray-900 dark:text-gray-100`,
-            nav_button: `${
-              getDefaultClassNames().nav_button
+            nav: `${
+              getDefaultClassNames().nav || ''
             } border border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800`,
-            head_cell: `${
-              getDefaultClassNames().head_cell
-            } text-gray-500 dark:text-gray-400`,
             day: `${
               getDefaultClassNames().day
             } hover:bg-blue-50 dark:hover:bg-blue-900/30`,
-            day_selected: `${
-              getDefaultClassNames().day_selected
+            selected: `${
+              getDefaultClassNames().selected || ''
             } bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:from-blue-600 hover:to-blue-700 dark:from-blue-400 dark:to-blue-500`,
-            day_today: `${
-              getDefaultClassNames().day_today
+            today: `${
+              getDefaultClassNames().today || ''
             } bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-semibold`,
-            day_outside: `${
-              getDefaultClassNames().day_outside
+            outside: `${
+              getDefaultClassNames().outside || ''
             } text-gray-400 opacity-50 dark:text-gray-600`,
-            day_disabled: `${
-              getDefaultClassNames().day_disabled
+            disabled: `${
+              getDefaultClassNames().disabled || ''
             } text-gray-400 opacity-50 dark:text-gray-600`,
           }}
           components={{

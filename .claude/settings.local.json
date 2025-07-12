@@ -11,7 +11,8 @@
       "WebFetch(domain:react-day-picker.js.org)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:daypicker.dev)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(yarn build:*)"
     ],
     "deny": []
   }

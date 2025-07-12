@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { HiCalendarDays } from 'react-icons/hi2';
 import { getDateArray } from '../utils/dateUtils';
 import { getTodayDate } from './DatePickerBar/constants';
-import { DatePickerBarProps } from './DatePickerBar/types';
+import type { DatePickerBarProps } from './DatePickerBar/types';
 import { createDateItems } from './DatePickerBar/helpers';
 import { useDateRange } from './DatePickerBar/hooks/useDateRange';
 import { useScrollable } from './DatePickerBar/hooks/useScrollable';
@@ -30,7 +30,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // ref統合: touch と scroll 両方に対応する共通ref
-  const containerRef = useRef<HTMLDivElement>(null);
+  // const containerRef = useRef<HTMLDivElement>(null);
 
   // カスタムフック
   const { dateRange, lastEdgeRef, prevWidthRef, expandRange } = useDateRange(centerDate);
@@ -42,7 +42,6 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   
   // touchフック：独自のrefを使わず、外部refを使用  
   const { touchRef } = useTouch({
-    centerDate,
     setCenterDate,
   });
   

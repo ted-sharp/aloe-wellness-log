@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HiCalendarDays } from 'react-icons/hi2';
 import { getDateArray } from '../../utils/dateUtils';
-import { DatePickerBarProps } from './types';
+import type { DatePickerBarProps } from './types';
 import { createDateItems } from './helpers';
 import { useDateRange } from './hooks/useDateRange';
 import { useScrollable } from './hooks/useScrollable';
@@ -36,7 +36,6 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   });
   
   const { touchRef } = useTouch({
-    centerDate,
     setCenterDate,
   });
   

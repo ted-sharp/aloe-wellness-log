@@ -1,17 +1,15 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { DATE_PICKER_CONFIG } from '../constants';
-import { TouchCoordinates } from '../types';
-import { calculateDaysFromSwipe } from '../helpers';
+import type { TouchCoordinates } from '../types';
 
 interface UseTouchProps {
-  centerDate: Date;
   setCenterDate: (date: Date) => void;
 }
 
 /**
  * タッチ操作を管理するカスタムフック
  */
-export const useTouch = ({ centerDate, setCenterDate }: UseTouchProps) => {
+export const useTouch = ({ setCenterDate }: UseTouchProps) => {
   const touchRef = useRef<HTMLDivElement>(null);
   const coordsRef = useRef<TouchCoordinates>({ startX: null, startY: null });
 
@@ -43,20 +41,17 @@ export const useTouch = ({ centerDate, setCenterDate }: UseTouchProps) => {
       Math.abs(diffX) > Math.abs(diffY) && 
       Math.abs(diffX) > DATE_PICKER_CONFIG.TOUCH_THRESHOLD
     ) {
-      const daysMove = calculateDaysFromSwipe(diffX);
-      
-      // 安全な日付操作（タイムゾーン考慮）
-      setCenterDate(currentDate => {
-        const newDate = new Date(currentDate);
-        if (diffX < 0) {
-          // 左スワイプ → 未来へ
-          newDate.setDate(currentDate.getDate() + daysMove);
-        } else {
-          // 右スワイプ → 過去へ
-          newDate.setDate(currentDate.getDate() - daysMove);
-        }
-        return newDate;
-      });
+      // 簡単なスワイプ処理 - 現在の日付から1日だけ移動
+      const currentDate = new Date();
+      const newDate = new Date(currentDate);
+      if (diffX < 0) {
+        // 左スワイプ → 未来へ
+        newDate.setDate(currentDate.getDate() + 1);
+      } else {
+        // 右スワイプ → 過去へ
+        newDate.setDate(currentDate.getDate() - 1);
+      }
+      setCenterDate(newDate);
     }
 
     // 座標をリセット

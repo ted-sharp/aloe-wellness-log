@@ -1,10 +1,10 @@
 import { useLayoutEffect } from 'react';
-import { DateRange, ScrollDirection } from '../types';
+import type { DateRange, ScrollDirection } from '../types';
 
 interface UseScrollCorrectionProps {
   containerRef: React.RefObject<HTMLDivElement>;
-  lastEdgeRef: React.RefObject<ScrollDirection | null>;
-  prevWidthRef: React.RefObject<number>;
+  lastEdgeRef: React.MutableRefObject<ScrollDirection | null>;
+  prevWidthRef: React.MutableRefObject<number>;
   dateRange: DateRange;
 }
 
@@ -24,7 +24,8 @@ export const useScrollCorrection = ({
     const container = containerRef.current;
     if (!container || !lastEdgeRef.current) return;
 
-    const diff = container.scrollWidth - prevWidthRef.current;
+    const prevWidth = prevWidthRef.current ?? 0;
+    const diff = container.scrollWidth - prevWidth;
     
     if (lastEdgeRef.current === 'left' && diff > 0) {
       // 左端拡張時はスクロール位置を補正して表示位置を維持
@@ -32,6 +33,8 @@ export const useScrollCorrection = ({
     }
 
     // リセット
-    lastEdgeRef.current = null;
+    if (lastEdgeRef.current) {
+      (lastEdgeRef as React.MutableRefObject<ScrollDirection | null>).current = null;
+    }
   }, [containerRef, lastEdgeRef, prevWidthRef, dateRange]);
 };

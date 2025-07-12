@@ -40,10 +40,10 @@ const RecordGraph: React.FC = () => {
   
   // 統合データフェッチング
   const {
-    weightRecords,
+    // weightRecords,
     dailyRecords,
     goal,
-    latestTimestamp,
+    // latestTimestamp,
     isLoading,
     error,
     getFilteredData,
@@ -153,7 +153,7 @@ const RecordGraph: React.FC = () => {
     ];
   }, [data]);
 
-  type StatusKey = 'exercise' | 'meal' | 'sleep';
+  // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
     x?: number;
     y?: number;

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { DATE_PICKER_CONFIG } from '../constants';
 import { isAtScrollEdge } from '../helpers';
-import { ScrollDirection } from '../types';
+import type { ScrollDirection } from '../types';
 
 interface UseScrollableProps {
   onScrollEdge: (direction: ScrollDirection, scrollWidth: number) => void;

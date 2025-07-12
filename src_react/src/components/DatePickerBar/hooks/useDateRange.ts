@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { DateRange, ScrollDirection } from '../types';
+import type { DateRange, ScrollDirection } from '../types';
 import { createDateRange, expandDateRange } from '../helpers';
 
 /**
@@ -10,8 +10,8 @@ export const useDateRange = (centerDate: Date) => {
     createDateRange(centerDate)
   );
   
-  const lastEdgeRef = useRef<ScrollDirection | null>(null);
-  const prevWidthRef = useRef<number>(0);
+  const lastEdgeRef = useRef<ScrollDirection | null>(null) as React.MutableRefObject<ScrollDirection | null>;
+  const prevWidthRef = useRef<number>(0) as React.MutableRefObject<number>;
 
   // centerDateが範囲外になった場合の自動拡張（無限ループ防止）
   useEffect(() => {
