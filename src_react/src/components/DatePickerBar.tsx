@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import { DayPicker, getDefaultClassNames } from 'react-day-picker';
+import { ja } from 'date-fns/locale';
 import { HiCalendarDays } from 'react-icons/hi2';
 import { formatDate, formatDay, formatWeekday, getDateArray } from '../utils/dateUtils';
 
@@ -327,7 +327,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
           aria-modal="true"
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl pt-8 p-4 sm:pt-10 sm:p-6 w-[95vw] max-w-md relative"
+            className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 pt-8 p-4 sm:pt-10 sm:p-6 w-[95vw] max-w-md relative"
             onClick={e => e.stopPropagation()}
           >
             <button
@@ -346,17 +346,42 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
                 />
               </svg>
             </button>
-            <Calendar
-              onChange={date => {
-                setSelectedDate(date as Date);
-                setCenterDate(date as Date);
-                setPendingCenterScroll(true);
-                setIsCalendarOpen(false);
+            <DayPicker
+              mode="single"
+              selected={selectedDate}
+              locale={ja}
+              weekStartsOn={0}
+              onSelect={(date) => {
+                if (date) {
+                  setSelectedDate(date);
+                  setCenterDate(date);
+                  setPendingCenterScroll(true);
+                  setIsCalendarOpen(false);
+                }
               }}
-              value={selectedDate}
-              locale="ja-JP"
-              className="w-full"
-              formatDay={(_locale, date) => date.getDate().toString()}
+              modifiers={{
+                recorded: (date) => isRecorded ? isRecorded(date) : false,
+                today: (date) => {
+                  const todayDate = new Date();
+                  return date.toDateString() === todayDate.toDateString();
+                }
+              }}
+              modifiersClassNames={{
+                recorded: "relative after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-green-500 after:rounded-full",
+                today: "ring-2 ring-blue-400 ring-offset-1"
+              }}
+              classNames={{
+                ...getDefaultClassNames(),
+                root: `${getDefaultClassNames().root} dark:text-gray-100`,
+                caption_label: `${getDefaultClassNames().caption_label} text-lg font-medium text-gray-900 dark:text-gray-100`,
+                nav_button: `${getDefaultClassNames().nav_button} border border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800`,
+                head_cell: `${getDefaultClassNames().head_cell} text-gray-500 dark:text-gray-400`,
+                day: `${getDefaultClassNames().day} hover:bg-blue-50 dark:hover:bg-blue-900/30`,
+                day_selected: `${getDefaultClassNames().day_selected} bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg hover:from-blue-600 hover:to-blue-700 dark:from-blue-400 dark:to-blue-500`,
+                day_today: `${getDefaultClassNames().day_today} bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 dark:from-gray-700 dark:to-gray-800 dark:text-gray-100 font-semibold`,
+                day_outside: `${getDefaultClassNames().day_outside} text-gray-400 opacity-50 dark:text-gray-600`,
+                day_disabled: `${getDefaultClassNames().day_disabled} text-gray-400 opacity-50 dark:text-gray-600`,
+              }}
             />
           </div>
         </div>

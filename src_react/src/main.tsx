@@ -4,6 +4,7 @@ import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastContainer from './components/ToastContainer';
 import './index.css';
+import 'react-day-picker/style.css';
 import { initializePrivacySettings } from './utils/privacy';
 
 // i18nの初期化

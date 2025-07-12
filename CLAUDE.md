@@ -37,7 +37,8 @@ yarn build:preview      # Build for preview
 yarn preview            # Preview production build
 
 # Testing
-yarn test               # Run unit tests with Vitest
+yarn test               # Run unit tests with Vitest (watch mode)
+yarn test:run           # Run unit tests once (for CI/validation)
 yarn test:coverage      # Run tests with coverage report
 yarn test:e2e           # Run E2E tests with Playwright
 yarn test:e2e:ui        # Run E2E tests with UI mode
@@ -45,6 +46,7 @@ yarn test:e2e:ui        # Run E2E tests with UI mode
 # Code Quality
 yarn lint               # Run ESLint
 yarn lint:fix           # Run ESLint with auto-fix
+tsc                     # TypeScript type checking (run from src_react/)
 
 # Deployment
 yarn deploy             # Deploy to GitHub Pages
@@ -127,6 +129,11 @@ Always work from the `src_react/` directory when running commands, as this conta
 
 ### Development Tips
 - Use `yarn dev` for development with HMR
-- Run `yarn test` before committing changes
+- Run `yarn test:run` and `tsc` before committing changes
 - Check `yarn lint` for code quality issues
 - Use `yarn test:e2e` to verify critical user flows
+
+### Knowledge Management
+- Project follows structured knowledge accumulation in `./kb/` directory
+- Reference `./kb/index.md` for implementation guidance and past decisions
+- Document new insights and solutions in appropriate knowledge base files
