@@ -277,7 +277,7 @@ const BpRecord: React.FC = () => {
 
         {/* 血圧測定に関する注意事項 */}
         <div className="w-full max-w-md mx-auto mb-2 px-4">
-          <div className="bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-400 text-blue-800 dark:text-blue-100 p-3 rounded shadow-sm text-sm text-left">
+          <div className="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400 text-yellow-800 dark:text-yellow-100 p-3 rounded shadow-sm text-sm text-left">
             <strong>【ワンポイント】</strong>{' '}
             血圧は安静時に測定し、可能であれば毎日同じ時間帯（朝・夜など）に記録することをお勧めします。運動後や食事直後の測定は避けましょう。
           </div>

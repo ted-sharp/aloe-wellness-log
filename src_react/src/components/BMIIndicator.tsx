@@ -153,7 +153,7 @@ const BMIIndicator = memo(function BMIIndicator({
               style={{ backgroundColor: band.color }}
               title={`${band.label} (${band.range})`}
             >
-              <span className="text-[10px] font-semibold text-white drop-shadow">
+              <span className="text-[10px] font-bold text-gray-800 dark:text-gray-900">
                 {band.label}
               </span>
             </div>
