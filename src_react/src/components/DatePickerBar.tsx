@@ -2,32 +2,12 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { HiCalendarDays } from 'react-icons/hi2';
+import { formatDate, formatDay, formatWeekday, getDateArray } from '../utils/dateUtils';
 
-// 日付ユーティリティ
+// 日付ピッカー設定
 const BUTTON_WIDTH = 56;
-const EXTRA_SCROLL_DAYS = 90; // 最低表示日数（片側）
-const SCROLL_EXPAND_CHUNK = 30; // 端に来たら追加する日数
-
-const getDateArray = (minDate: Date, maxDate: Date) => {
-  const arr = [];
-  const d = new Date(minDate);
-  while (d <= maxDate) {
-    arr.push(new Date(d));
-    d.setDate(d.getDate() + 1);
-  }
-  return arr;
-};
-
-const formatDate = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-const formatDay = (date: Date) => `${date.getDate()}`;
-const formatWeekday = (date: Date) =>
-  ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+const EXTRA_SCROLL_DAYS = 90;
+const SCROLL_EXPAND_CHUNK = 30;
 
 export interface DatePickerBarProps {
   selectedDate: Date;

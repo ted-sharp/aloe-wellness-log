@@ -4,7 +4,8 @@
       "Bash(grep:*)",
       "Bash(yarn lint)",
       "Bash(timeout 10 yarn dev)",
-      "Bash(yarn tsc:*)"
+      "Bash(yarn tsc:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }
