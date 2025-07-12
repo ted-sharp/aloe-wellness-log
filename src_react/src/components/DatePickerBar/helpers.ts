@@ -1,4 +1,4 @@
-import { DATE_PICKER_CONFIG, WEEKDAY_COLORS, DateStatus } from './constants';
+import { DATE_PICKER_CONFIG, WEEKDAY_COLORS, DateStatus, WeekdayColor } from './constants';
 import { DateItem, DateRange } from './types';
 import { formatDate, formatDay, formatWeekday } from '../../utils/dateUtils';
 
@@ -32,9 +32,9 @@ export const expandDateRange = (
 };
 
 /**
- * 曜日に応じた色を取得する
+ * 曜日に応じた色を取得する（型安全）
  */
-export const getWeekdayColor = (dayOfWeek: number): string => {
+export const getWeekdayColor = (dayOfWeek: number): WeekdayColor => {
   switch (dayOfWeek) {
     case 0: return WEEKDAY_COLORS.SUNDAY;
     case 6: return WEEKDAY_COLORS.SATURDAY;
@@ -43,7 +43,7 @@ export const getWeekdayColor = (dayOfWeek: number): string => {
 };
 
 /**
- * 日付配列から表示用のDateItemを生成する
+ * 日付配列から表示用のDateItemを生成する（最適化版）
  */
 export const createDateItems = (
   dateArray: Date[],
@@ -53,10 +53,16 @@ export const createDateItems = (
   getDateStatus?: (date: Date) => DateStatus,
   isRecorded?: (date: Date) => boolean
 ): DateItem[] => {
+  // パフォーマンス最適化: 比較用文字列を一度だけ計算
+  const selectedDateStr = formatDate(selectedDate);
+  const todayDateStr = formatDate(today);
+  const centerDateStr = formatDate(centerDate);
+  
   return dateArray.map((date, index) => {
-    const isSelected = formatDate(date) === formatDate(selectedDate);
-    const isToday = formatDate(date) === formatDate(today);
-    const isCenter = formatDate(date) === formatDate(centerDate);
+    const dateStr = formatDate(date);
+    const isSelected = dateStr === selectedDateStr;
+    const isToday = dateStr === todayDateStr;
+    const isCenter = dateStr === centerDateStr;
     
     const prevDate = index > 0 ? dateArray[index - 1] : null;
     const showMonth = index === 0 || 
@@ -65,11 +71,10 @@ export const createDateItems = (
     const dayOfWeek = date.getDay();
     const weekdayColor = getWeekdayColor(dayOfWeek);
     
-    const status = getDateStatus 
+    // 型安全なステータス決定
+    const status: DateStatus = getDateStatus 
       ? getDateStatus(date)
-      : isRecorded && isRecorded(date)
-      ? 'green' as DateStatus
-      : 'none' as DateStatus;
+      : (isRecorded?.(date) ? 'green' : 'none');
 
     return {
       date,

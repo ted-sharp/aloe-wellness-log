@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { ja } from 'date-fns/locale';
 import { DatePickerBarProps } from '../types';
@@ -13,9 +13,9 @@ interface CalendarModalProps {
 }
 
 /**
- * カレンダーモーダルコンポーネント
+ * カレンダーモーダルコンポーネント（最適化版）
  */
-export const CalendarModal: React.FC<CalendarModalProps> = ({
+const CalendarModalComponent: React.FC<CalendarModalProps> = ({
   isOpen,
   onClose,
   selectedDate,
@@ -141,3 +141,15 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
     </div>
   );
 };
+
+// React.memoでメモ化
+export const CalendarModal = memo(CalendarModalComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.selectedDate.getTime() === nextProps.selectedDate.getTime() &&
+    prevProps.onClose === nextProps.onClose &&
+    prevProps.onSelect === nextProps.onSelect &&
+    prevProps.onCenterScroll === nextProps.onCenterScroll &&
+    prevProps.isRecorded === nextProps.isRecorded
+  );
+});

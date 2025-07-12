@@ -27,7 +27,7 @@ export const useTouch = ({ centerDate, setCenterDate }: UseTouchProps) => {
   }, []);
 
   /**
-   * タッチ終了時の処理（フリック判定）
+   * タッチ終了時の処理（フリック判定・最適化版）
    */
   const handleTouchEnd = useCallback((e: TouchEvent) => {
     const { startX, startY } = coordsRef.current;
@@ -44,22 +44,24 @@ export const useTouch = ({ centerDate, setCenterDate }: UseTouchProps) => {
       Math.abs(diffX) > DATE_PICKER_CONFIG.TOUCH_THRESHOLD
     ) {
       const daysMove = calculateDaysFromSwipe(diffX);
-      const newDate = new Date(centerDate);
       
-      if (diffX < 0) {
-        // 左スワイプ → 未来へ
-        newDate.setDate(centerDate.getDate() + daysMove);
-      } else {
-        // 右スワイプ → 過去へ
-        newDate.setDate(centerDate.getDate() - daysMove);
-      }
-      
-      setCenterDate(newDate);
+      // 安全な日付操作（タイムゾーン考慮）
+      setCenterDate(currentDate => {
+        const newDate = new Date(currentDate);
+        if (diffX < 0) {
+          // 左スワイプ → 未来へ
+          newDate.setDate(currentDate.getDate() + daysMove);
+        } else {
+          // 右スワイプ → 過去へ
+          newDate.setDate(currentDate.getDate() - daysMove);
+        }
+        return newDate;
+      });
     }
 
     // 座標をリセット
     coordsRef.current = { startX: null, startY: null };
-  }, [centerDate, setCenterDate]);
+  }, [setCenterDate]); // centerDateを依存関係から除外
 
   // タッチイベントリスナーの設定
   useEffect(() => {

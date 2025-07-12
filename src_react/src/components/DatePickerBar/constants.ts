@@ -29,6 +29,16 @@ export const WEEKDAY_COLORS = {
   WEEKDAY: '',
 } as const;
 
+// 型安全な曜日色の型定義
+export type WeekdayColor = typeof WEEKDAY_COLORS[keyof typeof WEEKDAY_COLORS];
+
+// 今日の日付を安全に取得する関数
+export const getTodayDate = (): Date => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
 // 日付ステータスの型定義
 export type DateStatus = 'none' | 'green' | 'red';
 

@@ -1,4 +1,4 @@
-import { DateStatus } from './constants';
+import { DateStatus, WeekdayColor } from './constants';
 
 // DatePickerBarのProps型定義
 export interface DatePickerBarProps {
@@ -18,7 +18,7 @@ export interface DateItem {
   isToday: boolean;
   isCenter: boolean;
   showMonth: boolean;
-  weekdayColor: string;
+  weekdayColor: WeekdayColor;
   status: DateStatus;
   index: number;
 }
@@ -29,12 +29,7 @@ export interface TouchCoordinates {
   startY: number | null;
 }
 
-// スクロール情報の型定義
-export interface ScrollInfo {
-  scrollLeft: number;
-  scrollWidth: number;
-  clientWidth: number;
-}
+// スクロール情報の型定義（実際の使用場所で直接型定義）
 
 // 日付範囲の型定義
 export interface DateRange {

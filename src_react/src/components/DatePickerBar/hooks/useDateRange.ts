@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { DateRange, ScrollDirection } from '../types';
 import { createDateRange, expandDateRange } from '../helpers';
 
@@ -13,29 +13,31 @@ export const useDateRange = (centerDate: Date) => {
   const lastEdgeRef = useRef<ScrollDirection | null>(null);
   const prevWidthRef = useRef<number>(0);
 
-  // centerDateが範囲外になった場合の自動拡張
+  // centerDateが範囲外になった場合の自動拡張（無限ループ防止）
   useEffect(() => {
     const { minDate, maxDate } = dateRange;
+    let needsUpdate = false;
+    let newRange = { ...dateRange };
     
     if (centerDate < minDate) {
-      setDateRange(prev => ({
-        ...prev,
-        minDate: expandDateRange(centerDate, 'backward'),
-      }));
+      newRange.minDate = expandDateRange(centerDate, 'backward');
+      needsUpdate = true;
     }
     
     if (centerDate > maxDate) {
-      setDateRange(prev => ({
-        ...prev,
-        maxDate: expandDateRange(centerDate, 'forward'),
-      }));
+      newRange.maxDate = expandDateRange(centerDate, 'forward');
+      needsUpdate = true;
     }
-  }, [centerDate, dateRange]);
+    
+    if (needsUpdate) {
+      setDateRange(newRange);
+    }
+  }, [centerDate]); // dateRangeを依存関係から除外して無限ループを防止
 
   /**
-   * 日付範囲を左右に拡張する
+   * 日付範囲を左右に拡張する（メモ化）
    */
-  const expandRange = (direction: ScrollDirection, scrollWidth: number) => {
+  const expandRange = useCallback((direction: ScrollDirection, scrollWidth: number) => {
     if (direction === 'left') {
       setDateRange(prev => ({
         ...prev,
@@ -50,7 +52,7 @@ export const useDateRange = (centerDate: Date) => {
     
     lastEdgeRef.current = direction;
     prevWidthRef.current = scrollWidth;
-  };
+  }, []); // 依存関係なし - setDateRange は安定している
 
   return {
     dateRange,
