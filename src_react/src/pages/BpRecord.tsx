@@ -165,7 +165,7 @@ const BpRecord: React.FC = () => {
                 <NumberInput
                   value={rec.systolic}
                   onChange={(value) => handleUpdate({ ...rec, systolic: Number(value) })}
-                  placeholder="最高血圧"
+                  placeholder="収縮"
                   step="1"
                   min="0"
                   max="300"
@@ -176,7 +176,7 @@ const BpRecord: React.FC = () => {
                 <NumberInput
                   value={rec.diastolic}
                   onChange={(value) => handleUpdate({ ...rec, diastolic: Number(value) })}
-                  placeholder="最低血圧"
+                  placeholder="拡張"
                   step="1"
                   min="0"
                   max="200"
@@ -190,7 +190,7 @@ const BpRecord: React.FC = () => {
                     ...rec, 
                     heartRate: value === '' ? null : Number(value) 
                   })}
-                  placeholder="心拍数"
+                  placeholder="心拍"
                   step="1"
                   min="0"
                   max="300"
@@ -234,7 +234,7 @@ const BpRecord: React.FC = () => {
               <NumberInput
                 value={formData.systolic}
                 onChange={(systolic) => updateField('systolic', systolic)}
-                placeholder="最高血圧"
+                placeholder="収縮"
                 step="1"
                 min="0"
                 max="300"
@@ -245,7 +245,7 @@ const BpRecord: React.FC = () => {
               <NumberInput
                 value={formData.diastolic}
                 onChange={(diastolic) => updateField('diastolic', diastolic)}
-                placeholder="最低血圧"
+                placeholder="拡張"
                 step="1"
                 min="0"
                 max="200"
@@ -256,7 +256,7 @@ const BpRecord: React.FC = () => {
               <NumberInput
                 value={formData.heartRate}
                 onChange={(heartRate) => updateField('heartRate', heartRate)}
-                placeholder="心拍数"
+                placeholder="心拍"
                 step="1"
                 min="0"
                 max="300"

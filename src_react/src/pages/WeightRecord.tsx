@@ -287,7 +287,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   placeholder="体重"
                   step="0.1"
                   min="0"
-                  width="md"
+                  width="lg"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">kg</span>
                 <NumberInput
@@ -299,7 +299,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   placeholder="体脂肪"
                   step="0.1"
                   min="0"
-                  width="md"
+                  width="lg"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">%</span>
                 <NumberInput
@@ -311,7 +311,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   placeholder="腹囲"
                   step="0.1"
                   min="0"
-                  width="md"
+                  width="lg"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">cm</span>
               </div>
@@ -368,7 +368,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 placeholder="体重"
                 step="0.1"
                 min="0"
-                width="md"
+                width="lg"
               />
               <span className="ml-0.5 mr-3 text-gray-500">kg</span>
               <NumberInput
@@ -377,7 +377,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 placeholder="体脂肪"
                 step="0.1"
                 min="0"
-                width="md"
+                width="lg"
               />
               <span className="ml-0.5 mr-3 text-gray-500">%</span>
               <NumberInput
@@ -386,7 +386,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 placeholder="腹囲"
                 step="0.1"
                 min="0"
-                width="md"
+                width="lg"
               />
               <span className="ml-0.5 mr-3 text-gray-500">cm</span>
             </div>
