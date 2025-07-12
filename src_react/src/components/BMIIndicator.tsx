@@ -116,27 +116,29 @@ const BMIIndicator = memo(function BMIIndicator({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* BMI値表示 */}
-      <div className="flex items-center justify-center mb-2">
-        <span className="text-base font-semibold text-blue-700 dark:text-blue-200">
-          BMI{' '}
-          <span
-            style={{
-              display: 'inline-block',
-              minWidth: '4ch',
-              textAlign: 'right',
-              fontFamily: 'monospace',
-            }}
-          >
-            {animatedBmi.toFixed(1)}
+      {/* BMI値表示 - showWeightDiffがtrueの時のみ表示 */}
+      {showWeightDiff && (
+        <div className="flex items-center justify-center mb-2">
+          <span className="text-base font-semibold text-blue-700 dark:text-blue-200">
+            BMI{' '}
+            <span
+              style={{
+                display: 'inline-block',
+                minWidth: '4ch',
+                textAlign: 'right',
+                fontFamily: 'monospace',
+              }}
+            >
+              {animatedBmi.toFixed(1)}
+            </span>
           </span>
-        </span>
-        {showWeightDiff && animatedDiff < 0 && (
-          <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
-            ({animatedDiff.toFixed(1)}kg)
-          </span>
-        )}
-      </div>
+          {showWeightDiff && animatedDiff < 0 && (
+            <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
+              🏆{animatedDiff.toFixed(1)}kg
+            </span>
+          )}
+        </div>
+      )}
 
       {/* BMIインジケーターバー */}
       <div className="flex flex-col items-center mb-2">

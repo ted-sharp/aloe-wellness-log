@@ -189,19 +189,32 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             day: 'numeric',
           })}
           {isRecorded(selectedDate) && (
-            <HiCheck
-              className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
-              aria-label="入力済み"
-            />
+            <>
+              <HiCheck
+                className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
+                aria-label="入力済み"
+              />
+              {/* BMI値を横に表示 */}
+              {latestWeightOfDay && goal && goal.height && (
+                <span className="ml-3 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
+                  BMI {(latestWeightOfDay / Math.pow(goal.height / 100, 2)).toFixed(1)}
+                  {goal.startWeight && latestWeightOfDay - goal.startWeight < 0 && (
+                    <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
+                      🏆{(latestWeightOfDay - goal.startWeight).toFixed(1)}kg
+                    </span>
+                  )}
+                </span>
+              )}
+            </>
           )}
         </span>
       </div>
 
-      {/* BMI表示とインジケーター */}
+      {/* BMIインジケーターバーのみ表示 */}
       <BMIIndicator
         currentWeight={latestWeightOfDay}
         goal={goal}
-        showWeightDiff={true}
+        showWeightDiff={false}
       />
 
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
