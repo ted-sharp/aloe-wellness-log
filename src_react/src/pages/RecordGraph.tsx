@@ -202,11 +202,11 @@ const RecordGraph: React.FC = () => {
       data-testid="record-graph"
     >
       {/* 白い帯＋期間切り替えボタンのみ */}
-      <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-4 p-2">
+      <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-4 p-2">
         {PERIODS.map((p, i) => (
           <button
             key={p.label}
-            className={`px-4 py-2 rounded-xl border-2 font-bold transition mx-0.5
+            className={`flex-1 py-2 rounded-xl border-2 font-bold transition mx-0.5
               ${
                 periodIdx === i
                   ? 'border-orange-400 text-orange-500 scale-105 shadow'
@@ -214,7 +214,6 @@ const RecordGraph: React.FC = () => {
               }
             `}
             onClick={() => setPeriodIdx(i)}
-            style={{ minWidth: 80 }}
           >
             {p.label}
           </button>
