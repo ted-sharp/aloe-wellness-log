@@ -138,13 +138,11 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     resetValues: initialFormValues,
   });
 
-  // その日付の最新体重（記録があれば）
-  const latestWeightOfDay = useMemo(() => {
+  // その日付の最低体重（記録があれば）
+  const lowestWeightOfDay = useMemo(() => {
     if (recordsOfDay.length === 0) return null;
-    const sorted = [...recordsOfDay].sort((a, b) =>
-      (b.time || '').localeCompare(a.time || '')
-    );
-    return sorted.length > 0 ? Number(sorted[0].weight) : null;
+    const weights = recordsOfDay.map(record => Number(record.weight));
+    return Math.min(...weights);
   }, [recordsOfDay]);
 
   // goal（身長など）が未ロードなら自動でロード
@@ -195,12 +193,12 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 aria-label="入力済み"
               />
               {/* BMI値を横に表示 */}
-              {latestWeightOfDay && goal && goal.height && (
+              {lowestWeightOfDay && goal && goal.height && (
                 <span className="ml-3 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-                  BMI {(latestWeightOfDay / Math.pow(goal.height / 100, 2)).toFixed(1)}
-                  {goal.startWeight && latestWeightOfDay - goal.startWeight < 0 && (
+                  BMI {(lowestWeightOfDay / Math.pow(goal.height / 100, 2)).toFixed(1)}
+                  {goal.startWeight && lowestWeightOfDay - goal.startWeight < 0 && (
                     <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
-                      🏆{(latestWeightOfDay - goal.startWeight).toFixed(1)}kg
+                      🏆{(lowestWeightOfDay - goal.startWeight).toFixed(1)}kg
                     </span>
                   )}
                 </span>
@@ -212,7 +210,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
 
       {/* BMIインジケーターバーのみ表示 */}
       <BMIIndicator
-        currentWeight={latestWeightOfDay}
+        currentWeight={lowestWeightOfDay}
         goal={goal}
         showWeightDiff={false}
       />

@@ -57,15 +57,16 @@ interface BpIndicatorProps {
  * 現在の血圧値をマーカーで示す
  */
 const BpIndicator: React.FC<BpIndicatorProps> = ({ recordsOfDay }) => {
-  // 最新値取得（時刻降順）
-  const latest = recordsOfDay.length
-    ? [...recordsOfDay].sort((a, b) =>
-        (b.time || '').localeCompare(a.time || '')
-      )[0]
+  // 最低値取得（その日の最も低い血圧値）
+  const lowestSystolic = recordsOfDay.length
+    ? Math.min(...recordsOfDay.map(record => record.systolic))
+    : null;
+  const lowestDiastolic = recordsOfDay.length
+    ? Math.min(...recordsOfDay.map(record => record.diastolic))
     : null;
   
-  const systolic = latest?.systolic ?? null;
-  const diastolic = latest?.diastolic ?? null;
+  const systolic = lowestSystolic;
+  const diastolic = lowestDiastolic;
   const markerLeftSys = getMarkerLeft(systolicBands, systolic);
   const markerLeftDia = getMarkerLeft(diastolicBands, diastolic);
 
