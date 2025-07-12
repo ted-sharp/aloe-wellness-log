@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(yarn lint)",
+      "Bash(timeout 10 yarn dev)",
+      "Bash(yarn tsc:*)"
+    ],
+    "deny": []
+  }
+}

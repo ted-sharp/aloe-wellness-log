@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../components/Button';
 import SparkleDropdown from '../components/SparkleDropdown';
 import { getAllWeightRecords } from '../db/indexedDb';

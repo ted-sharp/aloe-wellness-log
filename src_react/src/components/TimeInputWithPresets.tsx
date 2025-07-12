@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { MdFlashOn } from 'react-icons/md';
 import { TbSunrise } from 'react-icons/tb';
 
@@ -14,7 +15,7 @@ const getCurrentTimeString = (): string => {
   return `${h}:${m}`;
 };
 
-export default function TimeInputWithPresets({
+const TimeInputWithPresets = memo(function TimeInputWithPresets({
   value,
   onChange,
   className = '',
@@ -55,4 +56,6 @@ export default function TimeInputWithPresets({
       </button>
     </div>
   );
-}
+});
+
+export default TimeInputWithPresets;

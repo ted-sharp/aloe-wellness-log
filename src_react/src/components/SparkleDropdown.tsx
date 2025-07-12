@@ -9,7 +9,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { HiSparkles } from 'react-icons/hi2';
 
 interface SparkleDropdownProps {
@@ -45,7 +45,7 @@ function useSparkleDropdown() {
   };
 }
 
-export default function SparkleDropdown({
+const SparkleDropdown = memo(function SparkleDropdown({
   examples,
   onSelect,
   label = '定型文を挿入',
@@ -95,4 +95,6 @@ export default function SparkleDropdown({
       )}
     </>
   );
-}
+});
+
+export default SparkleDropdown;

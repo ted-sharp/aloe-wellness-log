@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface NumberInputProps {
   value: string | number;
   onChange: (value: string) => void;
@@ -24,7 +26,7 @@ const getWidthClass = (width: 'sm' | 'md' | 'lg' = 'md') => {
   }
 };
 
-export default function NumberInput({
+const NumberInput = memo(function NumberInput({
   value,
   onChange,
   placeholder,
@@ -52,4 +54,6 @@ export default function NumberInput({
       data-testid={dataTestId}
     />
   );
-}
+});
+
+export default NumberInput;
