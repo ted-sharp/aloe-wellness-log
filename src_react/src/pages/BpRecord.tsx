@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { HiCheck, HiTrash } from 'react-icons/hi2';
-import { MdFlashOn } from 'react-icons/md';
-import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
+import NumberInput from '../components/NumberInput';
+import TimeInputWithPresets from '../components/TimeInputWithPresets';
 import {
   addBpRecord,
   deleteBpRecord,
@@ -11,22 +11,8 @@ import {
   updateBpRecord,
 } from '../db/indexedDb';
 import type { BpRecordV2 } from '../types/record';
+import { formatDate, getCurrentTimeString, SELECTED_DATE_KEY } from '../utils/dateUtils';
 
-const SELECTED_DATE_KEY = 'shared_selected_date';
-
-const formatDate = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-const getCurrentTimeString = () => {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
-  const m = String(now.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
-};
 
 const BpRecord: React.FC = () => {
   const today = new Date();
@@ -218,30 +204,10 @@ const BpRecord: React.FC = () => {
         <div className="w-full max-w-md mt-2 mb-0">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0 flex flex-col gap-2">
             <div className="flex items-center w-full gap-2">
-              <input
-                type="time"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
+              <TimeInputWithPresets
                 value={newTime}
-                onChange={e => setNewTime(e.target.value)}
+                onChange={setNewTime}
               />
-              <button
-                type="button"
-                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
-                title="朝7時にセット"
-                aria-label="朝7時にセット"
-                onClick={() => setNewTime('07:00')}
-              >
-                <TbSunrise className="w-6 h-6" />
-              </button>
-              <button
-                type="button"
-                className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
-                title="現在時刻にセット"
-                aria-label="現在時刻にセット"
-                onClick={() => setNewTime(getCurrentTimeString())}
-              >
-                <MdFlashOn className="w-6 h-6" />
-              </button>
               <div className="flex-1" />
               <Button
                 variant="success"
@@ -257,34 +223,31 @@ const BpRecord: React.FC = () => {
               </Button>
             </div>
             <div className="flex items-center gap-2 w-full">
-              <input
-                type="number"
-                step="1"
-                min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
+              <NumberInput
                 value={newSystolic}
-                onChange={e => setNewSystolic(e.target.value)}
+                onChange={setNewSystolic}
                 placeholder="収縮"
-              />
-              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
-              <input
-                type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-sm placeholder-gray-400"
+                width="sm"
+              />
+              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
+              <NumberInput
                 value={newDiastolic}
-                onChange={e => setNewDiastolic(e.target.value)}
+                onChange={setNewDiastolic}
                 placeholder="拡張"
-              />
-              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
-              <input
-                type="number"
                 step="1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-lg font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-[3.8em] placeholder:font-normal placeholder:text-base placeholder-gray-400"
+                width="sm"
+              />
+              <span className="ml-0 mr-3 text-gray-500">mmHg</span>
+              <NumberInput
                 value={newHeartRate}
-                onChange={e => setNewHeartRate(e.target.value)}
+                onChange={setNewHeartRate}
                 placeholder="脈拍"
+                step="1"
+                min="0"
+                width="sm"
               />
               <span className="ml-0 mr-3 text-gray-500">bpm</span>
             </div>

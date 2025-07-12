@@ -1,17 +1,6 @@
-import {
-  FloatingPortal,
-  flip,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-  useRole,
-} from '@floating-ui/react';
 import { useEffect, useRef, useState } from 'react';
-import { HiSparkles } from 'react-icons/hi2';
 import Button from '../components/Button';
+import SparkleDropdown from '../components/SparkleDropdown';
 import { getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
 
@@ -74,32 +63,6 @@ const genderOptions = [
   { value: 'unknown', label: '未回答' },
 ];
 
-// --- 目標入力用 floating-ui スパークル共通フック ---
-function useSparkleDropdown() {
-  const [open, setOpen] = useState(false);
-  const { refs, floatingStyles, context } = useFloating({
-    open,
-    onOpenChange: setOpen,
-    middleware: [offset(6), flip(), shift()],
-    placement: 'bottom-end',
-  });
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
-  const role = useRole(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([
-    click,
-    dismiss,
-    role,
-  ]);
-  return {
-    open,
-    setOpen,
-    refs,
-    floatingStyles,
-    getReferenceProps,
-    getFloatingProps,
-  };
-}
 
 export default function GoalInput() {
   const { goal, setGoal, loadGoal } = useGoalStore();
@@ -118,24 +81,7 @@ export default function GoalInput() {
   const [sleepGoal, setSleepGoal] = useState('');
   const [smokingGoal, setSmokingGoal] = useState('');
   const [alcoholGoal, setAlcoholGoal] = useState('');
-  const [showExerciseExamples, setShowExerciseExamples] = useState(false);
-  const [showDietExamples, setShowDietExamples] = useState(false);
-  const [showSleepExamples, setShowSleepExamples] = useState(false);
-  const [showSmokingExamples, setShowSmokingExamples] = useState(false);
-  const [showAlcoholExamples, setShowAlcoholExamples] = useState(false);
-  const exerciseExampleRef = useRef<HTMLDivElement | null>(null);
-  const dietExampleRef = useRef<HTMLDivElement | null>(null);
-  const sleepExampleRef = useRef<HTMLDivElement | null>(null);
-  const smokingExampleRef = useRef<HTMLDivElement | null>(null);
-  const alcoholExampleRef = useRef<HTMLDivElement | null>(null);
   const [latestWeight, setLatestWeight] = useState<number | null>(null);
-
-  // --- スパークル定型文ドロップダウン ---
-  const exerciseSparkle = useSparkleDropdown();
-  const dietSparkle = useSparkleDropdown();
-  const sleepSparkle = useSparkleDropdown();
-  const smokingSparkle = useSparkleDropdown();
-  const alcoholSparkle = useSparkleDropdown();
 
   useEffect(() => {
     // V2体重データから最新体重を取得
@@ -298,108 +244,6 @@ export default function GoalInput() {
   // 身長の+5/-5
   const heightNum = Number(height) || 170;
 
-  // フォーム外クリックでポップアップを閉じる処理（useEffectで）
-  useEffect(() => {
-    if (!showExerciseExamples) return;
-    const handleClick = (e: MouseEvent) => {
-      const icon = document.querySelector('[aria-label="運動目標の例を表示"]');
-      const popup = exerciseExampleRef.current;
-      if (
-        icon &&
-        !icon.contains(e.target as Node) &&
-        popup &&
-        !popup.contains(e.target as Node)
-      ) {
-        setShowExerciseExamples(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [showExerciseExamples]);
-
-  useEffect(() => {
-    if (showDietExamples) {
-      const handleClick = (e: MouseEvent) => {
-        const icon = document.querySelector(
-          '[aria-label="減食目標の例を表示"]'
-        );
-        const popup = dietExampleRef.current;
-        if (
-          icon &&
-          !icon.contains(e.target as Node) &&
-          popup &&
-          !popup.contains(e.target as Node)
-        ) {
-          setShowDietExamples(false);
-        }
-      };
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [showDietExamples]);
-
-  useEffect(() => {
-    if (showSleepExamples) {
-      const handleClick = (e: MouseEvent) => {
-        const icon = document.querySelector(
-          '[aria-label="睡眠目標の例を表示"]'
-        );
-        const popup = sleepExampleRef.current;
-        if (
-          icon &&
-          !icon.contains(e.target as Node) &&
-          popup &&
-          !popup.contains(e.target as Node)
-        ) {
-          setShowSleepExamples(false);
-        }
-      };
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [showSleepExamples]);
-
-  useEffect(() => {
-    if (showSmokingExamples) {
-      const handleClick = (e: MouseEvent) => {
-        const icon = document.querySelector(
-          '[aria-label="喫煙目標の例を表示"]'
-        );
-        const popup = smokingExampleRef.current;
-        if (
-          icon &&
-          !icon.contains(e.target as Node) &&
-          popup &&
-          !popup.contains(e.target as Node)
-        ) {
-          setShowSmokingExamples(false);
-        }
-      };
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [showSmokingExamples]);
-
-  useEffect(() => {
-    if (showAlcoholExamples) {
-      const handleClick = (e: MouseEvent) => {
-        const icon = document.querySelector(
-          '[aria-label="飲酒目標の例を表示"]'
-        );
-        const popup = alcoholExampleRef.current;
-        if (
-          icon &&
-          !icon.contains(e.target as Node) &&
-          popup &&
-          !popup.contains(e.target as Node)
-        ) {
-          setShowAlcoholExamples(false);
-        }
-      };
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [showAlcoholExamples]);
 
   // 性別による1kgあたりのカロリー値
   const kcalPerKg = gender === 'female' ? 7000 : 6500;
@@ -683,42 +527,11 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 毎日30分歩く"
             />
-            <div
-              ref={exerciseSparkle.refs.setReference}
-              {...exerciseSparkle.getReferenceProps({})}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-              tabIndex={0}
-              aria-label="定型文を挿入"
-              onClick={() => exerciseSparkle.setOpen(v => !v)}
-            >
-              <HiSparkles className="w-6 h-6" />
-            </div>
-            {exerciseSparkle.open && (
-              <FloatingPortal>
-                <div
-                  ref={exerciseSparkle.refs.setFloating}
-                  style={exerciseSparkle.floatingStyles}
-                  {...exerciseSparkle.getFloatingProps({
-                    className:
-                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
-                  })}
-                >
-                  {exerciseExamples.map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                      onClick={() => {
-                        setExerciseGoal(option);
-                        exerciseSparkle.setOpen(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+            <SparkleDropdown
+              examples={exerciseExamples}
+              onSelect={(example) => setExerciseGoal(example)}
+              label="運動目標の定型文を挿入"
+            />
           </div>
         </label>
         {/* 運動目標の下に一日あたり消費カロリーの半分を表示 */}
@@ -766,42 +579,11 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 間食を控える"
             />
-            <div
-              ref={dietSparkle.refs.setReference}
-              {...dietSparkle.getReferenceProps({})}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-              tabIndex={0}
-              aria-label="定型文を挿入"
-              onClick={() => dietSparkle.setOpen(v => !v)}
-            >
-              <HiSparkles className="w-6 h-6" />
-            </div>
-            {dietSparkle.open && (
-              <FloatingPortal>
-                <div
-                  ref={dietSparkle.refs.setFloating}
-                  style={dietSparkle.floatingStyles}
-                  {...dietSparkle.getFloatingProps({
-                    className:
-                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
-                  })}
-                >
-                  {dietExamples.map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                      onClick={() => {
-                        setDietGoal(option);
-                        dietSparkle.setOpen(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+            <SparkleDropdown
+              examples={dietExamples}
+              onSelect={(example) => setDietGoal(example)}
+              label="減食目標の定型文を挿入"
+            />
           </div>
         </label>
         {/* 減食目標の下に一日あたり消費カロリーの半分を表示 */}
@@ -849,42 +631,11 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 7時間以上寝る"
             />
-            <div
-              ref={sleepSparkle.refs.setReference}
-              {...sleepSparkle.getReferenceProps({})}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-              tabIndex={0}
-              aria-label="定型文を挿入"
-              onClick={() => sleepSparkle.setOpen(v => !v)}
-            >
-              <HiSparkles className="w-6 h-6" />
-            </div>
-            {sleepSparkle.open && (
-              <FloatingPortal>
-                <div
-                  ref={sleepSparkle.refs.setFloating}
-                  style={sleepSparkle.floatingStyles}
-                  {...sleepSparkle.getFloatingProps({
-                    className:
-                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
-                  })}
-                >
-                  {sleepExamples.map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                      onClick={() => {
-                        setSleepGoal(option);
-                        sleepSparkle.setOpen(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+            <SparkleDropdown
+              examples={sleepExamples}
+              onSelect={(example) => setSleepGoal(example)}
+              label="睡眠目標の定型文を挿入"
+            />
           </div>
         </label>
         <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
@@ -900,42 +651,11 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 1日○本までにする"
             />
-            <div
-              ref={smokingSparkle.refs.setReference}
-              {...smokingSparkle.getReferenceProps({})}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-              tabIndex={0}
-              aria-label="定型文を挿入"
-              onClick={() => smokingSparkle.setOpen(v => !v)}
-            >
-              <HiSparkles className="w-6 h-6" />
-            </div>
-            {smokingSparkle.open && (
-              <FloatingPortal>
-                <div
-                  ref={smokingSparkle.refs.setFloating}
-                  style={smokingSparkle.floatingStyles}
-                  {...smokingSparkle.getFloatingProps({
-                    className:
-                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
-                  })}
-                >
-                  {smokingExamples.map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                      onClick={() => {
-                        setSmokingGoal(option);
-                        smokingSparkle.setOpen(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+            <SparkleDropdown
+              examples={smokingExamples}
+              onSelect={(example) => setSmokingGoal(example)}
+              label="喫煙目標の定型文を挿入"
+            />
           </div>
         </label>
         <label className="flex flex-col gap-1">
@@ -948,42 +668,11 @@ export default function GoalInput() {
               className="border rounded px-3 py-2 text-base flex-1 pr-10"
               placeholder="例: 週2回までにする"
             />
-            <div
-              ref={alcoholSparkle.refs.setReference}
-              {...alcoholSparkle.getReferenceProps({})}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-yellow-400 cursor-pointer align-middle hover:opacity-80 focus:outline-none"
-              tabIndex={0}
-              aria-label="定型文を挿入"
-              onClick={() => alcoholSparkle.setOpen(v => !v)}
-            >
-              <HiSparkles className="w-6 h-6" />
-            </div>
-            {alcoholSparkle.open && (
-              <FloatingPortal>
-                <div
-                  ref={alcoholSparkle.refs.setFloating}
-                  style={alcoholSparkle.floatingStyles}
-                  {...alcoholSparkle.getFloatingProps({
-                    className:
-                      'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
-                  })}
-                >
-                  {alcoholExamples.map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                      onClick={() => {
-                        setAlcoholGoal(option);
-                        alcoholSparkle.setOpen(false);
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </FloatingPortal>
-            )}
+            <SparkleDropdown
+              examples={alcoholExamples}
+              onSelect={(example) => setAlcoholGoal(example)}
+              label="飲酒目標の定型文を挿入"
+            />
           </div>
         </label>
         <Button

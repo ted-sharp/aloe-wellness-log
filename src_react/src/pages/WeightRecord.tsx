@@ -12,11 +12,12 @@ import {
 import React, { useEffect, useState } from 'react';
 import { FaTrophy } from 'react-icons/fa';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
-import { MdAutoAwesome, MdFlashOn } from 'react-icons/md';
+import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
-import { TbSunrise } from 'react-icons/tb';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
+import NumberInput from '../components/NumberInput';
+import TimeInputWithPresets from '../components/TimeInputWithPresets';
 import {
   addWeightRecord,
   deleteWeightRecord,
@@ -25,16 +26,8 @@ import {
 } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
 import type { WeightRecordV2 } from '../types/record';
+import { formatDate, getCurrentTimeString, SELECTED_DATE_KEY } from '../utils/dateUtils';
 
-// 共通キー定数を追加
-const SELECTED_DATE_KEY = 'shared_selected_date';
-
-const formatDate = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(date.getDate()).padStart(2, '0')}`;
-};
 
 interface WeightRecordProps {
   showTipsModal?: () => void;
@@ -99,13 +92,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     return weightRecords.some(r => r.date === d);
   };
 
-  // newTimeのuseState初期値を現在時刻に
-  const getCurrentTimeString = () => {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
-  };
 
   // 新規追加用state
   const [newWeight, setNewWeight] = useState('');
@@ -540,32 +526,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         <div className="w-full max-w-md mt-2 mb-2">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0 flex flex-col gap-1">
             <div className="flex items-center w-full mb-1 justify-between">
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-base bg-inherit text-gray-700 dark:text-gray-200 w-[6.5em]"
-                  value={newTime}
-                  onChange={e => setNewTime(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
-                  title="朝7時にセット"
-                  aria-label="朝7時にセット"
-                  onClick={() => setNewTime('07:00')}
-                >
-                  <TbSunrise className="w-6 h-6" />
-                </button>
-                <button
-                  type="button"
-                  className="h-10 px-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-300/20 dark:hover:bg-yellow-300/40 border border-yellow-300 text-yellow-500 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow flex items-center justify-center transition-colors duration-150"
-                  title="現在時刻にセット"
-                  aria-label="現在時刻にセット"
-                  onClick={() => setNewTime(getCurrentTimeString())}
-                >
-                  <MdFlashOn className="w-6 h-6" />
-                </button>
-              </div>
+              <TimeInputWithPresets
+                value={newTime}
+                onChange={setNewTime}
+              />
               <div className="flex items-center gap-2">
                 <Button
                   variant="success"
@@ -594,37 +558,31 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               </div>
             </div>
             <div className="flex items-center gap-1 w-full mb-1">
-              <input
-                type="number"
-                inputMode="decimal"
+              <NumberInput
+                value={newWeight}
+                onChange={setNewWeight}
+                placeholder="体重"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
-                value={newWeight}
-                onChange={e => setNewWeight(e.target.value)}
-                placeholder="体重"
+                width="md"
               />
               <span className="ml-0.5 mr-3 text-gray-500">kg</span>
-              <input
-                type="number"
-                inputMode="decimal"
+              <NumberInput
+                value={newBodyFat}
+                onChange={setNewBodyFat}
+                placeholder="体脂肪"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-xs placeholder-gray-400"
-                value={newBodyFat}
-                onChange={e => setNewBodyFat(e.target.value)}
-                placeholder="体脂肪"
+                width="md"
               />
               <span className="ml-0.5 mr-3 text-gray-500">%</span>
-              <input
-                type="number"
-                inputMode="decimal"
+              <NumberInput
+                value={newWaist}
+                onChange={setNewWaist}
+                placeholder="腹囲"
                 step="0.1"
                 min="0"
-                className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
-                value={newWaist}
-                onChange={e => setNewWaist(e.target.value)}
-                placeholder="腹囲"
+                width="md"
               />
               <span className="ml-0.5 mr-3 text-gray-500">cm</span>
             </div>
