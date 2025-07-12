@@ -152,9 +152,12 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     }
   }, [goal, loadGoal]);
 
+  // いずれかのフィールドが入力されているかチェック
+  const hasAnyData = formData.weight || formData.bodyFat || formData.waist;
+
   // レコード追加処理
   const handleAddRecord = useCallback(async () => {
-    if (!formData.weight) return;
+    if (!hasAnyData) return;
     try {
       const record = createRecordFromForm(recordDate);
       await addRecord(record);
@@ -162,7 +165,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     } catch (error) {
       // エラーハンドリングはuseRecordCRUDで行われる
     }
-  }, [formData.weight, createRecordFromForm, recordDate, addRecord, resetForm]);
+  }, [hasAnyData, createRecordFromForm, recordDate, addRecord, resetForm]);
 
   // メモ欄用スパークルドロップダウン
   const noteSparkle = useSparkleDropdown();
@@ -339,7 +342,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   aria-label="保存"
                   onClick={handleAddRecord}
                   data-testid="save-btn"
-                  disabled={isLoading}
+                  disabled={isLoading || !hasAnyData}
                 >
                   {''}
                 </Button>
