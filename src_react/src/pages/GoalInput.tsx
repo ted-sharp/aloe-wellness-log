@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Button from '../components/Button';
+import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
 import { getAllWeightRecords } from '../db/indexedDb';
 import { useGoalStore } from '../store/goal';
@@ -245,8 +246,6 @@ export default function GoalInput() {
   const heightNum = Number(height) || 170;
 
 
-  // 性別による1kgあたりのカロリー値
-  const kcalPerKg = gender === 'female' ? 7000 : 6500;
 
   return (
     <div className="flex flex-col items-center justify-start py-0 bg-transparent">
@@ -425,20 +424,14 @@ export default function GoalInput() {
           </div>
         </label>
         {/* 目標体重入力後に必要カロリー表示（目標体重の直後に移動） */}
-        {startWeight &&
-          targetWeight &&
-          !isNaN(Number(startWeight)) &&
-          !isNaN(Number(targetWeight)) &&
-          Number(targetWeight) < Number(startWeight) && (
-            <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
-              あと{(Number(startWeight) - Number(targetWeight)).toFixed(1)}
-              kg減らすには約
-              {Math.round(
-                (Number(startWeight) - Number(targetWeight)) * kcalPerKg
-              ).toLocaleString()}
-              kcalの消費が必要です
-            </div>
-          )}
+        <CalorieCalculator
+          startWeight={startWeight}
+          targetWeight={targetWeight}
+          targetStart={targetStart}
+          targetEnd={targetEnd}
+          gender={gender}
+          type="total"
+        />
         <label className="flex flex-col gap-1">
           <span>目標開始日</span>
           <div className="flex items-center gap-2">
@@ -487,36 +480,14 @@ export default function GoalInput() {
           </div>
         </label>
         {/* 目標終了日の下に一日あたり消費カロリーを表示 */}
-        {startWeight &&
-          targetWeight &&
-          targetStart &&
-          targetEnd &&
-          !isNaN(Number(startWeight)) &&
-          !isNaN(Number(targetWeight)) &&
-          Number(targetWeight) < Number(startWeight) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
-          new Date(targetEnd) >= new Date(targetStart) &&
-          (() => {
-            const totalCal =
-              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
-            const start = new Date(targetStart);
-            const end = new Date(targetEnd);
-            const days =
-              Math.floor(
-                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-              ) + 1;
-            if (days > 0) {
-              const perDay = Math.round(totalCal / days);
-              return (
-                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
-                  期間中に一日あたり約{perDay.toLocaleString()}
-                  kcalの消費が必要です
-                </div>
-              );
-            }
-            return null;
-          })()}
+        <CalorieCalculator
+          startWeight={startWeight}
+          targetWeight={targetWeight}
+          targetStart={targetStart}
+          targetEnd={targetEnd}
+          gender={gender}
+          type="daily"
+        />
         <label className="flex flex-col gap-1">
           <span>運動目標 (例: なるべく階段を使う)</span>
           <div className="relative flex items-center gap-2">
@@ -535,37 +506,14 @@ export default function GoalInput() {
           </div>
         </label>
         {/* 運動目標の下に一日あたり消費カロリーの半分を表示 */}
-        {startWeight &&
-          targetWeight &&
-          targetStart &&
-          targetEnd &&
-          !isNaN(Number(startWeight)) &&
-          !isNaN(Number(targetWeight)) &&
-          Number(targetWeight) < Number(startWeight) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
-          new Date(targetEnd) >= new Date(targetStart) &&
-          (() => {
-            const totalCal =
-              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
-            const start = new Date(targetStart);
-            const end = new Date(targetEnd);
-            const days =
-              Math.floor(
-                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-              ) + 1;
-            if (days > 0) {
-              const perDay = Math.round(totalCal / days);
-              const halfPerDay = Math.round(perDay / 2);
-              return (
-                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold">
-                  運動で一日あたり約{halfPerDay.toLocaleString()}
-                  kcalの消費を目標にしましょう。
-                </div>
-              );
-            }
-            return null;
-          })()}
+        <CalorieCalculator
+          startWeight={startWeight}
+          targetWeight={targetWeight}
+          targetStart={targetStart}
+          targetEnd={targetEnd}
+          gender={gender}
+          type="exercise"
+        />
         <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
           簡単に取り組める日常の動作の延長が効果的です。
         </div>
@@ -587,37 +535,14 @@ export default function GoalInput() {
           </div>
         </label>
         {/* 減食目標の下に一日あたり消費カロリーの半分を表示 */}
-        {startWeight &&
-          targetWeight &&
-          targetStart &&
-          targetEnd &&
-          !isNaN(Number(startWeight)) &&
-          !isNaN(Number(targetWeight)) &&
-          Number(targetWeight) < Number(startWeight) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetStart) &&
-          /^\d{4}-\d{2}-\d{2}$/.test(targetEnd) &&
-          new Date(targetEnd) >= new Date(targetStart) &&
-          (() => {
-            const totalCal =
-              (Number(startWeight) - Number(targetWeight)) * kcalPerKg;
-            const start = new Date(targetStart);
-            const end = new Date(targetEnd);
-            const days =
-              Math.floor(
-                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-              ) + 1;
-            if (days > 0) {
-              const perDay = Math.round(totalCal / days);
-              const halfPerDay = Math.round(perDay / 2);
-              return (
-                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold">
-                  減食で一日あたり約{halfPerDay.toLocaleString()}
-                  kcalの消費を目標にしましょう。
-                </div>
-              );
-            }
-            return null;
-          })()}
+        <CalorieCalculator
+          startWeight={startWeight}
+          targetWeight={targetWeight}
+          targetStart={targetStart}
+          targetEnd={targetEnd}
+          gender={gender}
+          type="diet"
+        />
         <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
           カロリーコントロールが一番効果があります。
         </div>
