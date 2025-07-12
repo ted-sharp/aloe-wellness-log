@@ -78,41 +78,47 @@ export default function RecordExport({ showTipsModal }: RecordExportProps) {
           onDataUpdated={handleDataUpdated}
         />
 
-        {/* テストデータ生成（開発環境のみ） */}
-        {isDev && (
-          <TestDataGenerator onStatusChange={handleStatusChange} />
-        )}
-
         {/* データ管理（全削除） */}
         <DataManager 
           onStatusChange={handleStatusChange}
           onDataUpdated={handleDataUpdated}
         />
 
+        {/* テストデータ生成（開発環境のみ） */}
+        {isDev && (
+          <TestDataGenerator onStatusChange={handleStatusChange} />
+        )}
+
         {/* 開発環境専用: エラーバウンダリテスト */}
         {isDev && (
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2">
+            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
               <HiChartBarSquare className="w-6 h-6" />
               開発者ツール
             </h2>
             
             <div className="space-y-4">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <p>開発環境でのみ表示される機能です。</p>
+              <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
+                <div className="text-left max-w-md">
+                  <p>開発環境でのみ表示される機能です。</p>
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={triggerTestError}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                エラーバウンダリをテスト
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={triggerTestError}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  エラーバウンダリをテスト
+                </button>
+              </div>
 
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                <p>• エラーバウンダリ: 意図的にエラーを発生させて、エラーハンドリングをテストします</p>
-                <p>• テストデータ生成: 開発・デモ用のサンプルデータを生成できます</p>
+              <div className="flex justify-center">
+                <ul className="list-disc list-inside space-y-1 text-xs text-gray-500 dark:text-gray-400 text-left max-w-md">
+                  <li>エラーバウンダリ: 意図的にエラーを発生させて、エラーハンドリングをテストします</li>
+                  <li>テストデータ生成: 開発・デモ用のサンプルデータを生成できます</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -120,14 +126,16 @@ export default function RecordExport({ showTipsModal }: RecordExportProps) {
 
         {/* 使用上の注意 */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold mb-3 text-blue-800 dark:text-blue-200">
+          <h3 className="text-lg font-semibold mb-3 text-blue-800 dark:text-blue-200 text-center">
             使用上の注意
           </h3>
-          <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-            <p>• データは端末内のみに保存され、外部サーバーには送信されません</p>
-            <p>• 定期的にデータをエクスポートしてバックアップを作成することをお勧めします</p>
-            <p>• ブラウザのデータを削除すると、記録したデータも失われます</p>
-            <p>• インポート時は既存データに新しいデータが追加されます（上書きではありません）</p>
+          <div className="flex justify-center">
+            <ul className="list-disc list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300 text-left max-w-md">
+              <li>データは端末内のみに保存され、外部サーバーには送信されません</li>
+              <li>定期的にデータをエクスポートしてバックアップを作成することをお勧めします</li>
+              <li>ブラウザのデータを削除すると、記録したデータも失われます</li>
+              <li>インポート時は既存データに新しいデータが追加されます（上書きではありません）</li>
+            </ul>
           </div>
         </div>
       </div>

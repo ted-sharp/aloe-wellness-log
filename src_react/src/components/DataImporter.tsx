@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { HiArrowUpTray, HiExclamationTriangle } from 'react-icons/hi2';
+import { HiArrowUpTray, HiExclamationTriangle, HiArrowDownTray, HiFolder } from 'react-icons/hi2';
 import Button from './Button';
 import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 import {
@@ -185,19 +185,22 @@ const DataImporter = memo(function DataImporter({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">
+      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
+        <HiArrowDownTray className="w-6 h-6" />
         データインポート
       </h2>
       
       <div className="space-y-4">
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          <p>以前にエクスポートしたJSONファイルからデータを復元できます。</p>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex justify-center">
+          <div className="text-left max-w-md">
+            <p>以前にエクスポートしたJSONファイルからデータを復元できます。</p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 justify-center">
           <Button
             variant="primary"
-            icon={HiArrowUpTray}
+            icon={HiFolder}
             onClick={handleImportClick}
           >
             JSONファイルを選択
@@ -212,12 +215,14 @@ const DataImporter = memo(function DataImporter({
           />
         </div>
 
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <div className="flex items-start gap-2">
-            <HiExclamationTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-yellow-800 dark:text-yellow-200">
-              <p className="font-semibold mb-1">注意事項:</p>
-              <ul className="list-disc list-inside space-y-1">
+        <div className="flex justify-center">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 max-w-md">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                <HiExclamationTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                <p className="font-semibold text-sm text-yellow-800 dark:text-yellow-200">注意事項</p>
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800 dark:text-yellow-200 text-left">
                 <li>既存のデータは保持され、新しいデータが追加されます</li>
                 <li>同じIDのレコードがある場合は、既存データが優先されます</li>
                 <li>インポート前に現在のデータをバックアップすることをお勧めします</li>

@@ -60,26 +60,28 @@ const DataManager = memo(function DataManager({
 
   return (
     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow p-6">
-      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2">
+      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
         <HiExclamationTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
         危険な操作
       </h2>
       
       <div className="space-y-4">
-        <div className="text-sm text-red-800 dark:text-red-200 mb-4">
-          <p className="mb-2">
-            この操作により、すべての記録データが完全に削除されます：
-          </p>
-          <ul className="list-disc list-inside space-y-1 mb-3">
-            <li>体重記録</li>
-            <li>血圧記録</li>
-            <li>日課記録</li>
-            <li>日課項目設定</li>
-            <li>目標設定</li>
-          </ul>
-          <p className="font-semibold">
-            削除前に必ずデータをエクスポートしてバックアップを作成してください。
-          </p>
+        <div className="text-sm text-red-800 dark:text-red-200 mb-4 flex justify-center">
+          <div className="text-left max-w-md">
+            <p className="mb-2">
+              この操作により、すべての記録データが完全に削除されます：
+            </p>
+            <ul className="list-disc list-inside space-y-1 mb-3">
+              <li>体重記録</li>
+              <li>血圧記録</li>
+              <li>日課記録</li>
+              <li>日課項目設定</li>
+              <li>目標設定</li>
+            </ul>
+            <p className="font-semibold">
+              削除前に必ずデータをエクスポートしてバックアップを作成してください。
+            </p>
+          </div>
         </div>
 
         <div className="flex justify-center">

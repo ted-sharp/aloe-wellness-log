@@ -316,18 +316,21 @@ const TestDataGenerator = memo(function TestDataGenerator({
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-        <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">
+        <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
+          <HiSparkles className="w-6 h-6" />
           テストデータ生成
         </h2>
         
         <div className="space-y-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p>• 体重: {weightCount}件 {weightPeriod && `(${weightPeriod})`}</p>
-            <p>• 日課: {dailyCount}件 {dailyPeriod && `(${dailyPeriod})`}</p>
-            <p>• 血圧: {bpCount}件 {bpPeriod && `(${bpPeriod})`}</p>
+          <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
+            <div className="text-left max-w-md">
+              <p>• 体重: {weightCount}件 {weightPeriod && `(${weightPeriod})`}</p>
+              <p>• 日課: {dailyCount}件 {dailyPeriod && `(${dailyPeriod})`}</p>
+              <p>• 血圧: {bpCount}件 {bpPeriod && `(${bpPeriod})`}</p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             <Button
               variant="primary"
               icon={HiSparkles}

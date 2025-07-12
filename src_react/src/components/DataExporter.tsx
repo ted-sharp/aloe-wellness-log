@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { HiDocument } from 'react-icons/hi2';
+import { HiDocument, HiArrowUpTray } from 'react-icons/hi2';
 import Button from './Button';
 import {
   getAllBpRecords,
@@ -63,16 +63,19 @@ const DataExporter = memo(function DataExporter({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200">
+      <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
+        <HiArrowUpTray className="w-6 h-6" />
         データエクスポート
       </h2>
       
       <div className="space-y-4">
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          <p>記録したデータをファイルとしてダウンロードできます。</p>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex justify-center">
+          <div className="text-left max-w-md">
+            <p>記録したデータをファイルとしてダウンロードできます。</p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center">
           <Button
             variant="primary"
             icon={HiDocument}
