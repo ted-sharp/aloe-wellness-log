@@ -88,6 +88,7 @@ export default function GoalInput() {
   const [smokingGoal, setSmokingGoal] = useState('');
   const [alcoholGoal, setAlcoholGoal] = useState('');
   const [latestWeight, setLatestWeight] = useState<number | null>(null);
+  const [oldestWeight, setOldestWeight] = useState<number | null>(null);
 
   // バリデーション（新しいフックを使用）
   const birthYearError = useYearValidation(birthYear, '生年');
@@ -110,62 +111,39 @@ export default function GoalInput() {
     : null;
 
   useEffect(() => {
-    // V2体重データから最新体重を取得
+    // 最新体重と最古体重を取得（ボタン用）
     getAllWeightRecords().then(records => {
       if (records.length > 0) {
-        // 日付+時刻で降順ソート
+        // 日付+時刻でソート
         const sorted = [...records].sort((a, b) => {
           const adt = new Date(`${a.date}T${a.time}`).getTime();
           const bdt = new Date(`${b.date}T${b.time}`).getTime();
-          return bdt - adt;
+          return adt - bdt; // 昇順ソート
         });
-        setLatestWeight(sorted[0].weight);
+        
+        // 最古（最初）と最新（最後）を取得
+        setOldestWeight(sorted[0].weight);
+        setLatestWeight(sorted[sorted.length - 1].weight);
       } else {
         setLatestWeight(null);
+        setOldestWeight(null);
       }
     });
   }, []);
 
+  // 初回goal読み込み
   useEffect(() => {
-    loadGoal().then(() => {
-      if (goal) {
-        setGender(goal.gender || 'unknown');
-        setBirthYear(goal.birthYear.toString());
-        setHeight(goal.height.toString());
-        setStartWeight(
-          goal.startWeight !== undefined
-            ? goal.startWeight.toString()
-            : latestWeight !== null
-            ? latestWeight.toString()
-            : ''
-        );
-        setTargetStart(goal.targetStart);
-        setTargetEnd(goal.targetEnd);
-        setTargetWeight(goal.targetWeight.toString());
-        setExerciseGoal(goal.exerciseGoal || '');
-        setDietGoal(goal.dietGoal || '');
-        setSleepGoal(goal.sleepGoal || '');
-        setSmokingGoal(goal.smokingGoal || '');
-        setAlcoholGoal(goal.alcoholGoal || '');
-      } else {
-        setStartWeight(latestWeight !== null ? latestWeight.toString() : '');
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latestWeight]);
+    loadGoal();
+  }, [loadGoal]);
 
+  // goalが変更されたときの画面更新
   useEffect(() => {
     if (goal) {
+      console.log('Loading saved goal data:', goal);
       setGender(goal.gender || 'unknown');
       setBirthYear(goal.birthYear.toString());
       setHeight(goal.height.toString());
-      setStartWeight(
-        goal.startWeight !== undefined
-          ? goal.startWeight.toString()
-          : latestWeight !== null
-          ? latestWeight.toString()
-          : ''
-      );
+      setStartWeight(goal.startWeight ? goal.startWeight.toString() : '');
       setTargetStart(goal.targetStart);
       setTargetEnd(goal.targetEnd);
       setTargetWeight(goal.targetWeight.toString());
@@ -175,7 +153,7 @@ export default function GoalInput() {
       setSmokingGoal(goal.smokingGoal || '');
       setAlcoholGoal(goal.alcoholGoal || '');
     }
-  }, [goal, latestWeight]);
+  }, [goal]);
 
   // 統合バリデーション（新しいフックベースのバリデーションを使用）
   const validate = () => {
@@ -191,6 +169,20 @@ export default function GoalInput() {
   // 入力変更時に即保存
   useEffect(() => {
     // すべての値が有効な場合のみ保存
+    const validationError = validate();
+    
+    console.log('Goal save validation:', {
+      gender: !!gender,
+      birthYear: !!birthYear,
+      height: !!height,
+      startWeight: !!startWeight,
+      targetStart: !!targetStart,
+      targetEnd: !!targetEnd,
+      targetWeight: !!targetWeight,
+      validationError,
+      startWeightValue: startWeight,
+    });
+    
     if (
       gender &&
       birthYear &&
@@ -199,9 +191,9 @@ export default function GoalInput() {
       targetStart &&
       targetEnd &&
       targetWeight &&
-      !validate()
+      !validationError
     ) {
-      setGoal({
+      const goalData = {
         gender,
         birthYear: Number(birthYear),
         height: Number(height),
@@ -214,7 +206,10 @@ export default function GoalInput() {
         sleepGoal,
         smokingGoal,
         alcoholGoal,
-      });
+      };
+      
+      console.log('Saving goal data:', goalData);
+      setGoal(goalData);
     }
   }, [
     gender,
@@ -229,6 +224,8 @@ export default function GoalInput() {
     sleepGoal,
     smokingGoal,
     alcoholGoal,
+    setGoal,
+    // バリデーションエラーは関数内で取得するため依存関係から除外
   ]);
 
   // 年齢→生年変換
@@ -365,7 +362,17 @@ export default function GoalInput() {
                 variant="secondary"
                 onClick={() => setStartWeight(latestWeight.toString())}
               >
-                最新体重
+                最新
+              </Button>
+            )}
+            {oldestWeight !== null && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setStartWeight(oldestWeight.toString())}
+              >
+                最古
               </Button>
             )}
           </div>
