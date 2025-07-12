@@ -233,7 +233,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
           </div>
         )}
 
-        <div className="flex flex-col gap-6 w-full max-w-md">
+        <div className="flex flex-col gap-2 w-full max-w-md">
           {/* 既存の記録一覧 */}
           {recordsOfDay.map(rec => (
             <div
