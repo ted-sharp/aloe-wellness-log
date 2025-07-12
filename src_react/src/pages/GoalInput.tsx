@@ -3,6 +3,11 @@ import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
 import { getAllWeightRecords } from '../db/indexedDb';
+import { 
+  useYearValidation,
+  useHeightValidation, 
+  useWeightValidation 
+} from '../hooks/useNumericValidation';
 import { useGoalStore } from '../store/goal';
 
 
@@ -84,6 +89,26 @@ export default function GoalInput() {
   const [alcoholGoal, setAlcoholGoal] = useState('');
   const [latestWeight, setLatestWeight] = useState<number | null>(null);
 
+  // バリデーション（新しいフックを使用）
+  const birthYearError = useYearValidation(birthYear, '生年');
+  const heightError = useHeightValidation(height, '身長');
+  const startWeightError = useWeightValidation(startWeight, '開始体重');
+  const targetWeightError = useWeightValidation(targetWeight, '目標体重');
+
+  // 日付バリデーション
+  const validateDate = (date: string, fieldName: string) => {
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return `${fieldName}はYYYY-MM-DD形式で入力してください。`;
+    }
+    return null;
+  };
+
+  const targetStartError = validateDate(targetStart, '目標開始日');
+  const targetEndError = validateDate(targetEnd, '目標終了日');
+  const dateRangeError = targetStart && targetEnd && targetStart > targetEnd 
+    ? '目標終了日は開始日以降の日付にしてください。' 
+    : null;
+
   useEffect(() => {
     // V2体重データから最新体重を取得
     getAllWeightRecords().then(records => {
@@ -152,49 +177,15 @@ export default function GoalInput() {
     }
   }, [goal, latestWeight]);
 
+  // 統合バリデーション（新しいフックベースのバリデーションを使用）
   const validate = () => {
-    if (
-      !birthYear ||
-      isNaN(Number(birthYear)) ||
-      Number(birthYear) < 1900 ||
-      Number(birthYear) > currentYear
-    ) {
-      return '生年は1900年以降、今年以下の数字で入力してください。';
-    }
-    if (
-      !height ||
-      isNaN(Number(height)) ||
-      Number(height) < 100 ||
-      Number(height) > 250
-    ) {
-      return '身長は100～250cmの範囲で入力してください。';
-    }
-    if (
-      !startWeight ||
-      isNaN(Number(startWeight)) ||
-      Number(startWeight) < 30 ||
-      Number(startWeight) > 200
-    ) {
-      return '開始体重は30～200kgの範囲で入力してください。';
-    }
-    if (!targetStart || !/^\d{4}-\d{2}-\d{2}$/.test(targetStart)) {
-      return '目標開始日はYYYY-MM-DD形式で入力してください。';
-    }
-    if (!targetEnd || !/^\d{4}-\d{2}-\d{2}$/.test(targetEnd)) {
-      return '目標終了日はYYYY-MM-DD形式で入力してください。';
-    }
-    if (targetStart > targetEnd) {
-      return '目標終了日は開始日以降の日付にしてください。';
-    }
-    if (
-      !targetWeight ||
-      isNaN(Number(targetWeight)) ||
-      Number(targetWeight) < 30 ||
-      Number(targetWeight) > 200
-    ) {
-      return '目標体重は30～200kgの範囲で入力してください。';
-    }
-    return null;
+    return birthYearError || 
+           heightError || 
+           startWeightError || 
+           targetStartError || 
+           targetEndError || 
+           dateRangeError || 
+           targetWeightError;
   };
 
   // 入力変更時に即保存

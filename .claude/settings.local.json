@@ -5,7 +5,8 @@
       "Bash(yarn lint)",
       "Bash(timeout 10 yarn dev)",
       "Bash(yarn tsc:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

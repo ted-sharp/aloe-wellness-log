@@ -161,24 +161,14 @@ const TestDataGenerator = memo(function TestDataGenerator({
     onStatusChange?.('日課テストデータを生成中...');
 
     try {
-      // 日課フィールドを先に作成
+      // 既存のデフォルトフィールドIDを使用（新しいフィールドは作成しない）
       const dailyFields = [
-        { fieldId: 'test_exercise', name: '運動', order: 1, display: true },
-        { fieldId: 'test_diet', name: '食事制限', order: 2, display: true },
-        { fieldId: 'test_sleep', name: '十分な睡眠', order: 3, display: true },
-        { fieldId: 'test_smoking', name: '禁煙', order: 4, display: true },
-        { fieldId: 'test_alcohol', name: '禁酒', order: 5, display: true },
+        { fieldId: 'exercise' },
+        { fieldId: 'meal' },
+        { fieldId: 'sleep' },
+        { fieldId: 'smoke' },
+        { fieldId: 'alcohol' },
       ];
-
-      for (const field of dailyFields) {
-        try {
-          await addDailyField(field);
-        } catch (error) {
-          if (isDev) {
-            console.warn(`日課フィールド追加失敗 (${field.fieldId}):`, error);
-          }
-        }
-      }
 
       const daysBack = 180; // 180日分
       let createdCount = 0;
@@ -270,10 +260,9 @@ const TestDataGenerator = memo(function TestDataGenerator({
             id: uniqueId,
             date: dateStr,
             time: timeStr,
-            fieldId: 'bp',
             systolic: systolic,
             diastolic: diastolic,
-            pulse: pulse,
+            heartRate: pulse,
             note: Math.random() > 0.8 ? 'テストメモ' : null,
           };
 

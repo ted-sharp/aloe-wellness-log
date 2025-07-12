@@ -23,6 +23,8 @@ import Button from '../components/Button';
 import DailyAchievementItem from '../components/DailyAchievementItem';
 import SortableItem from '../components/SortableItem';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
+import { useDateSelection } from '../hooks/useDateSelection';
+import { formatDate } from '../utils/dateUtils';
 import DatePickerBar from '../components/DatePickerBar';
 import {
   addDailyField,
@@ -40,26 +42,23 @@ import type { DailyFieldV2, DailyRecordV2 } from '../types/record';
  * 毎日記録ページ（今後実装予定）
  */
 
-const formatDate = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    '0'
-  )}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-// 共通キー定数を追加
-const SELECTED_DATE_KEY = 'shared_selected_date';
-
-
 const DailyRecord: React.FC = () => {
-  const today = new Date();
-  const [centerDate, setCenterDate] = useState<Date>(() => {
-    const saved = localStorage.getItem(SELECTED_DATE_KEY);
-    return saved ? new Date(saved) : today;
-  });
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    const saved = localStorage.getItem(SELECTED_DATE_KEY);
-    return saved ? new Date(saved) : today;
+  // 状態管理
+  const [fields, setFields] = useState<DailyFieldV2[]>([]);
+  const [records, setRecords] = useState<DailyRecordV2[]>([]);
+
+  // 日付選択管理 - 既存の useDateSelection フックを使用
+  const {
+    selectedDate,
+    setSelectedDate,
+    centerDate,
+    setCenterDate,
+    today,
+    recordDate,
+    isRecorded: isRecordedByHook,
+  } = useDateSelection({
+    records,
+    getRecordDate: (record) => record.date,
   });
 
   // 新規項目追加用state
@@ -69,8 +68,6 @@ const DailyRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const [fields, setFields] = useState<DailyFieldV2[]>([]);
-  const [records, setRecords] = useState<DailyRecordV2[]>([]);
   const boolFields = isEditMode
     ? fields.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     : fields
@@ -87,9 +84,6 @@ const DailyRecord: React.FC = () => {
   // D&D sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // 日付・時刻文字列
-  const recordDate = formatDate(selectedDate);
-
   // 既存記録の取得
   const getBoolRecord = (fieldId: string) =>
     records.find(r => r.fieldId === fieldId && r.date === recordDate);
@@ -102,7 +96,7 @@ const DailyRecord: React.FC = () => {
     }
     return undefined;
   };
-  // 日付ごとの記録済み判定（scope: 'daily'で絞り込み）
+  // 日付ごとの記録済み判定（scope: 'daily'で絞り込み） - 日課用にカスタマイズ
   const isRecorded = (date: Date) => {
     const d = formatDate(date);
     const dailyFieldIds = fields.map(f => f.fieldId);
@@ -299,7 +293,6 @@ const DailyRecord: React.FC = () => {
 
   const getRecent14Days = () => {
     const days: string[] = [];
-    const today = new Date();
     for (let i = 0; i < 14; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
@@ -431,9 +424,6 @@ const DailyRecord: React.FC = () => {
     return hasAchieve ? 'green' : 'red';
   };
 
-  useEffect(() => {
-    localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
-  }, [selectedDate]);
 
   return (
     <div className="bg-transparent">
@@ -449,7 +439,7 @@ const DailyRecord: React.FC = () => {
       {/* タイトル：日付ピッカー下・左上 */}
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
-          {formatDate(selectedDate)}
+          {recordDate}
           {isRecorded(selectedDate) && (
             <HiCheck
               className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"

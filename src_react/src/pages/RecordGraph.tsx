@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
@@ -10,10 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { getAllDailyRecords, getAllWeightRecords } from '../db/indexedDb';
-import { useGoalStore } from '../store/goal';
-
-import type { DailyRecordV2, WeightRecordV2 } from '../types/record';
+import { useGraphData } from '../hooks/useGraphData';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
@@ -38,50 +35,26 @@ interface TooltipItem {
 const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
 
 const RecordGraph: React.FC = () => {
-  const { goal, loadGoal } = useGoalStore();
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
-  const [dailyRecords, setDailyRecords] = React.useState<DailyRecordV2[]>([]);
-
-  // V2体重データ取得
-  const [weightRecords, setWeightRecords] = React.useState<WeightRecordV2[]>(
-    []
+  
+  // 統合データフェッチング
+  const {
+    weightRecords,
+    dailyRecords,
+    goal,
+    latestTimestamp,
+    isLoading,
+    error,
+    getFilteredData,
+    getStatusStats,
+  } = useGraphData();
+  
+  // 期間に応じた体重データを抽出
+  const data = useMemo(() => 
+    getFilteredData(periodIdx, showExcluded), 
+    [getFilteredData, periodIdx, showExcluded]
   );
-  useEffect(() => {
-    getAllWeightRecords().then(setWeightRecords);
-  }, []);
-  // 最新データの日付を取得（V2体重のみ）
-  const latestTimestamp = useMemo(() => {
-    if (!weightRecords.length) return 0;
-    return Math.max(
-      ...weightRecords.map(r => new Date(`${r.date}T${r.time}`).getTime())
-    );
-  }, [weightRecords]);
-  // 期間に応じた体重データを抽出（V2体重のみ）
-  const data = useMemo(() => {
-    const filtered = weightRecords
-      .filter(
-        (r: WeightRecordV2) =>
-          typeof r.weight === 'number' && (showExcluded || !r.excludeFromGraph)
-      )
-      .sort((a, b) => {
-        const adt = new Date(`${a.date}T${a.time}`).getTime();
-        const bdt = new Date(`${b.date}T${b.time}`).getTime();
-        return adt - bdt;
-      });
-    let mapped = filtered.map(r => ({
-      datetime: `${r.date}T${r.time}`,
-      timestamp: new Date(`${r.date}T${r.time}`).getTime(),
-      value: Number(r.weight),
-      excluded: !!r.excludeFromGraph,
-    }));
-    const period = PERIODS[periodIdx];
-    if (period.days && latestTimestamp) {
-      const from = latestTimestamp - period.days * 24 * 60 * 60 * 1000;
-      mapped = mapped.filter(d => d.timestamp >= from);
-    }
-    return mapped;
-  }, [weightRecords, periodIdx, latestTimestamp, showExcluded]);
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
@@ -200,68 +173,28 @@ const RecordGraph: React.FC = () => {
     );
   };
 
-  // 日課達成率計算用
-  const getPeriodDateList = () => {
-    if (!dailyRecords.length) return [];
-    let fromDate: Date | null = null;
-    let toDate: Date | null = null;
-    if (PERIODS[periodIdx].days && latestTimestamp) {
-      toDate = new Date(latestTimestamp);
-      fromDate = new Date(latestTimestamp);
-      fromDate.setDate(toDate.getDate() - PERIODS[periodIdx].days + 1);
-    } else if (dailyRecords.length > 0) {
-      // 全データの場合は記録の最初と最後
-      const sorted = [...dailyRecords].sort((a, b) =>
-        a.date.localeCompare(b.date)
-      );
-      fromDate = new Date(sorted[0].date);
-      toDate = new Date(sorted[sorted.length - 1].date);
-    }
-    if (!fromDate || !toDate) {
-      return [];
-    }
-    const list: string[] = [];
-    if (fromDate && toDate) {
-      const d = new Date(fromDate);
-      while (d <= toDate) {
-        list.push(
-          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-            2,
-            '0'
-          )}-${String(d.getDate()).padStart(2, '0')}`
-        );
-        d.setDate(d.getDate() + 1);
-      }
-    }
-    return list;
-  };
 
-  const getStatusStats = (key: StatusKey) => {
-    const dateList = getPeriodDateList();
-    let total = 0;
-    let success = 0;
-    dateList.forEach(date => {
-      // その日付・keyのレコードが存在するか
-      const rec = dailyRecords.find(r => r.fieldId === key && r.date === date);
-      if (rec && (rec.value === 1 || rec.value === 0)) {
-        total++;
-        if (rec.value === 1) success++;
-      }
-    });
-    return {
-      total,
-      success,
-      percent: total > 0 ? Math.round((success / total) * 100) : 0,
-    };
-  };
+  // ローディング表示
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-400">データを読み込み中...</p>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    getAllDailyRecords().then(setDailyRecords);
-  }, []);
-
-  useEffect(() => {
-    loadGoal();
-  }, [loadGoal]);
+  // エラー表示
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md">
+          <p className="text-red-800 text-sm mb-2">データの読み込みに失敗しました</p>
+          <p className="text-red-600 text-xs">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -558,7 +491,7 @@ const RecordGraph: React.FC = () => {
       {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
       <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
         {(['exercise', 'meal', 'sleep'] as const).map(key => {
-          const stats = getStatusStats(key);
+          const stats = getStatusStats(key, periodIdx);
           let goalText = '';
           if (goal) {
             if (key === 'exercise' && goal.exerciseGoal)

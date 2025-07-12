@@ -9,7 +9,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
@@ -24,11 +24,10 @@ import {
   getAllWeightRecords,
   updateWeightRecord,
 } from '../db/indexedDb';
-import { useDateSelection } from '../hooks/useDateSelection';
-import { useRecordCRUD } from '../hooks/useRecordCRUD';
-import { useRecordForm } from '../hooks/useRecordForm';
 import { useGoalStore } from '../store/goal';
-import { getCurrentTimeString } from '../utils/dateUtils';
+import type { WeightRecordV2 } from '../types/record';
+import { formatDate, getCurrentTimeString, SELECTED_DATE_KEY } from '../utils/dateUtils';
+
 
 interface WeightRecordProps {
   showTipsModal?: () => void;
@@ -44,16 +43,6 @@ const noteExamples = [
   '運動後に測定',
   '外食あり',
 ];
-
-// フォームの初期値
-const initialFormValues = {
-  weight: '',
-  bodyFat: '',
-  waist: '',
-  time: getCurrentTimeString(),
-  note: '',
-  excludeFromGraph: false,
-};
 
 // スパークルドロップダウン共通フック
 function useSparkleDropdown() {
@@ -83,60 +72,50 @@ function useSparkleDropdown() {
 }
 
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
+  const today = new Date();
+  const [centerDate, setCenterDate] = useState<Date>(() => {
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
+    return saved ? new Date(saved) : today;
+  });
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const saved = localStorage.getItem(SELECTED_DATE_KEY);
+    return saved ? new Date(saved) : today;
+  });
   const { goal, loadGoal } = useGoalStore();
 
-  // 記録のCRUD操作
-  const {
-    records: weightRecords,
-    isLoading,
-    error,
-    handleAdd: addRecord,
-    handleUpdate,
-    handleDelete,
-    clearError,
-  } = useRecordCRUD({
-    getAllRecords: getAllWeightRecords,
-    addRecord: addWeightRecord,
-    updateRecord: updateWeightRecord,
-    deleteRecord: deleteWeightRecord,
-    onRecordAdded: showTipsModal,
-  });
+  // 日付・時刻文字列
+  const recordDate = useMemo(() => formatDate(selectedDate), [selectedDate]);
 
-  // 日付選択管理
-  const {
-    selectedDate,
-    setSelectedDate,
-    centerDate,
-    setCenterDate,
-    today,
-    recordDate,
-    recordsOfDay,
-    isRecorded,
-  } = useDateSelection({
-    records: weightRecords,
-    getRecordDate: (record) => record.date,
-  });
+  // 新規追加用state
+  const [newWeight, setNewWeight] = useState('');
+  const [newBodyFat, setNewBodyFat] = useState(''); // 体脂肪率
+  const [newWaist, setNewWaist] = useState(''); // ウェスト
+  const [newTime, setNewTime] = useState(getCurrentTimeString());
+  const [newNote, setNewNote] = useState('');
+  const [newExcludeFromGraph, setNewExcludeFromGraph] = useState(false);
 
-  // フォーム状態管理
-  const {
-    formData,
-    updateField,
-    resetForm,
-    createRecordFromForm,
-  } = useRecordForm({
-    initialValues: initialFormValues,
-    createRecord: (formData, date) => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      date,
-      time: formData.time,
-      weight: Number(formData.weight),
-      bodyFat: formData.bodyFat !== '' ? Number(formData.bodyFat) : null,
-      waist: formData.waist !== '' ? Number(formData.waist) : null,
-      note: formData.note || null,
-      excludeFromGraph: formData.excludeFromGraph,
-    }),
-    resetValues: initialFormValues,
-  });
+  const [weightRecords, setWeightRecords] = useState<WeightRecordV2[]>([]);
+
+  // その日付にfieldId==='weight'の記録が1つでもあればtrue
+  const isRecorded = useCallback((date: Date) => {
+    const d = formatDate(date);
+    return weightRecords.some(r => r.date === d);
+  }, [weightRecords]);
+
+  // データ取得
+  useEffect(() => {
+    const fetchRecords = async () => {
+      const all = await getAllWeightRecords();
+      setWeightRecords(all);
+    };
+    fetchRecords();
+  }, []);
+
+  // recordsOfDayの定義をlatestWeightOfDayより前に移動
+  const recordsOfDay = useMemo(() => 
+    weightRecords.filter(r => r.date === recordDate), 
+    [weightRecords, recordDate]
+  );
 
   // その日付の最新体重（記録があれば）
   const latestWeightOfDay = useMemo(() => {
@@ -147,24 +126,64 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     return sorted.length > 0 ? Number(sorted[0].weight) : null;
   }, [recordsOfDay]);
 
+
   // goal（身長など）が未ロードなら自動でロード
-  React.useEffect(() => {
+  useEffect(() => {
     if (!goal || !goal.height) {
       loadGoal();
     }
   }, [goal, loadGoal]);
 
-  // レコード追加処理
-  const handleAddRecord = useCallback(async () => {
-    if (!formData.weight) return;
-    try {
-      const record = createRecordFromForm(recordDate);
-      await addRecord(record);
-      resetForm();
-    } catch (error) {
-      // エラーハンドリングはuseRecordCRUDで行われる
-    }
-  }, [formData.weight, createRecordFromForm, recordDate, addRecord, resetForm]);
+  useEffect(() => {
+    localStorage.setItem(SELECTED_DATE_KEY, selectedDate.toISOString());
+  }, [selectedDate]);
+
+  // selectedDateが変わったらcenterDateも追従
+  useEffect(() => {
+    setCenterDate(selectedDate);
+  }, [selectedDate]);
+
+  // DatePickerBarに渡す直前
+  useEffect(() => {
+    // No need to log here as per the new code instructions
+  }, [centerDate, selectedDate]);
+
+  const handleAdd = useCallback(async () => {
+    if (!newWeight) return;
+    const rec: WeightRecordV2 = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      date: recordDate,
+      time: newTime,
+      weight: Number(newWeight),
+      bodyFat: newBodyFat !== '' ? Number(newBodyFat) : null,
+      waist: newWaist !== '' ? Number(newWaist) : null,
+      note: newNote || null,
+      excludeFromGraph: newExcludeFromGraph,
+    };
+    await addWeightRecord(rec);
+    setNewWeight('');
+    setNewBodyFat('');
+    setNewWaist('');
+    setNewNote('');
+    setNewExcludeFromGraph(false);
+    setNewTime(getCurrentTimeString());
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
+    if (showTipsModal) showTipsModal();
+  }, [newWeight, recordDate, newTime, newBodyFat, newWaist, newNote, newExcludeFromGraph, showTipsModal]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    if (!window.confirm('本当に削除しますか？')) return;
+    await deleteWeightRecord(id);
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
+  }, []);
+
+  const handleUpdate = useCallback(async (rec: WeightRecordV2) => {
+    await updateWeightRecord(rec);
+    const all = await getAllWeightRecords();
+    setWeightRecords(all);
+  }, []);
 
   // メモ欄用スパークルドロップダウン
   const noteSparkle = useSparkleDropdown();
@@ -180,14 +199,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         isRecorded={isRecorded}
         data-testid="date-picker"
       />
-      
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
-          {selectedDate.toLocaleDateString('ja-JP', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
+          {formatDate(selectedDate)}
           {isRecorded(selectedDate) && (
             <HiCheck
               className="inline-block w-6 h-6 text-green-500 ml-2 align-middle"
@@ -196,32 +210,14 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
           )}
         </span>
       </div>
-
       {/* BMI表示とインジケーター */}
       <BMIIndicator
         currentWeight={latestWeightOfDay}
         goal={goal}
         showWeightDiff={true}
       />
-
       <div className="flex flex-col items-center justify-start min-h-[60vh]">
-        {/* エラー表示 */}
-        {error && (
-          <div className="w-full max-w-md mb-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-800 text-sm">{error}</p>
-              <button
-                onClick={clearError}
-                className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
-              >
-                エラーを閉じる
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col gap-6 w-full max-w-md">
-          {/* 既存の記録一覧 */}
           {recordsOfDay.map(rec => (
             <div
               key={rec.id}
@@ -242,7 +238,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                     aria-label="削除"
                     onClick={() => handleDelete(rec.id)}
                   >
-                    {''} 
+                    {''}
                   </Button>
                   <Button
                     variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
@@ -268,37 +264,48 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 </div>
               </div>
               <div className="flex items-center gap-1 w-full">
-                <NumberInput
-                  value={rec.weight}
-                  onChange={(value) => handleUpdate({ ...rec, weight: Number(value) })}
-                  placeholder="体重"
+                <input
+                  type="number"
                   step="0.1"
                   min="0"
-                  width="md"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
+                  value={rec.weight}
+                  onChange={e =>
+                    handleUpdate({ ...rec, weight: Number(e.target.value) })
+                  }
+                  placeholder="体重"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">kg</span>
-                <NumberInput
-                  value={rec.bodyFat ?? ''}
-                  onChange={(value) => handleUpdate({ 
-                    ...rec, 
-                    bodyFat: value === '' ? null : Number(value) 
-                  })}
-                  placeholder="体脂肪"
+                <input
+                  type="number"
                   step="0.1"
                   min="0"
-                  width="md"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-xs placeholder-gray-400"
+                  value={rec.bodyFat ?? ''}
+                  onChange={e =>
+                    handleUpdate({
+                      ...rec,
+                      bodyFat:
+                        e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                  placeholder="体脂肪"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">%</span>
-                <NumberInput
-                  value={rec.waist ?? ''}
-                  onChange={(value) => handleUpdate({ 
-                    ...rec, 
-                    waist: value === '' ? null : Number(value) 
-                  })}
-                  placeholder="腹囲"
+                <input
+                  type="number"
                   step="0.1"
                   min="0"
-                  width="md"
+                  className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-lg font-mono font-semibold bg-inherit text-gray-700 dark:text-gray-200 w-20 placeholder:font-normal placeholder:text-sm placeholder-gray-400"
+                  value={rec.waist ?? ''}
+                  onChange={e =>
+                    handleUpdate({
+                      ...rec,
+                      waist:
+                        e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                  placeholder="腹囲"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500">cm</span>
               </div>
@@ -311,14 +318,13 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             </div>
           ))}
         </div>
-
-        {/* 新規項目追加フォーム */}
+        {/* 新規項目追加ボタンとフォーム（編集モード時のみ） */}
         <div className="w-full max-w-md mt-2 mb-2">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-2 mb-0 flex flex-col gap-1">
             <div className="flex items-center w-full mb-1 justify-between">
               <TimeInputWithPresets
-                value={formData.time}
-                onChange={(time) => updateField('time', time)}
+                value={newTime}
+                onChange={setNewTime}
               />
               <div className="flex items-center gap-2">
                 <Button
@@ -326,22 +332,21 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   size="sm"
                   icon={HiCheck}
                   aria-label="保存"
-                  onClick={handleAddRecord}
+                  onClick={handleAdd}
                   data-testid="save-btn"
-                  disabled={isLoading}
                 >
                   {''}
                 </Button>
                 <Button
-                  variant={formData.excludeFromGraph ? 'secondary' : 'sky'}
+                  variant={newExcludeFromGraph ? 'secondary' : 'sky'}
                   size="sm"
-                  aria-label={formData.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'}
-                  onClick={() => updateField('excludeFromGraph', !formData.excludeFromGraph)}
+                  aria-label={newExcludeFromGraph ? 'グラフ除外' : 'グラフ表示'}
+                  onClick={() => setNewExcludeFromGraph(v => !v)}
                 >
                   {''}
                   <span className="relative inline-block w-5 h-5">
                     <PiChartLineDown className="w-5 h-5 text-white" />
-                    {formData.excludeFromGraph && (
+                    {newExcludeFromGraph && (
                       <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
                     )}
                   </span>
@@ -350,8 +355,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             </div>
             <div className="flex items-center gap-1 w-full mb-1">
               <NumberInput
-                value={formData.weight}
-                onChange={(weight) => updateField('weight', weight)}
+                value={newWeight}
+                onChange={setNewWeight}
                 placeholder="体重"
                 step="0.1"
                 min="0"
@@ -359,8 +364,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               />
               <span className="ml-0.5 mr-3 text-gray-500">kg</span>
               <NumberInput
-                value={formData.bodyFat}
-                onChange={(bodyFat) => updateField('bodyFat', bodyFat)}
+                value={newBodyFat}
+                onChange={setNewBodyFat}
                 placeholder="体脂肪"
                 step="0.1"
                 min="0"
@@ -368,8 +373,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               />
               <span className="ml-0.5 mr-3 text-gray-500">%</span>
               <NumberInput
-                value={formData.waist}
-                onChange={(waist) => updateField('waist', waist)}
+                value={newWaist}
+                onChange={setNewWaist}
                 placeholder="腹囲"
                 step="0.1"
                 min="0"
@@ -381,8 +386,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               <textarea
                 className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-10 mb-0"
                 rows={1}
-                value={formData.note}
-                onChange={e => updateField('note', e.target.value)}
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
                 placeholder="補足・メモ（任意）"
               />
               <div
@@ -411,7 +416,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         type="button"
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 dark:hover:bg-yellow-900"
                         onClick={() => {
-                          updateField('note', option);
+                          setNewNote(option);
                           noteSparkle.setOpen(false);
                         }}
                       >
@@ -424,8 +429,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
             </div>
           </div>
         </div>
-
-        {/* 体重測定タイミングの注意事項 */}
+        {/* 体重測定タイミングの注意事項（カード直下・隙間最小） */}
         <div className="w-full max-w-md mx-auto mb-2 px-4">
           <div className="bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400 text-yellow-800 dark:text-yellow-100 p-3 rounded shadow-sm text-sm text-left">
             <strong>【ワンポイント】</strong>{' '}
