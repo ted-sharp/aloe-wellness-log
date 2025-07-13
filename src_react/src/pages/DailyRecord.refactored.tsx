@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { HiPencil } from 'react-icons/hi2';
 import Button from '../components/Button';
 import DailyAchievementItem from '../components/DailyAchievementItem';
 import DailyRecordHeader from '../components/DailyRecord/DailyRecordHeader';
 import AddFieldForm from '../components/DailyRecord/AddFieldForm';
-import { useDateSelection } from '../hooks/useDateSelection';
+// import { useDateSelection } from '../hooks/useDateSelection';
 import { useDailyFields } from '../hooks/useDailyFields';
 import { useDailyRecords } from '../hooks/useDailyRecords';
 import { useDailyStats } from '../hooks/useDailyStats';
@@ -15,7 +15,8 @@ import { useDailyStats } from '../hooks/useDailyStats';
  */
 const DailyRecord: React.FC = () => {
   // 日付選択の管理
-  const { selectedDate, centerDate, setSelectedDate, setCenterDate } = useDateSelection();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [centerDate, setCenterDate] = useState(new Date().toISOString().split('T')[0]);
 
   // フィールド管理
   const {
@@ -149,15 +150,21 @@ const DailyRecord: React.FC = () => {
         {/* 日課リスト */}
         {!isLoading && fields.length > 0 && (
           <div className="space-y-3">
-            {fields.map((field) => (
-              <DailyAchievementItem
-                key={field.fieldId}
-                field={field}
-                isAchieved={getFieldAchievement(selectedDate, field.fieldId)}
-                onToggle={(achieved) => handleAchievementToggle(field.fieldId, achieved)}
-                disabled={isLoading}
-              />
-            ))}
+            {fields.map((field) => {
+              const achievement = getFieldAchievement(selectedDate, field.fieldId);
+              const value = achievement ? 1 : 0 as 0 | 0.5 | 1;
+              return (
+                <DailyAchievementItem
+                  key={field.fieldId}
+                  field={field}
+                  value={value}
+                  stats={{ total: 14, success: 7, percent: 50 }}
+                  onAchieve={async () => handleAchievementToggle(field.fieldId, true)}
+                  onPartial={async () => console.log('Partial achievement not implemented')}
+                  onUnachieve={async () => handleAchievementToggle(field.fieldId, false)}
+                />
+              );
+            })}
           </div>
         )}
 

@@ -86,6 +86,7 @@ export const useDailyRecords = (selectedDate: string) => {
           id: `daily_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           date,
           fieldId,
+          value: achieved ? 1 : 0,
           achieved,
         };
         

@@ -56,6 +56,7 @@ export type DailyRecordV2 = {
   date: string; // YYYY-MM-DD
   fieldId: string;
   value: 0 | 0.5 | 1; // 0:未達成, 0.5:少し達成, 1:達成
+  achieved?: boolean; // 後方互換性のため
 };
 
 // 新しい日課フィールド型（V2）
@@ -64,4 +65,8 @@ export type DailyFieldV2 = {
   name: string;
   order: number;
   display: boolean;
+  // 後方互換性のため
+  fieldName?: string;
+  displayOrder?: number;
+  isDefault?: boolean;
 };

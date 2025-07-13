@@ -49,8 +49,8 @@ export const useDailyFields = () => {
         return;
       }
       
-      // 表示順でソート
-      const sortedFields = allFields.sort((a, b) => a.displayOrder - b.displayOrder);
+      // 表示順でソート（displayOrderがない場合はorderを使用）
+      const sortedFields = allFields.sort((a, b) => (a.displayOrder ?? a.order) - (b.displayOrder ?? b.order));
       setFields(sortedFields);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '日課フィールドの読み込みに失敗しました';
@@ -106,9 +106,9 @@ export const useDailyFields = () => {
         return false;
       }
       
-      // 重複チェック
+      // 重複チェック（fieldNameまたはnameを使用）
       const isDuplicate = fields.some(field => 
-        field.fieldName.toLowerCase() === trimmedName.toLowerCase()
+        (field.fieldName ?? field.name).toLowerCase() === trimmedName.toLowerCase()
       );
       
       if (isDuplicate) {
@@ -118,10 +118,13 @@ export const useDailyFields = () => {
       
       // 新しいフィールドの作成
       const fieldId = `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const maxOrder = Math.max(...fields.map(f => f.displayOrder), 0);
+      const maxOrder = Math.max(...fields.map(f => f.displayOrder ?? f.order), 0);
       
       const newField: DailyFieldV2 = {
         fieldId,
+        name: trimmedName,
+        order: maxOrder + 1,
+        display: true,
         fieldName: trimmedName,
         displayOrder: maxOrder + 1,
         isDefault: false,
@@ -163,7 +166,7 @@ export const useDailyFields = () => {
         const trimmedName = updates.fieldName.trim();
         const isDuplicate = fields.some(field => 
           field.fieldId !== fieldId && 
-          field.fieldName.toLowerCase() === trimmedName.toLowerCase()
+          (field.fieldName ?? field.name).toLowerCase() === trimmedName.toLowerCase()
         );
         
         if (isDuplicate) {
@@ -300,6 +303,6 @@ export const useDailyFields = () => {
     
     // 便利な計算プロパティ
     hasFields: fields.length > 0,
-    sortedFields: fields.sort((a, b) => a.displayOrder - b.displayOrder),
+    sortedFields: fields.sort((a, b) => (a.displayOrder ?? a.order) - (b.displayOrder ?? b.order)),
   };
 };

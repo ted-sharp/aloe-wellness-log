@@ -27,15 +27,9 @@ const DailyRecordHeader: React.FC<DailyRecordHeaderProps> = ({
   isRecorded,
   stats,
 }) => {
-  const animatedStreak = useAnimatedNumber(stats.overallStreak, {
-    duration: 800,
-    easing: 'easeOutCubic',
-  });
+  const animatedStreak = useAnimatedNumber(stats.overallStreak, 800);
 
-  const animatedAchievementRate = useAnimatedNumber(stats.todayAchievementRate, {
-    duration: 600,
-    easing: 'easeOutQuart',
-  });
+  const animatedAchievementRate = useAnimatedNumber(stats.todayAchievementRate, 600);
 
   const isToday = selectedDate === new Date().toISOString().split('T')[0];
   const isFullyAchieved = stats.totalAchievedToday === stats.totalFields && stats.totalFields > 0;
@@ -44,17 +38,17 @@ const DailyRecordHeader: React.FC<DailyRecordHeaderProps> = ({
     <div className="space-y-4">
       {/* 日付選択バー */}
       <DatePickerBar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        centerDate={centerDate}
-        setCenterDate={setCenterDate}
-        isRecorded={isRecorded}
+        selectedDate={new Date(selectedDate)}
+        setSelectedDate={(date: Date) => setSelectedDate(date.toISOString().split('T')[0])}
+        centerDate={new Date(centerDate)}
+        setCenterDate={(date: Date) => setCenterDate(date.toISOString().split('T')[0])}
+        isRecorded={(date: Date) => isRecorded(date.toISOString().split('T')[0])}
       />
 
       {/* 選択日付の表示と達成アイコン */}
       <div className="flex items-center justify-center space-x-3 py-2">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          {formatDate(selectedDate, 'short')}
+          {formatDate(new Date(selectedDate))}
         </h2>
         {isFullyAchieved && (
           <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">

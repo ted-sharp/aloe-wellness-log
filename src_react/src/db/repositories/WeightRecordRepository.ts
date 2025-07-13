@@ -87,7 +87,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('get-weight-record-by-id', async () => {
       try {
         const record = await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readonly',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -316,7 +316,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('count-weight-records', async () => {
       try {
         const count = await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readonly',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
