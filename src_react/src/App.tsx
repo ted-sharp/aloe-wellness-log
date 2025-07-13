@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
-import Button from './components/Button';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TipsModal from './components/TipsModal';
@@ -237,38 +236,7 @@ function Navigation() {
   );
 }
 
-const RecordExport = lazy(() => {
-  
-  return import('./pages/RecordExport')
-    .then(module => {
-      
-      return module;
-    })
-    .catch(error => {
-      console.error('Failed to load RecordExport:', error);
-      return {
-        default: function ErrorComponent() {
-          return (
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-bold text-red-600 mb-4">
-                ロードエラー
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                エクスポートページのロードに失敗しました。
-              </p>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => window.location.reload()}
-              >
-                ページを再読み込み
-              </Button>
-            </div>
-          );
-        },
-      };
-    });
-});
+const RecordExport = lazy(() => import('./pages/RecordExport'));
 
 function App() {
   const { } = useRecordsStore();

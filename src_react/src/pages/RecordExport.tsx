@@ -1,17 +1,22 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense, memo } from 'react';
 import { HiChartBarSquare } from 'react-icons/hi2';
-import DataExporter from '../components/DataExporter';
-import DataImporter from '../components/DataImporter';
-import DataManager from '../components/DataManager';
 import { ErrorMessage, InfoMessage, SuccessMessage } from '../components/StatusMessage';
-import TestDataGenerator from '../components/TestDataGenerator';
 import { isDev } from '../utils/devTools';
+import { useRenderPerformance } from '../utils/performance';
+
+// 重いコンポーネントを動的インポートで最適化
+const DataExporter = lazy(() => import('../components/DataExporter'));
+const DataImporter = lazy(() => import('../components/DataImporter'));
+const DataManager = lazy(() => import('../components/DataManager'));
+const TestDataGenerator = lazy(() => import('../components/TestDataGenerator'));
 
 interface RecordExportProps {
   showTipsModal?: () => void;
 }
 
-export default function RecordExport({ showTipsModal }: RecordExportProps) {
+const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportProps) {
+  useRenderPerformance('RecordExport');
+  
   const [globalStatus, setGlobalStatus] = useState<string | null>(null);
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
@@ -69,25 +74,28 @@ export default function RecordExport({ showTipsModal }: RecordExportProps) {
           </div>
         )}
 
-        {/* データエクスポート */}
-        <DataExporter onStatusChange={handleStatusChange} />
+        {/* Suspenseでラップして読み込み中の表示を追加 */}
+        <Suspense fallback={<div className="text-center py-4">読み込み中...</div>}>
+          {/* データエクスポート */}
+          <DataExporter onStatusChange={handleStatusChange} />
 
-        {/* データインポート */}
-        <DataImporter 
-          onStatusChange={handleStatusChange}
-          onDataUpdated={handleDataUpdated}
+          {/* データインポート */}
+          <DataImporter 
+            onStatusChange={handleStatusChange}
+            onDataUpdated={handleDataUpdated}
+          />
+
+          {/* データ管理（全削除） */}
+          <DataManager 
+            onStatusChange={handleStatusChange}
+            onDataUpdated={handleDataUpdated}
         />
 
-        {/* データ管理（全削除） */}
-        <DataManager 
-          onStatusChange={handleStatusChange}
-          onDataUpdated={handleDataUpdated}
-        />
-
-        {/* テストデータ生成（開発環境のみ） */}
-        {isDev && (
-          <TestDataGenerator onStatusChange={handleStatusChange} />
-        )}
+          {/* テストデータ生成（開発環境のみ） */}
+          {isDev && (
+            <TestDataGenerator onStatusChange={handleStatusChange} />
+          )}
+        </Suspense>
 
         {/* 開発環境専用: エラーバウンダリテスト */}
         {isDev && (
@@ -141,4 +149,6 @@ export default function RecordExport({ showTipsModal }: RecordExportProps) {
       </div>
     </div>
   );
-}
+});
+
+export default RecordExport;

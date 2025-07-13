@@ -12,6 +12,9 @@ import {
   logUnifiedError,
 } from '../utils/unifiedErrorHandler';
 
+// 後方互換性のため、古いAPIをエクスポート
+export { useUnifiedErrorHandler as useErrorHandler };
+
 // Hookオプション
 interface UseUnifiedErrorHandlerOptions extends Partial<ErrorHandlingConfig> {
   onError?: (error: UnifiedError) => void;

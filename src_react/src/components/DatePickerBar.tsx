@@ -1,14 +1,7 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { HiCalendarDays } from 'react-icons/hi2';
-import { getDateArray } from '../utils/dateUtils';
-import { getTodayDate } from './DatePickerBar/constants';
 import type { DatePickerBarProps } from './DatePickerBar/types';
-import { createDateItems } from './DatePickerBar/helpers';
-import { useDateRange } from './DatePickerBar/hooks/useDateRange';
-import { useScrollable } from './DatePickerBar/hooks/useScrollable';
-import { useTouch } from './DatePickerBar/hooks/useTouch';
-import { useCenterScroll } from './DatePickerBar/hooks/useCenterScroll';
-import { useScrollCorrection } from './DatePickerBar/hooks/useScrollCorrection';
+import { useDatePickerBehavior } from './DatePickerBar/hooks/useDatePickerBehavior';
 import { DateButton } from './DatePickerBar/components/DateButton';
 import { MonthIndicator } from './DatePickerBar/components/MonthIndicator';
 import { CalendarModal } from './DatePickerBar/components/CalendarModal';
@@ -17,74 +10,23 @@ import { CalendarModal } from './DatePickerBar/components/CalendarModal';
  * リファクタリングされたDatePickerBarコンポーネント
  * 複数のカスタムフックと子コンポーネントに分離してシンプルに
  */
-const DatePickerBar: React.FC<DatePickerBarProps> = ({
-  selectedDate,
-  setSelectedDate,
-  centerDate,
-  setCenterDate,
-  today = getTodayDate(), // 型安全で一貫性のある今日の日付
-  isRecorded,
-  getDateStatus,
-}) => {
+const DatePickerBar: React.FC<DatePickerBarProps> = (props) => {
+  const {
+    selectedDate,
+    isRecorded,
+  } = props;
+
   // ローカル状態
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // ref統合: touch と scroll 両方に対応する共通ref
-  // const containerRef = useRef<HTMLDivElement>(null);
-
-  // カスタムフック
-  const { dateRange, lastEdgeRef, prevWidthRef, expandRange } = useDateRange(centerDate);
-  
-  // scrollableフック：独自のrefを使わず、外部refを使用
-  const { containerRef: scrollRef } = useScrollable({
-    onScrollEdge: expandRange,
-  });
-  
-  // touchフック：独自のrefを使わず、外部refを使用  
-  const { touchRef } = useTouch({
-    setCenterDate,
-  });
-  
-  const { requestCenterScroll } = useCenterScroll({
-    centerDate,
-    containerRef: scrollRef,
-  });
-  
-  useScrollCorrection({
-    containerRef: scrollRef,
-    lastEdgeRef,
-    prevWidthRef,
-    dateRange,
-  });
-
-  // パフォーマンス最適化: dateItemsのメモ化
-  const dateArray = useMemo(() => 
-    getDateArray(dateRange.minDate, dateRange.maxDate), 
-    [dateRange.minDate, dateRange.maxDate]
-  );
-  
-  const dateItems = useMemo(() => 
-    createDateItems(
-      dateArray,
-      selectedDate,
-      centerDate,
-      today,
-      getDateStatus,
-      isRecorded
-    ), 
-    [dateArray, selectedDate, centerDate, today, getDateStatus, isRecorded]
-  );
-
-  // イベントハンドラー（メモ化）
-  const handleDateSelect = useCallback((date: Date) => {
-    setSelectedDate(date);
-  }, [setSelectedDate]);
-
-  const handleCalendarSelect = useCallback((date: Date) => {
-    setSelectedDate(date);
-    setCenterDate(date);
-    requestCenterScroll();
-  }, [setSelectedDate, setCenterDate, requestCenterScroll]);
+  // 統合されたDatePickerBar動作フック
+  const {
+    dateItems,
+    scrollRef,
+    touchRef,
+    handleDateSelect,
+    handleCalendarSelect,
+  } = useDatePickerBehavior(props);
 
   const openCalendar = useCallback(() => setIsCalendarOpen(true), []);
   const closeCalendar = useCallback(() => setIsCalendarOpen(false), []);
@@ -150,7 +92,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
         onClose={closeCalendar}
         selectedDate={selectedDate}
         onSelect={handleCalendarSelect}
-        onCenterScroll={requestCenterScroll}
+        onCenterScroll={() => {}}
         isRecorded={isRecorded}
       />
     </div>
