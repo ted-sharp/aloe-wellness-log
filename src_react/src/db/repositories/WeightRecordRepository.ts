@@ -23,6 +23,7 @@ export interface WeightRecordQuery extends QueryOptions<WeightRecordV2> {
  * 体重記録の統計情報
  */
 export interface WeightRecordStats {
+  recordCount: number;
   totalRecords: number;
   averageWeight: number;
   minWeight: number;
@@ -57,7 +58,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('get-all-weight-records', async () => {
       try {
         const records = await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readonly',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -124,7 +125,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
         };
 
         await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readwrite',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -153,7 +154,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('update-weight-record', async () => {
       try {
         await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readwrite',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -182,7 +183,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('delete-weight-record', async () => {
       try {
         await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readwrite',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -211,7 +212,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
     return trackDbOperation('delete-all-weight-records', async () => {
       try {
         await executeTransaction(
-          this.storeName,
+          this.storeName as any,
           'readwrite',
           async (_transaction, store) => {
             const objectStore = store as IDBObjectStore;
@@ -353,6 +354,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
           return {
             success: true,
             data: {
+              recordCount: 0,
               totalRecords: 0,
               averageWeight: 0,
               minWeight: 0,
@@ -402,6 +404,7 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
         return {
           success: true,
           data: {
+            recordCount: records.length,
             totalRecords: records.length,
             averageWeight,
             minWeight,

@@ -300,9 +300,9 @@ const RecordGraph: React.FC = () => {
                 !isNaN(Date.parse(goal.targetEnd));
               if (!hasStart || !hasTarget || !hasStartDate || !hasEndDate)
                 return null;
-              const x1 = Date.parse(goal.targetStart);
+              const x1 = Date.parse(goal.targetStart!);
               const y1 = goal.startWeight!;
-              const x2 = Date.parse(goal.targetEnd);
+              const x2 = Date.parse(goal.targetEnd!);
               const y2 = goal.targetWeight!;
               if (x1 >= x2) return null;
               // グラフの表示範囲

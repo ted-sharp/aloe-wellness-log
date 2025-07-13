@@ -86,7 +86,7 @@ const WeightTargetSection: React.FC<WeightTargetSectionProps> = ({
             {weightRecords.latest && (
               <Button
                 variant="secondary"
-                size="xs"
+                size="sm"
                 onClick={() => handleAutoFillWeight('latest')}
                 className="text-xs"
               >
@@ -96,7 +96,7 @@ const WeightTargetSection: React.FC<WeightTargetSectionProps> = ({
             {weightRecords.oldest && weightRecords.oldest.id !== weightRecords.latest?.id && (
               <Button
                 variant="secondary"
-                size="xs"
+                size="sm"
                 onClick={() => handleAutoFillWeight('oldest')}
                 className="text-xs"
               >
@@ -109,7 +109,7 @@ const WeightTargetSection: React.FC<WeightTargetSectionProps> = ({
             {!weightRecords.isLoading && !weightRecords.latest && !weightRecords.oldest && (
               <Button
                 variant="secondary"
-                size="xs"
+                size="sm"
                 onClick={onLoadWeightRecords}
                 className="text-xs"
               >

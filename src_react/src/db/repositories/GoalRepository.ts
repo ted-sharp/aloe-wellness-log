@@ -2,7 +2,6 @@ import type { GoalData } from '../../types/goal';
 import { STORE_NAMES } from '../config';
 import { trackDbOperation } from '../performance';
 import { executeTransaction } from '../connection';
-import { DbError, DbErrorType } from '../errors';
 
 /**
  * 目標データの操作結果

@@ -21,7 +21,6 @@ const GoalInput: React.FC = () => {
     isFormValid,
     hasUnsavedChanges,
     updateField,
-    updateFields,
     saveForm,
     resetForm,
     loadWeightRecords,

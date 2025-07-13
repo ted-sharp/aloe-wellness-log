@@ -141,11 +141,11 @@ export default function GoalInput() {
     if (goal) {
       console.log('Loading saved goal data:', goal);
       setGender(goal.gender || 'unknown');
-      setBirthYear(goal.birthYear.toString());
-      setHeight(goal.height.toString());
+      setBirthYear(goal.birthYear ? goal.birthYear.toString() : '');
+      setHeight(goal.height ? goal.height.toString() : '');
       setStartWeight(goal.startWeight ? goal.startWeight.toString() : '');
-      setTargetStart(goal.targetStart);
-      setTargetEnd(goal.targetEnd);
+      setTargetStart(goal.targetStart || '');
+      setTargetEnd(goal.targetEnd || '');
       setTargetWeight(goal.targetWeight.toString());
       setExerciseGoal(goal.exerciseGoal || '');
       setDietGoal(goal.dietGoal || '');
