@@ -294,6 +294,13 @@ function App() {
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const lastTipsDate = localStorage.getItem('lastTipsDate');
     const disableTips = localStorage.getItem('disableTips') === '1';
+    console.log('TIPS自動表示チェック:', {
+      disableTips,
+      lastTipsDate,
+      todayStr,
+      shouldShow: !disableTips && lastTipsDate !== todayStr
+    });
+    
     if (!disableTips && lastTipsDate !== todayStr) {
       showTipsModal();
     }

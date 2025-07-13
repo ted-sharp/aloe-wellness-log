@@ -12,8 +12,12 @@ const TipsModal: React.FC<TipsModalProps> = ({ open, onClose, tipText }) => {
     setDisableTips(localStorage.getItem('disableTips') === '1');
   }, [open]);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDisableTips(e.target.checked);
-    localStorage.setItem('disableTips', e.target.checked ? '1' : '0');
+    const newValue = e.target.checked;
+    setDisableTips(newValue);
+    localStorage.setItem('disableTips', newValue ? '1' : '0');
+    
+    // デバッグ用ログ
+    console.log('TIPS無効化設定:', newValue ? '有効' : '無効', 'localStorage値:', localStorage.getItem('disableTips'));
   };
   if (!open) return null;
   return (

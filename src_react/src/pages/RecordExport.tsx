@@ -112,7 +112,7 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
                 </div>
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-3">
                 <button
                   type="button"
                   onClick={triggerTestError}
@@ -120,11 +120,22 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
                 >
                   エラーバウンダリをテスト
                 </button>
+                
+                {showTipsModal && (
+                  <button
+                    type="button"
+                    onClick={showTipsModal}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    TIPSを表示
+                  </button>
+                )}
               </div>
 
               <div className="flex justify-center">
                 <ul className="list-disc list-inside space-y-1 text-xs text-gray-500 dark:text-gray-400 text-left max-w-md">
                   <li>エラーバウンダリ: 意図的にエラーを発生させて、エラーハンドリングをテストします</li>
+                  <li>TIPS表示: 健康に関するヒントを手動で表示します</li>
                   <li>テストデータ生成: 開発・デモ用のサンプルデータを生成できます</li>
                 </ul>
               </div>
