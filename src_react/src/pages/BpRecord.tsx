@@ -10,7 +10,7 @@ import {
   deleteBpRecord,
   getAllBpRecords,
   updateBpRecord,
-} from '../db/indexedDb';
+} from '../db';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';

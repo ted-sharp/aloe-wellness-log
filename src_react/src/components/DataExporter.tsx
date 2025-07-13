@@ -6,7 +6,7 @@ import {
   getAllDailyFields,
   getAllDailyRecords,
   getAllWeightRecords,
-} from '../db/indexedDb';
+} from '../db';
 
 function formatDateForFilename(date: Date) {
   const year = date.getFullYear();

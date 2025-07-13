@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRecordsStore } from './records';
 
 // IndexedDBのモック
-vi.mock('../db/indexedDb', () => ({
+vi.mock('../db', () => ({
   deleteAllData: vi.fn(),
   // DbErrorクラスとDbErrorTypeのモック
   DbError: class DbError extends Error {
@@ -26,7 +26,7 @@ vi.mock('../db/indexedDb', () => ({
   },
 }));
 
-import * as db from '../db/indexedDb';
+import * as db from '../db';
 
 // モックされたdbモジュール
 const mockDb = vi.mocked(db);

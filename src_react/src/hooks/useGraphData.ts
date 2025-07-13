@@ -1,77 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getAllDailyRecords, getAllWeightRecords } from '../db/indexedDb';
+import { useEffect, useMemo, useCallback } from 'react';
+import { useRecordsSelectors, useEnhancedRecordsStore } from '../store/records.enhanced';
 import { useGoalStore } from '../store/goal';
-import type { DailyRecordV2, WeightRecordV2 } from '../types/record';
+import type { WeightRecordV2 } from '../types/record';
 
 /**
  * グラフ表示用の統合データフェッチングフック
  * RecordGraph.tsx専用の複数データソース管理
  */
 export function useGraphData() {
-  // データ状態
-  const [weightRecords, setWeightRecords] = useState<WeightRecordV2[]>([]);
-  const [dailyRecords, setDailyRecords] = useState<DailyRecordV2[]>([]);
+  // Enhanced Records Store からデータと状態を取得
+  const weightRecords = useRecordsSelectors.weightRecords();
+  const dailyRecords = useRecordsSelectors.dailyRecords();
+  const loading = useRecordsSelectors.loading();
+  const errors = useRecordsSelectors.errors();
   
-  // ローディング状態
-  const [isLoadingWeight, setIsLoadingWeight] = useState(true);
-  const [isLoadingDaily, setIsLoadingDaily] = useState(true);
-  const [isLoadingGoal, setIsLoadingGoal] = useState(true);
-  
-  // エラー状態
-  const [weightError, setWeightError] = useState<string | null>(null);
-  const [dailyError, setDailyError] = useState<string | null>(null);
+  // ストアから直接アクションを取得（セレクターは使わない）
+  const loadAllData = useEnhancedRecordsStore(state => state.loadAllData);
   
   // Goal store
   const { goal, loadGoal } = useGoalStore();
   
-  // 体重データの取得
-  const fetchWeightRecords = async () => {
-    try {
-      setIsLoadingWeight(true);
-      setWeightError(null);
-      const records = await getAllWeightRecords();
-      setWeightRecords(records);
-    } catch (error) {
-      setWeightError(error instanceof Error ? error.message : '体重データの取得に失敗しました');
-    } finally {
-      setIsLoadingWeight(false);
-    }
-  };
-  
-  // 日課データの取得
-  const fetchDailyRecords = async () => {
-    try {
-      setIsLoadingDaily(true);
-      setDailyError(null);
-      const records = await getAllDailyRecords();
-      setDailyRecords(records);
-    } catch (error) {
-      setDailyError(error instanceof Error ? error.message : '日課データの取得に失敗しました');
-    } finally {
-      setIsLoadingDaily(false);
-    }
-  };
-  
-  // ゴールデータの取得
-  const fetchGoalData = async () => {
-    try {
-      setIsLoadingGoal(true);
-      await loadGoal();
-    } catch (error) {
-      // Goal store handles its own error state
-    } finally {
-      setIsLoadingGoal(false);
-    }
-  };
-  
   // 初期データロード
   useEffect(() => {
-    Promise.all([
-      fetchWeightRecords(),
-      fetchDailyRecords(), 
-      fetchGoalData()
-    ]);
-  }, []);
+    loadAllData();
+    loadGoal();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // 最新データのタイムスタンプ計算
   const latestTimestamp = useMemo(() => {
@@ -82,7 +35,7 @@ export function useGraphData() {
   }, [weightRecords]);
   
   // 期間フィルタリング用のデータ処理関数
-  const getFilteredData = (periodIdx: number, showExcluded: boolean) => {
+  const getFilteredData = useCallback((periodIdx: number, showExcluded: boolean) => {
     const PERIODS = [
       { label: '2週間', days: 14 },
       { label: '1か月半', days: 45 },
@@ -115,10 +68,10 @@ export function useGraphData() {
     }
     
     return mapped;
-  };
+  }, [weightRecords, latestTimestamp]);
   
   // 期間内の日付リスト取得
-  const getPeriodDateList = (periodIdx: number) => {
+  const getPeriodDateList = useCallback((periodIdx: number) => {
     const PERIODS = [
       { label: '2週間', days: 14 },
       { label: '1か月半', days: 45 },
@@ -152,10 +105,10 @@ export function useGraphData() {
       d.setDate(d.getDate() + 1);
     }
     return list;
-  };
+  }, [dailyRecords, latestTimestamp]);
   
   // 日課達成統計の計算
-  const getStatusStats = (fieldId: 'exercise' | 'meal' | 'sleep', periodIdx: number) => {
+  const getStatusStats = useCallback((fieldId: 'exercise' | 'meal' | 'sleep', periodIdx: number) => {
     const dateList = getPeriodDateList(periodIdx);
     let total = 0;
     let success = 0;
@@ -173,22 +126,19 @@ export function useGraphData() {
       success,
       percent: total > 0 ? Math.round((success / total) * 100) : 0,
     };
-  };
+  }, [dailyRecords, getPeriodDateList]);
   
   // 全体のローディング状態
-  const isLoading = isLoadingWeight || isLoadingDaily || isLoadingGoal;
+  const isLoading = loading.global || loading.weight || loading.daily;
   
-  // 全体のエラー状態
-  const error = weightError || dailyError;
+  // 全体のエラー状態 
+  const error = errors.weight?.message || errors.daily?.message || null;
   
   // データ再取得関数
-  const refetch = () => {
-    return Promise.all([
-      fetchWeightRecords(),
-      fetchDailyRecords(),
-      fetchGoalData()
-    ]);
-  };
+  const refetch = useCallback(() => {
+    loadAllData();
+    loadGoal();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   return {
     // データ

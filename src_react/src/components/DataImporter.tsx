@@ -7,7 +7,7 @@ import {
   addDailyField,
   addDailyRecord,
   addWeightRecord,
-} from '../db/indexedDb';
+} from '../db';
 
 interface DataImporterProps {
   onStatusChange?: (status: string | null) => void;

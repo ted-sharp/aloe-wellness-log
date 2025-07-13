@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
-import { getAllWeightRecords } from '../db/indexedDb';
+import { getAllWeightRecords } from '../db';
 import { 
   useYearValidation,
   useHeightValidation, 

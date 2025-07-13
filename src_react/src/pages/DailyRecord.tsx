@@ -35,7 +35,7 @@ import {
   getAllDailyRecords,
   updateDailyField,
   updateDailyRecord,
-} from '../db/indexedDb';
+} from '../db';
 import type { DailyFieldV2, DailyRecordV2 } from '../types/record';
 
 /**

@@ -12,7 +12,7 @@ import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
 import { useRecordsStore } from './store/records';
 import { isDev } from './utils/devTools';
-import * as db from './db/indexedDb';
+import * as db from './db';
 
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {

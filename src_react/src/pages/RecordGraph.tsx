@@ -51,13 +51,14 @@ const RecordGraph: React.FC = () => {
   } = useGraphData();
   
   // 期間に応じた体重データを抽出
-  const data = useMemo(() => 
-    getFilteredData(periodIdx, showExcluded), 
-    [getFilteredData, periodIdx, showExcluded]
-  );
+  const data = useMemo(() => {
+    console.log('RecordGraph: data useMemo triggered');
+    return getFilteredData(periodIdx, showExcluded);
+  }, [periodIdx, showExcluded]); // getFilteredDataを依存配列から一時的に除外
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
+    console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
     if (!data.length) return [];
     const start = new Date(data[0].timestamp);
     const end = new Date(data[data.length - 1].timestamp);

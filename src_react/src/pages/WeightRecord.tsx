@@ -18,12 +18,7 @@ import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
 import NumberInput from '../components/NumberInput';
 import TimeInputWithPresets from '../components/TimeInputWithPresets';
-import {
-  addWeightRecord,
-  deleteWeightRecord,
-  getAllWeightRecords,
-  updateWeightRecord,
-} from '../db/indexedDb';
+import { weightRecordRepository } from '../db';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
@@ -95,10 +90,31 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     handleDelete,
     clearError,
   } = useRecordCRUD({
-    getAllRecords: getAllWeightRecords,
-    addRecord: addWeightRecord,
-    updateRecord: updateWeightRecord,
-    deleteRecord: deleteWeightRecord,
+    getAllRecords: async () => {
+      const result = await weightRecordRepository.getAll();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch records');
+      }
+      return result.data || [];
+    },
+    addRecord: async (record: WeightRecordV2) => {
+      const result = await weightRecordRepository.add(record);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to add record');
+      }
+    },
+    updateRecord: async (record: WeightRecordV2) => {
+      const result = await weightRecordRepository.update(record);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update record');
+      }
+    },
+    deleteRecord: async (id: string) => {
+      const result = await weightRecordRepository.delete(id);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete record');
+      }
+    },
     onRecordAdded: showTipsModal,
   });
 

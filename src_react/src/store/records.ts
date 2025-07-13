@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import * as db from '../db/indexedDb';
-import { DbError, DbErrorType } from '../db/indexedDb';
+import { deleteAllData } from '../db';
+import { DbError, DbErrorType } from '../db';
 
 // 操作状態の定義
 interface OperationState {
@@ -45,7 +45,7 @@ export const useRecordsStore = create<RecordsState>((set) => ({
     });
 
     try {
-      await db.deleteAllData();
+      await deleteAllData();
       set({
         recordsOperation: { loading: false, error: null },
         fieldsOperation: { loading: false, error: null },

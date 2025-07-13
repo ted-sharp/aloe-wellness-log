@@ -10,7 +10,7 @@ import {
   getAllBpRecords,
   getAllDailyRecords,
   getAllWeightRecords,
-} from '../db/indexedDb';
+} from '../db';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
 

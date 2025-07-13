@@ -1,9 +1,5 @@
 import { create } from 'zustand';
-import {
-  clearGoalData as dbClearGoalData,
-  getGoalData,
-  setGoalData,
-} from '../db/indexedDb';
+import { goalRepository } from '../db';
 import type { GoalData } from '../types/goal';
 
 interface GoalState {
@@ -16,15 +12,27 @@ interface GoalState {
 export const useGoalStore = create<GoalState>(set => ({
   goal: null,
   setGoal: async (goal: GoalData) => {
-    await setGoalData(goal);
-    set({ goal });
+    const result = await goalRepository.setGoal(goal);
+    if (result.success) {
+      set({ goal });
+    } else {
+      throw new Error(result.error || 'Failed to set goal');
+    }
   },
   clearGoal: async () => {
-    await dbClearGoalData();
-    set({ goal: null });
+    const result = await goalRepository.clearGoal();
+    if (result.success) {
+      set({ goal: null });
+    } else {
+      throw new Error(result.error || 'Failed to clear goal');
+    }
   },
   loadGoal: async () => {
-    const goal = await getGoalData();
-    set({ goal });
+    const result = await goalRepository.getGoal();
+    if (result.success) {
+      set({ goal: result.data || null });
+    } else {
+      set({ goal: null });
+    }
   },
 }));
