@@ -4,20 +4,20 @@ export const DATE_PICKER_CONFIG = {
   BUTTON_WIDTH: 56,
   BUTTON_HEIGHT: 48,
   MONTH_INDICATOR_WIDTH: 56,
-  
+
   // スクロール設定
-  EXTRA_SCROLL_DAYS: 90,
-  SCROLL_EXPAND_CHUNK: 30,
-  EDGE_THRESHOLD: 60,
-  
+  EXTRA_SCROLL_DAYS: 15,
+  SCROLL_EXPAND_CHUNK: 15,
+  EDGE_THRESHOLD: 10,
+
   // タッチ操作設定
-  TOUCH_THRESHOLD: 30,
+  TOUCH_THRESHOLD: 15,
   DAY_PIXEL_SPACING: 8, // BUTTON_WIDTH + gap
-  
+
   // アニメーション設定
   SCROLL_RETRY_MAX: 10,
   SCROLL_RETRY_DELAY: 30,
-  
+
   // スタイル設定
   SCROLL_SNAP_TYPE: 'x mandatory',
 } as const;
@@ -30,7 +30,7 @@ export const WEEKDAY_COLORS = {
 } as const;
 
 // 型安全な曜日色の型定義
-export type WeekdayColor = typeof WEEKDAY_COLORS[keyof typeof WEEKDAY_COLORS];
+export type WeekdayColor = (typeof WEEKDAY_COLORS)[keyof typeof WEEKDAY_COLORS];
 
 // 今日の日付を安全に取得する関数
 export const getTodayDate = (): Date => {
