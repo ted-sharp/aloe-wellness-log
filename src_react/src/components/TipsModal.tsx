@@ -17,7 +17,7 @@ const TipsModal: React.FC<TipsModalProps> = ({ open, onClose, tipText }) => {
     localStorage.setItem('disableTips', newValue ? '1' : '0');
     
     // デバッグ用ログ
-    console.log('TIPS無効化設定:', newValue ? '有効' : '無効', 'localStorage値:', localStorage.getItem('disableTips'));
+    console.log('TIPS表示設定変更:', newValue ? 'TIPS自動表示を無効化' : 'TIPS自動表示を有効化', 'localStorage値:', localStorage.getItem('disableTips'));
   };
   if (!open) return null;
   return (

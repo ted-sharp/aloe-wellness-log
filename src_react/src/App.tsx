@@ -244,8 +244,24 @@ function App() {
   const [tipText, setTipText] = useState('');
   const [isDataInitialized, setIsDataInitialized] = useState(false);
 
-  // tips表示用関数
+  // tips表示用関数（disableTipsをチェック）
   const showTipsModal = () => {
+    const disableTips = localStorage.getItem('disableTips') === '1';
+    console.log('showTipsModal呼び出し - disableTips:', disableTips);
+    
+    if (disableTips) {
+      console.log('TIPS表示無効化設定により表示をスキップ');
+      return;
+    }
+    
+    const randomTip = tipsList[Math.floor(Math.random() * tipsList.length)];
+    setTipText(randomTip);
+    setTipsModalOpen(true);
+  };
+
+  // 開発者ツール用の強制表示関数（disableTipsを無視）
+  const forceShowTipsModal = () => {
+    console.log('開発者ツール: TIPS強制表示');
     const randomTip = tipsList[Math.floor(Math.random() * tipsList.length)];
     setTipText(randomTip);
     setTipsModalOpen(true);
@@ -285,7 +301,7 @@ function App() {
 
   
 
-  // 初回マウント時のtips表示（デバッグ用）
+  // 初回マウント時のtips表示（日付チェック）
   useEffect(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -293,16 +309,15 @@ function App() {
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
     const lastTipsDate = localStorage.getItem('lastTipsDate');
-    const disableTips = localStorage.getItem('disableTips') === '1';
+    
     console.log('TIPS自動表示チェック:', {
-      disableTips,
       lastTipsDate,
       todayStr,
-      shouldShow: !disableTips && lastTipsDate !== todayStr
+      shouldShow: lastTipsDate !== todayStr
     });
     
-    if (!disableTips && lastTipsDate !== todayStr) {
-      showTipsModal();
+    if (lastTipsDate !== todayStr) {
+      showTipsModal(); // この中でdisableTipsをチェック
     }
   }, []);
 
@@ -377,7 +392,7 @@ function App() {
                 path="/export"
                 element={
                   <Suspense fallback={<PageLoader pageName="管理" />}>
-                    <RecordExport showTipsModal={showTipsModal} />
+                    <RecordExport showTipsModal={forceShowTipsModal} />
                   </Suspense>
                 }
               />
