@@ -23,6 +23,7 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useGoalStore } from '../store/goal';
+import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 interface WeightRecordProps {
@@ -80,6 +81,36 @@ function useSparkleDropdown() {
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const { goal, loadGoal } = useGoalStore();
 
+  // useCallbackで関数を安定化して無限ループを防ぐ
+  const getAllRecords = useCallback(async () => {
+    const result = await weightRecordRepository.getAll();
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch records');
+    }
+    return result.data || [];
+  }, []);
+
+  const addRecordCallback = useCallback(async (record: WeightRecordV2) => {
+    const result = await weightRecordRepository.add(record);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to add record');
+    }
+  }, []);
+
+  const updateRecordCallback = useCallback(async (record: WeightRecordV2) => {
+    const result = await weightRecordRepository.update(record);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to update record');
+    }
+  }, []);
+
+  const deleteRecordCallback = useCallback(async (id: string) => {
+    const result = await weightRecordRepository.delete(id);
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to delete record');
+    }
+  }, []);
+
   // 記録のCRUD操作
   const {
     records: weightRecords,
@@ -90,31 +121,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     handleDelete,
     clearError,
   } = useRecordCRUD({
-    getAllRecords: async () => {
-      const result = await weightRecordRepository.getAll();
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch records');
-      }
-      return result.data || [];
-    },
-    addRecord: async (record: WeightRecordV2) => {
-      const result = await weightRecordRepository.add(record);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to add record');
-      }
-    },
-    updateRecord: async (record: WeightRecordV2) => {
-      const result = await weightRecordRepository.update(record);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update record');
-      }
-    },
-    deleteRecord: async (id: string) => {
-      const result = await weightRecordRepository.delete(id);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete record');
-      }
-    },
+    getAllRecords,
+    addRecord: addRecordCallback,
+    updateRecord: updateRecordCallback,
+    deleteRecord: deleteRecordCallback,
     onRecordAdded: showTipsModal,
   });
 

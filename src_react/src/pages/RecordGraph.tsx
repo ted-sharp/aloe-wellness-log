@@ -54,7 +54,7 @@ const RecordGraph: React.FC = () => {
   const data = useMemo(() => {
     console.log('RecordGraph: data useMemo triggered');
     return getFilteredData(periodIdx, showExcluded);
-  }, [periodIdx, showExcluded]); // getFilteredDataを依存配列から一時的に除外
+  }, [getFilteredData, periodIdx, showExcluded]);
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
