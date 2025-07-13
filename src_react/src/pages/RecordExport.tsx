@@ -61,6 +61,33 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
           </p>
         </div>
 
+        {/* TIPS表示カード */}
+        {showTipsModal && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl shadow p-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
+              💡 健康TIPS
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
+                <div className="text-left max-w-md">
+                  <p>健康に関するヒントやアドバイスを手動で表示できます。</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={showTipsModal}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
+                >
+                  TIPSを表示
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* グローバルステータス表示 */}
         {globalStatus && (
           <div className="w-full">
@@ -112,7 +139,7 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
                 </div>
               </div>
 
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center">
                 <button
                   type="button"
                   onClick={triggerTestError}
@@ -120,22 +147,11 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
                 >
                   エラーバウンダリをテスト
                 </button>
-                
-                {showTipsModal && (
-                  <button
-                    type="button"
-                    onClick={showTipsModal}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    TIPSを表示
-                  </button>
-                )}
               </div>
 
               <div className="flex justify-center">
                 <ul className="list-disc list-inside space-y-1 text-xs text-gray-500 dark:text-gray-400 text-left max-w-md">
                   <li>エラーバウンダリ: 意図的にエラーを発生させて、エラーハンドリングをテストします</li>
-                  <li>TIPS表示: 健康に関するヒントを手動で表示します</li>
                   <li>テストデータ生成: 開発・デモ用のサンプルデータを生成できます</li>
                 </ul>
               </div>
