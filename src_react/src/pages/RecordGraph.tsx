@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
+  ComposedChart,
   Line,
   LineChart,
   ReferenceLine,
@@ -17,6 +18,12 @@ const PERIODS = [
   { label: '1か月半', days: 45 },
   { label: '3か月', days: 90 },
   { label: '全データ', days: null },
+];
+
+const GRAPH_TYPES = [
+  { label: '体重', value: 'weight' },
+  { label: '体脂肪', value: 'bodyComposition' },
+  { label: '血圧', value: 'bloodPressure' },
 ];
 
 const STATUS_LABELS = {
@@ -37,24 +44,43 @@ const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
 const RecordGraph: React.FC = () => {
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
+  const [graphType, setGraphType] = useState<'weight' | 'bloodPressure' | 'bodyComposition'>('weight'); // グラフ種類
   
   // 統合データフェッチング
   const {
     // weightRecords,
+    bpRecords,
     dailyRecords,
     goal,
     // latestTimestamp,
     isLoading,
     error,
     getFilteredData,
+    getFilteredBpData,
+    getFilteredBodyCompositionData,
     getStatusStats,
   } = useGraphData();
   
-  // 期間に応じた体重データを抽出
+  // 期間に応じたデータを抽出
   const data = useMemo(() => {
     console.log('RecordGraph: data useMemo triggered');
-    return getFilteredData(periodIdx, showExcluded);
-  }, [getFilteredData, periodIdx, showExcluded]);
+    if (graphType === 'weight') {
+      return getFilteredData(periodIdx, showExcluded);
+    } else if (graphType === 'bloodPressure') {
+      // 血圧データの場合は収縮期・拡張期の両方を含む
+      const systolicData = getFilteredBpData(periodIdx, 'systolic');
+      const diastolicData = getFilteredBpData(periodIdx, 'diastolic');
+      
+      // 両方のデータを合成
+      return systolicData.map(item => ({
+        ...item,
+        diastolic: diastolicData.find(d => d.timestamp === item.timestamp)?.diastolic || 0,
+      }));
+    } else {
+      // 体脂肪率・腹囲データの場合
+      return getFilteredBodyCompositionData(periodIdx);
+    }
+  }, [getFilteredData, getFilteredBpData, getFilteredBodyCompositionData, periodIdx, showExcluded, graphType]);
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
@@ -202,7 +228,26 @@ const RecordGraph: React.FC = () => {
       className="flex flex-col items-center justify-start py-0 bg-transparent"
       data-testid="record-graph"
     >
-      {/* 白い帯＋期間切り替えボタンのみ */}
+      {/* グラフ種類選択 */}
+      <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-2 p-2">
+        {GRAPH_TYPES.map((type) => (
+          <button
+            key={type.value}
+            className={`flex-1 py-1.5 px-1 rounded-xl border-2 font-bold transition mx-0.5 text-sm
+              ${
+                graphType === type.value
+                  ? 'border-blue-400 text-blue-500 scale-105 shadow'
+                  : 'border-gray-300 text-gray-500 hover:border-blue-300 hover:text-blue-400'
+              }
+            `}
+            onClick={() => setGraphType(type.value as 'weight' | 'bloodPressure' | 'bodyComposition')}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+      
+      {/* 期間切り替えボタン */}
       <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-4 p-2">
         {PERIODS.map((p, i) => (
           <button
@@ -220,50 +265,208 @@ const RecordGraph: React.FC = () => {
           </button>
         ))}
       </div>
-      {/* 目標線・傾向線の凡例 */}
-      <div className="flex gap-4 items-center mb-2">
-        <span className="flex items-center text-sm font-semibold">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 18,
-              height: 6,
-              background: '#f59e42',
-              borderRadius: 2,
-              marginRight: 6,
-            }}
-          />
-          目標
-        </span>
-        <span className="flex items-center text-sm font-semibold">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 18,
-              height: 6,
-              background: '#22c55e',
-              borderRadius: 2,
-              marginRight: 6,
-            }}
-          />
-          傾向
-        </span>
+      {/* 凡例 */}
+      <div className="flex gap-4 items-center mb-2 flex-wrap justify-center">
+        {graphType === 'weight' ? (
+          <>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#f59e42',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              目標
+            </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#22c55e',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              傾向
+            </span>
+          </>
+        ) : graphType === 'bloodPressure' ? (
+          <>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#ef4444',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              収縮期
+            </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#3b82f6',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              拡張期
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#8b5cf6',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              体脂肪率
+            </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#f59e0b',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              腹囲
+            </span>
+          </>
+        )}
       </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
-        <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
-          <input
-            type="checkbox"
-            className="form-checkbox accent-blue-600 mr-1"
-            checked={showExcluded}
-            onChange={e => setShowExcluded(e.target.checked)}
-          />
-          除外値も表示
-        </label>
+        {graphType === 'weight' && (
+          <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="form-checkbox accent-blue-600 mr-1"
+              checked={showExcluded}
+              onChange={e => setShowExcluded(e.target.checked)}
+            />
+            除外値も表示
+          </label>
+        )}
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-          >
+          {graphType === 'bodyComposition' ? (
+            <ComposedChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+            >
+              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                domain={xAxisDomain}
+                tick={periodIdx === 0 ? CustomTick : undefined}
+                tickFormatter={periodIdx === 0 ? undefined : formatDateTimeLabel}
+                ticks={xAxisTicks}
+              />
+              {periodIdx === 0 &&
+                dayStartLines.map(ts => (
+                  <ReferenceLine
+                    key={ts}
+                    x={ts}
+                    stroke="#888"
+                    strokeDasharray="2 2"
+                    yAxisId="left"
+                  />
+                ))}
+              <YAxis yAxisId="left" domain={['auto', 'auto']} unit="%" />
+              <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} unit="cm" />
+              <Tooltip
+                content={({ active, payload, label: _ }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  const point = payload[0]?.payload;
+                  const ts = point?.timestamp;
+                  const d = ts ? new Date(ts) : null;
+                  return (
+                    <div
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #ccc',
+                        padding: 8,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                        {d ? formatDateTimeLabel(ts) : ''}
+                      </div>
+                      {payload.map((item, idx) => (
+                        <div
+                          key={idx}
+                          style={{ color: item.color, fontSize: 14 }}
+                        >
+                          {item.dataKey === 'bodyFat' ? '体脂肪率: ' : '腹囲: '}
+                          {typeof item.value === 'number'
+                            ? item.value.toFixed(1)
+                            : item.value}
+                          {item.dataKey === 'bodyFat' ? '%' : 'cm'}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }}
+              />
+              {/* 体脂肪率ライン */}
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="bodyFat"
+                stroke="#8b5cf6"
+                strokeWidth={3}
+                dot={{
+                  fill: '#8b5cf6',
+                  stroke: '#fff',
+                  strokeWidth: 1,
+                  r: 4,
+                }}
+                activeDot={false}
+                connectNulls={false}
+              />
+              {/* 腹囲ライン */}
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="waist"
+                stroke="#f59e0b"
+                strokeWidth={3}
+                dot={{
+                  fill: '#f59e0b',
+                  stroke: '#fff',
+                  strokeWidth: 1,
+                  r: 4,
+                }}
+                activeDot={false}
+                connectNulls={false}
+              />
+            </ComposedChart>
+          ) : (
+            <LineChart
+              data={data}
+              margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+            >
             <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
             <XAxis
               dataKey="timestamp"
@@ -282,9 +485,16 @@ const RecordGraph: React.FC = () => {
                   strokeDasharray="2 2"
                 />
               ))}
-            <YAxis domain={['auto', 'auto']} unit={'kg'} />
+            {graphType === 'bodyComposition' ? (
+              <>
+                <YAxis yAxisId="left" domain={['auto', 'auto']} unit="%" />
+                <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} unit="cm" />
+              </>
+            ) : (
+              <YAxis domain={['auto', 'auto']} unit={graphType === 'weight' ? 'kg' : 'mmHg'} />
+            )}
             {/* 目標体重線（傾きあり・表示期間でクリップ） */}
-            {(() => {
+            {graphType === 'weight' && (() => {
               if (!goal) return null;
               const hasStart =
                 typeof goal.startWeight === 'number' &&
@@ -395,9 +605,9 @@ const RecordGraph: React.FC = () => {
                           style={{ color: item.color, fontSize: 14 }}
                         >
                           {typeof item.value === 'number'
-                            ? item.value.toFixed(2)
+                            ? item.value.toFixed(graphType === 'weight' ? 2 : 0)
                             : item.value}
-                          {'kg'}
+                          {graphType === 'weight' ? 'kg' : 'mmHg'}
                         </div>
                       ))}
                     <div style={{ marginTop: 6, fontSize: 13 }}>
@@ -452,26 +662,61 @@ const RecordGraph: React.FC = () => {
                 );
               }}
             />
-            <Line
-              type="monotone"
-              dataKey="value"
-              data={data}
-              stroke="#38bdf8"
-              strokeWidth={3}
-              dot={({ cx, cy, payload }) => (
-                <circle
-                  key={payload?.timestamp ?? `${cx}-${cy}`}
-                  cx={cx}
-                  cy={cy}
-                  r={4}
-                  fill={payload.excluded ? '#f87171' : '#38bdf8'}
-                  stroke="#fff"
-                  strokeWidth={1}
+            {graphType === 'weight' ? (
+              <Line
+                type="monotone"
+                dataKey="value"
+                data={data}
+                stroke="#38bdf8"
+                strokeWidth={3}
+                dot={({ cx, cy, payload }) => (
+                  <circle
+                    key={payload?.timestamp ?? `${cx}-${cy}`}
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill={payload.excluded ? '#f87171' : '#38bdf8'}
+                    stroke="#fff"
+                    strokeWidth={1}
+                  />
+                )}
+                activeDot={false}
+              />
+            ) : (
+              <>
+                {/* 収縮期血圧（上の血圧） */}
+                <Line
+                  type="monotone"
+                  dataKey="systolic"
+                  data={data}
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                  dot={{
+                    fill: '#ef4444',
+                    stroke: '#fff',
+                    strokeWidth: 1,
+                    r: 4,
+                  }}
+                  activeDot={false}
                 />
-              )}
-              activeDot={false}
-            />
-            {trendLine && (
+                {/* 拡張期血圧（下の血圧） */}
+                <Line
+                  type="monotone"
+                  dataKey="diastolic"
+                  data={data}
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={{
+                    fill: '#3b82f6',
+                    stroke: '#fff',
+                    strokeWidth: 1,
+                    r: 4,
+                  }}
+                  activeDot={false}
+                />
+              </>
+            )}
+            {graphType === 'weight' && trendLine && (
               <Line
                 type="linear"
                 data={trendLine}
@@ -485,11 +730,13 @@ const RecordGraph: React.FC = () => {
                 legendType="none"
               />
             )}
-          </LineChart>
+            </LineChart>
+          )}
         </ResponsiveContainer>
       </div>
       {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
-      <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
+      {graphType === 'weight' && (
+        <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
         {(['exercise', 'meal', 'sleep'] as const).map(key => {
           const stats = getStatusStats(key, periodIdx);
           let goalText = '';
@@ -540,7 +787,8 @@ const RecordGraph: React.FC = () => {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
