@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
-import { getAllWeightRecords } from '../db';
+import { getAllWeightRecords, getAllBpRecords, getAllDailyRecords } from '../db';
 import { 
   useYearValidation,
   useHeightValidation, 
@@ -89,6 +89,7 @@ export default function GoalInput() {
   const [alcoholGoal, setAlcoholGoal] = useState('');
   const [latestWeight, setLatestWeight] = useState<number | null>(null);
   const [oldestWeight, setOldestWeight] = useState<number | null>(null);
+  const [oldestDate, setOldestDate] = useState<string | null>(null);
 
   // バリデーション（新しいフックを使用）
   const birthYearError = useYearValidation(birthYear, '生年');
@@ -111,24 +112,65 @@ export default function GoalInput() {
     : null;
 
   useEffect(() => {
-    // 最新体重と最古体重を取得（ボタン用）
-    getAllWeightRecords().then(records => {
-      if (records.length > 0) {
-        // 日付+時刻でソート
-        const sorted = [...records].sort((a, b) => {
-          const adt = new Date(`${a.date}T${a.time}`).getTime();
-          const bdt = new Date(`${b.date}T${b.time}`).getTime();
-          return adt - bdt; // 昇順ソート
+    // 最新体重と最古体重、最古日付を取得（ボタン用）
+    const fetchData = async () => {
+      try {
+        // 体重データ、血圧データ、日常記録データを並行取得
+        const [weightRecords, bpRecords, dailyRecords] = await Promise.all([
+          getAllWeightRecords(),
+          getAllBpRecords(),
+          getAllDailyRecords()
+        ]);
+
+        // 体重データの処理
+        if (weightRecords.length > 0) {
+          const sorted = [...weightRecords].sort((a, b) => {
+            const adt = new Date(`${a.date}T${a.time}`).getTime();
+            const bdt = new Date(`${b.date}T${b.time}`).getTime();
+            return adt - bdt; // 昇順ソート
+          });
+          
+          setOldestWeight(sorted[0].weight);
+          setLatestWeight(sorted[sorted.length - 1].weight);
+        } else {
+          setLatestWeight(null);
+          setOldestWeight(null);
+        }
+
+        // 全データから最古の日付を取得
+        const allDates: string[] = [];
+        
+        // 体重データの日付を追加
+        weightRecords.forEach(record => {
+          allDates.push(record.date);
         });
         
-        // 最古（最初）と最新（最後）を取得
-        setOldestWeight(sorted[0].weight);
-        setLatestWeight(sorted[sorted.length - 1].weight);
-      } else {
+        // 血圧データの日付を追加
+        bpRecords.forEach(record => {
+          allDates.push(record.date);
+        });
+        
+        // 日常記録データの日付を追加
+        dailyRecords.forEach(record => {
+          allDates.push(record.date);
+        });
+
+        // 最古の日付を取得
+        if (allDates.length > 0) {
+          const sortedDates = allDates.sort();
+          setOldestDate(sortedDates[0]);
+        } else {
+          setOldestDate(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
         setLatestWeight(null);
         setOldestWeight(null);
+        setOldestDate(null);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   // 初回goal読み込み
@@ -450,6 +492,16 @@ export default function GoalInput() {
             >
               今日
             </Button>
+            {oldestDate && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setTargetStart(oldestDate)}
+              >
+                最古
+              </Button>
+            )}
           </div>
         </label>
         <label className="flex flex-col gap-1">
@@ -474,6 +526,19 @@ export default function GoalInput() {
               }}
             >
               3か月後
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                // 目標開始日から6か月後を自動入力
+                const d = targetStart ? new Date(targetStart) : new Date();
+                d.setMonth(d.getMonth() + 6);
+                setTargetEnd(d.toISOString().slice(0, 10));
+              }}
+            >
+              半年後
             </Button>
           </div>
         </label>
