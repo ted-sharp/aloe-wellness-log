@@ -207,7 +207,7 @@ const RecordGraph: React.FC = () => {
         {PERIODS.map((p, i) => (
           <button
             key={p.label}
-            className={`flex-1 py-2 rounded-xl border-2 font-bold transition mx-0.5
+            className={`flex-1 py-1.5 px-1 rounded-xl border-2 font-bold transition mx-0.5 text-sm
               ${
                 periodIdx === i
                   ? 'border-orange-400 text-orange-500 scale-105 shadow'
