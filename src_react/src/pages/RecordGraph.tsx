@@ -152,20 +152,54 @@ const RecordGraph: React.FC = () => {
     return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
   };
 
-  // 回帰直線（傾向線）の計算（体重グラフのみ）
+  // 回帰直線（傾向線）の計算
   const trendLine = useMemo(() => {
-    if (graphType !== 'weight' || data.length < 2) return null;
-    const weightData = data as { datetime: string; timestamp: number; value: number; excluded: boolean; }[];
-    const n = weightData.length;
-    let sumX = 0,
-      sumY = 0,
-      sumXX = 0,
-      sumXY = 0;
-    for (const d of weightData) {
+    if (data.length < 2) return null;
+    
+    if (graphType === 'weight') {
+      const weightData = data as { datetime: string; timestamp: number; value: number; excluded: boolean; }[];
+      const n = weightData.length;
+      let sumX = 0,
+        sumY = 0,
+        sumXX = 0,
+        sumXY = 0;
+      for (const d of weightData) {
+        sumX += d.timestamp;
+        sumY += d.value;
+        sumXX += d.timestamp * d.timestamp;
+        sumXY += d.timestamp * d.value;
+      }
+      const avgX = sumX / n;
+      const avgY = sumY / n;
+      const denom = sumXX - sumX * avgX;
+      if (denom === 0) return null;
+      const a = (sumXY - sumX * avgY) / denom;
+      const b = avgY - a * avgX;
+      const x1 = weightData[0].timestamp;
+      const x2 = weightData[weightData.length - 1].timestamp;
+      return [
+        { timestamp: x1, weightTrend: a * x1 + b },
+        { timestamp: x2, weightTrend: a * x2 + b },
+      ];
+    }
+    
+    return null;
+  }, [data, graphType]);
+
+  // 体脂肪率の傾向線計算
+  const bodyFatTrendLine = useMemo(() => {
+    if (graphType !== 'bodyComposition' || data.length < 2) return null;
+    const bodyCompositionData = data as { timestamp: number; bodyFat: number; waist: number; }[];
+    const validData = bodyCompositionData.filter(d => d.bodyFat != null && !isNaN(d.bodyFat));
+    if (validData.length < 2) return null;
+    
+    const n = validData.length;
+    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
+    for (const d of validData) {
       sumX += d.timestamp;
-      sumY += d.value;
+      sumY += d.bodyFat;
       sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.value;
+      sumXY += d.timestamp * d.bodyFat;
     }
     const avgX = sumX / n;
     const avgY = sumY / n;
@@ -173,11 +207,98 @@ const RecordGraph: React.FC = () => {
     if (denom === 0) return null;
     const a = (sumXY - sumX * avgY) / denom;
     const b = avgY - a * avgX;
-    const x1 = weightData[0].timestamp;
-    const x2 = weightData[weightData.length - 1].timestamp;
+    const x1 = validData[0].timestamp;
+    const x2 = validData[validData.length - 1].timestamp;
     return [
-      { timestamp: x1, value: a * x1 + b },
-      { timestamp: x2, value: a * x2 + b },
+      { timestamp: x1, bodyFatTrend: a * x1 + b },
+      { timestamp: x2, bodyFatTrend: a * x2 + b },
+    ];
+  }, [data, graphType]);
+
+  // 腹囲の傾向線計算
+  const waistTrendLine = useMemo(() => {
+    if (graphType !== 'bodyComposition' || data.length < 2) return null;
+    const bodyCompositionData = data as { timestamp: number; bodyFat: number; waist: number; }[];
+    const validData = bodyCompositionData.filter(d => d.waist != null && !isNaN(d.waist));
+    if (validData.length < 2) return null;
+    
+    const n = validData.length;
+    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
+    for (const d of validData) {
+      sumX += d.timestamp;
+      sumY += d.waist;
+      sumXX += d.timestamp * d.timestamp;
+      sumXY += d.timestamp * d.waist;
+    }
+    const avgX = sumX / n;
+    const avgY = sumY / n;
+    const denom = sumXX - sumX * avgX;
+    if (denom === 0) return null;
+    const a = (sumXY - sumX * avgY) / denom;
+    const b = avgY - a * avgX;
+    const x1 = validData[0].timestamp;
+    const x2 = validData[validData.length - 1].timestamp;
+    return [
+      { timestamp: x1, waistTrend: a * x1 + b },
+      { timestamp: x2, waistTrend: a * x2 + b },
+    ];
+  }, [data, graphType]);
+
+  // 血圧（収縮期）の傾向線計算
+  const systolicTrendLine = useMemo(() => {
+    if (graphType !== 'bloodPressure' || data.length < 2) return null;
+    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; }[];
+    const validData = bloodPressureData.filter(d => d.systolic != null && !isNaN(d.systolic));
+    if (validData.length < 2) return null;
+    
+    const n = validData.length;
+    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
+    for (const d of validData) {
+      sumX += d.timestamp;
+      sumY += d.systolic;
+      sumXX += d.timestamp * d.timestamp;
+      sumXY += d.timestamp * d.systolic;
+    }
+    const avgX = sumX / n;
+    const avgY = sumY / n;
+    const denom = sumXX - sumX * avgX;
+    if (denom === 0) return null;
+    const a = (sumXY - sumX * avgY) / denom;
+    const b = avgY - a * avgX;
+    const x1 = validData[0].timestamp;
+    const x2 = validData[validData.length - 1].timestamp;
+    return [
+      { timestamp: x1, systolicTrend: a * x1 + b },
+      { timestamp: x2, systolicTrend: a * x2 + b },
+    ];
+  }, [data, graphType]);
+
+  // 血圧（拡張期）の傾向線計算
+  const diastolicTrendLine = useMemo(() => {
+    if (graphType !== 'bloodPressure' || data.length < 2) return null;
+    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; }[];
+    const validData = bloodPressureData.filter(d => d.diastolic != null && !isNaN(d.diastolic));
+    if (validData.length < 2) return null;
+    
+    const n = validData.length;
+    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
+    for (const d of validData) {
+      sumX += d.timestamp;
+      sumY += d.diastolic;
+      sumXX += d.timestamp * d.timestamp;
+      sumXY += d.timestamp * d.diastolic;
+    }
+    const avgX = sumX / n;
+    const avgY = sumY / n;
+    const denom = sumXX - sumX * avgX;
+    if (denom === 0) return null;
+    const a = (sumXY - sumX * avgY) / denom;
+    const b = avgY - a * avgX;
+    const x1 = validData[0].timestamp;
+    const x2 = validData[validData.length - 1].timestamp;
+    return [
+      { timestamp: x1, diastolicTrend: a * x1 + b },
+      { timestamp: x2, diastolicTrend: a * x2 + b },
     ];
   }, [data, graphType]);
 
@@ -327,6 +448,19 @@ const RecordGraph: React.FC = () => {
               />
               拡張期
             </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 6,
+                  background: '#22c55e',
+                  borderRadius: 2,
+                  marginRight: 6,
+                }}
+              />
+              傾向
+            </span>
           </>
         ) : (
           <>
@@ -355,6 +489,38 @@ const RecordGraph: React.FC = () => {
                 }}
               />
               腹囲
+            </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 2,
+                  background: '#8b5cf6',
+                  borderRadius: 1,
+                  marginRight: 6,
+                  borderStyle: 'dashed',
+                  borderWidth: '1px 0',
+                  borderColor: '#8b5cf6',
+                }}
+              />
+              体脂肪傾向
+            </span>
+            <span className="flex items-center text-sm font-semibold">
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 18,
+                  height: 2,
+                  background: '#f59e0b',
+                  borderRadius: 1,
+                  marginRight: 6,
+                  borderStyle: 'dashed',
+                  borderWidth: '1px 0',
+                  borderColor: '#f59e0b',
+                }}
+              />
+              腹囲傾向
             </span>
           </>
         )}
@@ -434,6 +600,7 @@ const RecordGraph: React.FC = () => {
               />
               {/* 体脂肪率ライン */}
               <Line
+                key="bodyFat-line"
                 yAxisId="left"
                 type="monotone"
                 dataKey="bodyFat"
@@ -450,6 +617,7 @@ const RecordGraph: React.FC = () => {
               />
               {/* 腹囲ライン */}
               <Line
+                key="waist-line"
                 yAxisId="right"
                 type="monotone"
                 dataKey="waist"
@@ -464,6 +632,40 @@ const RecordGraph: React.FC = () => {
                 activeDot={false}
                 connectNulls={false}
               />
+              {/* 体脂肪率傾向線 */}
+              {bodyFatTrendLine && (
+                <Line
+                  key="bodyFat-trend"
+                  yAxisId="left"
+                  type="linear"
+                  data={bodyFatTrendLine}
+                  dataKey="bodyFatTrend"
+                  stroke="#8b5cf6"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  strokeDasharray="6 6"
+                  legendType="none"
+                />
+              )}
+              {/* 腹囲傾向線 */}
+              {waistTrendLine && (
+                <Line
+                  key="waist-trend"
+                  yAxisId="right"
+                  type="linear"
+                  data={waistTrendLine}
+                  dataKey="waistTrend"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                  strokeDasharray="6 6"
+                  legendType="none"
+                />
+              )}
             </ComposedChart>
           ) : (
             <LineChart
@@ -533,6 +735,7 @@ const RecordGraph: React.FC = () => {
               ];
               return (
                 <Line
+                  key="weight-target"
                   type="linear"
                   data={targetLineData}
                   dataKey="value"
@@ -667,6 +870,7 @@ const RecordGraph: React.FC = () => {
             />
             {graphType === 'weight' ? (
               <Line
+                key="weight-line"
                 type="monotone"
                 dataKey="value"
                 data={data}
@@ -689,6 +893,7 @@ const RecordGraph: React.FC = () => {
               <>
                 {/* 収縮期血圧（上の血圧） */}
                 <Line
+                  key="systolic-line"
                   type="monotone"
                   dataKey="systolic"
                   data={data}
@@ -704,6 +909,7 @@ const RecordGraph: React.FC = () => {
                 />
                 {/* 拡張期血圧（下の血圧） */}
                 <Line
+                  key="diastolic-line"
                   type="monotone"
                   dataKey="diastolic"
                   data={data}
@@ -717,13 +923,46 @@ const RecordGraph: React.FC = () => {
                   }}
                   activeDot={false}
                 />
+                {/* 収縮期血圧傾向線 */}
+                {systolicTrendLine && (
+                  <Line
+                    key="systolic-trend"
+                    type="linear"
+                    data={systolicTrendLine}
+                    dataKey="systolicTrend"
+                    stroke="#22c55e"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                    strokeDasharray="6 6"
+                    legendType="none"
+                  />
+                )}
+                {/* 拡張期血圧傾向線 */}
+                {diastolicTrendLine && (
+                  <Line
+                    key="diastolic-trend"
+                    type="linear"
+                    data={diastolicTrendLine}
+                    dataKey="diastolicTrend"
+                    stroke="#22c55e"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                    strokeDasharray="6 6"
+                    legendType="none"
+                  />
+                )}
               </>
             )}
             {graphType === 'weight' && trendLine && (
               <Line
+                key="weight-trend"
                 type="linear"
                 data={trendLine}
-                dataKey="value"
+                dataKey="weightTrend"
                 stroke="#22c55e"
                 strokeWidth={3}
                 dot={false}
