@@ -152,15 +152,16 @@ const RecordGraph: React.FC = () => {
     return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
   };
 
-  // 回帰直線（傾向線）の計算
+  // 回帰直線（傾向線）の計算（体重グラフのみ）
   const trendLine = useMemo(() => {
-    if (data.length < 2) return null;
-    const n = data.length;
+    if (graphType !== 'weight' || data.length < 2) return null;
+    const weightData = data as { datetime: string; timestamp: number; value: number; excluded: boolean; }[];
+    const n = weightData.length;
     let sumX = 0,
       sumY = 0,
       sumXX = 0,
       sumXY = 0;
-    for (const d of data) {
+    for (const d of weightData) {
       sumX += d.timestamp;
       sumY += d.value;
       sumXX += d.timestamp * d.timestamp;
@@ -172,13 +173,13 @@ const RecordGraph: React.FC = () => {
     if (denom === 0) return null;
     const a = (sumXY - sumX * avgY) / denom;
     const b = avgY - a * avgX;
-    const x1 = data[0].timestamp;
-    const x2 = data[data.length - 1].timestamp;
+    const x1 = weightData[0].timestamp;
+    const x2 = weightData[weightData.length - 1].timestamp;
     return [
       { timestamp: x1, value: a * x1 + b },
       { timestamp: x2, value: a * x2 + b },
     ];
-  }, [data]);
+  }, [data, graphType]);
 
   // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
@@ -487,7 +488,7 @@ const RecordGraph: React.FC = () => {
                   strokeDasharray="2 2"
                 />
               ))}
-            {graphType === 'bodyComposition' ? (
+            {(graphType as string) === 'bodyComposition' ? (
               <>
                 <YAxis yAxisId="left" domain={['auto', 'auto']} unit="%" />
                 <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} unit="cm" />
@@ -594,7 +595,7 @@ const RecordGraph: React.FC = () => {
                         return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
                       })()}
                     </div>
-                    {((payload ?? []) as TooltipItem[])
+                    {(graphType as string) !== 'bodyComposition' && ((payload ?? []) as TooltipItem[])
                       .filter(
                         item =>
                           item &&
