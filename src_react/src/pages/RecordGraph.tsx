@@ -229,17 +229,18 @@ const RecordGraph: React.FC = () => {
       data-testid="record-graph"
     >
       {/* グラフ種類選択 */}
-      <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-2 p-2">
+      <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-2 py-1 px-2">
         {GRAPH_TYPES.map((type) => (
           <button
             key={type.value}
-            className={`flex-1 py-1.5 px-1 rounded-xl border-2 font-bold transition mx-0.5 text-sm
+            className={`flex-1 rounded-lg border font-semibold transition mx-0.5 text-xs leading-none flex items-center justify-center
               ${
                 graphType === type.value
-                  ? 'border-blue-400 text-blue-500 scale-105 shadow'
+                  ? 'border-blue-400 text-blue-500 shadow'
                   : 'border-gray-300 text-gray-500 hover:border-blue-300 hover:text-blue-400'
               }
             `}
+            style={{ height: '24px', minHeight: '24px', maxHeight: '24px', padding: '0' }}
             onClick={() => setGraphType(type.value as 'weight' | 'bloodPressure' | 'bodyComposition')}
           >
             {type.label}
@@ -252,13 +253,14 @@ const RecordGraph: React.FC = () => {
         {PERIODS.map((p, i) => (
           <button
             key={p.label}
-            className={`flex-1 py-1.5 px-1 rounded-xl border-2 font-bold transition mx-0.5 text-sm
+            className={`flex-1 rounded-lg border font-semibold transition mx-0.5 text-xs leading-none flex items-center justify-center
               ${
                 periodIdx === i
-                  ? 'border-orange-400 text-orange-500 scale-105 shadow'
+                  ? 'border-orange-400 text-orange-500 shadow'
                   : 'border-gray-300 text-gray-500 hover:border-orange-300 hover:text-orange-400'
               }
             `}
+            style={{ height: '24px', minHeight: '24px', maxHeight: '24px', padding: '0' }}
             onClick={() => setPeriodIdx(i)}
           >
             {p.label}
