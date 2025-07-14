@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useState, lazy, Suspense, memo } from 'react';
+import { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react';
 import { HiChartBarSquare } from 'react-icons/hi2';
-import { ErrorMessage, InfoMessage, SuccessMessage } from '../components/StatusMessage';
+import {
+  ErrorMessage,
+  InfoMessage,
+  SuccessMessage,
+} from '../components/StatusMessage';
 import { isDev } from '../utils/devTools';
 import { useRenderPerformance } from '../utils/performance';
 
@@ -14,9 +18,11 @@ interface RecordExportProps {
   showTipsModal?: () => void;
 }
 
-const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportProps) {
+const RecordExport = memo(function RecordExport({
+  showTipsModal,
+}: RecordExportProps) {
   useRenderPerformance('RecordExport');
-  
+
   const [globalStatus, setGlobalStatus] = useState<string | null>(null);
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
 
@@ -50,14 +56,13 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent min-h-screen">
       <div className="w-full max-w-4xl space-y-6 px-4">
-        
         {/* ページタイトル */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
             データ管理
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            データのエクスポート、インポート、テストデータ生成を行えます
+            データのエクスポート、インポート、を行えます
           </p>
         </div>
 
@@ -67,7 +72,7 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
             <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
               💡 健康TIPS
             </h2>
-            
+
             <div className="space-y-4">
               <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
                 <div className="text-left max-w-md">
@@ -91,10 +96,15 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
         {/* グローバルステータス表示 */}
         {globalStatus && (
           <div className="w-full">
-            {globalStatus.includes('エラー') || globalStatus.includes('失敗') ? (
+            {globalStatus.includes('エラー') ||
+            globalStatus.includes('失敗') ? (
               <ErrorMessage message={globalStatus} onHide={handleClearStatus} />
-            ) : globalStatus.includes('完了') || globalStatus.includes('削除しました') ? (
-              <SuccessMessage message={globalStatus} onHide={handleClearStatus} />
+            ) : globalStatus.includes('完了') ||
+              globalStatus.includes('削除しました') ? (
+              <SuccessMessage
+                message={globalStatus}
+                onHide={handleClearStatus}
+              />
             ) : (
               <InfoMessage message={globalStatus} />
             )}
@@ -102,26 +112,26 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
         )}
 
         {/* Suspenseでラップして読み込み中の表示を追加 */}
-        <Suspense fallback={<div className="text-center py-4">読み込み中...</div>}>
+        <Suspense
+          fallback={<div className="text-center py-4">読み込み中...</div>}
+        >
           {/* データエクスポート */}
           <DataExporter onStatusChange={handleStatusChange} />
 
           {/* データインポート */}
-          <DataImporter 
+          <DataImporter
             onStatusChange={handleStatusChange}
             onDataUpdated={handleDataUpdated}
           />
 
           {/* データ管理（全削除） */}
-          <DataManager 
+          <DataManager
             onStatusChange={handleStatusChange}
             onDataUpdated={handleDataUpdated}
-        />
+          />
 
           {/* テストデータ生成（開発環境のみ） */}
-          {isDev && (
-            <TestDataGenerator onStatusChange={handleStatusChange} />
-          )}
+          {isDev && <TestDataGenerator onStatusChange={handleStatusChange} />}
         </Suspense>
 
         {/* 開発環境専用: エラーバウンダリテスト */}
@@ -131,7 +141,7 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
               <HiChartBarSquare className="w-6 h-6" />
               開発者ツール
             </h2>
-            
+
             <div className="space-y-4">
               <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
                 <div className="text-left max-w-md">
@@ -151,8 +161,10 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
 
               <div className="flex justify-center">
                 <ul className="list-disc list-inside space-y-1 text-xs text-gray-500 dark:text-gray-400 text-left max-w-md">
-                  <li>エラーバウンダリ: 意図的にエラーを発生させて、エラーハンドリングをテストします</li>
-                  <li>テストデータ生成: 開発・デモ用のサンプルデータを生成できます</li>
+                  <li>
+                    エラーバウンダリ:
+                    意図的にエラーを発生させて、エラーハンドリングをテストします
+                  </li>
                 </ul>
               </div>
             </div>
@@ -166,10 +178,16 @@ const RecordExport = memo(function RecordExport({ showTipsModal }: RecordExportP
           </h3>
           <div className="flex justify-center">
             <ul className="list-disc list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300 text-left max-w-md">
-              <li>データは端末内のみに保存され、外部サーバーには送信されません</li>
-              <li>定期的にデータをエクスポートしてバックアップを作成することをお勧めします</li>
+              <li>
+                データは端末内のみに保存され、外部サーバーには送信されません
+              </li>
+              <li>
+                定期的にデータをエクスポートしてバックアップを作成することをお勧めします
+              </li>
               <li>ブラウザのデータを削除すると、記録したデータも失われます</li>
-              <li>インポート時は既存データに新しいデータが追加されます（上書きではありません）</li>
+              <li>
+                インポート時は既存データに新しいデータが追加されます（上書きではありません）
+              </li>
             </ul>
           </div>
         </div>

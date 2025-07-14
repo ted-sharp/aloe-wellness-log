@@ -1,12 +1,12 @@
 import { memo, useCallback } from 'react';
-import { HiDocument, HiArrowUpTray } from 'react-icons/hi2';
-import Button from './Button';
+import { HiArrowUpTray, HiDocument } from 'react-icons/hi2';
 import {
   getAllBpRecords,
   getAllDailyFields,
   getAllDailyRecords,
   getAllWeightRecords,
 } from '../db';
+import Button from './Button';
 
 function formatDateForFilename(date: Date) {
   const year = date.getFullYear();
@@ -25,11 +25,10 @@ interface DataExporterProps {
 const DataExporter = memo(function DataExporter({
   onStatusChange,
 }: DataExporterProps) {
-  
   const handleExportJSON = useCallback(async () => {
     try {
       onStatusChange?.('データをエクスポート中...');
-      
+
       const [weightRecords, bpRecords, dailyRecords, dailyFields] =
         await Promise.all([
           getAllWeightRecords(),
@@ -53,13 +52,16 @@ const DataExporter = memo(function DataExporter({
       a.download = `records-v2-${formatDateForFilename(new Date())}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      
+
       onStatusChange?.('JSONエクスポートが完了しました');
     } catch (error) {
-      onStatusChange?.(`エクスポートエラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      onStatusChange?.(
+        `エクスポートエラー: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
     }
   }, [onStatusChange]);
-
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
@@ -67,7 +69,7 @@ const DataExporter = memo(function DataExporter({
         <HiArrowUpTray className="w-6 h-6" />
         データエクスポート
       </h2>
-      
+
       <div className="space-y-4">
         <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex justify-center">
           <div className="text-left max-w-md">
@@ -83,10 +85,6 @@ const DataExporter = memo(function DataExporter({
           >
             JSON形式でエクスポート
           </Button>
-        </div>
-
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          <p>• JSON形式: アプリに再インポートできる形式</p>
         </div>
       </div>
     </div>

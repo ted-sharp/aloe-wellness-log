@@ -1,8 +1,8 @@
 import { memo, useCallback, useState } from 'react';
 import { HiExclamationTriangle, HiTrash } from 'react-icons/hi2';
+import { useRecordsStore } from '../store/records';
 import Button from './Button';
 import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
-import { useRecordsStore } from '../store/records';
 
 interface DataManagerProps {
   onStatusChange?: (status: string | null) => void;
@@ -45,7 +45,8 @@ const DataManager = memo(function DataManager({
       onStatusChange?.('すべてのデータを削除しました');
       onDataUpdated?.();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      const errorMessage =
+        error instanceof Error ? error.message : '不明なエラー';
       setDeleteStatus(`削除に失敗しました: ${errorMessage}`);
       onStatusChange?.(`削除に失敗しました: ${errorMessage}`);
     } finally {
@@ -64,12 +65,12 @@ const DataManager = memo(function DataManager({
         <HiExclamationTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
         危険な操作
       </h2>
-      
+
       <div className="space-y-4">
         <div className="text-sm text-red-800 dark:text-red-200 mb-4 flex justify-center">
           <div className="text-left max-w-md">
             <p className="mb-2">
-              この操作により、すべての記録データが完全に削除されます：
+              この操作により、すべての記録データが完全に削除されます。
             </p>
             <ul className="list-disc list-inside space-y-1 mb-3">
               <li>体重記録</li>
@@ -97,19 +98,19 @@ const DataManager = memo(function DataManager({
 
         {deleteStatus && (
           <div className="mt-4">
-            {deleteStatus.includes('失敗') || deleteStatus.includes('エラー') ? (
+            {deleteStatus.includes('失敗') ||
+            deleteStatus.includes('エラー') ? (
               <ErrorMessage message={deleteStatus} onHide={handleClearStatus} />
             ) : deleteStatus.includes('削除しました') ? (
-              <SuccessMessage message={deleteStatus} onHide={handleClearStatus} />
+              <SuccessMessage
+                message={deleteStatus}
+                onHide={handleClearStatus}
+              />
             ) : (
               <InfoMessage message={deleteStatus} />
             )}
           </div>
         )}
-
-        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          <p>データは復元できません。慎重に操作してください。</p>
-        </div>
       </div>
     </div>
   );
