@@ -133,7 +133,7 @@ Always work from the `src_react/` directory when running commands, as this conta
 - Check `yarn lint` for code quality issues
 - Use `yarn test:e2e` to verify critical user flows
 
-### Knowledge Management
-- Project follows structured knowledge accumulation in `./kb/` directory
-- Reference `./kb/index.md` for implementation guidance and past decisions
-- Document new insights and solutions in appropriate knowledge base files
+### Environment Notes
+- Development environment: Windows 10 with PowerShell 7
+- Package manager: Uses yarn (verify before running npm commands)
+- All commands must be run from the `src_react/` directory unless otherwise specified
