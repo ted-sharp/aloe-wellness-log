@@ -48,6 +48,7 @@ export type BpRecordV2 = {
   diastolic: number; // 拡張期血圧
   heartRate?: number | null; // 心拍数（任意）
   note?: string | null;
+  excludeFromGraph?: boolean;
 };
 
 // 新しい日課レコード型（V2）

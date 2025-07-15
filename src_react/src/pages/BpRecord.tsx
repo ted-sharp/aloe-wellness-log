@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
-import { HiCheck, HiTrash } from 'react-icons/hi2';
+import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
+import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
 import Button from '../components/Button';
 import DatePickerBar from '../components/DatePickerBar';
@@ -23,6 +24,7 @@ const initialFormValues = {
   heartRate: '',
   time: getCurrentTimeString(),
   note: '',
+  excludeFromGraph: false,
 };
 
 const BpRecord: React.FC = () => {
@@ -73,6 +75,7 @@ const BpRecord: React.FC = () => {
       diastolic: Number(formData.diastolic),
       heartRate: formData.heartRate !== '' ? Number(formData.heartRate) : null,
       note: formData.note || null,
+      excludeFromGraph: formData.excludeFromGraph || false,
     }),
     resetValues: initialFormValues,
   });
@@ -150,15 +153,38 @@ const BpRecord: React.FC = () => {
                   value={rec.time}
                   onChange={e => handleUpdate({ ...rec, time: e.target.value })}
                 />
-                <Button
-                  variant="danger"
-                  size="sm"
-                  icon={HiTrash}
-                  aria-label="削除"
-                  onClick={() => handleDelete(rec.id)}
-                >
-                  {''}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    icon={HiTrash}
+                    aria-label="削除"
+                    onClick={() => handleDelete(rec.id)}
+                  >
+                    {''}
+                  </Button>
+                  <Button
+                    variant={rec.excludeFromGraph ? 'secondary' : 'sky'}
+                    size="sm"
+                    aria-label={
+                      rec.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'
+                    }
+                    onClick={() =>
+                      handleUpdate({
+                        ...rec,
+                        excludeFromGraph: !rec.excludeFromGraph,
+                      })
+                    }
+                  >
+                    {''}
+                    <span className="relative inline-block w-5 h-5">
+                      <PiChartLineDown className="w-5 h-5 text-white" />
+                      {rec.excludeFromGraph && (
+                        <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                      )}
+                    </span>
+                  </Button>
+                </div>
               </div>
               
               <div className="flex items-center gap-1 w-full">
@@ -266,12 +292,25 @@ const BpRecord: React.FC = () => {
             </div>
             
             <textarea
-              className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-2 mb-0"
+              className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-2 mb-1"
               rows={1}
               value={formData.note}
               onChange={e => updateField('note', e.target.value)}
               placeholder="補足・メモ（任意）"
             />
+            
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="checkbox"
+                id="excludeFromGraph"
+                checked={formData.excludeFromGraph}
+                onChange={e => updateField('excludeFromGraph', e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="excludeFromGraph" className="text-sm text-gray-700 dark:text-gray-200">
+                グラフから除外
+              </label>
+            </div>
           </div>
         </div>
 

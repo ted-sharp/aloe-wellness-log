@@ -70,6 +70,11 @@ export const STORE_CONFIGS: StoreConfig[] = [
         keyPath: 'fieldId',
         options: { unique: false },
       },
+      {
+        name: 'excludeFromGraphIndex',
+        keyPath: 'excludeFromGraph',
+        options: { unique: false },
+      },
     ],
   },
   {

@@ -5,7 +5,10 @@
       "Bash(tsc)",
       "Bash(npx tsc:*)",
       "Bash(yarn build)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(tsc --noEmit)",
+      "Bash(yarn lint)",
+      "Bash(yarn test:*)"
     ],
     "deny": []
   }

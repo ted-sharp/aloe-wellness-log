@@ -129,7 +129,7 @@ export function useGraphData() {
   }, [weightRecords, latestTimestamp]);
 
   // 血圧データのフィルタリング用関数
-  const getFilteredBpData = useCallback((periodIdx: number, type: 'systolic' | 'diastolic') => {
+  const getFilteredBpData = useCallback((periodIdx: number, type: 'systolic' | 'diastolic', showExcluded: boolean = false) => {
     const PERIODS = [
       { label: '2週間', days: 14 },
       { label: '1か月半', days: 45 },
@@ -138,7 +138,11 @@ export function useGraphData() {
     ];
     
     const filtered = bpRecords
-      .filter(r => typeof r.systolic === 'number' && typeof r.diastolic === 'number')
+      .filter(r => 
+        typeof r.systolic === 'number' && 
+        typeof r.diastolic === 'number' &&
+        (showExcluded || !r.excludeFromGraph)
+      )
       .sort((a, b) => {
         const adt = new Date(`${a.date}T${a.time}`).getTime();
         const bdt = new Date(`${b.date}T${b.time}`).getTime();
@@ -151,6 +155,7 @@ export function useGraphData() {
       systolic: r.systolic,
       diastolic: r.diastolic,
       value: type === 'systolic' ? r.systolic : r.diastolic,
+      excluded: !!r.excludeFromGraph,
     }));
     
     const period = PERIODS[periodIdx];

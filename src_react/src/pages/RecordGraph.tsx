@@ -68,14 +68,8 @@ const RecordGraph: React.FC = () => {
       return getFilteredData(periodIdx, showExcluded);
     } else if (graphType === 'bloodPressure') {
       // 血圧データの場合は収縮期・拡張期の両方を含む
-      const systolicData = getFilteredBpData(periodIdx, 'systolic');
-      const diastolicData = getFilteredBpData(periodIdx, 'diastolic');
-      
-      // 両方のデータを合成
-      return systolicData.map(item => ({
-        ...item,
-        diastolic: diastolicData.find(d => d.timestamp === item.timestamp)?.diastolic || 0,
-      }));
+      const bloodPressureData = getFilteredBpData(periodIdx, 'systolic', showExcluded);
+      return bloodPressureData;
     } else {
       // 体脂肪率・腹囲データの場合
       return getFilteredBodyCompositionData(periodIdx);
@@ -189,17 +183,17 @@ const RecordGraph: React.FC = () => {
   // 体脂肪率の傾向線計算
   const bodyFatTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition' || data.length < 2) return null;
-    const bodyCompositionData = data as { timestamp: number; bodyFat: number; waist: number; }[];
-    const validData = bodyCompositionData.filter(d => d.bodyFat != null && !isNaN(d.bodyFat));
+    const bodyCompositionData = data as { timestamp: number; bodyFat: number | null; waist: number | null; }[];
+    const validData = bodyCompositionData.filter(d => d.bodyFat != null && !isNaN(d.bodyFat) && typeof d.bodyFat === 'number');
     if (validData.length < 2) return null;
     
     const n = validData.length;
     let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
     for (const d of validData) {
       sumX += d.timestamp;
-      sumY += d.bodyFat;
+      sumY += d.bodyFat!;
       sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.bodyFat;
+      sumXY += d.timestamp * d.bodyFat!;
     }
     const avgX = sumX / n;
     const avgY = sumY / n;
@@ -218,17 +212,17 @@ const RecordGraph: React.FC = () => {
   // 腹囲の傾向線計算
   const waistTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition' || data.length < 2) return null;
-    const bodyCompositionData = data as { timestamp: number; bodyFat: number; waist: number; }[];
-    const validData = bodyCompositionData.filter(d => d.waist != null && !isNaN(d.waist));
+    const bodyCompositionData = data as { timestamp: number; bodyFat: number | null; waist: number | null; }[];
+    const validData = bodyCompositionData.filter(d => d.waist != null && !isNaN(d.waist) && typeof d.waist === 'number');
     if (validData.length < 2) return null;
     
     const n = validData.length;
     let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
     for (const d of validData) {
       sumX += d.timestamp;
-      sumY += d.waist;
+      sumY += d.waist!;
       sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.waist;
+      sumXY += d.timestamp * d.waist!;
     }
     const avgX = sumX / n;
     const avgY = sumY / n;
@@ -247,7 +241,7 @@ const RecordGraph: React.FC = () => {
   // 血圧（収縮期）の傾向線計算
   const systolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure' || data.length < 2) return null;
-    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; }[];
+    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; value: number; excluded: boolean; datetime: string; }[];
     const validData = bloodPressureData.filter(d => d.systolic != null && !isNaN(d.systolic));
     if (validData.length < 2) return null;
     
@@ -276,7 +270,7 @@ const RecordGraph: React.FC = () => {
   // 血圧（拡張期）の傾向線計算
   const diastolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure' || data.length < 2) return null;
-    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; }[];
+    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; value: number; excluded: boolean; datetime: string; }[];
     const validData = bloodPressureData.filter(d => d.diastolic != null && !isNaN(d.diastolic));
     if (validData.length < 2) return null;
     
@@ -526,7 +520,7 @@ const RecordGraph: React.FC = () => {
         )}
       </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
-        {graphType === 'weight' && (
+        {(graphType === 'weight' || graphType === 'bloodPressure') && (
           <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
             <input
               type="checkbox"
@@ -899,12 +893,17 @@ const RecordGraph: React.FC = () => {
                   data={data}
                   stroke="#ef4444"
                   strokeWidth={3}
-                  dot={{
-                    fill: '#ef4444',
-                    stroke: '#fff',
-                    strokeWidth: 1,
-                    r: 4,
-                  }}
+                  dot={({ cx, cy, payload }) => (
+                    <circle
+                      key={payload?.timestamp ?? `${cx}-${cy}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill={payload.excluded ? '#f87171' : '#ef4444'}
+                      stroke="#fff"
+                      strokeWidth={1}
+                    />
+                  )}
                   activeDot={false}
                 />
                 {/* 拡張期血圧（下の血圧） */}
@@ -915,12 +914,17 @@ const RecordGraph: React.FC = () => {
                   data={data}
                   stroke="#3b82f6"
                   strokeWidth={3}
-                  dot={{
-                    fill: '#3b82f6',
-                    stroke: '#fff',
-                    strokeWidth: 1,
-                    r: 4,
-                  }}
+                  dot={({ cx, cy, payload }) => (
+                    <circle
+                      key={payload?.timestamp ?? `${cx}-${cy}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill={payload.excluded ? '#f87171' : '#3b82f6'}
+                      stroke="#fff"
+                      strokeWidth={1}
+                    />
+                  )}
                   activeDot={false}
                 />
                 {/* 収縮期血圧傾向線 */}
