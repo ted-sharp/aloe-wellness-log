@@ -15,6 +15,7 @@ import {
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
+import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値
@@ -28,6 +29,9 @@ const initialFormValues = {
 };
 
 const BpRecord: React.FC = () => {
+  // 血圧記録のビジネスロジック
+  const bpLogic = useBpRecordLogic();
+
   // 記録のCRUD操作
   const {
     records: bpRecords,
@@ -82,7 +86,7 @@ const BpRecord: React.FC = () => {
 
   // レコード追加処理
   const handleAddRecord = useCallback(async () => {
-    if (!formData.systolic || !formData.diastolic) return;
+    if (!bpLogic.hasRecordData(formData)) return;
     try {
       const record = createRecordFromForm(recordDate);
       await addRecord(record);
@@ -90,7 +94,7 @@ const BpRecord: React.FC = () => {
     } catch (error) {
       // エラーハンドリングはuseRecordCRUDで行われる
     }
-  }, [formData.systolic, formData.diastolic, createRecordFromForm, recordDate, addRecord, resetForm]);
+  }, [bpLogic, formData, createRecordFromForm, recordDate, addRecord, resetForm]);
 
   return (
     <div className="bg-transparent">
@@ -250,7 +254,7 @@ const BpRecord: React.FC = () => {
                 aria-label="保存"
                 onClick={handleAddRecord}
                 data-testid="save-btn"
-                disabled={isLoading || !formData.systolic || !formData.diastolic}
+                disabled={isLoading || !bpLogic.hasRecordData(formData)}
               >
                 {''}
               </Button>

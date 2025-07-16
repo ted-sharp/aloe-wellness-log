@@ -1,17 +1,7 @@
-import { useEffect, useState } from 'react';
 import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
-import { getAllWeightRecords, getAllBpRecords, getAllDailyRecords } from '../db';
-import { 
-  useYearValidation,
-  useHeightValidation, 
-  useWeightValidation 
-} from '../hooks/useNumericValidation';
-import { useGoalStore } from '../store/goal';
-
-
-const currentYear = new Date().getFullYear();
+import { useGoalInputLogic } from '../hooks/business/useGoalInputLogic';
 
 // 運動目標の例リスト
 const exerciseExamples = [
@@ -71,209 +61,60 @@ const genderOptions = [
 
 
 export default function GoalInput() {
-  const { goal, setGoal, loadGoal } = useGoalStore();
-  
-  const [gender, setGender] = useState<'male' | 'female' | 'unknown'>(
-    'unknown'
-  );
-  const [birthYear, setBirthYear] = useState('');
-  const [height, setHeight] = useState('');
-  const [startWeight, setStartWeight] = useState('');
-  const [targetStart, setTargetStart] = useState('');
-  const [targetEnd, setTargetEnd] = useState('');
-  const [targetWeight, setTargetWeight] = useState('');
-  const [exerciseGoal, setExerciseGoal] = useState('');
-  const [dietGoal, setDietGoal] = useState('');
-  const [sleepGoal, setSleepGoal] = useState('');
-  const [smokingGoal, setSmokingGoal] = useState('');
-  const [alcoholGoal, setAlcoholGoal] = useState('');
-  const [latestWeight, setLatestWeight] = useState<number | null>(null);
-  const [oldestWeight, setOldestWeight] = useState<number | null>(null);
-  const [oldestDate, setOldestDate] = useState<string | null>(null);
-
-  // バリデーション（新しいフックを使用）
-  const birthYearError = useYearValidation(birthYear, '生年');
-  const heightError = useHeightValidation(height, '身長');
-  const startWeightError = useWeightValidation(startWeight, '開始体重');
-  const targetWeightError = useWeightValidation(targetWeight, '目標体重');
-
-  // 日付バリデーション
-  const validateDate = (date: string, fieldName: string) => {
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return `${fieldName}はYYYY-MM-DD形式で入力してください。`;
-    }
-    return null;
-  };
-
-  const targetStartError = validateDate(targetStart, '目標開始日');
-  const targetEndError = validateDate(targetEnd, '目標終了日');
-  const dateRangeError = targetStart && targetEnd && targetStart > targetEnd 
-    ? '目標終了日は開始日以降の日付にしてください。' 
-    : null;
-
-  useEffect(() => {
-    // 最新体重と最古体重、最古日付を取得（ボタン用）
-    const fetchData = async () => {
-      try {
-        // 体重データ、血圧データ、日常記録データを並行取得
-        const [weightRecords, bpRecords, dailyRecords] = await Promise.all([
-          getAllWeightRecords(),
-          getAllBpRecords(),
-          getAllDailyRecords()
-        ]);
-
-        // 体重データの処理
-        if (weightRecords.length > 0) {
-          const sorted = [...weightRecords].sort((a, b) => {
-            const adt = new Date(`${a.date}T${a.time}`).getTime();
-            const bdt = new Date(`${b.date}T${b.time}`).getTime();
-            return adt - bdt; // 昇順ソート
-          });
-          
-          setOldestWeight(sorted[0].weight);
-          setLatestWeight(sorted[sorted.length - 1].weight);
-        } else {
-          setLatestWeight(null);
-          setOldestWeight(null);
-        }
-
-        // 全データから最古の日付を取得
-        const allDates: string[] = [];
-        
-        // 体重データの日付を追加
-        weightRecords.forEach(record => {
-          allDates.push(record.date);
-        });
-        
-        // 血圧データの日付を追加
-        bpRecords.forEach(record => {
-          allDates.push(record.date);
-        });
-        
-        // 日常記録データの日付を追加
-        dailyRecords.forEach(record => {
-          allDates.push(record.date);
-        });
-
-        // 最古の日付を取得
-        if (allDates.length > 0) {
-          const sortedDates = allDates.sort();
-          setOldestDate(sortedDates[0]);
-        } else {
-          setOldestDate(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-        setLatestWeight(null);
-        setOldestWeight(null);
-        setOldestDate(null);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // 初回goal読み込み
-  useEffect(() => {
-    loadGoal();
-  }, [loadGoal]);
-
-  // goalが変更されたときの画面更新
-  useEffect(() => {
-    if (goal) {
-      console.log('Loading saved goal data:', goal);
-      setGender(goal.gender || 'unknown');
-      setBirthYear(goal.birthYear ? goal.birthYear.toString() : '');
-      setHeight(goal.height ? goal.height.toString() : '');
-      setStartWeight(goal.startWeight ? goal.startWeight.toString() : '');
-      setTargetStart(goal.targetStart || '');
-      setTargetEnd(goal.targetEnd || '');
-      setTargetWeight(goal.targetWeight.toString());
-      setExerciseGoal(goal.exerciseGoal || '');
-      setDietGoal(goal.dietGoal || '');
-      setSleepGoal(goal.sleepGoal || '');
-      setSmokingGoal(goal.smokingGoal || '');
-      setAlcoholGoal(goal.alcoholGoal || '');
-    }
-  }, [goal]);
-
-  // 統合バリデーション（新しいフックベースのバリデーションを使用）
-  const validate = () => {
-    return birthYearError || 
-           heightError || 
-           startWeightError || 
-           targetStartError || 
-           targetEndError || 
-           dateRangeError || 
-           targetWeightError;
-  };
-
-  // 入力変更時に即保存
-  useEffect(() => {
-    // すべての値が有効な場合のみ保存
-    const validationError = validate();
-    
-    console.log('Goal save validation:', {
-      gender: !!gender,
-      birthYear: !!birthYear,
-      height: !!height,
-      startWeight: !!startWeight,
-      targetStart: !!targetStart,
-      targetEnd: !!targetEnd,
-      targetWeight: !!targetWeight,
-      validationError,
-      startWeightValue: startWeight,
-    });
-    
-    if (
-      gender &&
-      birthYear &&
-      height &&
-      startWeight &&
-      targetStart &&
-      targetEnd &&
-      targetWeight &&
-      !validationError
-    ) {
-      const goalData = {
-        gender,
-        birthYear: Number(birthYear),
-        height: Number(height),
-        startWeight: Number(startWeight),
-        targetStart,
-        targetEnd,
-        targetWeight: Number(targetWeight),
-        exerciseGoal,
-        dietGoal,
-        sleepGoal,
-        smokingGoal,
-        alcoholGoal,
-      };
-      
-      console.log('Saving goal data:', goalData);
-      setGoal(goalData);
-    }
-  }, [
+  const {
+    // フォーム状態
     gender,
+    setGender,
     birthYear,
+    setBirthYear,
     height,
+    setHeight,
     startWeight,
+    setStartWeight,
     targetStart,
+    setTargetStart,
     targetEnd,
+    setTargetEnd,
     targetWeight,
+    setTargetWeight,
     exerciseGoal,
+    setExerciseGoal,
     dietGoal,
+    setDietGoal,
     sleepGoal,
+    setSleepGoal,
     smokingGoal,
+    setSmokingGoal,
     alcoholGoal,
-    setGoal,
-    // バリデーションエラーは関数内で取得するため依存関係から除外
-  ]);
+    setAlcoholGoal,
 
-  // 年齢→生年変換
-  const yearFromAge = (age: number) => (currentYear - age).toString();
-  // 身長の+5/-5
-  const heightNum = Number(height) || 170;
+    // データ取得状態
+    latestWeight,
+    oldestWeight,
+    oldestDate,
+
+    // バリデーション
+    birthYearError,
+    heightError,
+    startWeightError,
+    targetWeightError,
+    targetStartError,
+    targetEndError,
+    dateRangeError,
+
+    // ヘルパー
+    currentYear,
+    yearFromAge,
+    heightNum,
+
+    // クイック入力
+    setLatestWeightAsStart,
+    setOldestWeightAsStart,
+    setTodayAsTargetStart,
+    setOldestDateAsTargetStart,
+    setTargetEndFromStart,
+    setTargetWeightFromStart,
+  } = useGoalInputLogic();
 
 
 
@@ -402,7 +243,7 @@ export default function GoalInput() {
                 type="button"
                 size="sm"
                 variant="secondary"
-                onClick={() => setStartWeight(latestWeight.toString())}
+                onClick={setLatestWeightAsStart}
               >
                 最新
               </Button>
@@ -412,7 +253,7 @@ export default function GoalInput() {
                 type="button"
                 size="sm"
                 variant="secondary"
-                onClick={() => setStartWeight(oldestWeight.toString())}
+                onClick={setOldestWeightAsStart}
               >
                 最古
               </Button>
@@ -437,13 +278,7 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => {
-                if (startWeight && !isNaN(Number(startWeight))) {
-                  setTargetWeight(
-                    (Math.round((Number(startWeight) - 2) * 10) / 10).toString()
-                  );
-                }
-              }}
+              onClick={() => setTargetWeightFromStart(-2)}
             >
               -2kg
             </Button>
@@ -451,13 +286,7 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => {
-                if (startWeight && !isNaN(Number(startWeight))) {
-                  setTargetWeight(
-                    (Math.round((Number(startWeight) - 5) * 10) / 10).toString()
-                  );
-                }
-              }}
+              onClick={() => setTargetWeightFromStart(-5)}
             >
               -5kg
             </Button>
@@ -486,9 +315,7 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() =>
-                setTargetStart(new Date().toISOString().slice(0, 10))
-              }
+              onClick={setTodayAsTargetStart}
             >
               今日
             </Button>
@@ -497,7 +324,7 @@ export default function GoalInput() {
                 type="button"
                 size="sm"
                 variant="secondary"
-                onClick={() => setTargetStart(oldestDate)}
+                onClick={setOldestDateAsTargetStart}
               >
                 最古
               </Button>
@@ -518,12 +345,7 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => {
-                // 目標開始日から3か月後を自動入力
-                const d = targetStart ? new Date(targetStart) : new Date();
-                d.setMonth(d.getMonth() + 3);
-                setTargetEnd(d.toISOString().slice(0, 10));
-              }}
+              onClick={() => setTargetEndFromStart(3)}
             >
               3か月後
             </Button>
@@ -531,12 +353,7 @@ export default function GoalInput() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => {
-                // 目標開始日から6か月後を自動入力
-                const d = targetStart ? new Date(targetStart) : new Date();
-                d.setMonth(d.getMonth() + 6);
-                setTargetEnd(d.toISOString().slice(0, 10));
-              }}
+              onClick={() => setTargetEndFromStart(6)}
             >
               半年後
             </Button>

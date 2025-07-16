@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import { useGraphData } from '../hooks/useGraphData';
+import { useGraphCalculations } from '../hooks/business/useGraphCalculations';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
@@ -46,6 +47,9 @@ const RecordGraph: React.FC = () => {
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
   const [graphType, setGraphType] = useState<'weight' | 'bloodPressure' | 'bodyComposition'>('weight'); // グラフ種類
   
+  // グラフ計算ロジック
+  const graphCalculations = useGraphCalculations();
+  
   // 統合データフェッチング
   const {
     // weightRecords,
@@ -79,27 +83,8 @@ const RecordGraph: React.FC = () => {
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
     console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
-    if (!data.length) return [];
-    const start = new Date(data[0].timestamp);
-    const end = new Date(data[data.length - 1].timestamp);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    const lines: number[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      lines.push(
-        new Date(
-          d.getFullYear(),
-          d.getMonth(),
-          d.getDate(),
-          0,
-          0,
-          0,
-          0
-        ).getTime()
-      );
-    }
-    return lines;
-  }, [data]);
+    return graphCalculations.calculateDayStartLines(data);
+  }, [data, graphCalculations]);
 
   // X軸domain（日単位で固定）
   const xAxisDomain = useMemo(() => {
@@ -114,26 +99,8 @@ const RecordGraph: React.FC = () => {
   // X軸tick値（日付の00:00）
   const xAxisTicks = useMemo(() => {
     if (periodIdx !== 0 || !data.length) return undefined;
-    const start = new Date(data[0].timestamp);
-    const end = new Date(data[data.length - 1].timestamp);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    const ticks: number[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      ticks.push(
-        new Date(
-          d.getFullYear(),
-          d.getMonth(),
-          d.getDate(),
-          0,
-          0,
-          0,
-          0
-        ).getTime()
-      );
-    }
-    return ticks;
-  }, [data, periodIdx]);
+    return graphCalculations.calculateXAxisTicks(data);
+  }, [data, periodIdx, graphCalculations]);
 
   // X軸ラベルをMM/DD(曜) HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
@@ -148,153 +115,35 @@ const RecordGraph: React.FC = () => {
 
   // 回帰直線（傾向線）の計算
   const trendLine = useMemo(() => {
-    if (data.length < 2) return null;
-    
     if (graphType === 'weight') {
-      const weightData = data as { datetime: string; timestamp: number; value: number; excluded: boolean; }[];
-      const n = weightData.length;
-      let sumX = 0,
-        sumY = 0,
-        sumXX = 0,
-        sumXY = 0;
-      for (const d of weightData) {
-        sumX += d.timestamp;
-        sumY += d.value;
-        sumXX += d.timestamp * d.timestamp;
-        sumXY += d.timestamp * d.value;
-      }
-      const avgX = sumX / n;
-      const avgY = sumY / n;
-      const denom = sumXX - sumX * avgX;
-      if (denom === 0) return null;
-      const a = (sumXY - sumX * avgY) / denom;
-      const b = avgY - a * avgX;
-      const x1 = weightData[0].timestamp;
-      const x2 = weightData[weightData.length - 1].timestamp;
-      return [
-        { timestamp: x1, weightTrend: a * x1 + b },
-        { timestamp: x2, weightTrend: a * x2 + b },
-      ];
+      return graphCalculations.calculateWeightTrendLine(data);
     }
-    
     return null;
-  }, [data, graphType]);
+  }, [data, graphType, graphCalculations]);
 
   // 体脂肪率の傾向線計算
   const bodyFatTrendLine = useMemo(() => {
-    if (graphType !== 'bodyComposition' || data.length < 2) return null;
-    const bodyCompositionData = data as { timestamp: number; bodyFat: number | null; waist: number | null; }[];
-    const validData = bodyCompositionData.filter(d => d.bodyFat != null && !isNaN(d.bodyFat) && typeof d.bodyFat === 'number');
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.bodyFat!;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.bodyFat!;
-    }
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    if (denom === 0) return null;
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    return [
-      { timestamp: x1, bodyFatTrend: a * x1 + b },
-      { timestamp: x2, bodyFatTrend: a * x2 + b },
-    ];
-  }, [data, graphType]);
+    if (graphType !== 'bodyComposition') return null;
+    return graphCalculations.calculateBodyFatTrendLine(data);
+  }, [data, graphType, graphCalculations]);
 
   // 腹囲の傾向線計算
   const waistTrendLine = useMemo(() => {
-    if (graphType !== 'bodyComposition' || data.length < 2) return null;
-    const bodyCompositionData = data as { timestamp: number; bodyFat: number | null; waist: number | null; }[];
-    const validData = bodyCompositionData.filter(d => d.waist != null && !isNaN(d.waist) && typeof d.waist === 'number');
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.waist!;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.waist!;
-    }
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    if (denom === 0) return null;
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    return [
-      { timestamp: x1, waistTrend: a * x1 + b },
-      { timestamp: x2, waistTrend: a * x2 + b },
-    ];
-  }, [data, graphType]);
+    if (graphType !== 'bodyComposition') return null;
+    return graphCalculations.calculateWaistTrendLine(data);
+  }, [data, graphType, graphCalculations]);
 
   // 血圧（収縮期）の傾向線計算
   const systolicTrendLine = useMemo(() => {
-    if (graphType !== 'bloodPressure' || data.length < 2) return null;
-    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; value: number; excluded: boolean; datetime: string; }[];
-    const validData = bloodPressureData.filter(d => d.systolic != null && !isNaN(d.systolic));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.systolic;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.systolic;
-    }
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    if (denom === 0) return null;
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    return [
-      { timestamp: x1, systolicTrend: a * x1 + b },
-      { timestamp: x2, systolicTrend: a * x2 + b },
-    ];
-  }, [data, graphType]);
+    if (graphType !== 'bloodPressure') return null;
+    return graphCalculations.calculateSystolicTrendLine(data);
+  }, [data, graphType, graphCalculations]);
 
   // 血圧（拡張期）の傾向線計算
   const diastolicTrendLine = useMemo(() => {
-    if (graphType !== 'bloodPressure' || data.length < 2) return null;
-    const bloodPressureData = data as { timestamp: number; systolic: number; diastolic: number; value: number; excluded: boolean; datetime: string; }[];
-    const validData = bloodPressureData.filter(d => d.diastolic != null && !isNaN(d.diastolic));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.diastolic;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.diastolic;
-    }
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    if (denom === 0) return null;
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    return [
-      { timestamp: x1, diastolicTrend: a * x1 + b },
-      { timestamp: x2, diastolicTrend: a * x2 + b },
-    ];
-  }, [data, graphType]);
+    if (graphType !== 'bloodPressure') return null;
+    return graphCalculations.calculateDiastolicTrendLine(data);
+  }, [data, graphType, graphCalculations]);
 
   // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {

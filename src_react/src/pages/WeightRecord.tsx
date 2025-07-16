@@ -22,6 +22,7 @@ import { weightRecordRepository } from '../db';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
+import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
 import { useGoalStore } from '../store/goal';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
@@ -30,16 +31,7 @@ interface WeightRecordProps {
   showTipsModal?: () => void;
 }
 
-// メモ欄用の例文リスト
-const noteExamples = [
-  '朝一',
-  '朝食後',
-  '夕食前',
-  '夕食後',
-  '就寝前',
-  '運動後に測定',
-  '外食あり',
-];
+// メモ欄用の例文リストは useWeightRecordLogic から取得
 
 // フォームの初期値
 const initialFormValues = {
@@ -164,12 +156,14 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     resetValues: initialFormValues,
   });
 
+  // 体重記録のビジネスロジック
+  const weightLogic = useWeightRecordLogic();
+
   // その日付の最低体重（記録があれば）
   const lowestWeightOfDay = useMemo(() => {
     if (recordsOfDay.length === 0) return null;
-    const weights = recordsOfDay.map(record => Number(record.weight));
-    return Math.min(...weights);
-  }, [recordsOfDay]);
+    return weightLogic.calculateLowestWeight(recordsOfDay);
+  }, [recordsOfDay, weightLogic]);
 
   // goal（身長など）が未ロードなら自動でロード
   React.useEffect(() => {
@@ -179,7 +173,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   }, [goal, loadGoal]);
 
   // いずれかのフィールドが入力されているかチェック
-  const hasAnyData = formData.weight || formData.bodyFat || formData.waist;
+  const hasAnyData = weightLogic.hasRecordData(formData);
 
   // レコード追加処理
   const handleAddRecord = useCallback(async () => {
@@ -224,10 +218,10 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
               {/* BMI値を横に表示 */}
               {lowestWeightOfDay && goal && goal.height && (
                 <span className="ml-3 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-                  BMI {(lowestWeightOfDay / Math.pow(goal.height / 100, 2)).toFixed(1)}
-                  {goal.startWeight && lowestWeightOfDay - goal.startWeight < 0 && (
+                  BMI {weightLogic.calculateBMI(lowestWeightOfDay, goal.height).toFixed(1)}
+                  {goal.startWeight && weightLogic.calculateWeightChange(lowestWeightOfDay, goal.startWeight) < 0 && (
                     <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
-                      🏆{(lowestWeightOfDay - goal.startWeight).toFixed(1)}kg
+                      🏆{weightLogic.calculateWeightChange(lowestWeightOfDay, goal.startWeight).toFixed(1)}kg
                     </span>
                   )}
                 </span>
@@ -445,7 +439,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                         'z-30 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg min-w-[180px] py-1',
                     })}
                   >
-                    {noteExamples.map(option => (
+                    {weightLogic.noteExamples.map(option => (
                       <button
                         key={option}
                         type="button"

@@ -1,22 +1,7 @@
 import { memo, useCallback } from 'react';
 import { HiArrowUpTray, HiDocument } from 'react-icons/hi2';
-import {
-  getAllBpRecords,
-  getAllDailyFields,
-  getAllDailyRecords,
-  getAllWeightRecords,
-} from '../db';
+import { useDataExportLogic } from '../hooks/business/useDataExportLogic';
 import Button from './Button';
-
-function formatDateForFilename(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}${month}${day}${hours}${minutes}${seconds}`;
-}
 
 interface DataExporterProps {
   onStatusChange?: (status: string | null) => void;
@@ -25,43 +10,15 @@ interface DataExporterProps {
 const DataExporter = memo(function DataExporter({
   onStatusChange,
 }: DataExporterProps) {
+  const { exportAsJSON, exportAsCSV } = useDataExportLogic();
+
   const handleExportJSON = useCallback(async () => {
-    try {
-      onStatusChange?.('データをエクスポート中...');
+    await exportAsJSON(onStatusChange);
+  }, [exportAsJSON, onStatusChange]);
 
-      const [weightRecords, bpRecords, dailyRecords, dailyFields] =
-        await Promise.all([
-          getAllWeightRecords(),
-          getAllBpRecords(),
-          getAllDailyRecords(),
-          getAllDailyFields(),
-        ]);
-
-      const exportData = {
-        weightRecords,
-        bpRecords,
-        dailyRecords,
-        dailyFields,
-      };
-
-      const json = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `records-v2-${formatDateForFilename(new Date())}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      onStatusChange?.('JSONエクスポートが完了しました');
-    } catch (error) {
-      onStatusChange?.(
-        `エクスポートエラー: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
-    }
-  }, [onStatusChange]);
+  const handleExportCSV = useCallback(async () => {
+    await exportAsCSV(onStatusChange);
+  }, [exportAsCSV, onStatusChange]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
@@ -84,6 +41,13 @@ const DataExporter = memo(function DataExporter({
             onClick={handleExportJSON}
           >
             JSON形式でエクスポート
+          </Button>
+          <Button
+            variant="secondary"
+            icon={HiDocument}
+            onClick={handleExportCSV}
+          >
+            CSV形式でエクスポート
           </Button>
         </div>
       </div>
