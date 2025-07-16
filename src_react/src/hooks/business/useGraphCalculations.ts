@@ -71,14 +71,20 @@ export const useGraphCalculations = () => {
   }, []);
 
   /**
-   * 体重傾向線計算
-   * @param data 体重データ
-   * @returns 体重傾向線データ
+   * 汎用傾向線計算
+   * @param data データ配列
+   * @param yKey Y軸データのキー
+   * @param trendKey 傾向線の結果キー
+   * @returns 傾向線データ
    */
-  const calculateWeightTrendLine = useCallback((data: any[]): any[] | null => {
+  const calculateGenericTrendLine = useCallback((
+    data: any[],
+    yKey: string,
+    trendKey: string
+  ): any[] | null => {
     if (data.length < 2) return null;
     
-    const validData = data.filter(d => d.value != null && !isNaN(d.value));
+    const validData = data.filter(d => d[yKey] != null && !isNaN(d[yKey]));
     if (validData.length < 2) return null;
     
     const n = validData.length;
@@ -86,9 +92,9 @@ export const useGraphCalculations = () => {
     
     for (const d of validData) {
       sumX += d.timestamp;
-      sumY += d.value;
+      sumY += d[yKey];
       sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.value;
+      sumXY += d.timestamp * d[yKey];
     }
     
     const avgX = sumX / n;
@@ -104,10 +110,19 @@ export const useGraphCalculations = () => {
     const x2 = validData[validData.length - 1].timestamp;
     
     return [
-      { timestamp: x1, weightTrend: a * x1 + b },
-      { timestamp: x2, weightTrend: a * x2 + b },
+      { timestamp: x1, [trendKey]: a * x1 + b },
+      { timestamp: x2, [trendKey]: a * x2 + b },
     ];
   }, []);
+
+  /**
+   * 体重傾向線計算
+   * @param data 体重データ
+   * @returns 体重傾向線データ
+   */
+  const calculateWeightTrendLine = useCallback((data: any[]): any[] | null => {
+    return calculateGenericTrendLine(data, 'value', 'weightTrend');
+  }, [calculateGenericTrendLine]);
 
   /**
    * 体脂肪率傾向線計算
@@ -115,38 +130,8 @@ export const useGraphCalculations = () => {
    * @returns 体脂肪率傾向線データ
    */
   const calculateBodyFatTrendLine = useCallback((data: any[]): any[] | null => {
-    if (data.length < 2) return null;
-    
-    const validData = data.filter(d => d.bodyFat != null && !isNaN(d.bodyFat));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.bodyFat;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.bodyFat;
-    }
-    
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    
-    if (denom === 0) return null;
-    
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    
-    return [
-      { timestamp: x1, bodyFatTrend: a * x1 + b },
-      { timestamp: x2, bodyFatTrend: a * x2 + b },
-    ];
-  }, []);
+    return calculateGenericTrendLine(data, 'bodyFat', 'bodyFatTrend');
+  }, [calculateGenericTrendLine]);
 
   /**
    * 腹囲傾向線計算
@@ -154,38 +139,8 @@ export const useGraphCalculations = () => {
    * @returns 腹囲傾向線データ
    */
   const calculateWaistTrendLine = useCallback((data: any[]): any[] | null => {
-    if (data.length < 2) return null;
-    
-    const validData = data.filter(d => d.waist != null && !isNaN(d.waist));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.waist;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.waist;
-    }
-    
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    
-    if (denom === 0) return null;
-    
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    
-    return [
-      { timestamp: x1, waistTrend: a * x1 + b },
-      { timestamp: x2, waistTrend: a * x2 + b },
-    ];
-  }, []);
+    return calculateGenericTrendLine(data, 'waist', 'waistTrend');
+  }, [calculateGenericTrendLine]);
 
   /**
    * 血圧傾向線計算（収縮期）
@@ -193,38 +148,8 @@ export const useGraphCalculations = () => {
    * @returns 収縮期血圧傾向線データ
    */
   const calculateSystolicTrendLine = useCallback((data: any[]): any[] | null => {
-    if (data.length < 2) return null;
-    
-    const validData = data.filter(d => d.systolic != null && !isNaN(d.systolic));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.systolic;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.systolic;
-    }
-    
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    
-    if (denom === 0) return null;
-    
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    
-    return [
-      { timestamp: x1, systolicTrend: a * x1 + b },
-      { timestamp: x2, systolicTrend: a * x2 + b },
-    ];
-  }, []);
+    return calculateGenericTrendLine(data, 'systolic', 'systolicTrend');
+  }, [calculateGenericTrendLine]);
 
   /**
    * 血圧傾向線計算（拡張期）
@@ -232,38 +157,8 @@ export const useGraphCalculations = () => {
    * @returns 拡張期血圧傾向線データ
    */
   const calculateDiastolicTrendLine = useCallback((data: any[]): any[] | null => {
-    if (data.length < 2) return null;
-    
-    const validData = data.filter(d => d.diastolic != null && !isNaN(d.diastolic));
-    if (validData.length < 2) return null;
-    
-    const n = validData.length;
-    let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
-    
-    for (const d of validData) {
-      sumX += d.timestamp;
-      sumY += d.diastolic;
-      sumXX += d.timestamp * d.timestamp;
-      sumXY += d.timestamp * d.diastolic;
-    }
-    
-    const avgX = sumX / n;
-    const avgY = sumY / n;
-    const denom = sumXX - sumX * avgX;
-    
-    if (denom === 0) return null;
-    
-    const a = (sumXY - sumX * avgY) / denom;
-    const b = avgY - a * avgX;
-    
-    const x1 = validData[0].timestamp;
-    const x2 = validData[validData.length - 1].timestamp;
-    
-    return [
-      { timestamp: x1, diastolicTrend: a * x1 + b },
-      { timestamp: x2, diastolicTrend: a * x2 + b },
-    ];
-  }, []);
+    return calculateGenericTrendLine(data, 'diastolic', 'diastolicTrend');
+  }, [calculateGenericTrendLine]);
 
   /**
    * 日付境界線を計算
@@ -327,6 +222,7 @@ export const useGraphCalculations = () => {
     
     // 傾向線計算
     calculateTrendLine,
+    calculateGenericTrendLine,
     calculateWeightTrendLine,
     calculateBodyFatTrendLine,
     calculateWaistTrendLine,

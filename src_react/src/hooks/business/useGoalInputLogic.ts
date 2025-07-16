@@ -152,21 +152,8 @@ export const useGoalInputLogic = () => {
   }, [goal]);
 
   // 入力変更時に即保存
-  useEffect(() => {
-    // すべての値が有効な場合のみ保存
+  const saveGoal = useCallback(() => {
     const validationError = validate();
-    
-    console.log('Goal save validation:', {
-      gender: !!gender,
-      birthYear: !!birthYear,
-      height: !!height,
-      startWeight: !!startWeight,
-      targetStart: !!targetStart,
-      targetEnd: !!targetEnd,
-      targetWeight: !!targetWeight,
-      validationError,
-      startWeightValue: startWeight,
-    });
     
     if (
       gender &&
@@ -193,7 +180,6 @@ export const useGoalInputLogic = () => {
         alcoholGoal,
       };
       
-      console.log('Saving goal data:', goalData);
       setGoal(goalData);
     }
   }, [
@@ -212,6 +198,12 @@ export const useGoalInputLogic = () => {
     setGoal,
     validate,
   ]);
+
+  // デバウンス付きの保存
+  useEffect(() => {
+    const timer = setTimeout(saveGoal, 300);
+    return () => clearTimeout(timer);
+  }, [saveGoal]);
 
   // ヘルパー関数
   const currentYear = new Date().getFullYear();
