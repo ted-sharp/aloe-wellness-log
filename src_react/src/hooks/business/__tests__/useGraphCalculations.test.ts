@@ -195,9 +195,13 @@ describe('useGraphCalculations', () => {
   describe('calculateXAxisTicks', () => {
     const createDataForDays = (days: number) => {
       const data = [];
+      const baseDate = new Date('2024-01-01');
+      
       for (let i = 0; i < days; i++) {
+        const date = new Date(baseDate);
+        date.setDate(baseDate.getDate() + i);
         data.push({
-          timestamp: new Date(`2024-01-${String(i + 1).padStart(2, '0')}T12:00:00`).getTime(),
+          timestamp: date.getTime(),
         });
       }
       return data;

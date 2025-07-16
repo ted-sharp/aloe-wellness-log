@@ -18,7 +18,8 @@
       "Bash(ls:*)",
       "Bash(yarn dev)",
       "Bash(yarn test:run:*)",
-      "Bash(yarn test:*)"
+      "Bash(yarn test:*)",
+      "Bash(tsc --noEmit)"
     ],
     "deny": []
   }
