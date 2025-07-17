@@ -16,7 +16,12 @@
       "Bash(tsc)",
       "Bash(yarn run tsc:*)",
       "Bash(ls:*)",
-      "Bash(yarn dev)"
+      "Bash(yarn dev)",
+      "Bash(yarn test:run:*)",
+      "Bash(yarn test:*)",
+      "Bash(tsc --noEmit)",
+      "Bash(yarn lint:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

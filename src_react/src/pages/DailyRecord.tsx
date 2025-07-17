@@ -24,28 +24,32 @@ import DailyAchievementItem from '../components/DailyAchievementItem';
 import SortableItem from '../components/SortableItem';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
-import { formatDate } from '../utils/dateUtils';
+import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import DatePickerBar from '../components/DatePickerBar';
-import {
-  addDailyField,
-  addDailyRecord,
-  deleteDailyField,
-  deleteDailyRecord,
-  getAllDailyFields,
-  getAllDailyRecords,
-  updateDailyField,
-  updateDailyRecord,
-} from '../db';
-import type { DailyFieldV2, DailyRecordV2 } from '../types/record';
+import type { DailyFieldV2 } from '../types/record';
 
 /**
  * 毎日記録ページ（今後実装予定）
  */
 
 const DailyRecord: React.FC = () => {
-  // 状態管理
-  const [fields, setFields] = useState<DailyFieldV2[]>([]);
-  const [records, setRecords] = useState<DailyRecordV2[]>([]);
+  // ビジネスロジック
+  const {
+    fields,
+    records,
+    getBoolRecord,
+    getAchievementValue,
+    isRecorded,
+    handleAchievementInput,
+    addField,
+    deleteField,
+    updateField,
+    getFieldSuccessStats,
+    calcStreak,
+    calcTotalAchievedDays,
+    getDateStatus,
+    getDisplayFields,
+  } = useDailyRecordLogic();
 
   // 日付選択管理 - 既存の useDateSelection フックを使用
   const {
@@ -68,13 +72,7 @@ const DailyRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const boolFields = isEditMode
-    ? fields.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-    : fields
-        .filter(f =>
-          'display' in f ? (f as DailyFieldV2).display !== false : true
-        )
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const boolFields = getDisplayFields(isEditMode);
   const [editFields, setEditFields] = useState<DailyFieldV2[]>([]);
   const [editOrder, setEditOrder] = useState(() =>
     boolFields.map(f => f.fieldId)
@@ -84,115 +82,20 @@ const DailyRecord: React.FC = () => {
   // D&D sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // 既存記録の取得
-  const getBoolRecord = (fieldId: string) =>
-    records.find(r => r.fieldId === fieldId && r.date === recordDate);
-  const getAchievementValue = (fieldId: string): 0 | 0.5 | 1 | undefined => {
-    const rec = getBoolRecord(fieldId);
-    if (typeof rec?.value === 'number') {
-      if (rec.value === 1) return 1;
-      if (rec.value === 0.5) return 0.5;
-      if (rec.value === 0) return 0;
-    }
-    return undefined;
-  };
-  // 日付ごとの記録済み判定（scope: 'daily'で絞り込み） - 日課用にカスタマイズ
-  const isRecorded = (date: Date) => {
-    const d = formatDate(date);
-    const dailyFieldIds = fields.map(f => f.fieldId);
-    return records.some(r => r.date === d && dailyFieldIds.includes(r.fieldId));
-  };
-  // V2 APIでfields/recordsを取得
-  const loadFields = React.useCallback(async () => {
-    const fs = await getAllDailyFields();
-    setFields(fs);
-  }, []);
-  const loadRecords = React.useCallback(async () => {
-    const rs = await getAllDailyRecords();
-    setRecords(rs);
-  }, []);
-
-  // 初期日課項目（運動・食事・睡眠・喫煙・飲酒）
-  const DEFAULT_DAILY_FIELDS: DailyFieldV2[] = [
-    { fieldId: 'exercise', name: '運動', order: 10, display: true },
-    { fieldId: 'meal', name: '食事', order: 20, display: true },
-    { fieldId: 'sleep', name: '睡眠', order: 30, display: true },
-    { fieldId: 'smoke', name: '喫煙', order: 40, display: false },
-    { fieldId: 'alcohol', name: '飲酒', order: 50, display: false },
-  ];
-
-  // 初回のみ、日課項目が空なら自動投入
-  useEffect(() => {
-    (async () => {
-      const fs = await getAllDailyFields();
-      if (!fs || fs.length === 0) {
-        for (const field of DEFAULT_DAILY_FIELDS) {
-          await addDailyField(field);
-        }
-        // 再取得して反映
-        setFields(await getAllDailyFields());
-      }
-    })();
-  }, []);
-
-  // 初回マウント時に必ずロード
-  React.useEffect(() => {
-    loadFields();
-    loadRecords();
-  }, [loadFields, loadRecords]);
-
-  // ボタン押下時の保存/切替/解除処理
-  const handleAchievementInput = async (
-    fieldId: string,
-    value: 0 | 0.5 | 1
-  ) => {
-    const rec = getBoolRecord(fieldId);
-    if (rec && rec.value === value) {
-      await deleteDailyRecord(rec.id);
-      await loadRecords();
-    } else if (rec) {
-      await updateDailyRecord({ ...rec, value });
-      await loadRecords();
-    } else {
-      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      await addDailyRecord({
-        id,
-        fieldId,
-        date: recordDate,
-        value,
-      });
-      await loadRecords();
-    }
-  };
   // 新規bool項目追加処理
   const handleAddField = async () => {
     setAddFieldError('');
-    const name = newFieldName.trim();
-    if (!name) {
-      setAddFieldError('項目名を入力してください');
-      return;
+    try {
+      const newField = await addField(newFieldName);
+      if (isEditMode) {
+        setEditFields(fields => [...fields, newField]);
+        setEditOrder(order => [...order, newField.fieldId]);
+      }
+      setShowAddField(false);
+      setNewFieldName('');
+    } catch (error) {
+      setAddFieldError(error instanceof Error ? error.message : 'エラーが発生しました');
     }
-    if (fields.some(f => f.name === name)) {
-      setAddFieldError('同じ名前の項目が既に存在します');
-      return;
-    }
-    const fieldId = `custom_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 6)}`;
-    const newField: DailyFieldV2 = {
-      fieldId,
-      name,
-      order: (fields.length + 1) * 10,
-      display: true,
-    };
-    await addDailyField(newField);
-    await loadFields();
-    if (isEditMode) {
-      setEditFields(fields => [...fields, newField]);
-      setEditOrder(order => [...order, fieldId]);
-    }
-    setShowAddField(false);
-    setNewFieldName('');
   };
 
   // 編集モード切替時に最新フィールドで初期化
@@ -248,16 +151,15 @@ const DailyRecord: React.FC = () => {
   const handleEditSave = async () => {
     // 削除
     for (const delId of editDelete) {
-      await deleteDailyField(delId);
+      await deleteField(delId);
     }
     // 並び替え・名称変更
     for (let i = 0; i < editOrder.length; ++i) {
       const f = editFields.find(f => f.fieldId === editOrder[i]);
       if (f) {
-        await updateDailyField({ ...f, order: i * 10 });
+        await updateField({ ...f, order: i * 10 });
       }
     }
-    await loadFields();
     setIsEditMode(false);
   };
   // 編集キャンセル
@@ -291,138 +193,11 @@ const DailyRecord: React.FC = () => {
     );
   }, []);
 
-  const getRecent14Days = () => {
-    const days: string[] = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      days.push(formatDate(d));
-    }
-    return days.reverse();
-  };
-
-  // getFieldSuccessStats: 0.5も1カウントとして扱う
-  const getFieldSuccessStats = (fieldId: string) => {
-    const days = getRecent14Days();
-    let total = 0;
-    let success = 0;
-    days.forEach(date => {
-      const rec = records.find(r => r.fieldId === fieldId && r.date === date);
-      if (typeof rec?.value === 'number') {
-        total++;
-        if (rec.value > 0) success++;
-      }
-    });
-    return {
-      total,
-      success,
-      percent: total > 0 ? Math.round((success / total) * 100) : 0,
-    };
-  };
-
-  // 連続達成日数（streak）を計算
-  // const calcStreak = (baseDate: Date) => {
-  //   if (records.length === 0) return 0;
-  //   const dailyFieldIds = fields.map(f => f.fieldId);
-  //   // 記録が存在する日付をbaseDateまで逆順でソート
-  //   const dateSet = new Set(records.map(r => r.date));
-  //   const allDates = Array.from(dateSet)
-  //     .filter(date => new Date(date) <= baseDate)
-  //     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-  //   let streak = 0;
-  //   for (const dateStr of allDates) {
-  //     const hasAny = dailyFieldIds.some(fieldId =>
-  //       records.some(
-  //         r => r.fieldId === fieldId && r.date === dateStr && r.value === 1
-  //       )
-  //     );
-  //     if (hasAny) {
-  //       streak++;
-  //     } else {
-  //       break;
-  //     }
-  //   }
-  //   return streak;
-  // };
-  // 修正版: 抜けなし連続達成日数を厳密にカウント
-  const calcStreak = (baseDate: Date) => {
-    if (records.length === 0) return 0;
-    const dailyFieldIds = fields.map(f => f.fieldId);
-    const allDates = records.map(r => r.date).sort();
-    if (allDates.length === 0) return 0;
-    const firstDate = new Date(allDates[0]);
-    const endDate = baseDate;
-    let streak = 0;
-    for (
-      let d = new Date(endDate);
-      d >= firstDate;
-      d.setDate(d.getDate() - 1)
-    ) {
-      const dateStr = formatDate(d);
-      // その日に1つでも value > 0（達成または少し達成）があるか
-      const hasAny = dailyFieldIds.some(fieldId =>
-        records.some(
-          r =>
-            r.fieldId === fieldId &&
-            r.date === dateStr &&
-            typeof r.value === 'number' &&
-            r.value > 0
-        )
-      );
-      if (hasAny) {
-        streak++;
-      } else {
-        // 未達成または未入力でストップ
-        break;
-      }
-    }
-    // 1日だけの場合は0とする
-    return streak > 1 ? streak : 0;
-  };
   const streak = calcStreak(selectedDate);
   const animatedStreak = useAnimatedNumber(streak);
-
-  // baseDateまでの累計達成日数をカウントできるように修正
-  const calcTotalAchievedDays = (baseDate: Date) => {
-    const dailyFieldIds = fields.map(f => f.fieldId);
-    if (records.length === 0) return 0;
-    const dates = records.map(r => r.date).sort();
-    const firstDate = new Date(dates[0]);
-    const endDate = baseDate;
-    let count = 0;
-    for (
-      let d = new Date(firstDate);
-      d <= endDate;
-      d.setDate(d.getDate() + 1)
-    ) {
-      const dateStr = formatDate(d);
-      const hasAny = dailyFieldIds.some(fieldId =>
-        records.some(
-          r =>
-            r.fieldId === fieldId &&
-            r.date === dateStr &&
-            typeof r.value === 'number' &&
-            r.value > 0
-        )
-      );
-      if (hasAny) count++;
-    }
-    return count;
-  };
+  
   const totalAchievedDays = calcTotalAchievedDays(selectedDate);
   const animatedTotalAchievedDays = useAnimatedNumber(totalAchievedDays);
-
-  // 日付ごとの状態を判定（入力なし: 'none', 1つでも達成または少し達成: 'green', 入力あり全て未達: 'red'）
-  const getDateStatus = (date: Date): 'none' | 'green' | 'red' => {
-    const d = formatDate(date);
-    const dailyFieldIds = fields.map(f => f.fieldId);
-    const recs = records.filter(
-      r => r.date === d && dailyFieldIds.includes(r.fieldId)
-    );
-    if (recs.length === 0) return 'none';
-    const hasAchieve = recs.some(r => r.value === 1 || r.value === 0.5);
-    return hasAchieve ? 'green' : 'red';
-  };
 
 
   return (
@@ -532,7 +307,7 @@ const DailyRecord: React.FC = () => {
             </DndContext>
           ) : (
             boolFields.map(field => {
-              const value = getAchievementValue(field.fieldId);
+              const value = getAchievementValue(field.fieldId, recordDate);
               const stats = getFieldSuccessStats(field.fieldId);
               return (
                 <DailyAchievementItem
@@ -541,13 +316,13 @@ const DailyRecord: React.FC = () => {
                   value={value}
                   stats={stats}
                   onAchieve={async () => {
-                    await handleAchievementInput(field.fieldId, 1);
+                    await handleAchievementInput(field.fieldId, 1, recordDate);
                   }}
                   onPartial={async () => {
-                    await handleAchievementInput(field.fieldId, 0.5);
+                    await handleAchievementInput(field.fieldId, 0.5, recordDate);
                   }}
                   onUnachieve={async () => {
-                    await handleAchievementInput(field.fieldId, 0);
+                    await handleAchievementInput(field.fieldId, 0, recordDate);
                   }}
                 />
               );
