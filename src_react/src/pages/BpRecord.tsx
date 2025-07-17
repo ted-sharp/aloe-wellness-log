@@ -247,17 +247,33 @@ const BpRecord: React.FC = () => {
                 value={formData.time}
                 onChange={(time) => updateField('time', time)}
               />
-              <Button
-                variant="success"
-                size="sm"
-                icon={HiCheck}
-                aria-label="保存"
-                onClick={handleAddRecord}
-                data-testid="save-btn"
-                disabled={isLoading || !bpLogic.hasRecordData(formData)}
-              >
-                {''}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="success"
+                  size="sm"
+                  icon={HiCheck}
+                  aria-label="保存"
+                  onClick={handleAddRecord}
+                  data-testid="save-btn"
+                  disabled={isLoading || !bpLogic.hasRecordData(formData)}
+                >
+                  {''}
+                </Button>
+                <Button
+                  variant={formData.excludeFromGraph ? 'secondary' : 'sky'}
+                  size="sm"
+                  aria-label={formData.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'}
+                  onClick={() => updateField('excludeFromGraph', !formData.excludeFromGraph)}
+                >
+                  {''}
+                  <span className="relative inline-block w-5 h-5">
+                    <PiChartLineDown className="w-5 h-5 text-white" />
+                    {formData.excludeFromGraph && (
+                      <HiNoSymbol className="w-5 h-5 text-red-500 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    )}
+                  </span>
+                </Button>
+              </div>
             </div>
             
             <div className="flex items-center gap-1 w-full mb-1">
@@ -303,18 +319,6 @@ const BpRecord: React.FC = () => {
               placeholder="補足・メモ（任意）"
             />
             
-            <div className="flex items-center gap-2 mt-1">
-              <input
-                type="checkbox"
-                id="excludeFromGraph"
-                checked={formData.excludeFromGraph}
-                onChange={e => updateField('excludeFromGraph', e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-              />
-              <label htmlFor="excludeFromGraph" className="text-sm text-gray-700 dark:text-gray-200">
-                グラフから除外
-              </label>
-            </div>
           </div>
         </div>
 
