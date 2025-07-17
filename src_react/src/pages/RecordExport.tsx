@@ -39,11 +39,8 @@ const RecordExport = memo(function RecordExport({
 
   const handleDataUpdated = useCallback(() => {
     // データが更新された時の処理
-    // 必要に応じて他のコンポーネントに通知
-    if (showTipsModal) {
-      showTipsModal();
-    }
-  }, [showTipsModal]);
+    // インポート時はTIPS表示しない（手動入力時のみ表示したい）
+  }, []);
 
   const handleClearStatus = useCallback(() => {
     setGlobalStatus(null);
