@@ -1,5 +1,4 @@
-import { useCallback, useMemo } from 'react';
-import type { WeightRecordV2, BpRecordV2 } from '../../types/record';
+import { useCallback } from 'react';
 
 /**
  * グラフ計算ロジックを管理するカスタムHook

@@ -135,7 +135,7 @@ export const useGoalInputLogic = () => {
   // goalが変更されたときの画面更新
   useEffect(() => {
     if (goal) {
-      console.log('Loading saved goal data:', goal);
+      console.info('Loading saved goal data:', goal);
       setGender(goal.gender || 'unknown');
       setBirthYear(goal.birthYear ? goal.birthYear.toString() : '');
       setHeight(goal.height ? goal.height.toString() : '');

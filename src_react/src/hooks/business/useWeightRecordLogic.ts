@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { WeightRecordV2 } from '../../types/record';
 import type { GoalData } from '../../types/goal';
 

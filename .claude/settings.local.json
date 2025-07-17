@@ -19,7 +19,9 @@
       "Bash(yarn dev)",
       "Bash(yarn test:run:*)",
       "Bash(yarn test:*)",
-      "Bash(tsc --noEmit)"
+      "Bash(tsc --noEmit)",
+      "Bash(yarn lint:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }
