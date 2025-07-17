@@ -53,6 +53,51 @@ const RecordExport = memo(function RecordExport({
     setErrorToThrow(new Error('これは意図的なテストエラーです'));
   }, []);
 
+  const triggerVersionUpdateMessage = useCallback(() => {
+    // Service Worker更新通知をテストするためのモック
+    const mockRegistration = {
+      waiting: {
+        postMessage: (message: { type: string }) => {
+          console.log('Mock Service Worker message:', message);
+        }
+      }
+    } as ServiceWorkerRegistration;
+
+    // 新しいバージョンのメッセージを表示
+    const toastRoot = document.createElement('div');
+    toastRoot.style.position = 'fixed';
+    toastRoot.style.bottom = '32px';
+    toastRoot.style.left = '50%';
+    toastRoot.style.transform = 'translateX(-50%)';
+    toastRoot.style.zIndex = '9999';
+    toastRoot.style.padding = '0 16px';
+    document.body.appendChild(toastRoot);
+
+    toastRoot.innerHTML = `
+      <div style="background:#059669;color:#fff;padding:16px 20px;border-radius:12px;box-shadow:0 2px 8px #0002;display:flex;flex-direction:column;gap:12px;font-size:0.95rem;max-width:95vw;width:auto;min-width:280px;">
+        <span style="text-align:center;">新しいバージョンがあります。<br>再読み込みで最新に更新できます。</span>
+        <button id="sw-update-btn" style="background:#fff;color:#059669;font-weight:bold;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;width:100%;">再読み込み</button>
+      </div>
+    `;
+    
+    const btn = toastRoot.querySelector('#sw-update-btn') as HTMLButtonElement;
+    btn.onclick = () => {
+      if (mockRegistration.waiting) {
+        mockRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      // テスト用なので実際の再読み込みではなく、メッセージを削除
+      document.body.removeChild(toastRoot);
+      setGlobalStatus('テスト用の更新通知を表示しました');
+    };
+
+    // 10秒後に自動的に削除
+    setTimeout(() => {
+      if (document.body.contains(toastRoot)) {
+        document.body.removeChild(toastRoot);
+      }
+    }, 10000);
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent min-h-screen">
       <div className="w-full max-w-4xl space-y-6 px-4">
@@ -149,21 +194,32 @@ const RecordExport = memo(function RecordExport({
                 </div>
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                 <button
                   type="button"
                   onClick={triggerTestError}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium"
                 >
                   エラーバウンダリをテスト
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerVersionUpdateMessage}
+                  className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
+                >
+                  バージョン更新通知をテスト
                 </button>
               </div>
 
               <div className="flex justify-center">
-                <ul className="list-disc list-inside space-y-1 text-xs text-gray-500 dark:text-gray-400 text-left max-w-md">
+                <ul className="list-disc list-inside space-y-2 text-xs text-gray-500 dark:text-gray-400 text-left max-w-sm px-2">
                   <li>
-                    エラーバウンダリ:
-                    意図的にエラーを発生させて、エラーハンドリングをテストします
+                    <span className="font-medium">エラーバウンダリ:</span><br className="sm:hidden" />
+                    <span className="sm:ml-1">意図的にエラーを発生させて、エラーハンドリングをテストします</span>
+                  </li>
+                  <li>
+                    <span className="font-medium">バージョン更新通知:</span><br className="sm:hidden" />
+                    <span className="sm:ml-1">新しいバージョンがある際の通知メッセージをテストします</span>
                   </li>
                 </ul>
               </div>
