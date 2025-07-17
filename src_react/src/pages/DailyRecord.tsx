@@ -72,7 +72,7 @@ const DailyRecord: React.FC = () => {
 
   // 編集モード用state
   const [isEditMode, setIsEditMode] = useState(false);
-  const boolFields = getDisplayFields(isEditMode);
+  const boolFields = getDisplayFields(isEditMode, recordDate);
   const [editFields, setEditFields] = useState<DailyFieldV2[]>([]);
   const [editOrder, setEditOrder] = useState(() =>
     boolFields.map(f => f.fieldId)

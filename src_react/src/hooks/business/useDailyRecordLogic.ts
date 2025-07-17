@@ -252,15 +252,35 @@ export const useDailyRecordLogic = () => {
   }, [records, fields]);
 
   // フィールドフィルタリング
-  const getDisplayFields = useCallback((isEditMode: boolean) => {
+  const getDisplayFields = useCallback((isEditMode: boolean, targetDate?: string) => {
     return isEditMode
       ? fields.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : fields
-          .filter(f =>
-            'display' in f ? (f as DailyFieldV2).display !== false : true
-          )
+          .filter(f => {
+            // 表示設定がtrueのフィールドは常に表示
+            if ('display' in f && (f as DailyFieldV2).display !== false) {
+              return true;
+            }
+            // 表示設定がfalseでも、既存の記録があるフィールドは表示
+            // ただし、実際に値が入力されている記録のみを対象とする
+            // targetDateが指定された場合は、その日付での入力有無をチェック
+            if (targetDate) {
+              return records.some(record => 
+                record.fieldId === f.fieldId && 
+                record.date === targetDate &&
+                record.value !== null && 
+                record.value !== undefined
+              );
+            }
+            // targetDateが未指定の場合は、全期間での入力有無をチェック
+            return records.some(record => 
+              record.fieldId === f.fieldId && 
+              record.value !== null && 
+              record.value !== undefined
+            );
+          })
           .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [fields]);
+  }, [fields, records]);
 
   return {
     // 状態
