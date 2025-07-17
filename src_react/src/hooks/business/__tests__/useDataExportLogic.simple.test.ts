@@ -23,7 +23,7 @@ describe('useDataExportLogic (unit tests)', () => {
       click: vi.fn(),
     };
     
-    global.document.createElement = vi.fn(() => mockAnchor);
+    global.document.createElement = vi.fn(() => mockAnchor as any);
   });
 
   describe('formatDateForFilename', () => {
