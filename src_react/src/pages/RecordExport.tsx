@@ -138,23 +138,6 @@ const RecordExport = memo(function RecordExport({
           </div>
         )}
 
-        {/* グローバルステータス表示 */}
-        {globalStatus && (
-          <div className="w-full">
-            {globalStatus.includes('エラー') ||
-            globalStatus.includes('失敗') ? (
-              <ErrorMessage message={globalStatus} onHide={handleClearStatus} />
-            ) : globalStatus.includes('完了') ||
-              globalStatus.includes('削除しました') ? (
-              <SuccessMessage
-                message={globalStatus}
-                onHide={handleClearStatus}
-              />
-            ) : (
-              <InfoMessage message={globalStatus} />
-            )}
-          </div>
-        )}
 
         {/* Suspenseでラップして読み込み中の表示を追加 */}
         <Suspense
