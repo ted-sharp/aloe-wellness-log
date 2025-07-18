@@ -87,40 +87,50 @@ export class EnhancedRecordsStore {
   private readonly CACHE_DURATION = 5 * 60 * 1000;
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      // パフォーマンス最適化：プライベートメソッドは監視対象外
+      isStale: false,
+      updateCache: false,
+      setLoading: false,
+      setError: false,
+    });
   }
   
   // === Computed Values ===
   
   get recordStats() {
-    return {
+    return computed(() => ({
       weightCount: this.weightRecords.length,
       dailyCount: this.dailyRecords.length,
       bpCount: this.bpRecords.length,
       fieldsCount: this.dailyFields.length,
       totalCount: this.weightRecords.length + this.dailyRecords.length + this.bpRecords.length,
-    };
+    })).get();
   }
   
   get latestWeightRecord(): WeightRecordV2 | null {
-    if (this.weightRecords.length === 0) return null;
-    return this.weightRecords
-      .slice()
-      .sort((a, b) => {
-        const dateCompare = b.date.localeCompare(a.date);
-        if (dateCompare !== 0) return dateCompare;
-        return b.time.localeCompare(a.time);
-      })[0];
+    return computed(() => {
+      if (this.weightRecords.length === 0) return null;
+      return this.weightRecords
+        .slice()
+        .sort((a, b) => {
+          const dateCompare = b.date.localeCompare(a.date);
+          if (dateCompare !== 0) return dateCompare;
+          return b.time.localeCompare(a.time);
+        })[0];
+    }).get();
   }
   
   get weightRecordsForGraph(): WeightRecordV2[] {
-    return this.weightRecords
-      .filter(record => !record.excludeFromGraph)
-      .sort((a, b) => {
-        const dateCompare = a.date.localeCompare(b.date);
-        if (dateCompare !== 0) return dateCompare;
-        return a.time.localeCompare(b.time);
-      });
+    return computed(() => {
+      return this.weightRecords
+        .filter(record => !record.excludeFromGraph)
+        .sort((a, b) => {
+          const dateCompare = a.date.localeCompare(b.date);
+          if (dateCompare !== 0) return dateCompare;
+          return a.time.localeCompare(b.time);
+        });
+    }).get();
   }
   
   // === Private Methods ===

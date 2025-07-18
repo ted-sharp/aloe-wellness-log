@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import { observer } from 'mobx-react-lite';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
@@ -29,7 +28,7 @@ const initialFormValues = {
   excludeFromGraph: false,
 };
 
-const BpRecord: React.FC = observer(() => {
+const BpRecord: React.FC = () => {
   // 血圧記録のビジネスロジック
   const bpLogic = useBpRecordLogic();
 
@@ -333,6 +332,6 @@ const BpRecord: React.FC = observer(() => {
       </div>
     </div>
   );
-});
+};
 
 export default BpRecord;

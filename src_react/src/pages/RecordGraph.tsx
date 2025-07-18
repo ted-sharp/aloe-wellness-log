@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { observer } from 'mobx-react-lite';
 import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
@@ -43,7 +42,7 @@ interface TooltipItem {
 // 曜日配列を追加
 const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
 
-const RecordGraph: React.FC = observer(() => {
+const RecordGraph: React.FC = () => {
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
   const [graphType, setGraphType] = useState<'weight' | 'bloodPressure' | 'bodyComposition'>('weight'); // グラフ種類
@@ -894,6 +893,6 @@ const RecordGraph: React.FC = observer(() => {
       )}
     </div>
   );
-});
+};
 
 export default RecordGraph;

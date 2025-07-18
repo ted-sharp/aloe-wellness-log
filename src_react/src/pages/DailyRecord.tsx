@@ -11,7 +11,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { observer } from 'mobx-react-lite';
 import { FaFire } from 'react-icons/fa';
 import {
   HiCheck,
@@ -33,7 +32,7 @@ import type { DailyFieldV2 } from '../types/record';
  * 毎日記録ページ（今後実装予定）
  */
 
-const DailyRecord: React.FC = observer(() => {
+const DailyRecord: React.FC = () => {
   // ビジネスロジック
   const {
     fields,
@@ -431,6 +430,6 @@ const DailyRecord: React.FC = observer(() => {
       </div>
     </div>
   );
-});
+};
 
 export default DailyRecord;

@@ -1,6 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { observer } from 'mobx-react-lite';
 import './App.css';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
@@ -11,7 +10,7 @@ import DailyRecord from './pages/DailyRecord';
 import GoalInput from './pages/GoalInput';
 import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
-import { useRecordsStore } from './store/records.mobx';
+import { rootStore } from './store';
 import { isDev } from './utils/devTools';
 import * as db from './db';
 
@@ -240,7 +239,6 @@ function Navigation() {
 const RecordExport = lazy(() => import('./pages/RecordExport'));
 
 function App() {
-  const { } = useRecordsStore();
   const [tipsModalOpen, setTipsModalOpen] = useState(false);
   const [tipText, setTipText] = useState('');
   const [isDataInitialized, setIsDataInitialized] = useState(false);
@@ -272,6 +270,9 @@ function App() {
   useEffect(() => {
     const initializeData = async () => {
       try {
+        // MobXストアの初期化
+        const cleanupStores = await rootStore.initialize();
+        
         // 日課フィールドの初期化
         const baseDailyFieldStructure = [
           { fieldId: 'exercise', name: '運動', order: 6, display: true },
@@ -288,9 +289,12 @@ function App() {
           }
         }
 
-        // ここで他のV2レコードのロードも追加可能
-
         setIsDataInitialized(true);
+        
+        // コンポーネントアンマウント時のクリーンアップ
+        return () => {
+          cleanupStores();
+        };
       } catch (error) {
         console.error('データ初期化エラー:', error);
         // エラー発生時でもアプリは動作させるが、初期化フラグは立てない
@@ -406,4 +410,4 @@ function App() {
   );
 }
 
-export default observer(App);
+export default App;
