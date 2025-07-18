@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useToastStore } from '../store/toast';
+import { useToastStore } from '../store/toast.mobx';
 import type {
   ErrorHandlingConfig,
   UnifiedError,

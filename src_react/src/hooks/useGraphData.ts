@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { useRecordsSelectors, useEnhancedRecordsStore } from '../store/records.enhanced';
-import { useGoalStore } from '../store/goal';
+import { observer } from 'mobx-react-lite';
+import { enhancedRecordsStore } from '../store/records.enhanced';
+import { goalStore } from '../store/goal.mobx';
 import { getAllBpRecords } from '../db';
 import type { WeightRecordV2, BpRecordV2 } from '../types/record';
 
@@ -10,16 +11,13 @@ import type { WeightRecordV2, BpRecordV2 } from '../types/record';
  */
 export function useGraphData() {
   // Enhanced Records Store からデータと状態を取得
-  const weightRecords = useRecordsSelectors.weightRecords();
-  const dailyRecords = useRecordsSelectors.dailyRecords();
-  const loading = useRecordsSelectors.loading();
-  const errors = useRecordsSelectors.errors();
-  
-  // ストアから直接アクションを取得（セレクターは使わない）
-  const loadAllData = useEnhancedRecordsStore(state => state.loadAllData);
+  const weightRecords = enhancedRecordsStore.weightRecords;
+  const dailyRecords = enhancedRecordsStore.dailyRecords;
+  const loading = enhancedRecordsStore.loading;
+  const errors = enhancedRecordsStore.errors;
   
   // Goal store
-  const { goal, loadGoal } = useGoalStore();
+  const goal = goalStore.goal;
   
   // 血圧データの状態管理
   const [bpRecords, setBpRecords] = useState<BpRecordV2[]>([]);
@@ -27,237 +25,249 @@ export function useGraphData() {
   const [bpError, setBpError] = useState<string | null>(null);
   
   // 血圧データの取得
-  const loadBpData = useCallback(async () => {
+  const loadBpRecords = useCallback(async () => {
     setBpLoading(true);
     setBpError(null);
+    
     try {
       const records = await getAllBpRecords();
       setBpRecords(records);
-    } catch (error) {
-      setBpError(error instanceof Error ? error.message : 'Unknown error');
+    } catch (error: any) {
+      setBpError(error.message || 'Unknown error');
     } finally {
       setBpLoading(false);
     }
   }, []);
-
+  
+  // 統合データロード
+  const loadAllDataWithBp = useCallback(async () => {
+    await Promise.all([
+      goalStore.loadGoal(),
+      loadBpRecords(),
+      enhancedRecordsStore.loadAllData(),
+    ]);
+  }, [loadBpRecords]);
+  
   // 初期データロード
   useEffect(() => {
-    loadAllData();
-    loadGoal();
-    loadBpData();
-  }, [loadBpData]); // eslint-disable-line react-hooks/exhaustive-deps
+    console.log('useGraphData: Loading initial data');
+    loadAllDataWithBp();
+  }, [loadAllDataWithBp]);
   
-  // 最新データのタイムスタンプ計算
-  const latestTimestamp = useMemo(() => {
-    const weightTimestamps = weightRecords.map(r => new Date(`${r.date}T${r.time}`).getTime());
-    const bpTimestamps = bpRecords.map(r => new Date(`${r.date}T${r.time}`).getTime());
-    const allTimestamps = [...weightTimestamps, ...bpTimestamps];
-    return allTimestamps.length > 0 ? Math.max(...allTimestamps) : 0;
-  }, [weightRecords, bpRecords]);
+  // 統合されたローディング状態
+  const isLoading = useMemo(() => {
+    return loading.weight || loading.daily || bpLoading || loading.global;
+  }, [loading.weight, loading.daily, bpLoading, loading.global]);
   
-  // 期間フィルタリング用のデータ処理関数
-  const getFilteredData = useCallback((periodIdx: number, showExcluded: boolean) => {
-    const PERIODS = [
-      { label: '2週間', days: 14 },
-      { label: '1か月半', days: 45 },
-      { label: '3か月', days: 90 },
-      { label: '全データ', days: null },
-    ];
-    
-    const filtered = weightRecords
-      .filter(
-        (r: WeightRecordV2) =>
-          typeof r.weight === 'number' && (showExcluded || !r.excludeFromGraph)
-      )
-      .sort((a, b) => {
-        const adt = new Date(`${a.date}T${a.time}`).getTime();
-        const bdt = new Date(`${b.date}T${b.time}`).getTime();
-        return adt - bdt;
-      });
-    
-    let mapped = filtered.map(r => ({
-      datetime: `${r.date}T${r.time}`,
-      timestamp: new Date(`${r.date}T${r.time}`).getTime(),
-      value: Number(r.weight),
-      excluded: !!r.excludeFromGraph,
-    }));
-    
-    const period = PERIODS[periodIdx];
-    if (period.days && latestTimestamp) {
-      const from = latestTimestamp - period.days * 24 * 60 * 60 * 1000;
-      mapped = mapped.filter(d => d.timestamp >= from);
-    }
-    
-    return mapped;
-  }, [weightRecords, latestTimestamp]);
-
-  // 体脂肪率・腹囲データのフィルタリング用関数
-  const getFilteredBodyCompositionData = useCallback((periodIdx: number) => {
-    const PERIODS = [
-      { label: '2週間', days: 14 },
-      { label: '1か月半', days: 45 },
-      { label: '3か月', days: 90 },
-      { label: '全データ', days: null },
-    ];
-    
-    const filtered = weightRecords
-      .filter(
-        (r: WeightRecordV2) =>
-          (typeof r.bodyFat === 'number' && isFinite(r.bodyFat)) ||
-          (typeof r.waist === 'number' && isFinite(r.waist))
-      )
-      .sort((a, b) => {
-        const adt = new Date(`${a.date}T${a.time}`).getTime();
-        const bdt = new Date(`${b.date}T${b.time}`).getTime();
-        return adt - bdt;
-      });
-    
-    let mapped = filtered.map(r => ({
-      datetime: `${r.date}T${r.time}`,
-      timestamp: new Date(`${r.date}T${r.time}`).getTime(),
-      bodyFat: typeof r.bodyFat === 'number' && isFinite(r.bodyFat) ? r.bodyFat : null,
-      waist: typeof r.waist === 'number' && isFinite(r.waist) ? r.waist : null,
-    }));
-    
-    const period = PERIODS[periodIdx];
-    if (period.days && latestTimestamp) {
-      const from = latestTimestamp - period.days * 24 * 60 * 60 * 1000;
-      mapped = mapped.filter(d => d.timestamp >= from);
-    }
-    
-    return mapped;
-  }, [weightRecords, latestTimestamp]);
-
-  // 血圧データのフィルタリング用関数
-  const getFilteredBpData = useCallback((periodIdx: number, type: 'systolic' | 'diastolic', showExcluded: boolean = false) => {
-    const PERIODS = [
-      { label: '2週間', days: 14 },
-      { label: '1か月半', days: 45 },
-      { label: '3か月', days: 90 },
-      { label: '全データ', days: null },
-    ];
-    
-    const filtered = bpRecords
-      .filter(r => 
-        typeof r.systolic === 'number' && 
-        typeof r.diastolic === 'number' &&
-        (showExcluded || !r.excludeFromGraph)
-      )
-      .sort((a, b) => {
-        const adt = new Date(`${a.date}T${a.time}`).getTime();
-        const bdt = new Date(`${b.date}T${b.time}`).getTime();
-        return adt - bdt;
-      });
-    
-    let mapped = filtered.map(r => ({
-      datetime: `${r.date}T${r.time}`,
-      timestamp: new Date(`${r.date}T${r.time}`).getTime(),
-      systolic: r.systolic,
-      diastolic: r.diastolic,
-      value: type === 'systolic' ? r.systolic : r.diastolic,
-      excluded: !!r.excludeFromGraph,
-    }));
-    
-    const period = PERIODS[periodIdx];
-    if (period.days && latestTimestamp) {
-      const from = latestTimestamp - period.days * 24 * 60 * 60 * 1000;
-      mapped = mapped.filter(d => d.timestamp >= from);
-    }
-    
-    return mapped;
-  }, [bpRecords, latestTimestamp]);
+  // 統合されたエラー状態
+  const hasError = useMemo(() => {
+    return !!(errors.weight || errors.daily || bpError || errors.global);
+  }, [errors.weight, errors.daily, bpError, errors.global]);
   
-  // 期間内の日付リスト取得
-  const getPeriodDateList = useCallback((periodIdx: number) => {
-    const PERIODS = [
-      { label: '2週間', days: 14 },
-      { label: '1か月半', days: 45 },
-      { label: '3か月', days: 90 },
-      { label: '全データ', days: null },
-    ];
-    
-    if (!dailyRecords.length) return [];
-    
-    let fromDate: Date | null = null;
-    let toDate: Date | null = null;
-    
-    if (PERIODS[periodIdx].days && latestTimestamp) {
-      toDate = new Date(latestTimestamp);
-      fromDate = new Date(latestTimestamp);
-      fromDate.setDate(toDate.getDate() - PERIODS[periodIdx].days + 1);
-    } else if (dailyRecords.length > 0) {
-      const sorted = [...dailyRecords].sort((a, b) => a.date.localeCompare(b.date));
-      fromDate = new Date(sorted[0].date);
-      toDate = new Date(sorted[sorted.length - 1].date);
-    }
-    
-    if (!fromDate || !toDate) return [];
-    
-    const list: string[] = [];
-    const d = new Date(fromDate);
-    while (d <= toDate) {
-      list.push(
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      );
-      d.setDate(d.getDate() + 1);
-    }
-    return list;
-  }, [dailyRecords, latestTimestamp]);
+  // 体重データの処理
+  const processedWeightData = useMemo(() => {
+    console.log('useGraphData: Processing weight records:', weightRecords.length);
+    return weightRecords
+      .map((record, index) => {
+        const dateTime = `${record.date}T${record.time}`;
+        let timestamp = new Date(dateTime).getTime();
+        
+        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
+        const duplicateCount = weightRecords.filter((r, i) => 
+          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
+        ).length;
+        if (duplicateCount > 0) {
+          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
+        }
+        
+        return {
+          ...record,
+          dateTime,
+          timestamp,
+          weight: record.weight,
+          value: record.weight, // グラフ表示用のvalue プロパティ
+          excluded: record.excludeFromGraph || false,
+        };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
+  }, [weightRecords]);
   
-  // 日課達成統計の計算
-  const getStatusStats = useCallback((fieldId: 'exercise' | 'meal' | 'sleep', periodIdx: number) => {
-    const dateList = getPeriodDateList(periodIdx);
-    let total = 0;
-    let success = 0;
+  // 体脂肪データの処理
+  const processedBodyFatData = useMemo(() => {
+    return weightRecords
+      .map((record, index) => {
+        const dateTime = `${record.date}T${record.time}`;
+        let timestamp = new Date(dateTime).getTime();
+        
+        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
+        const duplicateCount = weightRecords.filter((r, i) => 
+          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
+        ).length;
+        if (duplicateCount > 0) {
+          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
+        }
+        
+        return {
+          ...record,
+          dateTime,
+          timestamp,
+          bodyFat: record.bodyFat ?? null,
+          waist: record.waist ?? null,
+        };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
+  }, [weightRecords]);
+  
+  // 血圧データの処理
+  const processedBpData = useMemo(() => {
+    console.log('useGraphData: Processing BP records:', bpRecords.length);
+    return bpRecords
+      .map((record, index) => {
+        const dateTime = `${record.date}T${record.time}`;
+        let timestamp = new Date(dateTime).getTime();
+        
+        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
+        const duplicateCount = bpRecords.filter((r, i) => 
+          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
+        ).length;
+        if (duplicateCount > 0) {
+          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
+        }
+        
+        return {
+          ...record,
+          dateTime,
+          timestamp,
+          systolic: record.systolic,
+          diastolic: record.diastolic,
+          pulse: record.heartRate || 0, // heartRate プロパティを pulse として使用
+          excluded: record.excludeFromGraph || false,
+        };
+      })
+      .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
+  }, [bpRecords]);
+  
+  // 統合された最新日付
+  const latestDate = useMemo(() => {
+    const allDates = [
+      ...processedWeightData.map(r => r.date),
+      ...processedBpData.map(r => r.date),
+    ];
+    return allDates.length > 0 ? allDates.sort().reverse()[0] : null;
+  }, [processedWeightData, processedBpData]);
+  
+  // 期間内のデータ取得
+  const getDataInPeriod = useCallback((days: number) => {
+    if (!latestDate) return { weight: [], bp: [] };
     
-    dateList.forEach(date => {
-      const rec = dailyRecords.find(r => r.fieldId === fieldId && r.date === date);
-      if (rec && (rec.value === 1 || rec.value === 0)) {
-        total++;
-        if (rec.value === 1) success++;
-      }
-    });
+    const endDate = new Date(latestDate);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days + 1);
+    
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
     
     return {
-      total,
-      success,
-      percent: total > 0 ? Math.round((success / total) * 100) : 0,
+      weight: processedWeightData.filter(r => r.date >= startDateStr && r.date <= endDateStr),
+      bp: processedBpData.filter(r => r.date >= startDateStr && r.date <= endDateStr),
     };
-  }, [dailyRecords, getPeriodDateList]);
+  }, [latestDate, processedWeightData, processedBpData]);
   
-  // 全体のローディング状態
-  const isLoading = loading.global || loading.weight || loading.daily || bpLoading;
+  // 日課データの処理
+  const processedDailyData = useMemo(() => {
+    return dailyRecords.map(record => ({
+      fieldId: record.fieldId,
+      date: record.date,
+      value: record.value,
+      achieved: record.value === 1,
+    }));
+  }, [dailyRecords]);
   
-  // 全体のエラー状態 
-  const error = errors.weight?.message || errors.daily?.message || bpError || null;
+  // 日課統計の取得
+  const getDailyStats = useCallback((fieldId: string, days: number) => {
+    if (!latestDate) return { total: 0, achieved: 0, rate: 0 };
+    
+    const endDate = new Date(latestDate);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days + 1);
+    
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    
+    const filteredData = processedDailyData.filter(
+      r => r.fieldId === fieldId && r.date >= startDateStr && r.date <= endDateStr
+    );
+    
+    const achieved = filteredData.filter(r => r.achieved).length;
+    const total = filteredData.length;
+    const rate = total > 0 ? (achieved / total) * 100 : 0;
+    
+    return { total, achieved, rate };
+  }, [latestDate, processedDailyData]);
   
-  // データ再取得関数
-  const refetch = useCallback(() => {
-    loadAllData();
-    loadGoal();
-    loadBpData();
-  }, [loadBpData]); // eslint-disable-line react-hooks/exhaustive-deps
+  // データのリフレッシュ
+  const refreshData = useCallback(() => {
+    loadAllDataWithBp();
+  }, [loadAllDataWithBp]);
+  
+  // RecordGraph.tsx に必要な追加メソッド
+  const getFilteredData = useCallback((period: number, showExcluded: boolean) => {
+    const data = getDataInPeriod(period);
+    const filteredData = showExcluded ? data.weight : data.weight.filter(r => !r.excluded);
+    console.log('getFilteredData: period=', period, 'showExcluded=', showExcluded, 'data.weight=', data.weight.length, 'filtered=', filteredData.length);
+    return filteredData;
+  }, [getDataInPeriod]);
+  
+  const getFilteredBpData = useCallback((period: number, showExcluded: boolean) => {
+    const data = getDataInPeriod(period);
+    return showExcluded ? data.bp : data.bp.filter(r => !r.excluded);
+  }, [getDataInPeriod]);
+  
+  const getFilteredBodyCompositionData = useCallback((period: number, showExcluded: boolean) => {
+    const data = getDataInPeriod(period);
+    // 期間内のデータを使用し、除外フラグも考慮
+    const periodData = processedBodyFatData.filter(r => {
+      if (!latestDate) return false;
+      const endDate = new Date(latestDate);
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - period + 1);
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      return r.date >= startDateStr && r.date <= endDateStr;
+    });
+    return showExcluded ? periodData : periodData.filter(r => !r.excludeFromGraph);
+  }, [processedBodyFatData, latestDate]);
+  
+  const getStatusStats = useCallback((fieldId: string, period: number) => {
+    return getDailyStats(fieldId, period);
+  }, [getDailyStats]);
   
   return {
     // データ
-    weightRecords,
-    bpRecords,
-    dailyRecords,
+    weightRecords: processedWeightData,
+    bpRecords: processedBpData,
+    dailyRecords: processedDailyData,
     goal,
-    latestTimestamp,
     
     // 状態
     isLoading,
-    error,
+    hasError,
+    error: hasError ? 'データの取得に失敗しました' : null,
+    errors: { weight: errors.weight, daily: errors.daily, bp: bpError, global: errors.global },
     
-    // 計算済みデータ取得関数
+    // 処理されたデータ
+    latestDate,
+    getDataInPeriod,
+    getDailyStats,
+    
+    // RecordGraph.tsx用の追加メソッド
     getFilteredData,
     getFilteredBpData,
     getFilteredBodyCompositionData,
-    getPeriodDateList,
     getStatusStats,
     
-    // 操作
-    refetch,
+    // アクション
+    loadAllData: loadAllDataWithBp,
+    refreshData,
   };
 }

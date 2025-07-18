@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { observer } from 'mobx-react-lite';
 import {
   HiCheckCircle,
   HiExclamationTriangle,
@@ -6,9 +7,9 @@ import {
   HiXCircle,
   HiXMark,
 } from 'react-icons/hi2';
-import { ToastType, useToastStore } from '../store/toast';
+import { ToastType, useToastStore } from '../store/toast.mobx';
 
-const ToastContainer: React.FC = () => {
+const ToastContainer: React.FC = observer(() => {
   const { toasts, removeToast } = useToastStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +134,6 @@ const ToastContainer: React.FC = () => {
       ))}
     </div>
   );
-};
+});
 
 export default ToastContainer;

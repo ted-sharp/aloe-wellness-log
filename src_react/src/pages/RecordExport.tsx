@@ -1,4 +1,5 @@
 import { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiChartBarSquare } from 'react-icons/hi2';
 import {
   ErrorMessage,
@@ -18,7 +19,7 @@ interface RecordExportProps {
   showTipsModal?: () => void;
 }
 
-const RecordExport = memo(function RecordExport({
+const RecordExport = memo(observer(function RecordExport({
   showTipsModal,
 }: RecordExportProps) {
   useRenderPerformance('RecordExport');
@@ -230,6 +231,6 @@ const RecordExport = memo(function RecordExport({
       </div>
     </div>
   );
-});
+}));
 
 export default RecordExport;

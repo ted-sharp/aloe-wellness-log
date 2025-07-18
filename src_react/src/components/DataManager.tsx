@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 import { HiExclamationTriangle, HiTrash } from 'react-icons/hi2';
-import { useRecordsStore } from '../store/records';
+import { useRecordsStore } from '../store/records.mobx';
 import Button from './Button';
 import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 

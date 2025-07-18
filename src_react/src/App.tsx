@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
 import './App.css';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
@@ -10,7 +11,7 @@ import DailyRecord from './pages/DailyRecord';
 import GoalInput from './pages/GoalInput';
 import RecordGraph from './pages/RecordGraph';
 import WeightRecord from './pages/WeightRecord';
-import { useRecordsStore } from './store/records';
+import { useRecordsStore } from './store/records.mobx';
 import { isDev } from './utils/devTools';
 import * as db from './db';
 
@@ -405,4 +406,4 @@ function App() {
   );
 }
 
-export default App;
+export default observer(App);

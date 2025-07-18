@@ -121,7 +121,7 @@ export default defineConfig(({ mode, command }) => {
             'icons-vendor': ['react-icons'],
 
             // State management関連を別チャンクに分離
-            'state-vendor': ['zustand'],
+            'state-vendor': ['mobx', 'mobx-react-lite'],
           },
         },
       },
@@ -155,7 +155,8 @@ export default defineConfig(({ mode, command }) => {
         'react',
         'react-dom',
         'react-router-dom',
-        'zustand',
+        'mobx',
+        'mobx-react-lite',
         'recharts',
         'react-calendar',
         '@headlessui/react',

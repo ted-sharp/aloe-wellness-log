@@ -5,7 +5,7 @@ import {
   useHeightValidation, 
   useWeightValidation 
 } from '../useNumericValidation';
-import { useGoalStore } from '../../store/goal';
+import { useGoalStore } from '../../store/goal.mobx';
 
 /**
  * 目標入力のビジネスロジックを管理するカスタムHook

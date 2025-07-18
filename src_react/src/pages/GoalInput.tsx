@@ -1,3 +1,4 @@
+import { observer } from 'mobx-react-lite';
 import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
@@ -60,7 +61,7 @@ const genderOptions = [
 ];
 
 
-export default function GoalInput() {
+export default observer(function GoalInput() {
   const {
     // フォーム状態
     gender,
@@ -491,4 +492,4 @@ export default function GoalInput() {
       </form>
     </div>
   );
-}
+});

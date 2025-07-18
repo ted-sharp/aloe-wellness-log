@@ -10,6 +10,7 @@ import {
   useRole,
 } from '@floating-ui/react';
 import React, { useCallback, useMemo, useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
@@ -23,7 +24,7 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
-import { useGoalStore } from '../store/goal';
+import { useGoalStore } from '../store/goal.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
@@ -471,4 +472,4 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   );
 };
 
-export default WeightRecord;
+export default observer(WeightRecord);
