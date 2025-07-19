@@ -5,7 +5,7 @@ import {
   useHeightValidation, 
   useWeightValidation 
 } from '../useNumericValidation';
-import { useGoalStore } from '../../store/goal';
+import { useGoalStore } from '../../store/goal.mobx';
 
 /**
  * 目標入力のビジネスロジックを管理するカスタムHook
@@ -141,7 +141,7 @@ export const useGoalInputLogic = () => {
       setHeight(goal.height ? goal.height.toString() : '');
       setStartWeight(goal.startWeight ? goal.startWeight.toString() : '');
       setTargetStart(goal.targetStart || '');
-      setTargetEnd(goal.targetEnd || '');
+      setTargetEnd(goal.targetEnd || goal.targetDate || ''); // 互換性のため
       setTargetWeight(goal.targetWeight.toString());
       setExerciseGoal(goal.exerciseGoal || '');
       setDietGoal(goal.dietGoal || '');
@@ -172,6 +172,7 @@ export const useGoalInputLogic = () => {
         startWeight: Number(startWeight),
         targetStart,
         targetEnd,
+        targetDate: targetEnd, // 互換性のために追加
         targetWeight: Number(targetWeight),
         exerciseGoal,
         dietGoal,

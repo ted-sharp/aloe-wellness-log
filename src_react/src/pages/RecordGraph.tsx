@@ -68,29 +68,38 @@ const RecordGraph: React.FC = () => {
   // 期間に応じたデータを抽出
   const data = useMemo(() => {
     console.log('RecordGraph: data useMemo triggered');
+    const days = PERIODS[periodIdx].days;
     if (graphType === 'weight') {
-      return getFilteredData(periodIdx, showExcluded);
+      return getFilteredData(days || 9999, showExcluded);
     } else if (graphType === 'bloodPressure') {
       // 血圧データの場合は収縮期・拡張期の両方を含む
-      const bloodPressureData = getFilteredBpData(periodIdx, 'systolic', showExcluded);
+      const bloodPressureData = getFilteredBpData(days || 9999, showExcluded);
       return bloodPressureData;
     } else {
       // 体脂肪率・腹囲データの場合
-      return getFilteredBodyCompositionData(periodIdx);
+      return getFilteredBodyCompositionData(days || 9999, showExcluded);
     }
-  }, [getFilteredData, getFilteredBpData, getFilteredBodyCompositionData, periodIdx, showExcluded, graphType]);
+  }, [periodIdx, showExcluded, graphType]); // 関数を依存配列から削除（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
     console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
     return graphCalculations.calculateDayStartLines(data);
-  }, [data, graphCalculations]);
+  }, [data]); // graphCalculationsを依存配列から削除（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // X軸domain（日単位で固定）
   const xAxisDomain = useMemo(() => {
     if (!data.length) return ['auto', 'auto'];
-    const start = new Date(data[0].timestamp);
-    const end = new Date(data[data.length - 1].timestamp);
+    
+    // 全データの最小・最大タイムスタンプを取得
+    const timestamps = data.map(d => d.timestamp);
+    const minTimestamp = Math.min(...timestamps);
+    const maxTimestamp = Math.max(...timestamps);
+    
+    const start = new Date(minTimestamp);
+    const end = new Date(maxTimestamp);
     start.setHours(0, 0, 0, 0);
     end.setHours(23, 59, 59, 999);
     return [start.getTime(), end.getTime()];
@@ -719,9 +728,9 @@ const RecordGraph: React.FC = () => {
                 data={data}
                 stroke="#38bdf8"
                 strokeWidth={3}
-                dot={({ cx, cy, payload }) => (
+                dot={({ cx, cy, payload, index }) => (
                   <circle
-                    key={payload?.timestamp ?? `${cx}-${cy}`}
+                    key={`weight-dot-${payload?.id || index}`}
                     cx={cx}
                     cy={cy}
                     r={4}
@@ -742,9 +751,9 @@ const RecordGraph: React.FC = () => {
                   data={data}
                   stroke="#ef4444"
                   strokeWidth={3}
-                  dot={({ cx, cy, payload }) => (
+                  dot={({ cx, cy, payload, index }) => (
                     <circle
-                      key={payload?.timestamp ?? `${cx}-${cy}`}
+                      key={`systolic-dot-${payload?.id || index}`}
                       cx={cx}
                       cy={cy}
                       r={4}
@@ -763,9 +772,9 @@ const RecordGraph: React.FC = () => {
                   data={data}
                   stroke="#3b82f6"
                   strokeWidth={3}
-                  dot={({ cx, cy, payload }) => (
+                  dot={({ cx, cy, payload, index }) => (
                     <circle
-                      key={payload?.timestamp ?? `${cx}-${cy}`}
+                      key={`diastolic-dot-${payload?.id || index}`}
                       cx={cx}
                       cy={cy}
                       r={4}
@@ -833,7 +842,7 @@ const RecordGraph: React.FC = () => {
       {graphType === 'weight' && (
         <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
         {(['exercise', 'meal', 'sleep'] as const).map(key => {
-          const stats = getStatusStats(key, periodIdx);
+          const stats = getStatusStats(key, PERIODS[periodIdx].days || 9999);
           let goalText = '';
           if (goal) {
             if (key === 'exercise' && goal.exerciseGoal)
@@ -871,7 +880,7 @@ const RecordGraph: React.FC = () => {
               </span>
               <span className="inline-block min-w-[7em]">
                 {stats.total > 0
-                  ? `${stats.percent}% (${stats.success}/${stats.total}日)`
+                  ? `${stats.rate.toFixed(0)}% (${stats.achieved}/${stats.total}日)`
                   : '記録なし'}
               </span>
               {goalText && (

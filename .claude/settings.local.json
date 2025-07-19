@@ -21,7 +21,8 @@
       "Bash(yarn test:*)",
       "Bash(tsc --noEmit)",
       "Bash(yarn lint:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(yarn install)"
     ],
     "deny": []
   }

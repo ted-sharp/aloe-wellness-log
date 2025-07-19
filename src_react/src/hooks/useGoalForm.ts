@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useGoalStore } from '../store/goal';
+import { useGoalStore } from '../store/goal.mobx';
 import { getAllWeightRecords } from '../db';
 import type { GoalData } from '../types/goal';
 import type { WeightRecordV2 } from '../types/record';

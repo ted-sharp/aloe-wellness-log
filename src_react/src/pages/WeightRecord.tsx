@@ -10,6 +10,7 @@ import {
   useRole,
 } from '@floating-ui/react';
 import React, { useCallback, useMemo, useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
@@ -23,7 +24,7 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
-import { useGoalStore } from '../store/goal';
+import { useGoalStore } from '../store/goal.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
@@ -165,12 +166,28 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     return weightLogic.calculateLowestWeight(recordsOfDay);
   }, [recordsOfDay, weightLogic]);
 
+  // BMI計算（reactive context内で実行）
+  const currentBMI = useMemo(() => {
+    if (!lowestWeightOfDay || !goal || !goal.height) return null;
+    return weightLogic.calculateBMI(lowestWeightOfDay, goal.height);
+  }, [lowestWeightOfDay, goal, weightLogic]);
+
+  // 体重変化計算（reactive context内で実行）
+  const weightChange = useMemo(() => {
+    if (!lowestWeightOfDay || !goal || !goal.startWeight) return null;
+    return weightLogic.calculateWeightChange(lowestWeightOfDay, goal.startWeight);
+  }, [lowestWeightOfDay, goal, weightLogic]);
+
   // goal（身長など）が未ロードなら自動でロード
+  // goalの有無とheightの有無を分離して監視
+  const hasGoal = !!goal;
+  const hasHeight = goal?.height ? true : false;
+  
   React.useEffect(() => {
-    if (!goal || !goal.height) {
+    if (!hasGoal || !hasHeight) {
       loadGoal();
     }
-  }, [goal, loadGoal]);
+  }, [hasGoal, hasHeight, loadGoal]);
 
   // いずれかのフィールドが入力されているかチェック
   const hasAnyData = weightLogic.hasRecordData(formData);
@@ -216,12 +233,12 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                 aria-label="入力済み"
               />
               {/* BMI値を横に表示 */}
-              {lowestWeightOfDay && goal && goal.height && (
+              {currentBMI !== null && (
                 <span className="ml-3 text-base font-semibold text-blue-700 dark:text-blue-200 align-middle">
-                  BMI {weightLogic.calculateBMI(lowestWeightOfDay, goal.height).toFixed(1)}
-                  {goal.startWeight && weightLogic.calculateWeightChange(lowestWeightOfDay, goal.startWeight) < 0 && (
+                  BMI {currentBMI.toFixed(1)}
+                  {weightChange !== null && weightChange < 0 && (
                     <span className="ml-2 text-base font-semibold text-green-600 dark:text-green-400">
-                      🏆{weightLogic.calculateWeightChange(lowestWeightOfDay, goal.startWeight).toFixed(1)}kg
+                      🏆{weightChange.toFixed(1)}kg
                     </span>
                   )}
                 </span>
@@ -471,4 +488,4 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   );
 };
 
-export default WeightRecord;
+export default observer(WeightRecord);

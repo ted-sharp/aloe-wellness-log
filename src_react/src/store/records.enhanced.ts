@@ -1,6 +1,9 @@
-import { create } from 'zustand';
+import { makeAutoObservable, runInAction, computed } from 'mobx';
 import { 
-  weightRecordRepository,
+  getAllWeightRecords,
+  addWeightRecord,
+  updateWeightRecord,
+  deleteWeightRecord,
   getAllDailyRecords,
   getAllBpRecords,
   getAllDailyFields,
@@ -46,556 +49,465 @@ interface CacheInfo {
 }
 
 /**
- * 拡張レコードストアの状態定義
- */
-export interface EnhancedRecordsState {
-  // === データ ===
-  weightRecords: WeightRecordV2[];
-  dailyRecords: DailyRecordV2[];
-  bpRecords: BpRecordV2[];
-  dailyFields: DailyFieldV2[];
-  
-  // === 状態管理 ===
-  loading: LoadingState;
-  errors: ErrorState;
-  cache: { [K in RecordType]: CacheInfo };
-  
-  // === データ取得アクション ===
-  loadWeightRecords: () => Promise<void>;
-  loadDailyRecords: () => Promise<void>;
-  loadBpRecords: () => Promise<void>;
-  loadDailyFields: () => Promise<void>;
-  loadAllData: () => Promise<void>;
-  
-  // === データ操作アクション ===
-  addWeightRecord: (record: Omit<WeightRecordV2, 'id'>) => Promise<WeightRecordV2 | null>;
-  updateWeightRecord: (record: WeightRecordV2) => Promise<boolean>;
-  deleteWeightRecord: (id: string) => Promise<boolean>;
-  
-  // TODO: 他のレコードタイプのCRUD操作も追加予定
-  
-  // === 全データ操作 ===
-  deleteAllData: () => Promise<void>;
-  refreshAllData: () => Promise<void>;
-  
-  // === エラー管理 ===
-  clearError: (type: RecordType | 'global') => void;
-  clearAllErrors: () => void;
-  
-  // === セレクター（計算されたプロパティ） ===
-  getRecordsOfDay: (date: string, type: 'weight' | 'daily' | 'bp') => any[];
-  isRecorded: (date: string, type: 'weight' | 'daily' | 'bp') => boolean;
-  getWeightRecordsForGraph: () => WeightRecordV2[];
-  getLatestWeightRecord: () => WeightRecordV2 | null;
-  getRecordStats: () => {
-    weightCount: number;
-    dailyCount: number;
-    bpCount: number;
-    fieldsCount: number;
-    totalCount: number;
-  };
-}
-
-/**
- * キャッシュの有効期限（5分）
- */
-const CACHE_DURATION = 5 * 60 * 1000;
-
-/**
- * エラーヘルパー関数
- */
-const createDbError = (error: unknown, defaultMessage: string): DbError => {
-  if (error instanceof DbError) {
-    return error;
-  }
-  return new DbError(
-    DbErrorType.UNKNOWN,
-    defaultMessage,
-    error
-  );
-};
-
-/**
- * 拡張レコードストア
+ * 拡張レコードストア（MobX版）
  * 全記録データの一元管理、キャッシュ、最適化を提供
  */
-export const useEnhancedRecordsStore = create<EnhancedRecordsState>((set, get) => ({
-  // === 初期状態 ===
-  weightRecords: [],
-  dailyRecords: [],
-  bpRecords: [],
-  dailyFields: [],
+export class EnhancedRecordsStore {
+  // === データ ===
+  weightRecords: WeightRecordV2[] = [];
+  dailyRecords: DailyRecordV2[] = [];
+  bpRecords: BpRecordV2[] = [];
+  dailyFields: DailyFieldV2[] = [];
   
-  loading: {
+  // === 状態管理 ===
+  loading: LoadingState = {
     weight: false,
     daily: false,
     bp: false,
     fields: false,
     global: false,
-  },
+  };
   
-  errors: {
+  errors: ErrorState = {
     weight: null,
     daily: null,
     bp: null,
     fields: null,
     global: null,
-  },
+  };
   
-  cache: {
-    weight: { lastUpdated: null, isStale: true },
-    daily: { lastUpdated: null, isStale: true },
-    bp: { lastUpdated: null, isStale: true },
-    fields: { lastUpdated: null, isStale: true },
-  },
+  cache: { [K in RecordType]: CacheInfo } = {
+    weight: { lastUpdated: null, isStale: false },
+    daily: { lastUpdated: null, isStale: false },
+    bp: { lastUpdated: null, isStale: false },
+    fields: { lastUpdated: null, isStale: false },
+  };
+  
+  // キャッシュ有効期限（5分）
+  private readonly CACHE_DURATION = 5 * 60 * 1000;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+  
+  // === Computed Values ===
+  
+  get recordStats() {
+    return computed(() => ({
+      weightCount: this.weightRecords.length,
+      dailyCount: this.dailyRecords.length,
+      bpCount: this.bpRecords.length,
+      fieldsCount: this.dailyFields.length,
+      totalCount: this.weightRecords.length + this.dailyRecords.length + this.bpRecords.length,
+    })).get();
+  }
+  
+  get latestWeightRecord(): WeightRecordV2 | null {
+    return computed(() => {
+      if (this.weightRecords.length === 0) return null;
+      return this.weightRecords
+        .slice()
+        .sort((a, b) => {
+          const dateCompare = b.date.localeCompare(a.date);
+          if (dateCompare !== 0) return dateCompare;
+          return b.time.localeCompare(a.time);
+        })[0];
+    }).get();
+  }
+  
+  get weightRecordsForGraph(): WeightRecordV2[] {
+    return computed(() => {
+      return this.weightRecords
+        .filter(record => !record.excludeFromGraph)
+        .sort((a, b) => {
+          const dateCompare = a.date.localeCompare(b.date);
+          if (dateCompare !== 0) return dateCompare;
+          return a.time.localeCompare(b.time);
+        });
+    }).get();
+  }
+  
+  // === Private Methods ===
+  
+  private isStale(type: RecordType): boolean {
+    const cache = this.cache[type];
+    if (!cache.lastUpdated) return true;
+    
+    const now = new Date();
+    const elapsed = now.getTime() - cache.lastUpdated.getTime();
+    return elapsed > this.CACHE_DURATION;
+  }
+  
+  private updateCache(type: RecordType) {
+    this.cache[type] = {
+      lastUpdated: new Date(),
+      isStale: false,
+    };
+  }
+  
+  private setLoading(type: RecordType | 'global', loading: boolean) {
+    this.loading[type] = loading;
+  }
+  
+  private setError(type: RecordType | 'global', error: DbError | null) {
+    this.errors[type] = error;
+  }
   
   // === データ取得アクション ===
   
-  /**
-   * 体重記録の読み込み
-   */
-  loadWeightRecords: async () => {
-    const state = get();
-    
-    // 既にローディング中の場合はスキップ
-    if (state.loading.weight) return;
-    
-    // キャッシュが有効な場合はスキップ
-    const cache = state.cache.weight;
-    if (cache.lastUpdated && !cache.isStale && 
-        Date.now() - cache.lastUpdated.getTime() < CACHE_DURATION) {
+  loadWeightRecords = async (): Promise<void> => {
+    if (this.loading.weight || (!this.isStale('weight') && this.weightRecords.length > 0)) {
       return;
     }
     
-    set(state => ({
-      loading: { ...state.loading, weight: true },
-      errors: { ...state.errors, weight: null },
-    }));
+    this.setLoading('weight', true);
+    this.setError('weight', null);
     
     try {
-      const result = await weightRecordRepository.getAll();
-      
-      if (result.success && result.data) {
-        set(state => ({
-          weightRecords: result.data || [],
-          loading: { ...state.loading, weight: false },
-          cache: {
-            ...state.cache,
-            weight: { lastUpdated: new Date(), isStale: false },
-          },
-        }));
-      } else {
-        throw new Error(result.error || 'Failed to load weight records');
-      }
+      const records = await getAllWeightRecords();
+      runInAction(() => {
+        this.weightRecords = records;
+        this.updateCache('weight');
+      });
     } catch (error) {
-      const dbError = createDbError(error, '体重記録の読み込みに失敗しました');
-      set(state => ({
-        loading: { ...state.loading, weight: false },
-        errors: { ...state.errors, weight: dbError },
-        cache: {
-          ...state.cache,
-          weight: { ...state.cache.weight, isStale: true },
-        },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to load weight records', error);
+      
+      runInAction(() => {
+        this.setError('weight', dbError);
+      });
+    } finally {
+      runInAction(() => {
+        this.setLoading('weight', false);
+      });
     }
-  },
+  };
   
-  /**
-   * 日課記録の読み込み
-   */
-  loadDailyRecords: async () => {
-    const state = get();
-    if (state.loading.daily) return;
-    
-    const cache = state.cache.daily;
-    if (cache.lastUpdated && !cache.isStale && 
-        Date.now() - cache.lastUpdated.getTime() < CACHE_DURATION) {
+  loadDailyRecords = async (): Promise<void> => {
+    if (this.loading.daily || (!this.isStale('daily') && this.dailyRecords.length > 0)) {
       return;
     }
     
-    set(state => ({
-      loading: { ...state.loading, daily: true },
-      errors: { ...state.errors, daily: null },
-    }));
+    this.setLoading('daily', true);
+    this.setError('daily', null);
     
     try {
       const records = await getAllDailyRecords();
-      
-      set(state => ({
-        dailyRecords: records,
-        loading: { ...state.loading, daily: false },
-        cache: {
-          ...state.cache,
-          daily: { lastUpdated: new Date(), isStale: false },
-        },
-      }));
+      runInAction(() => {
+        this.dailyRecords = records;
+        this.updateCache('daily');
+      });
     } catch (error) {
-      const dbError = createDbError(error, '日課記録の読み込みに失敗しました');
-      set(state => ({
-        loading: { ...state.loading, daily: false },
-        errors: { ...state.errors, daily: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to load daily records', error);
+      
+      runInAction(() => {
+        this.setError('daily', dbError);
+      });
+    } finally {
+      runInAction(() => {
+        this.setLoading('daily', false);
+      });
     }
-  },
+  };
   
-  /**
-   * 血圧記録の読み込み
-   */
-  loadBpRecords: async () => {
-    const state = get();
-    if (state.loading.bp) return;
-    
-    const cache = state.cache.bp;
-    if (cache.lastUpdated && !cache.isStale && 
-        Date.now() - cache.lastUpdated.getTime() < CACHE_DURATION) {
+  loadBpRecords = async (): Promise<void> => {
+    if (this.loading.bp || (!this.isStale('bp') && this.bpRecords.length > 0)) {
       return;
     }
     
-    set(state => ({
-      loading: { ...state.loading, bp: true },
-      errors: { ...state.errors, bp: null },
-    }));
+    this.setLoading('bp', true);
+    this.setError('bp', null);
     
     try {
       const records = await getAllBpRecords();
-      
-      set(state => ({
-        bpRecords: records,
-        loading: { ...state.loading, bp: false },
-        cache: {
-          ...state.cache,
-          bp: { lastUpdated: new Date(), isStale: false },
-        },
-      }));
+      runInAction(() => {
+        this.bpRecords = records;
+        this.updateCache('bp');
+      });
     } catch (error) {
-      const dbError = createDbError(error, '血圧記録の読み込みに失敗しました');
-      set(state => ({
-        loading: { ...state.loading, bp: false },
-        errors: { ...state.errors, bp: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to load bp records', error);
+      
+      runInAction(() => {
+        this.setError('bp', dbError);
+      });
+    } finally {
+      runInAction(() => {
+        this.setLoading('bp', false);
+      });
     }
-  },
+  };
   
-  /**
-   * 日課フィールドの読み込み
-   */
-  loadDailyFields: async () => {
-    const state = get();
-    if (state.loading.fields) return;
-    
-    const cache = state.cache.fields;
-    if (cache.lastUpdated && !cache.isStale && 
-        Date.now() - cache.lastUpdated.getTime() < CACHE_DURATION) {
+  loadDailyFields = async (): Promise<void> => {
+    if (this.loading.fields || (!this.isStale('fields') && this.dailyFields.length > 0)) {
       return;
     }
     
-    set(state => ({
-      loading: { ...state.loading, fields: true },
-      errors: { ...state.errors, fields: null },
-    }));
+    this.setLoading('fields', true);
+    this.setError('fields', null);
     
     try {
       const fields = await getAllDailyFields();
-      
-      set(state => ({
-        dailyFields: fields,
-        loading: { ...state.loading, fields: false },
-        cache: {
-          ...state.cache,
-          fields: { lastUpdated: new Date(), isStale: false },
-        },
-      }));
+      runInAction(() => {
+        this.dailyFields = fields;
+        this.updateCache('fields');
+      });
     } catch (error) {
-      const dbError = createDbError(error, '日課フィールドの読み込みに失敗しました');
-      set(state => ({
-        loading: { ...state.loading, fields: false },
-        errors: { ...state.errors, fields: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to load daily fields', error);
+      
+      runInAction(() => {
+        this.setError('fields', dbError);
+      });
+    } finally {
+      runInAction(() => {
+        this.setLoading('fields', false);
+      });
     }
-  },
+  };
   
-  /**
-   * 全データの読み込み
-   */
-  loadAllData: async () => {
-    const state = get();
-    if (state.loading.global) return;
-    
-    set(state => ({
-      loading: { ...state.loading, global: true },
-      errors: { ...state.errors, global: null },
-    }));
+  loadAllData = async (): Promise<void> => {
+    this.setLoading('global', true);
+    this.setError('global', null);
     
     try {
       await Promise.all([
-        get().loadWeightRecords(),
-        get().loadDailyRecords(),
-        get().loadBpRecords(),
-        get().loadDailyFields(),
+        this.loadWeightRecords(),
+        this.loadDailyRecords(),
+        this.loadBpRecords(),
+        this.loadDailyFields(),
       ]);
-      
-      set(state => ({
-        loading: { ...state.loading, global: false },
-      }));
     } catch (error) {
-      const dbError = createDbError(error, '全データの読み込みに失敗しました');
-      set(state => ({
-        loading: { ...state.loading, global: false },
-        errors: { ...state.errors, global: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to load all data', error);
+      
+      runInAction(() => {
+        this.setError('global', dbError);
+      });
+    } finally {
+      runInAction(() => {
+        this.setLoading('global', false);
+      });
     }
-  },
+  };
   
   // === データ操作アクション ===
   
-  /**
-   * 体重記録の追加
-   */
-  addWeightRecord: async (recordData: Omit<WeightRecordV2, 'id'>) => {
+  addWeightRecord = async (record: Omit<WeightRecordV2, 'id'>): Promise<WeightRecordV2 | null> => {
     try {
-      const result = await weightRecordRepository.add(recordData);
-      
-      if (result.success && result.data) {
-        // ローカル状態を更新
-        set(state => ({
-          weightRecords: [...state.weightRecords, result.data!],
-          cache: {
-            ...state.cache,
-            weight: { lastUpdated: new Date(), isStale: false },
-          },
-        }));
-        
-        return result.data;
-      } else {
-        throw new Error(result.error || 'Failed to add weight record');
-      }
+      const newRecord = { ...record, id: `weight_${Date.now()}` } as WeightRecordV2;
+      await addWeightRecord(newRecord);
+      runInAction(() => {
+        this.weightRecords.push(newRecord);
+        this.updateCache('weight');
+      });
+      return newRecord;
     } catch (error) {
-      const dbError = createDbError(error, '体重記録の追加に失敗しました');
-      set(state => ({
-        errors: { ...state.errors, weight: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to add weight record', error);
+      
+      runInAction(() => {
+        this.setError('weight', dbError);
+      });
       return null;
     }
-  },
+  };
   
-  /**
-   * 体重記録の更新
-   */
-  updateWeightRecord: async (record: WeightRecordV2) => {
+  updateWeightRecord = async (record: WeightRecordV2): Promise<boolean> => {
     try {
-      const result = await weightRecordRepository.update(record);
-      
-      if (result.success) {
-        // ローカル状態を更新
-        set(state => ({
-          weightRecords: state.weightRecords.map(r => 
-            r.id === record.id ? record : r
-          ),
-          cache: {
-            ...state.cache,
-            weight: { lastUpdated: new Date(), isStale: false },
-          },
-        }));
-        
-        return true;
-      } else {
-        throw new Error(result.error || 'Failed to update weight record');
-      }
+      await updateWeightRecord(record);
+      runInAction(() => {
+        const index = this.weightRecords.findIndex(r => r.id === record.id);
+        if (index !== -1) {
+          this.weightRecords[index] = record;
+          this.updateCache('weight');
+        }
+      });
+      return true;
     } catch (error) {
-      const dbError = createDbError(error, '体重記録の更新に失敗しました');
-      set(state => ({
-        errors: { ...state.errors, weight: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to update weight record', error);
+      
+      runInAction(() => {
+        this.setError('weight', dbError);
+      });
       return false;
     }
-  },
+  };
   
-  /**
-   * 体重記録の削除
-   */
-  deleteWeightRecord: async (id: string) => {
+  deleteWeightRecord = async (id: string): Promise<boolean> => {
     try {
-      const result = await weightRecordRepository.delete(id);
-      
-      if (result.success) {
-        // ローカル状態を更新
-        set(state => ({
-          weightRecords: state.weightRecords.filter(r => r.id !== id),
-          cache: {
-            ...state.cache,
-            weight: { lastUpdated: new Date(), isStale: false },
-          },
-        }));
-        
-        return true;
-      } else {
-        throw new Error(result.error || 'Failed to delete weight record');
-      }
+      await deleteWeightRecord(id);
+      runInAction(() => {
+        this.weightRecords = this.weightRecords.filter(r => r.id !== id);
+        this.updateCache('weight');
+      });
+      return true;
     } catch (error) {
-      const dbError = createDbError(error, '体重記録の削除に失敗しました');
-      set(state => ({
-        errors: { ...state.errors, weight: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to delete weight record', error);
+      
+      runInAction(() => {
+        this.setError('weight', dbError);
+      });
       return false;
     }
-  },
+  };
   
   // === 全データ操作 ===
   
-  /**
-   * 全データの削除
-   */
-  deleteAllData: async () => {
-    set(state => ({
-      loading: { ...state.loading, global: true },
-      errors: { ...state.errors, global: null },
-    }));
+  deleteAllData = async (): Promise<void> => {
+    this.setLoading('global', true);
+    this.setError('global', null);
     
     try {
       await deleteAllData();
-      
-      // 全データをクリア
-      set({
-        weightRecords: [],
-        dailyRecords: [],
-        bpRecords: [],
-        dailyFields: [],
-        loading: {
-          weight: false,
-          daily: false,
-          bp: false,
-          fields: false,
-          global: false,
-        },
-        errors: {
-          weight: null,
-          daily: null,
-          bp: null,
-          fields: null,
-          global: null,
-        },
-        cache: {
-          weight: { lastUpdated: new Date(), isStale: false },
-          daily: { lastUpdated: new Date(), isStale: false },
-          bp: { lastUpdated: new Date(), isStale: false },
-          fields: { lastUpdated: new Date(), isStale: false },
-        },
+      runInAction(() => {
+        this.weightRecords = [];
+        this.dailyRecords = [];
+        this.bpRecords = [];
+        this.dailyFields = [];
+        
+        // キャッシュをクリア
+        Object.keys(this.cache).forEach(key => {
+          this.cache[key as RecordType] = { lastUpdated: null, isStale: false };
+        });
       });
     } catch (error) {
-      const dbError = createDbError(error, '全データ削除に失敗しました');
-      set(state => ({
-        loading: { ...state.loading, global: false },
-        errors: { ...state.errors, global: dbError },
-      }));
+      const dbError = error instanceof DbError 
+        ? error 
+        : new DbError(DbErrorType.UNKNOWN, 'Failed to delete all data', error);
+      
+      runInAction(() => {
+        this.setError('global', dbError);
+      });
       throw error;
+    } finally {
+      runInAction(() => {
+        this.setLoading('global', false);
+      });
     }
-  },
+  };
   
-  /**
-   * 全データの再読み込み
-   */
-  refreshAllData: async () => {
+  refreshAllData = async (): Promise<void> => {
     // キャッシュを無効化
-    set(state => ({
-      cache: {
-        weight: { ...state.cache.weight, isStale: true },
-        daily: { ...state.cache.daily, isStale: true },
-        bp: { ...state.cache.bp, isStale: true },
-        fields: { ...state.cache.fields, isStale: true },
-      },
-    }));
+    Object.keys(this.cache).forEach(key => {
+      this.cache[key as RecordType].isStale = true;
+    });
     
-    // 全データを再読み込み
-    await get().loadAllData();
-  },
+    await this.loadAllData();
+  };
   
   // === エラー管理 ===
   
-  clearError: (type: RecordType | 'global') => {
-    set(state => ({
-      errors: { ...state.errors, [type]: null },
-    }));
-  },
+  clearError = (type: RecordType | 'global'): void => {
+    this.setError(type, null);
+  };
   
-  clearAllErrors: () => {
-    set(() => ({
-      errors: {
-        weight: null,
-        daily: null,
-        bp: null,
-        fields: null,
-        global: null,
-      },
-    }));
-  },
+  clearAllErrors = (): void => {
+    Object.keys(this.errors).forEach(key => {
+      this.errors[key as keyof ErrorState] = null;
+    });
+  };
   
-  // === セレクター ===
+  // === セレクター（計算されたプロパティ） ===
   
-  getRecordsOfDay: (date: string, type: 'weight' | 'daily' | 'bp') => {
-    const state = get();
-    
+  getRecordsOfDay = (date: string, type: 'weight' | 'daily' | 'bp'): WeightRecordV2[] | DailyRecordV2[] | BpRecordV2[] => {
     switch (type) {
       case 'weight':
-        return state.weightRecords.filter(record => record.date === date);
+        return this.weightRecords.filter(record => record.date === date);
       case 'daily':
-        return state.dailyRecords.filter(record => record.date === date);
+        return this.dailyRecords.filter(record => record.date === date);
       case 'bp':
-        return state.bpRecords.filter(record => record.date === date);
+        return this.bpRecords.filter(record => record.date === date);
       default:
         return [];
     }
-  },
+  };
   
-  isRecorded: (date: string, type: 'weight' | 'daily' | 'bp') => {
-    return get().getRecordsOfDay(date, type).length > 0;
-  },
-  
-  getWeightRecordsForGraph: () => {
-    const state = get();
-    return state.weightRecords
-      .filter(record => !record.excludeFromGraph)
-      .sort((a, b) => a.date.localeCompare(b.date));
-  },
-  
-  getLatestWeightRecord: () => {
-    const state = get();
-    const sorted = state.weightRecords
-      .sort((a, b) => b.date.localeCompare(a.date));
-    return sorted[0] || null;
-  },
-  
-  getRecordStats: () => {
-    const state = get();
-    return {
-      weightCount: state.weightRecords.length,
-      dailyCount: state.dailyRecords.length,
-      bpCount: state.bpRecords.length,
-      fieldsCount: state.dailyFields.length,
-      totalCount: state.weightRecords.length + state.dailyRecords.length + state.bpRecords.length,
-    };
-  },
-}));
+  isRecorded = (date: string, type: 'weight' | 'daily' | 'bp'): boolean => {
+    return this.getRecordsOfDay(date, type).length > 0;
+  };
+}
+
+// シングルトンインスタンス
+export const enhancedRecordsStore = new EnhancedRecordsStore();
+
+// React Hook（既存のコンポーネントとの互換性のため）
+export const useEnhancedRecordsStore = () => {
+  return {
+    // データ
+    weightRecords: enhancedRecordsStore.weightRecords,
+    dailyRecords: enhancedRecordsStore.dailyRecords,
+    bpRecords: enhancedRecordsStore.bpRecords,
+    dailyFields: enhancedRecordsStore.dailyFields,
+    
+    // 状態
+    loading: enhancedRecordsStore.loading,
+    errors: enhancedRecordsStore.errors,
+    
+    // 計算されたプロパティ
+    recordStats: enhancedRecordsStore.recordStats,
+    latestWeightRecord: enhancedRecordsStore.latestWeightRecord,
+    weightRecordsForGraph: enhancedRecordsStore.weightRecordsForGraph,
+    
+    // データロード
+    loadWeightRecords: enhancedRecordsStore.loadWeightRecords,
+    loadDailyRecords: enhancedRecordsStore.loadDailyRecords,
+    loadBpRecords: enhancedRecordsStore.loadBpRecords,
+    loadDailyFields: enhancedRecordsStore.loadDailyFields,
+    loadAllData: enhancedRecordsStore.loadAllData,
+    
+    // データ操作
+    addWeightRecord: enhancedRecordsStore.addWeightRecord,
+    updateWeightRecord: enhancedRecordsStore.updateWeightRecord,
+    deleteWeightRecord: enhancedRecordsStore.deleteWeightRecord,
+    deleteAllData: enhancedRecordsStore.deleteAllData,
+    refreshAllData: enhancedRecordsStore.refreshAllData,
+    
+    // エラー管理
+    clearError: enhancedRecordsStore.clearError,
+    clearAllErrors: enhancedRecordsStore.clearAllErrors,
+    
+    // セレクター
+    getRecordsOfDay: enhancedRecordsStore.getRecordsOfDay,
+    isRecorded: enhancedRecordsStore.isRecorded,
+  };
+};
 
 /**
  * セレクター関数（パフォーマンス最適化用）
  */
 export const useRecordsSelectors = {
-  weightRecords: () => useEnhancedRecordsStore(state => state.weightRecords),
-  dailyRecords: () => useEnhancedRecordsStore(state => state.dailyRecords),
-  bpRecords: () => useEnhancedRecordsStore(state => state.bpRecords),
-  dailyFields: () => useEnhancedRecordsStore(state => state.dailyFields),
+  weightRecords: () => enhancedRecordsStore.weightRecords,
+  dailyRecords: () => enhancedRecordsStore.dailyRecords,
+  bpRecords: () => enhancedRecordsStore.bpRecords,
+  dailyFields: () => enhancedRecordsStore.dailyFields,
   
-  loading: () => useEnhancedRecordsStore(state => state.loading),
-  errors: () => useEnhancedRecordsStore(state => state.errors),
+  loading: () => enhancedRecordsStore.loading,
+  errors: () => enhancedRecordsStore.errors,
   
-  actions: () => useEnhancedRecordsStore(state => ({
-    loadWeightRecords: state.loadWeightRecords,
-    loadDailyRecords: state.loadDailyRecords,
-    loadBpRecords: state.loadBpRecords,
-    loadDailyFields: state.loadDailyFields,
-    loadAllData: state.loadAllData,
-    addWeightRecord: state.addWeightRecord,
-    updateWeightRecord: state.updateWeightRecord,
-    deleteWeightRecord: state.deleteWeightRecord,
-  })),
+  actions: () => ({
+    loadWeightRecords: enhancedRecordsStore.loadWeightRecords,
+    loadDailyRecords: enhancedRecordsStore.loadDailyRecords,
+    loadBpRecords: enhancedRecordsStore.loadBpRecords,
+    loadDailyFields: enhancedRecordsStore.loadDailyFields,
+    loadAllData: enhancedRecordsStore.loadAllData,
+    addWeightRecord: enhancedRecordsStore.addWeightRecord,
+    updateWeightRecord: enhancedRecordsStore.updateWeightRecord,
+    deleteWeightRecord: enhancedRecordsStore.deleteWeightRecord,
+    deleteAllData: enhancedRecordsStore.deleteAllData,
+    refreshAllData: enhancedRecordsStore.refreshAllData,
+    clearError: enhancedRecordsStore.clearError,
+    clearAllErrors: enhancedRecordsStore.clearAllErrors,
+  }),
 };
