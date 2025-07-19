@@ -5,6 +5,7 @@ describe('ToastStore (MobX)', () => {
   let store: ToastStore;
 
   beforeEach(() => {
+    vi.useRealTimers(); // 前回のテスト用のタイマーをリセット
     store = new ToastStore();
     vi.clearAllMocks();
     vi.useFakeTimers();

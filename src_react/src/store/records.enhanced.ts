@@ -126,6 +126,134 @@ export class EnhancedRecordsStore {
         });
     }).get();
   }
+
+  // 期間別データ取得の最適化（重要：MobXで管理）
+  getRecordsByDateRange = (startDate: string, endDate: string): WeightRecordV2[] => {
+    return computed(() => {
+      return this.weightRecords.filter(record => 
+        record.date >= startDate && record.date <= endDate
+      );
+    }).get();
+  };
+
+  // グラフ用の処理済みデータ（タイムスタンプ重複解決済み）
+  get processedWeightRecordsForGraph(): (WeightRecordV2 & { timestamp: number })[] {
+    return computed(() => {
+      const timestampCounts = new Map<number, number>();
+      
+      return this.weightRecords
+        .map((record) => {
+          const dateTime = `${record.date}T${record.time}`;
+          const baseTimestamp = new Date(dateTime).getTime();
+          
+          const currentCount = timestampCounts.get(baseTimestamp) || 0;
+          const uniqueTimestamp = baseTimestamp + currentCount;
+          timestampCounts.set(baseTimestamp, currentCount + 1);
+          
+          return {
+            ...record,
+            timestamp: uniqueTimestamp,
+          };
+        })
+        .sort((a, b) => a.timestamp - b.timestamp);
+    }).get();
+  }
+
+  // 血圧データの処理済みデータ（最適化版）
+  get processedBpRecordsForGraph(): (BpRecordV2 & { timestamp: number })[] {
+    return computed(() => {
+      const timestampCounts = new Map<number, number>();
+      
+      return this.bpRecords
+        .map((record) => {
+          const dateTime = `${record.date}T${record.time}`;
+          const baseTimestamp = new Date(dateTime).getTime();
+          
+          const currentCount = timestampCounts.get(baseTimestamp) || 0;
+          const uniqueTimestamp = baseTimestamp + currentCount;
+          timestampCounts.set(baseTimestamp, currentCount + 1);
+          
+          return {
+            ...record,
+            timestamp: uniqueTimestamp,
+          };
+        })
+        .sort((a, b) => a.timestamp - b.timestamp);
+    }).get();
+  }
+
+  // 体組成データの処理済みデータ（体脂肪率・腹囲）
+  get processedBodyCompositionForGraph(): (WeightRecordV2 & { timestamp: number; bodyFat?: number; waist?: number })[] {
+    return computed(() => {
+      const timestampCounts = new Map<number, number>();
+      
+      return this.weightRecords
+        .filter((record) => record.bodyFat !== undefined && record.bodyFat !== null || 
+                           record.waist !== undefined && record.waist !== null)
+        .map((record) => {
+          const dateTime = `${record.date}T${record.time}`;
+          const baseTimestamp = new Date(dateTime).getTime();
+          
+          const currentCount = timestampCounts.get(baseTimestamp) || 0;
+          const uniqueTimestamp = baseTimestamp + currentCount;
+          timestampCounts.set(baseTimestamp, currentCount + 1);
+          
+          return {
+            ...record,
+            timestamp: uniqueTimestamp,
+            bodyFat: record.bodyFat,
+            waist: record.waist,
+          };
+        })
+        .sort((a, b) => a.timestamp - b.timestamp);
+    }).get();
+  }
+
+  // 日課データの統計計算（期間別）
+  getDailyRecordStats = (fieldId: string, days: number = 30): { total: number; achieved: number; rate: number } => {
+    return computed(() => {
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - days + 1);
+      
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const filteredRecords = this.dailyRecords.filter(
+        record => record.fieldId === fieldId && 
+                 record.date >= startDateStr && 
+                 record.date <= endDateStr
+      );
+      
+      const achieved = filteredRecords.filter(record => record.value === 1).length;
+      const total = filteredRecords.length;
+      const rate = total > 0 ? (achieved / total) * 100 : 0;
+      
+      return { total, achieved, rate };
+    }).get();
+  };
+
+  // 期間別データ取得（最適化版）
+  getRecordsByDateRangeOptimized = (startDate: string, endDate: string, recordType: 'weight' | 'bp' | 'daily'): WeightRecordV2[] | BpRecordV2[] | DailyRecordV2[] => {
+    return computed(() => {
+      switch (recordType) {
+        case 'weight':
+          return this.weightRecords.filter(record => 
+            record.date >= startDate && record.date <= endDate
+          );
+        case 'bp':
+          return this.bpRecords.filter(record => 
+            record.date >= startDate && record.date <= endDate
+          );
+        case 'daily':
+          return this.dailyRecords.filter(record => 
+            record.date >= startDate && record.date <= endDate
+          );
+        default:
+          return [];
+      }
+    }).get();
+  };
   
   // === Private Methods ===
   
@@ -459,6 +587,9 @@ export const useEnhancedRecordsStore = () => {
     recordStats: enhancedRecordsStore.recordStats,
     latestWeightRecord: enhancedRecordsStore.latestWeightRecord,
     weightRecordsForGraph: enhancedRecordsStore.weightRecordsForGraph,
+    processedWeightRecordsForGraph: enhancedRecordsStore.processedWeightRecordsForGraph,
+    processedBpRecordsForGraph: enhancedRecordsStore.processedBpRecordsForGraph,
+    processedBodyCompositionForGraph: enhancedRecordsStore.processedBodyCompositionForGraph,
     
     // データロード
     loadWeightRecords: enhancedRecordsStore.loadWeightRecords,
@@ -481,6 +612,8 @@ export const useEnhancedRecordsStore = () => {
     // セレクター
     getRecordsOfDay: enhancedRecordsStore.getRecordsOfDay,
     isRecorded: enhancedRecordsStore.isRecorded,
+    getDailyRecordStats: enhancedRecordsStore.getDailyRecordStats,
+    getRecordsByDateRangeOptimized: enhancedRecordsStore.getRecordsByDateRangeOptimized,
   };
 };
 

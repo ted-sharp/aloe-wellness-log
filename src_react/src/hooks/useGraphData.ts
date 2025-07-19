@@ -206,37 +206,77 @@ export function useGraphData() {
     loadAllDataWithBp();
   }, [loadAllDataWithBp]);
   
-  // RecordGraph.tsx に必要な追加メソッド
+  // RecordGraph.tsx に必要な追加メソッド（MobX最適化版を使用）
   const getFilteredData = useCallback((period: number, showExcluded: boolean) => {
-    const data = getDataInPeriod(period);
-    const filteredData = showExcluded ? data.weight : data.weight.filter(r => !r.excluded);
-    console.log('getFilteredData: period=', period, 'showExcluded=', showExcluded, 'data.weight=', data.weight.length, 'filtered=', filteredData.length);
-    return filteredData;
-  }, [getDataInPeriod]);
+    // MobXストアの最適化済みメソッドを使用
+    const processedData = recordsStore.processedWeightRecordsForGraph;
+    
+    // 期間フィルタリング
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - period + 1);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    
+    const periodData = processedData.filter(r => r.date >= startDateStr && r.date <= endDateStr);
+    
+    // 除外フラグ考慮
+    const filteredData = showExcluded ? periodData : periodData.filter(r => !r.excludeFromGraph);
+    console.log('getFilteredData (MobX optimized): period=', period, 'showExcluded=', showExcluded, 'filtered=', filteredData.length);
+    
+    return filteredData.map(r => ({
+      ...r,
+      value: r.weight, // グラフ表示用のvalue プロパティ
+      excluded: r.excludeFromGraph || false,
+    }));
+  }, [recordsStore.processedWeightRecordsForGraph]);
   
   const getFilteredBpData = useCallback((period: number, showExcluded: boolean) => {
-    const data = getDataInPeriod(period);
-    return showExcluded ? data.bp : data.bp.filter(r => !r.excluded);
-  }, [getDataInPeriod]);
+    // MobXストアの最適化済みメソッドを使用
+    const processedData = recordsStore.processedBpRecordsForGraph;
+    
+    // 期間フィルタリング
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - period + 1);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    
+    const periodData = processedData.filter(r => r.date >= startDateStr && r.date <= endDateStr);
+    
+    // 除外フラグ考慮
+    const filteredData = showExcluded ? periodData : periodData.filter(r => !r.excludeFromGraph);
+    
+    return filteredData.map(r => ({
+      ...r,
+      systolic: r.systolic,
+      diastolic: r.diastolic,
+      pulse: r.heartRate || 0,
+      excluded: r.excludeFromGraph || false,
+    }));
+  }, [recordsStore.processedBpRecordsForGraph]);
   
   const getFilteredBodyCompositionData = useCallback((period: number, showExcluded: boolean) => {
-    const data = getDataInPeriod(period);
-    // 期間内のデータを使用し、除外フラグも考慮
-    const periodData = processedBodyFatData.filter(r => {
-      if (!latestDate) return false;
-      const endDate = new Date(latestDate);
-      const startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - period + 1);
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-      return r.date >= startDateStr && r.date <= endDateStr;
-    });
+    // MobXストアの最適化済みメソッドを使用
+    const processedData = recordsStore.processedBodyCompositionForGraph;
+    
+    // 期間フィルタリング
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - period + 1);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+    
+    const periodData = processedData.filter(r => r.date >= startDateStr && r.date <= endDateStr);
+    
+    // 除外フラグ考慮
     return showExcluded ? periodData : periodData.filter(r => !r.excludeFromGraph);
-  }, [processedBodyFatData, latestDate]);
+  }, [recordsStore.processedBodyCompositionForGraph]);
   
   const getStatusStats = useCallback((fieldId: string, period: number) => {
-    return getDailyStats(fieldId, period);
-  }, [getDailyStats]);
+    // MobXストアの最適化済みメソッドを使用
+    return recordsStore.getDailyRecordStats(fieldId, period);
+  }, [recordsStore.getDailyRecordStats]);
   
   return {
     // データ
