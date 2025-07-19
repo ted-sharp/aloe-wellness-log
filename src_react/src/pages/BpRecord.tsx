@@ -17,7 +17,6 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
-import { goalStore } from '../store/goal.mobx';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値

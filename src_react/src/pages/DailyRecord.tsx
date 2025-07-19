@@ -27,7 +27,6 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import DatePickerBar from '../components/DatePickerBar';
-import { goalStore } from '../store/goal.mobx';
 import type { DailyFieldV2 } from '../types/record';
 
 /**

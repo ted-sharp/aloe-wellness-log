@@ -80,16 +80,6 @@ export const createDateItems = (
 
     // チェックポイント判定
     const isCheckpoint = checkpointDates ? checkpointDates.includes(dateStr) : false;
-    
-    // デバッグ用ログ（開発環境のみ）
-    if (process.env.NODE_ENV === 'development' && dateStr === '2025-08-02') {
-      console.log('🎯 Checkpoint check for 2025-08-02:', {
-        dateStr,
-        checkpointDates,
-        isCheckpoint,
-        includes: checkpointDates?.includes(dateStr)
-      });
-    }
 
     return {
       date,

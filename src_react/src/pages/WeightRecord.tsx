@@ -24,7 +24,7 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
-import { useGoalStore, goalStore } from '../store/goal.mobx';
+import { useGoalStore } from '../store/goal.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 

@@ -94,9 +94,6 @@ export class GoalStore {
 
   get checkpointDates(): string[] {
     if (!this.goal?.targetStart) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🎯 No goal or targetStart:', this.goal);
-      }
       return [];
     }
     
@@ -123,23 +120,12 @@ export class GoalStore {
     threeMonths.setMonth(startDate.getMonth() + 3);
     checkpoints.push(threeMonths.toISOString().split('T')[0]);
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎯 Calculated checkpoints from', this.goal.targetStart, ':', checkpoints);
-    }
-    
     return checkpoints;
   }
 
   isCheckpointDate = (date: Date): boolean => {
     const dateStr = date.toISOString().split('T')[0];
-    const result = this.checkpointDates.includes(dateStr);
-    
-    // デバッグ用ログ（開発環境のみ）
-    if (process.env.NODE_ENV === 'development' && result) {
-      console.log('🎯 Checkpoint date found:', dateStr, 'checkpoints:', this.checkpointDates);
-    }
-    
-    return result;
+    return this.checkpointDates.includes(dateStr);
   };
 
   get goalSummary(): {
@@ -302,19 +288,6 @@ export const debugGoalStore = () => {
 if (process.env.NODE_ENV === 'development') {
   (window as any).debugGoalStore = debugGoalStore;
   (window as any).goalStore = goalStore;
-  
-  // テスト用チェックポイント設定関数
-  (window as any).setTestCheckpoints = () => {
-    const today = new Date().toISOString().split('T')[0];
-    goalStore.setGoal({
-      targetWeight: 60,
-      currentWeight: 70,
-      startWeight: 70,
-      targetStart: today,
-      targetEnd: '2025-12-31'
-    });
-    console.log('🎯 Test checkpoints set from today:', today);
-  };
 }
 
 // アクションのみのフック（状態変更用）
