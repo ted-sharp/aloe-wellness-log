@@ -1,9 +1,9 @@
 import { configure, IReactionDisposer, reaction } from 'mobx';
 import { dateStore, initializeDateStore } from './date.mobx';
 import { goalStore } from './goal.mobx';
-import { recordsStore } from './records.mobx';
 import { enhancedRecordsStore } from './records.enhanced';
 import { toastStore } from './toast.mobx';
+// 非推奨: import { recordsStore } from './records.mobx'; // enhancedRecordsStoreに統一
 
 // 型定義
 export type StoreState = 'uninitialized' | 'initializing' | 'ready' | 'error';
@@ -25,8 +25,7 @@ configure({
 export class RootStore {
   public readonly dateStore = dateStore;
   public readonly goalStore = goalStore;
-  public readonly recordsStore = recordsStore;
-  public readonly enhancedRecordsStore = enhancedRecordsStore;
+  public readonly recordsStore = enhancedRecordsStore; // 統一: enhancedRecordsStoreを使用
   public readonly toastStore = toastStore;
 
   private _state: StoreState = 'uninitialized';
@@ -72,7 +71,7 @@ export class RootStore {
 
     // レコード操作エラー時にトーストを表示
     const recordsReaction = reaction(
-      () => this.recordsStore.hasError,
+      () => Object.values(this.recordsStore.errors).some(Boolean),
       (hasError) => {
         if (hasError) {
           this.toastStore.showError('データ操作中にエラーが発生しました');
@@ -124,7 +123,7 @@ export class RootStore {
       // 並列処理で高速化
       const initPromises = [
         this.goalStore.loadGoal(),
-        this.enhancedRecordsStore.loadAllData()
+        this.recordsStore.loadAllData()
       ];
       
       await Promise.all(initPromises);
@@ -186,8 +185,8 @@ export class RootStore {
         hasGoal: this.goalStore.hasGoal,
         isReady: this.goalStore.isReady
       });
-      console.log('Enhanced Records Store:', {
-        stats: this.enhancedRecordsStore.recordStats
+      console.log('Records Store:', {
+        stats: this.recordsStore.recordStats
       });
       console.log('Toast Store:', {
         hasToasts: this.toastStore.hasToasts,
@@ -205,9 +204,7 @@ export class RootStore {
       // 各ストアをリセット（データは消去しない、UIの状態のみ）
       this.toastStore.clearAll();
       this.goalStore.clearError();
-      this.recordsStore.clearRecordsError();
-      this.recordsStore.clearFieldsError();
-      this.enhancedRecordsStore.clearAllErrors();
+      this.recordsStore.clearAllErrors();
       
       this.toastStore.showSuccess('ストアをリセットしました');
     } catch (error) {
@@ -241,10 +238,11 @@ export type { Toast, ToastType } from './toast.mobx';
 export {
   dateStore,
   goalStore,
-  recordsStore,
-  enhancedRecordsStore,
   toastStore,
 };
+
+// 統一されたレコードストア
+export { enhancedRecordsStore as recordsStore };
 
 // 型安全なフックのエクスポート
 export {
@@ -263,14 +261,9 @@ export {
   useGoalActions,
 } from './goal.mobx';
 
+// 統一されたレコードストアフック
 export {
-  useRecordsStore,
-  useRecordsStatus,
-  useRecordsActions,
-} from './records.mobx';
-
-export {
-  useEnhancedRecordsStore,
+  useEnhancedRecordsStore as useRecordsStore,
   useRecordsSelectors,
 } from './records.enhanced';
 
@@ -294,26 +287,22 @@ export const useAppStatus = () => ({
 // データロード状態の統合監視
 export const useLoadingStatus = () => ({
   goalLoading: rootStore.goalStore.isLoading,
-  recordsLoading: rootStore.recordsStore.isOperating,
-  enhancedRecordsLoading: Object.values(rootStore.enhancedRecordsStore.loading).some(Boolean),
+  recordsLoading: Object.values(rootStore.recordsStore.loading).some(Boolean),
   anyLoading: rootStore.goalStore.isLoading || 
-             rootStore.recordsStore.isOperating || 
-             Object.values(rootStore.enhancedRecordsStore.loading).some(Boolean),
+             Object.values(rootStore.recordsStore.loading).some(Boolean),
 });
 
 // エラー状態の統合監視
 export const useErrorStatus = () => ({
   goalError: rootStore.goalStore.error,
-  recordsError: rootStore.recordsStore.hasError,
-  enhancedRecordsError: Object.values(rootStore.enhancedRecordsStore.errors).some(Boolean),
+  recordsError: Object.values(rootStore.recordsStore.errors).some(Boolean),
   hasAnyError: !!rootStore.goalStore.error || 
-               rootStore.recordsStore.hasError || 
-               Object.values(rootStore.enhancedRecordsStore.errors).some(Boolean),
+               Object.values(rootStore.recordsStore.errors).some(Boolean),
 });
 
 // アプリケーション全体の統計情報
 export const useAppStats = () => ({
-  recordStats: rootStore.enhancedRecordsStore.recordStats,
+  recordStats: rootStore.recordsStore.recordStats,
   hasGoal: rootStore.goalStore.hasGoal,
   hasToasts: rootStore.toastStore.hasToasts,
   selectedDate: rootStore.dateStore.selectedDate,

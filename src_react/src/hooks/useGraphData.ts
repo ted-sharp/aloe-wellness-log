@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { useEnhancedRecordsStore, useGoalStore } from '../store';
+import { useRecordsStore, useGoalStore } from '../store';
 import { getAllBpRecords } from '../db';
 import type { WeightRecordV2, BpRecordV2 } from '../types/record';
 
@@ -8,8 +8,8 @@ import type { WeightRecordV2, BpRecordV2 } from '../types/record';
  * RecordGraph.tsx専用の複数データソース管理
  */
 export function useGraphData() {
-  // Enhanced Records Store からデータと状態を取得（セレクター経由）
-  const enhancedStore = useEnhancedRecordsStore();
+  // 統一されたレコードストアからデータと状態を取得
+  const recordsStore = useRecordsStore();
   const goalStore = useGoalStore();
   
   const {
@@ -17,7 +17,7 @@ export function useGraphData() {
     dailyRecords,
     loading,
     errors,
-  } = enhancedStore;
+  } = recordsStore;
   
   const { goal } = goalStore;
   
@@ -55,7 +55,7 @@ export function useGraphData() {
       await Promise.all([
         goalStore.loadGoal(),
         loadBpRecords(),
-        enhancedStore.loadAllData(),
+        recordsStore.loadAllData(),
       ]);
     };
     
@@ -67,9 +67,9 @@ export function useGraphData() {
     await Promise.all([
       goalStore.loadGoal(),
       loadBpRecords(),
-      enhancedStore.loadAllData(),
+      recordsStore.loadAllData(),
     ]);
-  }, [loadBpRecords, goalStore.loadGoal, enhancedStore.loadAllData]);
+  }, [loadBpRecords, goalStore.loadGoal, recordsStore.loadAllData]);
   
   // 統合されたローディング状態
   const isLoading = useMemo(() => {
