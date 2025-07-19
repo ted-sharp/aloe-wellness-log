@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
@@ -16,6 +17,7 @@ import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
 import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
+import { goalStore } from '../store/goal.mobx';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値
@@ -334,4 +336,4 @@ const BpRecord: React.FC = () => {
   );
 };
 
-export default BpRecord;
+export default observer(BpRecord);

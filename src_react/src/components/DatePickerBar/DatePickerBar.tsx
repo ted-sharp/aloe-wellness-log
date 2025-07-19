@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiCalendarDays } from 'react-icons/hi2';
 import { getDateArray } from '../../utils/dateUtils';
 import type { DatePickerBarProps } from './types';
@@ -11,12 +12,13 @@ import { useScrollCorrection } from './hooks/useScrollCorrection';
 import { DateButton } from './components/DateButton';
 import { MonthIndicator } from './components/MonthIndicator';
 import { CalendarModal } from './components/CalendarModal';
+import { goalStore } from '../../store/goal.mobx';
 
 /**
  * リファクタリングされたDatePickerBarコンポーネント
  * 複数のカスタムフックと子コンポーネントに分離してシンプルに
  */
-const DatePickerBar: React.FC<DatePickerBarProps> = ({
+const DatePickerBarComponent: React.FC<DatePickerBarProps> = ({
   selectedDate,
   setSelectedDate,
   centerDate,
@@ -25,6 +27,11 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
   isRecorded,
   getDateStatus,
 }) => {
+  // デバッグ用ログ（コンポーネント実行確認）
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 DatePickerBar component executing');
+  }
+
   // ローカル状態
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -53,13 +60,23 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
 
   // 日付配列と表示アイテムの生成
   const dateArray = getDateArray(dateRange.minDate, dateRange.maxDate);
+  
+  // MobX observableからローカル変数に取得
+  const checkpointDates = goalStore.checkpointDates;
+  
+  // デバッグ用ログ（開発環境のみ）
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 DatePickerBar render - checkpointDates:', checkpointDates);
+  }
+  
   const dateItems = createDateItems(
     dateArray,
     selectedDate,
     centerDate,
     today,
     getDateStatus,
-    isRecorded
+    isRecorded,
+    checkpointDates
   );
 
   // イベントハンドラー
@@ -143,5 +160,7 @@ const DatePickerBar: React.FC<DatePickerBarProps> = ({
     </div>
   );
 };
+
+const DatePickerBar = observer(DatePickerBarComponent);
 
 export default DatePickerBar;

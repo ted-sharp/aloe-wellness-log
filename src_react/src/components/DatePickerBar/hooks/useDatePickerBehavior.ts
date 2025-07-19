@@ -7,6 +7,7 @@ import { useCenterScroll } from './useCenterScroll';
 import { useScrollCorrection } from './useScrollCorrection';
 import { createDateItems } from '../helpers';
 import { getDateArray } from '../../../utils/dateUtils';
+import { goalStore } from '../../../store/goal.mobx';
 
 /**
  * DatePickerBarの全ての動作を統合するカスタムフック
@@ -62,9 +63,10 @@ export const useDatePickerBehavior = ({
       centerDate,
       today || new Date(),
       getDateStatus,
-      isRecorded
+      isRecorded,
+      goalStore.checkpointDates
     ), 
-    [dateArray, selectedDate, centerDate, today, getDateStatus, isRecorded]
+    [dateArray, selectedDate, centerDate, today, getDateStatus, isRecorded, goalStore.checkpointDates]
   );
 
   // イベントハンドラー

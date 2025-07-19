@@ -32,6 +32,7 @@ export class GoalStore {
       goalProgress: computed,
       isGoalAchieved: computed,
       remainingWeight: computed,
+      checkpointDates: computed,
       goalSummary: computed,
     });
   }
@@ -91,6 +92,56 @@ export class GoalStore {
     return Math.abs(this.goal.targetWeight - this.goal.currentWeight);
   }
 
+  get checkpointDates(): string[] {
+    if (!this.goal?.targetStart) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🎯 No goal or targetStart:', this.goal);
+      }
+      return [];
+    }
+    
+    const startDate = new Date(this.goal.targetStart);
+    const checkpoints: string[] = [];
+    
+    // 2週間後
+    const twoWeeks = new Date(startDate);
+    twoWeeks.setDate(startDate.getDate() + 14);
+    checkpoints.push(twoWeeks.toISOString().split('T')[0]);
+    
+    // 1ヶ月後
+    const oneMonth = new Date(startDate);
+    oneMonth.setMonth(startDate.getMonth() + 1);
+    checkpoints.push(oneMonth.toISOString().split('T')[0]);
+    
+    // 2ヶ月後
+    const twoMonths = new Date(startDate);
+    twoMonths.setMonth(startDate.getMonth() + 2);
+    checkpoints.push(twoMonths.toISOString().split('T')[0]);
+    
+    // 3ヶ月後
+    const threeMonths = new Date(startDate);
+    threeMonths.setMonth(startDate.getMonth() + 3);
+    checkpoints.push(threeMonths.toISOString().split('T')[0]);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎯 Calculated checkpoints from', this.goal.targetStart, ':', checkpoints);
+    }
+    
+    return checkpoints;
+  }
+
+  isCheckpointDate = (date: Date): boolean => {
+    const dateStr = date.toISOString().split('T')[0];
+    const result = this.checkpointDates.includes(dateStr);
+    
+    // デバッグ用ログ（開発環境のみ）
+    if (process.env.NODE_ENV === 'development' && result) {
+      console.log('🎯 Checkpoint date found:', dateStr, 'checkpoints:', this.checkpointDates);
+    }
+    
+    return result;
+  };
+
   get goalSummary(): {
     hasGoal: boolean;
     progress: number;
@@ -98,6 +149,7 @@ export class GoalStore {
     remaining: number;
     isLoading: boolean;
     error: string | null;
+    checkpointDates: string[];
   } {
     return {
       hasGoal: this.hasGoal,
@@ -106,6 +158,7 @@ export class GoalStore {
       remaining: this.remainingWeight,
       isLoading: this.isLoading,
       error: this.error,
+      checkpointDates: this.checkpointDates,
     };
   }
 
@@ -235,6 +288,34 @@ export const useGoalProgress = () => ({
 });
 
 export const useGoalSummary = () => goalStore.goalSummary;
+
+// デバッグ用（開発環境のみ）
+export const debugGoalStore = () => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 Current goal data:', goalStore.goal);
+    console.log('🎯 Has goal:', goalStore.hasGoal);
+    console.log('🎯 Checkpoint dates:', goalStore.checkpointDates);
+  }
+};
+
+// グローバルデバッグ（開発環境のみ）
+if (process.env.NODE_ENV === 'development') {
+  (window as any).debugGoalStore = debugGoalStore;
+  (window as any).goalStore = goalStore;
+  
+  // テスト用チェックポイント設定関数
+  (window as any).setTestCheckpoints = () => {
+    const today = new Date().toISOString().split('T')[0];
+    goalStore.setGoal({
+      targetWeight: 60,
+      currentWeight: 70,
+      startWeight: 70,
+      targetStart: today,
+      targetEnd: '2025-12-31'
+    });
+    console.log('🎯 Test checkpoints set from today:', today);
+  };
+}
 
 // アクションのみのフック（状態変更用）
 export const useGoalActions = () => ({

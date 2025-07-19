@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
+import { observer } from 'mobx-react-lite';
 import { HiCalendarDays } from 'react-icons/hi2';
 import type { DatePickerBarProps } from './DatePickerBar/types';
 import { useDatePickerBehavior } from './DatePickerBar/hooks/useDatePickerBehavior';
 import { DateButton } from './DatePickerBar/components/DateButton';
 import { MonthIndicator } from './DatePickerBar/components/MonthIndicator';
 import { CalendarModal } from './DatePickerBar/components/CalendarModal';
+import { goalStore } from '../store/goal.mobx';
 
 /**
  * リファクタリングされたDatePickerBarコンポーネント
@@ -99,4 +101,4 @@ const DatePickerBar: React.FC<DatePickerBarProps> = (props) => {
   );
 };
 
-export default DatePickerBar;
+export default observer(DatePickerBar);

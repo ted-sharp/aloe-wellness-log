@@ -11,6 +11,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { observer } from 'mobx-react-lite';
 import { FaFire } from 'react-icons/fa';
 import {
   HiCheck,
@@ -26,6 +27,7 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import DatePickerBar from '../components/DatePickerBar';
+import { goalStore } from '../store/goal.mobx';
 import type { DailyFieldV2 } from '../types/record';
 
 /**
@@ -432,4 +434,4 @@ const DailyRecord: React.FC = () => {
   );
 };
 
-export default DailyRecord;
+export default observer(DailyRecord);
