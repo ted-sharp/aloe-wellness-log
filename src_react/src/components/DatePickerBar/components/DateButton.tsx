@@ -41,10 +41,10 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
 
     const centerClass = isCenter && !isSelected ? 'scale-105' : '';
     
-    const checkpointClass = isCheckpoint 
-      ? isSelected 
-        ? 'ring-2 ring-orange-400' 
-        : 'ring-2 ring-orange-400 bg-orange-50 dark:bg-orange-900/30' 
+    const checkpointClass = isCheckpoint
+      ? isSelected
+        ? 'relative after:content-["⭐"] after:absolute after:-top-1 after:-right-1 after:text-xs after:text-yellow-300'
+        : 'relative after:content-["⭐"] after:absolute after:-top-1 after:-right-1 after:text-xs after:text-yellow-500'
       : '';
 
     return `${baseClasses} ${stateClasses} ${centerClass} ${checkpointClass}`;
