@@ -110,14 +110,14 @@ const TestDataGenerator = memo(function TestDataGenerator({
         // 体脂肪率も徐々に減少させるパターン
         const baseBodyFat = 25; // 初期体脂肪率: 25%
         const bodyFatTrend = (daysBack - i) * 0.02; // 1日あたり0.02%減少
-        const bodyFatRandomDelta = (Math.random() - 0.5) * 1; // -0.5〜+0.5%
+        const bodyFatRandomDelta = (Math.random() - 0.5) * 0.3; // -0.15〜+0.15%
         let bodyFat = baseBodyFat - bodyFatTrend + bodyFatRandomDelta;
         bodyFat = Math.max(8, Math.min(35, Math.round(bodyFat * 10) / 10)); // 8-35%の範囲
 
         // 腹囲（ウエスト）も徐々に減少させるパターン
         const baseWaist = 85; // 初期ウエスト: 85cm
         const waistTrend = (daysBack - i) * 0.03; // 1日あたり0.03cm減少
-        const waistRandomDelta = (Math.random() - 0.5) * 2; // -1〜+1cm
+        const waistRandomDelta = (Math.random() - 0.5) * 0.3; // -0.15〜+0.15cm
         let waist = baseWaist - waistTrend + waistRandomDelta;
         waist = Math.max(60, Math.min(100, Math.round(waist * 10) / 10)); // 60-100cmの範囲
 
