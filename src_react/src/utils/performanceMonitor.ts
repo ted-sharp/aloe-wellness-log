@@ -80,7 +80,7 @@ class PerformanceStorage {
           '__aloe_perf_metrics',
           JSON.stringify(this.metrics.slice(-100))
         );
-      } catch (e) {
+      } catch (_e) {
         // ストレージエラーは無視
       }
     }
