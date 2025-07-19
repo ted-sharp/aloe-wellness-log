@@ -79,13 +79,15 @@ const RecordGraph: React.FC = () => {
       // 体脂肪率・腹囲データの場合
       return getFilteredBodyCompositionData(days || 9999, showExcluded);
     }
-  }, [getFilteredData, getFilteredBpData, getFilteredBodyCompositionData, periodIdx, showExcluded, graphType]);
+  }, [periodIdx, showExcluded, graphType]); // 関数を依存配列から削除（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
     console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
     return graphCalculations.calculateDayStartLines(data);
-  }, [data, graphCalculations]);
+  }, [data]); // graphCalculationsを依存配列から削除（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // X軸domain（日単位で固定）
   const xAxisDomain = useMemo(() => {

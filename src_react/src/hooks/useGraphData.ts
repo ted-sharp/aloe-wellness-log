@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { observer } from 'mobx-react-lite';
-import { enhancedRecordsStore } from '../store/records.enhanced';
-import { goalStore } from '../store/goal.mobx';
+import { useEnhancedRecordsStore, useGoalStore } from '../store';
 import { getAllBpRecords } from '../db';
 import type { WeightRecordV2, BpRecordV2 } from '../types/record';
 
@@ -10,14 +8,18 @@ import type { WeightRecordV2, BpRecordV2 } from '../types/record';
  * RecordGraph.tsx専用の複数データソース管理
  */
 export function useGraphData() {
-  // Enhanced Records Store からデータと状態を取得
-  const weightRecords = enhancedRecordsStore.weightRecords;
-  const dailyRecords = enhancedRecordsStore.dailyRecords;
-  const loading = enhancedRecordsStore.loading;
-  const errors = enhancedRecordsStore.errors;
+  // Enhanced Records Store からデータと状態を取得（セレクター経由）
+  const enhancedStore = useEnhancedRecordsStore();
+  const goalStore = useGoalStore();
   
-  // Goal store
-  const goal = goalStore.goal;
+  const {
+    weightRecords,
+    dailyRecords,
+    loading,
+    errors,
+  } = enhancedStore;
+  
+  const { goal } = goalStore;
   
   // 血圧データの状態管理
   const [bpRecords, setBpRecords] = useState<BpRecordV2[]>([]);
@@ -39,20 +41,35 @@ export function useGraphData() {
     }
   }, []);
   
-  // 統合データロード
+  // 初期データロードフラグ
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // 初期データロード（依存配列を最小限に）
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    console.log('useGraphData: Loading initial data');
+    setIsInitialized(true);
+    
+    const loadData = async () => {
+      await Promise.all([
+        goalStore.loadGoal(),
+        loadBpRecords(),
+        enhancedStore.loadAllData(),
+      ]);
+    };
+    
+    loadData();
+  }, [isInitialized]); // isInitializedのみに依存
+  
+  // 統合データロード関数（外部から呼び出し用）
   const loadAllDataWithBp = useCallback(async () => {
     await Promise.all([
       goalStore.loadGoal(),
       loadBpRecords(),
-      enhancedRecordsStore.loadAllData(),
+      enhancedStore.loadAllData(),
     ]);
-  }, [loadBpRecords]);
-  
-  // 初期データロード
-  useEffect(() => {
-    console.log('useGraphData: Loading initial data');
-    loadAllDataWithBp();
-  }, [loadAllDataWithBp]);
+  }, [loadBpRecords, goalStore.loadGoal, enhancedStore.loadAllData]);
   
   // 統合されたローディング状態
   const isLoading = useMemo(() => {

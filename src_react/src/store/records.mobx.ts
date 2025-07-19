@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable, runInAction, action, computed } from 'mobx';
 import { deleteAllData } from '../db';
 import { DbError, DbErrorType } from '../db';
 
@@ -14,7 +14,24 @@ export class RecordsStore {
   fieldsOperation: OperationState = { loading: false, error: null };
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this, {
+      // パフォーマンス最適化: アクションの明示的定義
+      clearRecordsError: action,
+      clearFieldsError: action,
+      deleteAllData: action,
+      // computed値
+      isOperating: computed,
+      hasError: computed,
+    });
+  }
+
+  // Computed values for better state management
+  get isOperating(): boolean {
+    return this.recordsOperation.loading || this.fieldsOperation.loading;
+  }
+
+  get hasError(): boolean {
+    return !!(this.recordsOperation.error || this.fieldsOperation.error);
   }
 
   // エラー状態クリア
@@ -64,9 +81,28 @@ export const recordsStore = new RecordsStore();
 
 // React Hook（既存のコンポーネントとの互換性のため）
 export const useRecordsStore = () => ({
+  // 既存API（互換性維持）
   recordsOperation: recordsStore.recordsOperation,
   fieldsOperation: recordsStore.fieldsOperation,
   clearRecordsError: recordsStore.clearRecordsError,
   clearFieldsError: recordsStore.clearFieldsError,
   deleteAllData: recordsStore.deleteAllData,
+  
+  // 新しいAPI（ベストプラクティス）
+  isOperating: recordsStore.isOperating,
+  hasError: recordsStore.hasError,
+});
+
+// セレクターフック（パフォーマンス最適化用）
+export const useRecordsStatus = () => ({
+  isOperating: recordsStore.isOperating,
+  hasError: recordsStore.hasError,
+  recordsLoading: recordsStore.recordsOperation.loading,
+  fieldsLoading: recordsStore.fieldsOperation.loading,
+});
+
+export const useRecordsActions = () => ({
+  deleteAllData: recordsStore.deleteAllData,
+  clearRecordsError: recordsStore.clearRecordsError,
+  clearFieldsError: recordsStore.clearFieldsError,
 });

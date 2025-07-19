@@ -427,7 +427,7 @@ export class EnhancedRecordsStore {
   
   // === セレクター（計算されたプロパティ） ===
   
-  getRecordsOfDay = (date: string, type: 'weight' | 'daily' | 'bp'): any[] => {
+  getRecordsOfDay = (date: string, type: 'weight' | 'daily' | 'bp'): WeightRecordV2[] | DailyRecordV2[] | BpRecordV2[] => {
     switch (type) {
       case 'weight':
         return this.weightRecords.filter(record => record.date === date);
