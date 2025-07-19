@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useGraphData } from '../hooks/useGraphData';
 import { useGraphCalculations } from '../hooks/business/useGraphCalculations';
+import { useGraphData } from '../hooks/useGraphData';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
@@ -45,15 +45,17 @@ const WEEKDAYS_JP = ['日', '月', '火', '水', '木', '金', '土'];
 const RecordGraph: React.FC = () => {
   const [periodIdx, setPeriodIdx] = useState(0); // 期間選択
   const [showExcluded, setShowExcluded] = useState(false); // 除外値表示
-  const [graphType, setGraphType] = useState<'weight' | 'bloodPressure' | 'bodyComposition'>('weight'); // グラフ種類
-  
+  const [graphType, setGraphType] = useState<
+    'weight' | 'bloodPressure' | 'bodyComposition'
+  >('weight'); // グラフ種類
+
   // グラフ計算ロジック
   const graphCalculations = useGraphCalculations();
-  
+
   // 統合データフェッチング
   const {
     // weightRecords,
-    bpRecords,
+    // bpRecords,
     dailyRecords,
     goal,
     // latestTimestamp,
@@ -64,7 +66,7 @@ const RecordGraph: React.FC = () => {
     getFilteredBodyCompositionData,
     getStatusStats,
   } = useGraphData();
-  
+
   // 期間に応じたデータを抽出
   const data = useMemo(() => {
     console.log('RecordGraph: data useMemo triggered');
@@ -80,24 +82,22 @@ const RecordGraph: React.FC = () => {
       return getFilteredBodyCompositionData(days || 9999, showExcluded);
     }
   }, [periodIdx, showExcluded, graphType]); // 関数を依存配列から削除（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
     console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
     return graphCalculations.calculateDayStartLines(data);
   }, [data]); // graphCalculationsを依存配列から削除（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // X軸domain（日単位で固定）
   const xAxisDomain = useMemo(() => {
     if (!data.length) return ['auto', 'auto'];
-    
+
     // 全データの最小・最大タイムスタンプを取得
     const timestamps = data.map(d => d.timestamp);
     const minTimestamp = Math.min(...timestamps);
     const maxTimestamp = Math.max(...timestamps);
-    
+
     const start = new Date(minTimestamp);
     const end = new Date(maxTimestamp);
     start.setHours(0, 0, 0, 0);
@@ -110,7 +110,6 @@ const RecordGraph: React.FC = () => {
     if (periodIdx !== 0 || !data.length) return undefined;
     return graphCalculations.calculateXAxisTicks(data);
   }, [data, periodIdx]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // X軸ラベルをMM/DD(曜) HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
@@ -130,35 +129,30 @@ const RecordGraph: React.FC = () => {
     }
     return null;
   }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 体脂肪率の傾向線計算
   const bodyFatTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateBodyFatTrendLine(data);
   }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 腹囲の傾向線計算
   const waistTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateWaistTrendLine(data);
   }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 血圧（収縮期）の傾向線計算
   const systolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateSystolicTrendLine(data);
   }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 血圧（拡張期）の傾向線計算
   const diastolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateDiastolicTrendLine(data);
   }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
@@ -180,13 +174,14 @@ const RecordGraph: React.FC = () => {
     );
   };
 
-
   // ローディング表示
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">データを読み込み中...</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          データを読み込み中...
+        </p>
       </div>
     );
   }
@@ -196,7 +191,9 @@ const RecordGraph: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md">
-          <p className="text-red-800 text-sm mb-2">データの読み込みに失敗しました</p>
+          <p className="text-red-800 text-sm mb-2">
+            データの読み込みに失敗しました
+          </p>
           <p className="text-red-600 text-xs">{error}</p>
         </div>
       </div>
@@ -210,7 +207,7 @@ const RecordGraph: React.FC = () => {
     >
       {/* グラフ種類選択 */}
       <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-2 py-1 px-2">
-        {GRAPH_TYPES.map((type) => (
+        {GRAPH_TYPES.map(type => (
           <button
             key={type.value}
             className={`flex-1 rounded-lg border font-semibold transition mx-0.5 text-xs leading-none flex items-center justify-center
@@ -220,14 +217,23 @@ const RecordGraph: React.FC = () => {
                   : 'border-gray-300 text-gray-500 hover:border-blue-300 hover:text-blue-400'
               }
             `}
-            style={{ height: '24px', minHeight: '24px', maxHeight: '24px', padding: '0' }}
-            onClick={() => setGraphType(type.value as 'weight' | 'bloodPressure' | 'bodyComposition')}
+            style={{
+              height: '24px',
+              minHeight: '24px',
+              maxHeight: '24px',
+              padding: '0',
+            }}
+            onClick={() =>
+              setGraphType(
+                type.value as 'weight' | 'bloodPressure' | 'bodyComposition'
+              )
+            }
           >
             {type.label}
           </button>
         ))}
       </div>
-      
+
       {/* 期間切り替えボタン */}
       <div className="w-full mx-auto bg-white dark:bg-gray-800 shadow flex justify-center items-center mb-4 p-2">
         {PERIODS.map((p, i) => (
@@ -240,7 +246,12 @@ const RecordGraph: React.FC = () => {
                   : 'border-gray-300 text-gray-500 hover:border-orange-300 hover:text-orange-400'
               }
             `}
-            style={{ height: '24px', minHeight: '24px', maxHeight: '24px', padding: '0' }}
+            style={{
+              height: '24px',
+              minHeight: '24px',
+              maxHeight: '24px',
+              padding: '0',
+            }}
             onClick={() => setPeriodIdx(i)}
           >
             {p.label}
@@ -407,7 +418,9 @@ const RecordGraph: React.FC = () => {
                 type="number"
                 domain={xAxisDomain}
                 tick={periodIdx === 0 ? CustomTick : undefined}
-                tickFormatter={periodIdx === 0 ? undefined : formatDateTimeLabel}
+                tickFormatter={
+                  periodIdx === 0 ? undefined : formatDateTimeLabel
+                }
                 ticks={xAxisTicks}
               />
               {periodIdx === 0 &&
@@ -420,8 +433,12 @@ const RecordGraph: React.FC = () => {
                     yAxisId="left"
                   />
                 ))}
-              <YAxis yAxisId="left" domain={['auto', 'auto']} unit="%" />
-              <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} unit="cm" />
+              <YAxis yAxisId="left" domain={['auto', 'auto']} />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={['auto', 'auto']}
+              />
               <Tooltip
                 content={({ active, payload, label: _ }) => {
                   if (!active || !payload || !payload.length) return null;
@@ -524,322 +541,390 @@ const RecordGraph: React.FC = () => {
                   legendType="none"
                 />
               )}
+              {/* 体組成グラフの単位表示 */}
+              <text
+                x={40}
+                y={10}
+                textAnchor="start"
+                fontSize="12"
+                fill="#666"
+                fontWeight="bold"
+              >
+                (%)
+              </text>
+              <text
+                x={window.innerWidth - 100}
+                y={10}
+                textAnchor="end"
+                fontSize="12"
+                fill="#666"
+                fontWeight="bold"
+              >
+                (cm)
+              </text>
             </ComposedChart>
           ) : (
             <LineChart
               data={data}
               margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
             >
-            <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-            <XAxis
-              dataKey="timestamp"
-              type="number"
-              domain={xAxisDomain}
-              tick={periodIdx === 0 ? CustomTick : undefined}
-              tickFormatter={periodIdx === 0 ? undefined : formatDateTimeLabel}
-              ticks={xAxisTicks}
-            />
-            {periodIdx === 0 &&
-              dayStartLines.map(ts => (
-                <ReferenceLine
-                  key={ts}
-                  x={ts}
-                  stroke="#888"
-                  strokeDasharray="2 2"
-                />
-              ))}
-            {(graphType as string) === 'bodyComposition' ? (
-              <>
-                <YAxis yAxisId="left" domain={['auto', 'auto']} unit="%" />
-                <YAxis yAxisId="right" orientation="right" domain={['auto', 'auto']} unit="cm" />
-              </>
-            ) : (
-              <YAxis domain={['auto', 'auto']} unit={graphType === 'weight' ? 'kg' : 'mmHg'} />
-            )}
-            {/* 目標体重線（傾きあり・表示期間でクリップ） */}
-            {graphType === 'weight' && (() => {
-              if (!goal) return null;
-              const hasStart =
-                typeof goal.startWeight === 'number' &&
-                isFinite(goal.startWeight);
-              const hasTarget =
-                typeof goal.targetWeight === 'number' &&
-                isFinite(goal.targetWeight);
-              const hasStartDate =
-                typeof goal.targetStart === 'string' &&
-                !isNaN(Date.parse(goal.targetStart));
-              const hasEndDate =
-                typeof goal.targetEnd === 'string' &&
-                !isNaN(Date.parse(goal.targetEnd));
-              if (!hasStart || !hasTarget || !hasStartDate || !hasEndDate)
-                return null;
-              const x1 = Date.parse(goal.targetStart!);
-              const y1 = goal.startWeight!;
-              const x2 = Date.parse(goal.targetEnd!);
-              const y2 = goal.targetWeight!;
-              if (x1 >= x2) return null;
-              // グラフの表示範囲
-              const [domainStart, domainEnd] = xAxisDomain as [number, number];
-              // 目標線の描画区間（表示範囲と目標期間の重なり）
-              const lineStart = Math.max(x1, domainStart);
-              const lineEnd = Math.min(x2, domainEnd);
-              if (lineStart > lineEnd) return null; // 重なりなし
-              // 線の両端のy値を直線式で計算
-              const getY = (x: number) =>
-                y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
-              const targetLineData = [
-                { timestamp: lineStart, value: getY(lineStart) },
-                { timestamp: lineEnd, value: getY(lineEnd) },
-              ];
-              return (
+              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+              <XAxis
+                dataKey="timestamp"
+                type="number"
+                domain={xAxisDomain}
+                tick={periodIdx === 0 ? CustomTick : undefined}
+                tickFormatter={
+                  periodIdx === 0 ? undefined : formatDateTimeLabel
+                }
+                ticks={xAxisTicks}
+              />
+              {periodIdx === 0 &&
+                dayStartLines.map(ts => (
+                  <ReferenceLine
+                    key={ts}
+                    x={ts}
+                    stroke="#888"
+                    strokeDasharray="2 2"
+                  />
+                ))}
+              {(graphType as string) === 'bodyComposition' ? (
+                <>
+                  <YAxis yAxisId="left" domain={['auto', 'auto']} />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    domain={['auto', 'auto']}
+                  />
+                  {/* 体組成グラフの単位表示 */}
+                  <text
+                    x={30}
+                    y={10}
+                    textAnchor="start"
+                    fontSize="12"
+                    fill="#666"
+                    fontWeight="bold"
+                  >
+                    (%)
+                  </text>
+                  <text
+                    x={window.innerWidth - 50}
+                    y={10}
+                    textAnchor="end"
+                    fontSize="12"
+                    fill="#666"
+                    fontWeight="bold"
+                  >
+                    (cm)
+                  </text>
+                </>
+              ) : (
+                <>
+                  <YAxis domain={['auto', 'auto']} />
+                  {/* 体重・血圧グラフの単位表示 */}
+                  <text
+                    x={30}
+                    y={10}
+                    textAnchor="start"
+                    fontSize="12"
+                    fill="#666"
+                    fontWeight="bold"
+                  >
+                    ({graphType === 'weight' ? 'kg' : 'mmHg'})
+                  </text>
+                </>
+              )}
+              {/* 目標体重線（傾きあり・表示期間でクリップ） */}
+              {graphType === 'weight' &&
+                (() => {
+                  if (!goal) return null;
+                  const hasStart =
+                    typeof goal.startWeight === 'number' &&
+                    isFinite(goal.startWeight);
+                  const hasTarget =
+                    typeof goal.targetWeight === 'number' &&
+                    isFinite(goal.targetWeight);
+                  const hasStartDate =
+                    typeof goal.targetStart === 'string' &&
+                    !isNaN(Date.parse(goal.targetStart));
+                  const hasEndDate =
+                    typeof goal.targetEnd === 'string' &&
+                    !isNaN(Date.parse(goal.targetEnd));
+                  if (!hasStart || !hasTarget || !hasStartDate || !hasEndDate)
+                    return null;
+                  const x1 = Date.parse(goal.targetStart!);
+                  const y1 = goal.startWeight!;
+                  const x2 = Date.parse(goal.targetEnd!);
+                  const y2 = goal.targetWeight!;
+                  if (x1 >= x2) return null;
+                  // グラフの表示範囲
+                  const [domainStart, domainEnd] = xAxisDomain as [
+                    number,
+                    number
+                  ];
+                  // 目標線の描画区間（表示範囲と目標期間の重なり）
+                  const lineStart = Math.max(x1, domainStart);
+                  const lineEnd = Math.min(x2, domainEnd);
+                  if (lineStart > lineEnd) return null; // 重なりなし
+                  // 線の両端のy値を直線式で計算
+                  const getY = (x: number) =>
+                    y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
+                  const targetLineData = [
+                    { timestamp: lineStart, value: getY(lineStart) },
+                    { timestamp: lineEnd, value: getY(lineEnd) },
+                  ];
+                  return (
+                    <Line
+                      key="weight-target"
+                      type="linear"
+                      data={targetLineData}
+                      dataKey="value"
+                      stroke="#f59e42"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      strokeDasharray="4 2"
+                      legendType="none"
+                    />
+                  );
+                })()}
+              <Tooltip
+                content={({ active, payload, label: _ }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  const point = payload[0]?.payload;
+                  // 日付取得
+                  const ts = point?.timestamp;
+                  const d = ts ? new Date(ts) : null;
+                  const dateStr = d
+                    ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+                        2,
+                        '0'
+                      )}-${String(d.getDate()).padStart(2, '0')}`
+                    : '';
+                  return (
+                    <div
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #ccc',
+                        padding: 8,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                        {(() => {
+                          type Pt = { timestamp: number };
+                          if (
+                            !payload ||
+                            !Array.isArray(payload) ||
+                            payload.length === 0
+                          )
+                            return '';
+                          const pt = payload[0]?.payload;
+                          if (
+                            !pt ||
+                            typeof pt !== 'object' ||
+                            pt === null ||
+                            !('timestamp' in pt)
+                          )
+                            return '';
+                          const ts = (pt as Pt).timestamp;
+                          const d = new Date(ts);
+                          const mm = String(d.getMonth() + 1).padStart(2, '0');
+                          const dd = String(d.getDate()).padStart(2, '0');
+                          const hh = String(d.getHours()).padStart(2, '0');
+                          const min = String(d.getMinutes()).padStart(2, '0');
+                          const weekday = WEEKDAYS_JP[d.getDay()];
+                          return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
+                        })()}
+                      </div>
+                      {(graphType as string) !== 'bodyComposition' &&
+                        ((payload ?? []) as TooltipItem[])
+                          .filter(
+                            item =>
+                              item &&
+                              item.color !== '#f59e42' &&
+                              item.color !== '#22c55e'
+                          )
+                          .map((item, idx) => (
+                            <div
+                              key={idx}
+                              style={{ color: item.color, fontSize: 14 }}
+                            >
+                              {typeof item.value === 'number'
+                                ? item.value.toFixed(
+                                    graphType === 'weight' ? 2 : 0
+                                  )
+                                : item.value}
+                              {graphType === 'weight' ? 'kg' : 'mmHg'}
+                            </div>
+                          ))}
+                      <div style={{ marginTop: 6, fontSize: 13 }}>
+                        {(() => {
+                          const statusList = [
+                            { key: 'exercise', label: '🏃‍♂️' },
+                            { key: 'meal', label: '🍽' },
+                            { key: 'sleep', label: '🛌' },
+                          ];
+                          return statusList.map(({ key, label }) => {
+                            const rec = dailyRecords.find(
+                              r => r.fieldId === key && r.date === dateStr
+                            );
+                            if (rec === undefined) return null; // 入力がなければ非表示
+                            return (
+                              <span
+                                key={key}
+                                style={{
+                                  marginRight: 8,
+                                  verticalAlign: 'middle',
+                                  fontSize: '1.1em',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                {label}
+                                {rec.value === 1 ? (
+                                  <HiCheck
+                                    style={{
+                                      color: '#38bdf8',
+                                      fontSize: '1.3em',
+                                      marginLeft: 2,
+                                      verticalAlign: 'middle',
+                                    }}
+                                  />
+                                ) : (
+                                  <HiXMark
+                                    style={{
+                                      color: '#bbb',
+                                      fontSize: '1.3em',
+                                      marginLeft: 2,
+                                      verticalAlign: 'middle',
+                                    }}
+                                  />
+                                )}
+                              </span>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+              {graphType === 'weight' ? (
                 <Line
-                  key="weight-target"
-                  type="linear"
-                  data={targetLineData}
+                  key="weight-line"
+                  type="monotone"
                   dataKey="value"
-                  stroke="#f59e42"
+                  data={data}
+                  stroke="#38bdf8"
+                  strokeWidth={3}
+                  dot={({ cx, cy, payload, index }) => (
+                    <circle
+                      key={`weight-dot-${payload?.id || index}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill={payload.excluded ? '#f87171' : '#38bdf8'}
+                      stroke="#fff"
+                      strokeWidth={1}
+                    />
+                  )}
+                  activeDot={false}
+                />
+              ) : (
+                <>
+                  {/* 収縮期血圧（上の血圧） */}
+                  <Line
+                    key="systolic-line"
+                    type="monotone"
+                    dataKey="systolic"
+                    data={data}
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={({ cx, cy, payload, index }) => (
+                      <circle
+                        key={`systolic-dot-${payload?.id || index}`}
+                        cx={cx}
+                        cy={cy}
+                        r={4}
+                        fill={payload.excluded ? '#f87171' : '#ef4444'}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
+                    )}
+                    activeDot={false}
+                  />
+                  {/* 拡張期血圧（下の血圧） */}
+                  <Line
+                    key="diastolic-line"
+                    type="monotone"
+                    dataKey="diastolic"
+                    data={data}
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    dot={({ cx, cy, payload, index }) => (
+                      <circle
+                        key={`diastolic-dot-${payload?.id || index}`}
+                        cx={cx}
+                        cy={cy}
+                        r={4}
+                        fill={payload.excluded ? '#f87171' : '#3b82f6'}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
+                    )}
+                    activeDot={false}
+                  />
+                  {/* 収縮期血圧傾向線 */}
+                  {systolicTrendLine && (
+                    <Line
+                      key="systolic-trend"
+                      type="linear"
+                      data={systolicTrendLine}
+                      dataKey="systolicTrend"
+                      stroke="#22c55e"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      strokeDasharray="6 6"
+                      legendType="none"
+                    />
+                  )}
+                  {/* 拡張期血圧傾向線 */}
+                  {diastolicTrendLine && (
+                    <Line
+                      key="diastolic-trend"
+                      type="linear"
+                      data={diastolicTrendLine}
+                      dataKey="diastolicTrend"
+                      stroke="#22c55e"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={false}
+                      isAnimationActive={false}
+                      strokeDasharray="6 6"
+                      legendType="none"
+                    />
+                  )}
+                </>
+              )}
+              {graphType === 'weight' && trendLine && (
+                <Line
+                  key="weight-trend"
+                  type="linear"
+                  data={trendLine}
+                  dataKey="weightTrend"
+                  stroke="#22c55e"
                   strokeWidth={3}
                   dot={false}
                   activeDot={false}
                   isAnimationActive={false}
-                  strokeDasharray="4 2"
+                  strokeDasharray="6 6"
                   legendType="none"
                 />
-              );
-            })()}
-            <Tooltip
-              content={({ active, payload, label: _ }) => {
-                if (!active || !payload || !payload.length) return null;
-                const point = payload[0]?.payload;
-                // 日付取得
-                const ts = point?.timestamp;
-                const d = ts ? new Date(ts) : null;
-                const dateStr = d
-                  ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-                      2,
-                      '0'
-                    )}-${String(d.getDate()).padStart(2, '0')}`
-                  : '';
-                return (
-                  <div
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #ccc',
-                      padding: 8,
-                      borderRadius: 8,
-                    }}
-                  >
-                    <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                      {(() => {
-                        type Pt = { timestamp: number };
-                        if (
-                          !payload ||
-                          !Array.isArray(payload) ||
-                          payload.length === 0
-                        )
-                          return '';
-                        const pt = payload[0]?.payload;
-                        if (
-                          !pt ||
-                          typeof pt !== 'object' ||
-                          pt === null ||
-                          !('timestamp' in pt)
-                        )
-                          return '';
-                        const ts = (pt as Pt).timestamp;
-                        const d = new Date(ts);
-                        const mm = String(d.getMonth() + 1).padStart(2, '0');
-                        const dd = String(d.getDate()).padStart(2, '0');
-                        const hh = String(d.getHours()).padStart(2, '0');
-                        const min = String(d.getMinutes()).padStart(2, '0');
-                        const weekday = WEEKDAYS_JP[d.getDay()];
-                        return `${mm}/${dd}(${weekday}) ${hh}:${min}`;
-                      })()}
-                    </div>
-                    {(graphType as string) !== 'bodyComposition' && ((payload ?? []) as TooltipItem[])
-                      .filter(
-                        item =>
-                          item &&
-                          item.color !== '#f59e42' &&
-                          item.color !== '#22c55e'
-                      )
-                      .map((item, idx) => (
-                        <div
-                          key={idx}
-                          style={{ color: item.color, fontSize: 14 }}
-                        >
-                          {typeof item.value === 'number'
-                            ? item.value.toFixed(graphType === 'weight' ? 2 : 0)
-                            : item.value}
-                          {graphType === 'weight' ? 'kg' : 'mmHg'}
-                        </div>
-                      ))}
-                    <div style={{ marginTop: 6, fontSize: 13 }}>
-                      {(() => {
-                        const statusList = [
-                          { key: 'exercise', label: '🏃‍♂️' },
-                          { key: 'meal', label: '🍽' },
-                          { key: 'sleep', label: '🛌' },
-                        ];
-                        return statusList.map(({ key, label }) => {
-                          const rec = dailyRecords.find(
-                            r => r.fieldId === key && r.date === dateStr
-                          );
-                          if (rec === undefined) return null; // 入力がなければ非表示
-                          return (
-                            <span
-                              key={key}
-                              style={{
-                                marginRight: 8,
-                                verticalAlign: 'middle',
-                                fontSize: '1.1em',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                              }}
-                            >
-                              {label}
-                              {rec.value === 1 ? (
-                                <HiCheck
-                                  style={{
-                                    color: '#38bdf8',
-                                    fontSize: '1.3em',
-                                    marginLeft: 2,
-                                    verticalAlign: 'middle',
-                                  }}
-                                />
-                              ) : (
-                                <HiXMark
-                                  style={{
-                                    color: '#bbb',
-                                    fontSize: '1.3em',
-                                    marginLeft: 2,
-                                    verticalAlign: 'middle',
-                                  }}
-                                />
-                              )}
-                            </span>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-                );
-              }}
-            />
-            {graphType === 'weight' ? (
-              <Line
-                key="weight-line"
-                type="monotone"
-                dataKey="value"
-                data={data}
-                stroke="#38bdf8"
-                strokeWidth={3}
-                dot={({ cx, cy, payload, index }) => (
-                  <circle
-                    key={`weight-dot-${payload?.id || index}`}
-                    cx={cx}
-                    cy={cy}
-                    r={4}
-                    fill={payload.excluded ? '#f87171' : '#38bdf8'}
-                    stroke="#fff"
-                    strokeWidth={1}
-                  />
-                )}
-                activeDot={false}
-              />
-            ) : (
-              <>
-                {/* 収縮期血圧（上の血圧） */}
-                <Line
-                  key="systolic-line"
-                  type="monotone"
-                  dataKey="systolic"
-                  data={data}
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  dot={({ cx, cy, payload, index }) => (
-                    <circle
-                      key={`systolic-dot-${payload?.id || index}`}
-                      cx={cx}
-                      cy={cy}
-                      r={4}
-                      fill={payload.excluded ? '#f87171' : '#ef4444'}
-                      stroke="#fff"
-                      strokeWidth={1}
-                    />
-                  )}
-                  activeDot={false}
-                />
-                {/* 拡張期血圧（下の血圧） */}
-                <Line
-                  key="diastolic-line"
-                  type="monotone"
-                  dataKey="diastolic"
-                  data={data}
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                  dot={({ cx, cy, payload, index }) => (
-                    <circle
-                      key={`diastolic-dot-${payload?.id || index}`}
-                      cx={cx}
-                      cy={cy}
-                      r={4}
-                      fill={payload.excluded ? '#f87171' : '#3b82f6'}
-                      stroke="#fff"
-                      strokeWidth={1}
-                    />
-                  )}
-                  activeDot={false}
-                />
-                {/* 収縮期血圧傾向線 */}
-                {systolicTrendLine && (
-                  <Line
-                    key="systolic-trend"
-                    type="linear"
-                    data={systolicTrendLine}
-                    dataKey="systolicTrend"
-                    stroke="#22c55e"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                    strokeDasharray="6 6"
-                    legendType="none"
-                  />
-                )}
-                {/* 拡張期血圧傾向線 */}
-                {diastolicTrendLine && (
-                  <Line
-                    key="diastolic-trend"
-                    type="linear"
-                    data={diastolicTrendLine}
-                    dataKey="diastolicTrend"
-                    stroke="#22c55e"
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                    strokeDasharray="6 6"
-                    legendType="none"
-                  />
-                )}
-              </>
-            )}
-            {graphType === 'weight' && trendLine && (
-              <Line
-                key="weight-trend"
-                type="linear"
-                data={trendLine}
-                dataKey="weightTrend"
-                stroke="#22c55e"
-                strokeWidth={3}
-                dot={false}
-                activeDot={false}
-                isAnimationActive={false}
-                strokeDasharray="6 6"
-                legendType="none"
-              />
-            )}
+              )}
             </LineChart>
           )}
         </ResponsiveContainer>
@@ -847,18 +932,36 @@ const RecordGraph: React.FC = () => {
       {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
       {graphType === 'weight' && (
         <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">
-        {(['exercise', 'meal', 'sleep'] as const).map(key => {
-          const stats = getStatusStats(key, PERIODS[periodIdx].days || 9999);
-          let goalText = '';
-          if (goal) {
-            if (key === 'exercise' && goal.exerciseGoal)
-              goalText = `${goal.exerciseGoal}`;
-            if (key === 'meal' && goal.dietGoal) goalText = `${goal.dietGoal}`;
-            if (key === 'sleep' && goal.sleepGoal)
-              goalText = `${goal.sleepGoal}`;
-          }
-          const icon = STATUS_LABELS[key] ?? '';
-          if (!stats) {
+          {(['exercise', 'meal', 'sleep'] as const).map(key => {
+            const stats = getStatusStats(key, PERIODS[periodIdx].days || 9999);
+            let goalText = '';
+            if (goal) {
+              if (key === 'exercise' && goal.exerciseGoal)
+                goalText = `${goal.exerciseGoal}`;
+              if (key === 'meal' && goal.dietGoal)
+                goalText = `${goal.dietGoal}`;
+              if (key === 'sleep' && goal.sleepGoal)
+                goalText = `${goal.sleepGoal}`;
+            }
+            const icon = STATUS_LABELS[key] ?? '';
+            if (!stats) {
+              return (
+                <div
+                  key={key}
+                  className="flex items-baseline text-xs sm:text-base text-blue-700 dark:text-blue-200 font-semibold whitespace-nowrap"
+                >
+                  <span className="inline-block min-w-[2em] text-center">
+                    {icon}
+                  </span>
+                  <span className="inline-block min-w-[7em]">記録なし</span>
+                  {goalText && (
+                    <span className="ml-0 text-gray-500 dark:text-gray-300 text-xs sm:text-sm font-normal">
+                      {goalText}
+                    </span>
+                  )}
+                </div>
+              );
+            }
             return (
               <div
                 key={key}
@@ -867,7 +970,13 @@ const RecordGraph: React.FC = () => {
                 <span className="inline-block min-w-[2em] text-center">
                   {icon}
                 </span>
-                <span className="inline-block min-w-[7em]">記録なし</span>
+                <span className="inline-block min-w-[7em]">
+                  {stats.total > 0
+                    ? `${stats.rate.toFixed(0)}% (${stats.achieved}/${
+                        stats.total
+                      }日)`
+                    : '記録なし'}
+                </span>
                 {goalText && (
                   <span className="ml-0 text-gray-500 dark:text-gray-300 text-xs sm:text-sm font-normal">
                     {goalText}
@@ -875,28 +984,7 @@ const RecordGraph: React.FC = () => {
                 )}
               </div>
             );
-          }
-          return (
-            <div
-              key={key}
-              className="flex items-baseline text-xs sm:text-base text-blue-700 dark:text-blue-200 font-semibold whitespace-nowrap"
-            >
-              <span className="inline-block min-w-[2em] text-center">
-                {icon}
-              </span>
-              <span className="inline-block min-w-[7em]">
-                {stats.total > 0
-                  ? `${stats.rate.toFixed(0)}% (${stats.achieved}/${stats.total}日)`
-                  : '記録なし'}
-              </span>
-              {goalText && (
-                <span className="ml-0 text-gray-500 dark:text-gray-300 text-xs sm:text-sm font-normal">
-                  {goalText}
-                </span>
-              )}
-            </div>
-          );
-        })}
+          })}
         </div>
       )}
     </div>
