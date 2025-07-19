@@ -19,6 +19,7 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
     weekdayColor,
     status,
     index,
+    isCheckpoint,
   } = dateItem;
 
   // スタイル計算のメモ化
@@ -39,9 +40,15 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
       : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200';
 
     const centerClass = isCenter && !isSelected ? 'scale-105' : '';
+    
+    const checkpointClass = isCheckpoint
+      ? isSelected
+        ? 'relative after:content-["⭐"] after:absolute after:-top-1 after:-right-1 after:text-xs after:text-yellow-300'
+        : 'relative after:content-["⭐"] after:absolute after:-top-1 after:-right-1 after:text-xs after:text-yellow-500'
+      : '';
 
-    return `${baseClasses} ${stateClasses} ${centerClass}`;
-  }, [isSelected, isToday, isCenter]);
+    return `${baseClasses} ${stateClasses} ${centerClass} ${checkpointClass}`;
+  }, [isSelected, isToday, isCenter, isCheckpoint]);
 
   const statusIndicatorClasses = useMemo(() => {
     const baseStyle = 'inline-block w-2 h-2 rounded-full';
@@ -61,9 +68,10 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
     const statusText = status === 'green' ? '記録済み' : status === 'red' ? '注意' : '';
     const selectedText = isSelected ? '選択中' : '';
     const todayText = isToday ? '今日' : '';
+    const checkpointText = isCheckpoint ? 'チェックポイント' : '';
     
-    return `${dateStr} ${weekdayStr} ${dayStr}日 ${statusText} ${selectedText} ${todayText}`.trim();
-  }, [date, status, isSelected, isToday]);
+    return `${dateStr} ${weekdayStr} ${dayStr}日 ${statusText} ${selectedText} ${todayText} ${checkpointText}`.trim();
+  }, [date, status, isSelected, isToday, isCheckpoint]);
 
   return (
     <button
@@ -111,6 +119,7 @@ export const DateButton = memo(DateButtonComponent, (prevProps, nextProps) => {
     prev.isCenter === next.isCenter &&
     prev.status === next.status &&
     prev.showMonth === next.showMonth &&
+    prev.isCheckpoint === next.isCheckpoint &&
     prevProps.onSelect === nextProps.onSelect
   );
 });

@@ -21,6 +21,7 @@ export interface DateItem {
   weekdayColor: WeekdayColor;
   status: DateStatus;
   index: number;
+  isCheckpoint: boolean;
 }
 
 // タッチイベントの座標型定義

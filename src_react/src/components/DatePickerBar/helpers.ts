@@ -52,7 +52,8 @@ export const createDateItems = (
   centerDate: Date,
   today: Date,
   getDateStatus?: (date: Date) => DateStatus,
-  isRecorded?: (date: Date) => boolean
+  isRecorded?: (date: Date) => boolean,
+  checkpointDates?: string[]
 ): DateItem[] => {
   // パフォーマンス最適化: 比較用文字列を一度だけ計算
   const selectedDateStr = formatDate(selectedDate);
@@ -77,6 +78,9 @@ export const createDateItems = (
       ? getDateStatus(date)
       : (isRecorded?.(date) ? 'green' : 'none');
 
+    // チェックポイント判定
+    const isCheckpoint = checkpointDates ? checkpointDates.includes(dateStr) : false;
+
     return {
       date,
       isSelected,
@@ -86,6 +90,7 @@ export const createDateItems = (
       weekdayColor,
       status,
       index,
+      isCheckpoint,
     };
   });
 };
