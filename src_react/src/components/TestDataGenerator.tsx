@@ -1,8 +1,5 @@
 import { memo, useCallback, useState } from 'react';
 import { HiSparkles } from 'react-icons/hi2';
-import Button from './Button';
-import ProgressBar from './ProgressBar';
-import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 import {
   addBpRecord,
   addDailyRecord,
@@ -13,6 +10,9 @@ import {
 } from '../db';
 import { isDev } from '../utils/devTools';
 import { performanceMonitor } from '../utils/performanceMonitor';
+import Button from './Button';
+import ProgressBar from './ProgressBar';
+import { ErrorMessage, InfoMessage, SuccessMessage } from './StatusMessage';
 
 interface TestDataGeneratorProps {
   onStatusChange?: (status: string | null) => void;
@@ -94,10 +94,10 @@ const TestDataGenerator = memo(function TestDataGenerator({
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
-        
+
         // 時刻は毎日8:00固定
         const timeStr = '08:00';
-        
+
         // 体重を徐々に減少させつつ±2kgの範囲でランダム変動
         const trend = (daysBack - i) * 0.05; // 1日あたり0.05kg減少
         const randomDelta = (Math.random() - 0.5) * 2; // -2〜+2kg
@@ -107,24 +107,32 @@ const TestDataGenerator = memo(function TestDataGenerator({
           Math.min(maxWeight, Math.round(weight * 10) / 10)
         );
 
+        // 体脂肪率も徐々に減少させるパターン
+        const baseBodyFat = 25; // 初期体脂肪率: 25%
+        const bodyFatTrend = (daysBack - i) * 0.02; // 1日あたり0.02%減少
+        const bodyFatRandomDelta = (Math.random() - 0.5) * 1; // -0.5〜+0.5%
+        let bodyFat = baseBodyFat - bodyFatTrend + bodyFatRandomDelta;
+        bodyFat = Math.max(8, Math.min(35, Math.round(bodyFat * 10) / 10)); // 8-35%の範囲
+
+        // 腹囲（ウエスト）も徐々に減少させるパターン
+        const baseWaist = 85; // 初期ウエスト: 85cm
+        const waistTrend = (daysBack - i) * 0.03; // 1日あたり0.03cm減少
+        const waistRandomDelta = (Math.random() - 0.5) * 2; // -1〜+1cm
+        let waist = baseWaist - waistTrend + waistRandomDelta;
+        waist = Math.max(60, Math.min(100, Math.round(waist * 10) / 10)); // 60-100cmの範囲
+
         // 一意なIDを生成
         const uniqueId = `test_weight_${dateStr}_${Math.random()
           .toString(36)
           .substr(2, 6)}`;
-        
+
         const testRecord = {
           id: uniqueId,
           date: dateStr,
           time: timeStr,
           weight: weight,
-          bodyFat:
-            Math.random() > 0.2
-              ? Math.round((15 + Math.random() * 20) * 10) / 10
-              : null, // 15〜35%くらい
-          waist:
-            Math.random() > 0.2
-              ? Math.round((65 + Math.random() * 25) * 10) / 10
-              : null, // 65〜90cmくらい
+          bodyFat: Math.random() > 0.2 ? bodyFat : null, // 80%の確率で体脂肪率を記録
+          waist: Math.random() > 0.2 ? waist : null, // 80%の確率でウエストを記録
           note: Math.random() > 0.7 ? 'テストメモ' : null,
           excludeFromGraph: Math.random() > 0.5 ? true : false,
         };
@@ -143,11 +151,17 @@ const TestDataGenerator = memo(function TestDataGenerator({
       setTestDataStatus(
         `体重テストデータ生成完了: ${createdCount}/${daysBack}件`
       );
-      onStatusChange?.(`体重テストデータ生成完了: ${createdCount}/${daysBack}件`);
+      onStatusChange?.(
+        `体重テストデータ生成完了: ${createdCount}/${daysBack}件`
+      );
       await updateDataCounts();
     } catch (error) {
-      setTestDataStatus(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      onStatusChange?.(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTestDataStatus(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      onStatusChange?.(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setIsGeneratingTestData(false);
     }
@@ -188,9 +202,9 @@ const TestDataGenerator = memo(function TestDataGenerator({
           else if (rand < 0.6) value = 0.5; // 30%の確率で部分達成
           else value = 0; // 40%の確率で未達成
 
-          const uniqueId = `test_daily_${field.fieldId}_${dateStr}_${Math.random()
-            .toString(36)
-            .substr(2, 6)}`;
+          const uniqueId = `test_daily_${
+            field.fieldId
+          }_${dateStr}_${Math.random().toString(36).substr(2, 6)}`;
 
           const testRecord = {
             id: uniqueId,
@@ -203,7 +217,10 @@ const TestDataGenerator = memo(function TestDataGenerator({
             await addDailyRecord(testRecord);
           } catch (error) {
             if (isDev) {
-              console.warn(`日課レコード追加失敗 (${dateStr}, ${field.fieldId}):`, error);
+              console.warn(
+                `日課レコード追加失敗 (${dateStr}, ${field.fieldId}):`,
+                error
+              );
             }
           }
         }
@@ -215,11 +232,17 @@ const TestDataGenerator = memo(function TestDataGenerator({
       setTestDataStatus(
         `日課テストデータ生成完了: ${createdCount * dailyFields.length}件`
       );
-      onStatusChange?.(`日課テストデータ生成完了: ${createdCount * dailyFields.length}件`);
+      onStatusChange?.(
+        `日課テストデータ生成完了: ${createdCount * dailyFields.length}件`
+      );
       await updateDataCounts();
     } catch (error) {
-      setTestDataStatus(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      onStatusChange?.(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTestDataStatus(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      onStatusChange?.(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }, [onStatusChange, updateDataCounts]);
 
@@ -242,7 +265,7 @@ const TestDataGenerator = memo(function TestDataGenerator({
 
         // 朝と夜の2回測定
         const times = ['08:00', '22:00'];
-        
+
         for (const timeStr of times) {
           // 最高血圧: 110-140の範囲
           const systolic = 110 + Math.round(Math.random() * 30);
@@ -251,9 +274,10 @@ const TestDataGenerator = memo(function TestDataGenerator({
           // 脈拍: 60-100の範囲
           const pulse = 60 + Math.round(Math.random() * 40);
 
-          const uniqueId = `test_bp_${dateStr}_${timeStr.replace(':', '')}_${Math.random()
-            .toString(36)
-            .substr(2, 6)}`;
+          const uniqueId = `test_bp_${dateStr}_${timeStr.replace(
+            ':',
+            ''
+          )}_${Math.random().toString(36).substr(2, 6)}`;
 
           const testRecord = {
             id: uniqueId,
@@ -269,7 +293,10 @@ const TestDataGenerator = memo(function TestDataGenerator({
             await addBpRecord(testRecord);
           } catch (error) {
             if (isDev) {
-              console.warn(`血圧レコード追加失敗 (${dateStr}, ${timeStr}):`, error);
+              console.warn(
+                `血圧レコード追加失敗 (${dateStr}, ${timeStr}):`,
+                error
+              );
             }
           }
         }
@@ -278,14 +305,16 @@ const TestDataGenerator = memo(function TestDataGenerator({
         setTestDataProgress(75 + (createdCount / daysBack) * 25); // 75%から100%まで
       }
 
-      setTestDataStatus(
-        `血圧テストデータ生成完了: ${createdCount * 2}件`
-      );
+      setTestDataStatus(`血圧テストデータ生成完了: ${createdCount * 2}件`);
       onStatusChange?.(`血圧テストデータ生成完了: ${createdCount * 2}件`);
       await updateDataCounts();
     } catch (error) {
-      setTestDataStatus(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      onStatusChange?.(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTestDataStatus(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      onStatusChange?.(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setIsGeneratingTestData(false);
       setTestDataProgress(100);
@@ -300,17 +329,26 @@ const TestDataGenerator = memo(function TestDataGenerator({
       await generateWeightTestData();
       await generateDailyTestData();
       await generateBpTestData();
-      
+
       setTestDataStatus('すべてのテストデータ生成が完了しました');
       onStatusChange?.('すべてのテストデータ生成が完了しました');
     } catch (error) {
-      setTestDataStatus(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      onStatusChange?.(`エラー: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTestDataStatus(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      onStatusChange?.(
+        `エラー: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       performanceMonitor.trackDatabase.end(operationId, 'generate-test-data');
       setIsGeneratingTestData(false);
     }
-  }, [generateWeightTestData, generateDailyTestData, generateBpTestData, onStatusChange]);
+  }, [
+    generateWeightTestData,
+    generateDailyTestData,
+    generateBpTestData,
+    onStatusChange,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -319,13 +357,19 @@ const TestDataGenerator = memo(function TestDataGenerator({
           <HiSparkles className="w-6 h-6" />
           テストデータ生成
         </h2>
-        
+
         <div className="space-y-4">
           <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
             <div className="text-left max-w-md">
-              <p>• 体重: {weightCount}件 {weightPeriod && `(${weightPeriod})`}</p>
-              <p>• 日課: {dailyCount}件 {dailyPeriod && `(${dailyPeriod})`}</p>
-              <p>• 血圧: {bpCount}件 {bpPeriod && `(${bpPeriod})`}</p>
+              <p>
+                • 体重: {weightCount}件 {weightPeriod && `(${weightPeriod})`}
+              </p>
+              <p>
+                • 日課: {dailyCount}件 {dailyPeriod && `(${dailyPeriod})`}
+              </p>
+              <p>
+                • 血圧: {bpCount}件 {bpPeriod && `(${bpPeriod})`}
+              </p>
             </div>
           </div>
 
