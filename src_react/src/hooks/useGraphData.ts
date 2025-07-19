@@ -52,26 +52,29 @@ export function useGraphData() {
     return !!(errors.weight || errors.daily || errors.bp || errors.global);
   }, [errors.weight, errors.daily, errors.bp, errors.global]);
   
-  // 体重データの処理
+  // 体重データの処理（最適化版：O(n) アルゴリズム）
   const processedWeightData = useMemo(() => {
     console.log('useGraphData: Processing weight records:', weightRecords.length);
+    
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return weightRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = weightRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           weight: record.weight,
           value: record.weight, // グラフ表示用のvalue プロパティ
           excluded: record.excludeFromGraph || false,
@@ -80,25 +83,27 @@ export function useGraphData() {
       .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
   }, [weightRecords]);
   
-  // 体脂肪データの処理
+  // 体脂肪データの処理（最適化版：O(n) アルゴリズム）
   const processedBodyFatData = useMemo(() => {
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return weightRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = weightRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           bodyFat: record.bodyFat ?? null,
           waist: record.waist ?? null,
         };
@@ -106,26 +111,29 @@ export function useGraphData() {
       .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
   }, [weightRecords]);
   
-  // 血圧データの処理
+  // 血圧データの処理（最適化版：O(n) アルゴリズム）
   const processedBpData = useMemo(() => {
     console.log('useGraphData: Processing BP records:', bpRecords.length);
+    
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return bpRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = bpRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           systolic: record.systolic,
           diastolic: record.diastolic,
           pulse: record.heartRate || 0, // heartRate プロパティを pulse として使用

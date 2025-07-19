@@ -52,6 +52,38 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
   }
 
   /**
+   * 日付範囲での体重記録取得（最適化版）
+   */
+  async getByDateRange(startDate: string, endDate: string): Promise<OperationResult<WeightRecordV2[]>> {
+    return trackDbOperation('get-weight-records-by-date-range', async () => {
+      try {
+        const records = await executeTransaction(
+          this.storeName as any,
+          'readonly',
+          async (_transaction, store) => {
+            const objectStore = store as IDBObjectStore;
+            const dateIndex = objectStore.index('date');
+            const range = IDBKeyRange.bound(startDate, endDate);
+            
+            return new Promise<WeightRecordV2[]>((resolve, reject) => {
+              const request = dateIndex.getAll(range);
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+          }
+        );
+
+        return { success: true, data: records, recordsAffected: records.length };
+      } catch (error) {
+        return { 
+          success: false, 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        };
+      }
+    });
+  }
+
+  /**
    * 全ての体重記録を取得
    */
   async getAll(): Promise<OperationResult<WeightRecordV2[]>> {
