@@ -109,7 +109,8 @@ const RecordGraph: React.FC = () => {
   const xAxisTicks = useMemo(() => {
     if (periodIdx !== 0 || !data.length) return undefined;
     return graphCalculations.calculateXAxisTicks(data);
-  }, [data, periodIdx, graphCalculations]);
+  }, [data, periodIdx]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // X軸ラベルをMM/DD(曜) HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
@@ -128,31 +129,36 @@ const RecordGraph: React.FC = () => {
       return graphCalculations.calculateWeightTrendLine(data);
     }
     return null;
-  }, [data, graphType, graphCalculations]);
+  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 体脂肪率の傾向線計算
   const bodyFatTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateBodyFatTrendLine(data);
-  }, [data, graphType, graphCalculations]);
+  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 腹囲の傾向線計算
   const waistTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateWaistTrendLine(data);
-  }, [data, graphType, graphCalculations]);
+  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 血圧（収縮期）の傾向線計算
   const systolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateSystolicTrendLine(data);
-  }, [data, graphType, graphCalculations]);
+  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // 血圧（拡張期）の傾向線計算
   const diastolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateDiastolicTrendLine(data);
-  }, [data, graphType, graphCalculations]);
+  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
