@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useRecordsStore, useGoalStore } from '../store';
-import { getAllBpRecords } from '../db';
 import type { WeightRecordV2, BpRecordV2 } from '../types/record';
 
 /**
@@ -15,92 +14,67 @@ export function useGraphData() {
   const {
     weightRecords,
     dailyRecords,
+    bpRecords,
     loading,
     errors,
   } = recordsStore;
   
   const { goal } = goalStore;
   
-  // 血圧データの状態管理
-  const [bpRecords, setBpRecords] = useState<BpRecordV2[]>([]);
-  const [bpLoading, setBpLoading] = useState(false);
-  const [bpError, setBpError] = useState<string | null>(null);
-  
-  // 血圧データの取得
-  const loadBpRecords = useCallback(async () => {
-    setBpLoading(true);
-    setBpError(null);
-    
-    try {
-      const records = await getAllBpRecords();
-      setBpRecords(records);
-    } catch (error: any) {
-      setBpError(error.message || 'Unknown error');
-    } finally {
-      setBpLoading(false);
-    }
-  }, []);
-  
-  // 初期データロードフラグ
-  const [isInitialized, setIsInitialized] = useState(false);
-  
-  // 初期データロード（依存配列を最小限に）
+  // 初期データロード（MobXストアの初期化状態を活用）
   useEffect(() => {
-    if (isInitialized) return;
-    
-    console.log('useGraphData: Loading initial data');
-    setIsInitialized(true);
-    
     const loadData = async () => {
+      console.log('useGraphData: Loading initial data');
       await Promise.all([
         goalStore.loadGoal(),
-        loadBpRecords(),
         recordsStore.loadAllData(),
       ]);
     };
     
     loadData();
-  }, [isInitialized]); // isInitializedのみに依存
+  }, []); // 空の依存配列でマウント時のみ実行
   
   // 統合データロード関数（外部から呼び出し用）
   const loadAllDataWithBp = useCallback(async () => {
     await Promise.all([
       goalStore.loadGoal(),
-      loadBpRecords(),
       recordsStore.loadAllData(),
     ]);
-  }, [loadBpRecords, goalStore.loadGoal, recordsStore.loadAllData]);
+  }, [goalStore.loadGoal, recordsStore.loadAllData]);
   
   // 統合されたローディング状態
   const isLoading = useMemo(() => {
-    return loading.weight || loading.daily || bpLoading || loading.global;
-  }, [loading.weight, loading.daily, bpLoading, loading.global]);
+    return loading.weight || loading.daily || loading.bp || loading.global;
+  }, [loading.weight, loading.daily, loading.bp, loading.global]);
   
   // 統合されたエラー状態
   const hasError = useMemo(() => {
-    return !!(errors.weight || errors.daily || bpError || errors.global);
-  }, [errors.weight, errors.daily, bpError, errors.global]);
+    return !!(errors.weight || errors.daily || errors.bp || errors.global);
+  }, [errors.weight, errors.daily, errors.bp, errors.global]);
   
-  // 体重データの処理
+  // 体重データの処理（最適化版：O(n) アルゴリズム）
   const processedWeightData = useMemo(() => {
     console.log('useGraphData: Processing weight records:', weightRecords.length);
+    
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return weightRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = weightRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           weight: record.weight,
           value: record.weight, // グラフ表示用のvalue プロパティ
           excluded: record.excludeFromGraph || false,
@@ -109,25 +83,27 @@ export function useGraphData() {
       .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
   }, [weightRecords]);
   
-  // 体脂肪データの処理
+  // 体脂肪データの処理（最適化版：O(n) アルゴリズム）
   const processedBodyFatData = useMemo(() => {
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return weightRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = weightRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           bodyFat: record.bodyFat ?? null,
           waist: record.waist ?? null,
         };
@@ -135,26 +111,29 @@ export function useGraphData() {
       .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
   }, [weightRecords]);
   
-  // 血圧データの処理
+  // 血圧データの処理（最適化版：O(n) アルゴリズム）
   const processedBpData = useMemo(() => {
     console.log('useGraphData: Processing BP records:', bpRecords.length);
+    
+    // 最適化：タイムスタンプの重複をMapで管理（O(n)）
+    const timestampCounts = new Map<number, number>();
+    
     return bpRecords
-      .map((record, index) => {
+      .map((record) => {
         const dateTime = `${record.date}T${record.time}`;
-        let timestamp = new Date(dateTime).getTime();
+        const baseTimestamp = new Date(dateTime).getTime();
         
-        // 同じタイムスタンプを持つレコードの場合、ミリ秒を追加してユニークにする
-        const duplicateCount = bpRecords.filter((r, i) => 
-          i < index && new Date(`${r.date}T${r.time}`).getTime() === timestamp
-        ).length;
-        if (duplicateCount > 0) {
-          timestamp = timestamp + duplicateCount; // 重複数分だけミリ秒を追加
-        }
+        // 現在のタイムスタンプの使用回数を取得
+        const currentCount = timestampCounts.get(baseTimestamp) || 0;
+        const uniqueTimestamp = baseTimestamp + currentCount;
+        
+        // 使用回数を更新
+        timestampCounts.set(baseTimestamp, currentCount + 1);
         
         return {
           ...record,
           dateTime,
-          timestamp,
+          timestamp: uniqueTimestamp,
           systolic: record.systolic,
           diastolic: record.diastolic,
           pulse: record.heartRate || 0, // heartRate プロパティを pulse として使用
@@ -270,7 +249,7 @@ export function useGraphData() {
     isLoading,
     hasError,
     error: hasError ? 'データの取得に失敗しました' : null,
-    errors: { weight: errors.weight, daily: errors.daily, bp: bpError, global: errors.global },
+    errors: { weight: errors.weight, daily: errors.daily, bp: errors.bp, global: errors.global },
     
     // 処理されたデータ
     latestDate,

@@ -5,11 +5,12 @@ import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TipsModal from './components/TipsModal';
 import tipsList from './data/tips';
-import BpRecord from './pages/BpRecord';
-import DailyRecord from './pages/DailyRecord';
-import GoalInput from './pages/GoalInput';
-import RecordGraph from './pages/RecordGraph';
-import WeightRecord from './pages/WeightRecord';
+// Lazy load for better performance
+const BpRecord = lazy(() => import('./pages/BpRecord'));
+const DailyRecord = lazy(() => import('./pages/DailyRecord'));
+const GoalInput = lazy(() => import('./pages/GoalInput'));
+const RecordGraph = lazy(() => import('./pages/RecordGraph'));
+const WeightRecord = lazy(() => import('./pages/WeightRecord'));
 import { rootStore } from './store';
 import { isDev } from './utils/devTools';
 import * as db from './db';
@@ -17,14 +18,22 @@ import * as db from './db';
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div 
+      className="flex items-center justify-center min-h-[400px]"
+      role="status" 
+      aria-live="polite"
+      aria-label={pageName ? `${pageName}を読み込み中` : 'ページを読み込み中'}
+    >
       <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div 
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"
+          aria-hidden="true"
+        ></div>
         <p className="text-gray-600 dark:text-gray-300 font-medium">
           {pageName ? `${pageName}を読み込み中...` : 'ページを読み込み中...'}
         </p>
         {isDev && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-xs text-gray-400 dark:text-gray-500" aria-hidden="true">
             パフォーマンス測定中
           </p>
         )}

@@ -33,7 +33,7 @@ export interface ButtonProps extends BaseComponentProps {
   size?: ButtonSize;
   loading?: boolean;
   disabled?: boolean;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<Record<string, unknown>>;
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
 }
@@ -85,7 +85,7 @@ export interface StatusMessageProps extends BaseComponentProps {
 }
 
 // データテーブルプロップス
-export interface DataTableProps<T = any> extends BaseComponentProps {
+export interface DataTableProps<T = Record<string, unknown>> extends BaseComponentProps {
   data: T[];
   columns: TableColumn<T>[];
   loading?: boolean;
@@ -93,10 +93,10 @@ export interface DataTableProps<T = any> extends BaseComponentProps {
   onRowClick?: (row: T, index: number) => void;
 }
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = Record<string, unknown>> {
   key: keyof T;
   title: string;
-  render?: (value: any, row: T, index: number) => React.ReactNode;
+  render?: (value: T[keyof T], row: T, index: number) => React.ReactNode;
   sortable?: boolean;
   width?: string | number;
   align?: 'left' | 'center' | 'right';
@@ -178,16 +178,16 @@ export interface ToastProps extends BaseComponentProps {
 }
 
 // 複合コンポーネント用のプロップス
-export interface RecordFormProps<T = any> extends BaseComponentProps {
+export interface RecordFormProps<T = Record<string, unknown>> extends BaseComponentProps {
   data?: T;
   onSave: (data: T) => void | Promise<void>;
   onCancel?: () => void;
   loading?: boolean;
-  validationSchema?: any;
+  validationSchema?: unknown;
 }
 
 export interface DataVisualizationProps extends BaseComponentProps {
-  data: any[];
+  data: Record<string, unknown>[];
   type: 'line' | 'bar' | 'pie' | 'area';
   xAxisKey?: string;
   yAxisKey?: string;

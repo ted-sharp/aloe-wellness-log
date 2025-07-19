@@ -6,7 +6,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
  * デバウンス機能付きコールバックフック
  * 高頻度で発生するイベント（検索入力など）を最適化
  */
-export const useDebounce = <T extends any[]>(
+export const useDebounce = <T extends readonly unknown[]>(
   callback: (...args: T) => void,
   delay: number
 ): ((...args: T) => void) => {
@@ -27,7 +27,7 @@ export const useDebounce = <T extends any[]>(
  * スロットリング機能付きコールバックフック
  * 高頻度で発生するイベント（スクロールなど）を最適化
  */
-export const useThrottle = <T extends any[]>(
+export const useThrottle = <T extends readonly unknown[]>(
   callback: (...args: T) => void,
   delay: number
 ): ((...args: T) => void) => {
@@ -141,7 +141,13 @@ export const useChunkedProcessing = <T, R>(
 export const useMemoryMonitor = (threshold: number = 50 * 1024 * 1024) => { // 50MB
   const checkMemory = useCallback(() => {
     if ('memory' in performance) {
-      const memInfo = (performance as any).memory;
+      const memInfo = (performance as Performance & {
+        memory: {
+          usedJSHeapSize: number;
+          totalJSHeapSize: number;
+          jsHeapSizeLimit: number;
+        }
+      }).memory;
       const used = memInfo.usedJSHeapSize;
       const total = memInfo.totalJSHeapSize;
       const limit = memInfo.jsHeapSizeLimit;
@@ -275,7 +281,7 @@ export const withMemo = <P extends object>(
  */
 export const useWebWorker = <T, R>(
   workerFunction: (data: T) => R,
-  dependencies: any[] = []
+  dependencies: readonly unknown[] = []
 ) => {
   const workerRef = useRef<Worker>();
   
