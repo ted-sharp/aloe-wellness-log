@@ -1,5 +1,5 @@
 // メインコンポーネント
-export { default as DatePickerBar } from './DatePickerBar';
+export { default as DatePickerBar } from '../DatePickerBar';
 
 // 型定義
 export type { DatePickerBarProps, DateItem, DateRange } from './types';
