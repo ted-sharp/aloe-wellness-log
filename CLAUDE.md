@@ -11,14 +11,18 @@ aloe-wellness-log/
 ├── src_react/                    # Main React application
 │   ├── src/
 │   │   ├── pages/               # Page components (WeightRecord, DailyRecord, BpRecord, etc.)
-│   │   ├── components/          # Reusable UI components 
-│   │   ├── store/               # Zustand state management
-│   │   ├── db/                  # IndexedDB database layer
+│   │   ├── components/          # Reusable UI components & compound components
+│   │   ├── store/               # MobX state management
+│   │   ├── db/                  # IndexedDB database layer with repository pattern
 │   │   ├── hooks/               # Custom React hooks
+│   │   │   └── business/        # Domain-specific hooks with tests
 │   │   ├── utils/               # Utility functions
-│   │   └── types/               # TypeScript type definitions
+│   │   ├── types/               # TypeScript type definitions
+│   │   ├── constants/           # Application constants
+│   │   └── data/                # Static data (tips, examples)
 │   ├── public/                  # Static files and PWA manifest
-│   └── tests/                   # E2E tests with Playwright
+│   ├── tests/                   # E2E tests with Playwright
+│   └── coverage/                # Test coverage reports
 ├── docs/                        # GitHub Pages deployment output
 └── doc/                         # Project documentation
 ```
@@ -55,23 +59,29 @@ yarn deploy             # Deploy to GitHub Pages
 ## 🏛️ Architecture Overview
 
 ### State Management
-- **Zustand** for global state management (records, goals, toast notifications)
-- State stores located in `src/store/` directory
-- Persistent data stored in IndexedDB via custom database layer
+- **MobX 6.13.7** for reactive state management (replaced Zustand)
+- **mobx-react-lite** for React integration with hooks
+- Centralized RootStore pattern with proper initialization
+- State stores: dateStore, goalStore, recordsStore, toastStore
+- Persistent data stored in IndexedDB via repository pattern
 
 ### Database Layer
 - **IndexedDB** for client-side data persistence
+- Repository pattern with structured data access layer
+- Repositories: WeightRecordRepository, GoalRepository, BpRecordRepository
 - Database operations centralized in `src/db/indexedDb.ts`
 - Supports health records, daily activities, blood pressure, and goals
 - Error handling with custom `DbError` types
 
 ### UI Framework
-- **React 18** with TypeScript
-- **Tailwind CSS** for styling
-- **Headless UI** for accessible components
+- **React 18.3.1** with TypeScript 5.8.3
+- **Tailwind CSS 4.1.10** for utility-first styling
+- **Headless UI 2.2.4** for accessible, unstyled components
 - **React Router** for client-side routing
-- **Recharts** for data visualization
-- **React Calendar** for date selection
+- **Recharts 2.15.3** for declarative charts and graphs
+- **React Calendar 6.0.0** for date selection
+- **React Icons 5.5.0** for comprehensive icon library
+- **@dnd-kit** for modern drag-and-drop functionality
 
 ### PWA Features
 - Service Worker for offline functionality
@@ -80,16 +90,54 @@ yarn deploy             # Deploy to GitHub Pages
 - Responsive design for mobile-first experience
 
 ### Testing Strategy
-- **Vitest** for unit testing
-- **Playwright** for E2E testing across browsers
-- **Testing Library** for React component testing
-- Coverage reports available
+- **Vitest 3.2.4** for fast unit testing with jsdom environment
+- **Playwright 1.53.1** for cross-browser E2E testing (Chromium, Firefox, Safari)
+- **@testing-library** for React component testing
+- **Business logic testing** for hooks in `hooks/business/__tests__/`
+- Coverage reports with detailed analysis
 
 ### Performance Optimizations
-- Code splitting with manual chunks (react-vendor, ui-vendor, etc.)
-- Lazy loading for large components (RecordExport)
-- Bundle analysis with rollup-plugin-visualizer
-- Terser minification for production builds
+- **Manual code splitting** - Separate vendor chunks (react, ui, dnd, icons, state)
+- **Lazy loading** - Route-level code splitting with React.Suspense
+- **Bundle analysis** - Rollup visualizer integration for size optimization
+- **Terser minification** - Console/debugger removal in production
+- **MobX reactions** - Efficient reactive state updates
+
+## 🏗️ Key Architectural Patterns
+
+### MobX Store Structure
+```typescript
+// Centralized RootStore pattern
+class RootStore {
+  dateStore = dateStore;           // Date selection management
+  goalStore = goalStore;           // Goal setting & tracking
+  recordsStore = enhancedRecordsStore; // Health records CRUD
+  toastStore = toastStore;         // Notification system
+}
+```
+
+### Repository Pattern for Data Access
+```typescript
+// Structured database access in src/db/
+export { WeightRecordRepository } from './repositories/WeightRecordRepository';
+export { GoalRepository } from './repositories/GoalRepository';
+export { BpRecordRepository } from './repositories/BpRecordRepository';
+```
+
+### Business Logic Hooks
+```
+hooks/business/
+├── useWeightRecordLogic.ts      # Weight tracking business logic
+├── useBpRecordLogic.ts          # Blood pressure logic  
+├── useGoalInputLogic.ts         # Goal management logic
+└── __tests__/                   # Business logic tests
+```
+
+### Component Architecture
+- **Page components** - Main route handlers in `pages/`
+- **Compound components** - Complex UI like DatePickerBar
+- **Feature-specific** - Organized in Goal/, DailyRecord/ folders
+- **Reusable components** - Button, StatusMessage, etc.
 
 ## 🎯 Key Features
 
@@ -100,16 +148,17 @@ The app manages health data including:
 - **Data visualization** with charts and graphs
 - **CSV export** functionality
 - **Goal setting and tracking**
+- **Milestone tracking** for special health guidance support
 
 ## 🔧 Configuration Files
 
-- `vite.config.ts` - Build configuration with GitHub Pages deployment settings
-- `package.json` - Dependencies and scripts
-- `tsconfig.json` - TypeScript configuration
-- `eslint.config.js` - ESLint rules
+- `vite.config.ts` - Build config with GitHub Pages setup, code splitting, PWA support
+- `package.json` - Dependencies, scripts, project metadata
+- `tsconfig.app.json` - TypeScript config with strict settings
+- `eslint.config.js` - Linting rules for TypeScript/React
 - `tailwind.config.js` - Tailwind CSS configuration
 - `playwright.config.ts` - E2E test configuration
-- `vitest.config.ts` - Unit test configuration
+- `vitest.config.ts` - Unit test setup with jsdom environment
 
 ## 🚨 Important Notes
 
@@ -137,3 +186,9 @@ Always work from the `src_react/` directory when running commands, as this conta
 - Development environment: Windows 10 with PowerShell 7
 - Package manager: Uses yarn (verify before running npm commands)
 - All commands must be run from the `src_react/` directory unless otherwise specified
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
