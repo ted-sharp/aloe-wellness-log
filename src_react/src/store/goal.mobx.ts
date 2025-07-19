@@ -25,8 +25,6 @@ export class GoalStore {
       setGoal: action,
       clearGoal: action,
       loadGoal: action,
-      setLoading: action,
-      setError: action,
       clearError: action,
       // computed値の明示的定義
       hasGoal: computed,

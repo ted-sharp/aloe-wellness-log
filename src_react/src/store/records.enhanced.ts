@@ -87,13 +87,7 @@ export class EnhancedRecordsStore {
   private readonly CACHE_DURATION = 5 * 60 * 1000;
 
   constructor() {
-    makeAutoObservable(this, {
-      // パフォーマンス最適化：プライベートメソッドは監視対象外
-      isStale: false,
-      updateCache: false,
-      setLoading: false,
-      setError: false,
-    });
+    makeAutoObservable(this);
   }
   
   // === Computed Values ===

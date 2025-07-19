@@ -1,4 +1,5 @@
-import { configure, IReactionDisposer, reaction } from 'mobx';
+import { configure, reaction } from 'mobx';
+import type { IReactionDisposer } from 'mobx';
 import { dateStore, initializeDateStore } from './date.mobx';
 import { goalStore } from './goal.mobx';
 import { enhancedRecordsStore } from './records.enhanced';
@@ -6,8 +7,8 @@ import { toastStore } from './toast.mobx';
 // 非推奨: import { recordsStore } from './records.mobx'; // enhancedRecordsStoreに統一
 
 // 型定義
-export type StoreState = 'uninitialized' | 'initializing' | 'ready' | 'error';
-export type StoreCleanupFunction = () => void;
+type StoreState = 'uninitialized' | 'initializing' | 'ready' | 'error';
+type StoreCleanupFunction = () => void;
 
 // MobXの設定 - 開発効率と安全性のバランス
 configure({
@@ -22,7 +23,7 @@ configure({
  * 全MobXストアの統合管理
  * 型安全性とパフォーマンスを重視した設計
  */
-export class RootStore {
+class RootStore {
   public readonly dateStore = dateStore;
   public readonly goalStore = goalStore;
   public readonly recordsStore = enhancedRecordsStore; // 統一: enhancedRecordsStoreを使用
@@ -228,8 +229,7 @@ export class RootStore {
 export const rootStore = new RootStore();
 
 // 型エクスポート（型安全性の向上）
-export type { StoreState, StoreCleanupFunction };
-export type { RootStore };
+export type { StoreState, StoreCleanupFunction, RootStore };
 export type { GoalData } from '../types/goal';
 export type { WeightRecordV2, DailyRecordV2, BpRecordV2, DailyFieldV2 } from '../types/record';
 export type { Toast, ToastType } from './toast.mobx';
