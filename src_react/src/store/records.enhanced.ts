@@ -201,8 +201,8 @@ export class EnhancedRecordsStore {
           return {
             ...record,
             timestamp: uniqueTimestamp,
-            bodyFat: record.bodyFat,
-            waist: record.waist,
+            bodyFat: record.bodyFat ?? undefined,
+            waist: record.waist ?? undefined,
           };
         })
         .sort((a, b) => a.timestamp - b.timestamp);

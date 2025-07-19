@@ -457,15 +457,8 @@ export class WeightRecordRepository extends BaseRepository<WeightRecordV2> {
   }
 
   /**
-   * 日付範囲での体重記録取得
+   * 日付範囲での体重記録取得（旧実装、互換性のため削除）
    */
-  async getByDateRange(startDate: string, endDate: string): Promise<OperationResult<WeightRecordV2[]>> {
-    return this.search({
-      dateRange: { start: startDate, end: endDate },
-      orderBy: 'date',
-      order: 'asc',
-    });
-  }
 
   /**
    * 最新の体重記録を取得
