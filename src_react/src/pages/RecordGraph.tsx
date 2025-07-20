@@ -16,8 +16,8 @@ import { useGraphData } from '../hooks/useGraphData';
 
 const PERIODS = [
   { label: '2週間', days: 14 },
-  { label: '1か月半', days: 45 },
-  { label: '3か月', days: 90 },
+  { label: '1か月', days: 30 },
+  { label: '2か月', days: 60 },
   { label: '全データ', days: null },
 ];
 
