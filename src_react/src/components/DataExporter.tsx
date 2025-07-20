@@ -10,15 +10,11 @@ interface DataExporterProps {
 const DataExporter = memo(function DataExporter({
   onStatusChange,
 }: DataExporterProps) {
-  const { exportAsJSON, exportAsCSV } = useDataExportLogic();
+  const { exportAsJSON } = useDataExportLogic();
 
   const handleExportJSON = useCallback(async () => {
     await exportAsJSON(onStatusChange);
   }, [exportAsJSON, onStatusChange]);
-
-  const handleExportCSV = useCallback(async () => {
-    await exportAsCSV(onStatusChange);
-  }, [exportAsCSV, onStatusChange]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
@@ -30,7 +26,7 @@ const DataExporter = memo(function DataExporter({
       <div className="space-y-4">
         <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 flex justify-center">
           <div className="text-left max-w-md">
-            <p>記録したデータをファイルとしてダウンロードできます。</p>
+            <p>記録したデータをJSONファイルとしてダウンロードできます。</p>
           </div>
         </div>
 
@@ -40,14 +36,7 @@ const DataExporter = memo(function DataExporter({
             icon={HiDocument}
             onClick={handleExportJSON}
           >
-            JSON形式でエクスポート
-          </Button>
-          <Button
-            variant="secondary"
-            icon={HiDocument}
-            onClick={handleExportCSV}
-          >
-            CSV形式でエクスポート
+            JSONファイルでエクスポート
           </Button>
         </div>
       </div>

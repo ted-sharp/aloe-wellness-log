@@ -59,113 +59,31 @@ describe('useDataExportLogic (unit tests)', () => {
     });
   });
 
-  describe('CSV generation', () => {
-    it('should generate weight CSV correctly', () => {
-      const weightRecords = [
-        {
-          date: '2024-01-01',
-          time: '08:00',
-          weight: 70.5,
-          bodyFat: 15.2,
-          waist: 85.0,
-          note: 'Morning',
-          excludeFromGraph: false,
-        },
-      ];
+  describe('JSON data structure', () => {
+    it('should create proper JSON structure', () => {
+      const mockData = {
+        weightRecords: [
+          {
+            date: '2024-01-01',
+            time: '08:00',
+            weight: 70.5,
+            bodyFat: 15.2,
+            waist: 85.0,
+            note: 'Morning',
+            excludeFromGraph: false,
+          },
+        ],
+        bpRecords: [],
+        dailyRecords: [],
+        dailyFields: [],
+      };
       
-      const expectedCSV = [
-        'Date,Time,Weight,BodyFat,Waist,Note,ExcludeFromGraph',
-        '2024-01-01,08:00,70.5,15.2,85,Morning,false'
-      ].join('\n');
+      const json = JSON.stringify(mockData, null, 2);
+      const parsed = JSON.parse(json);
       
-      const weightCSV = [
-        'Date,Time,Weight,BodyFat,Waist,Note,ExcludeFromGraph',
-        ...weightRecords.map(record => 
-          `${record.date},${record.time},${record.weight},${record.bodyFat || ''},${record.waist || ''},${record.note || ''},${record.excludeFromGraph || false}`
-        )
-      ].join('\n');
-      
-      expect(weightCSV).toBe(expectedCSV);
-    });
-
-    it('should generate BP CSV correctly', () => {
-      const bpRecords = [
-        {
-          date: '2024-01-01',
-          time: '08:00',
-          systolic: 120,
-          diastolic: 80,
-          heartRate: 70,
-          note: 'Normal',
-          excludeFromGraph: false,
-        },
-      ];
-      
-      const expectedCSV = [
-        'Date,Time,Systolic,Diastolic,HeartRate,Note,ExcludeFromGraph',
-        '2024-01-01,08:00,120,80,70,Normal,false'
-      ].join('\n');
-      
-      const bpCSV = [
-        'Date,Time,Systolic,Diastolic,HeartRate,Note,ExcludeFromGraph',
-        ...bpRecords.map(record => 
-          `${record.date},${record.time},${record.systolic},${record.diastolic},${record.heartRate || ''},${record.note || ''},${record.excludeFromGraph || false}`
-        )
-      ].join('\n');
-      
-      expect(bpCSV).toBe(expectedCSV);
-    });
-
-    it('should generate daily CSV correctly', () => {
-      const dailyRecords = [
-        {
-          date: '2024-01-01',
-          fieldId: 'exercise',
-          value: 1,
-        },
-      ];
-      
-      const expectedCSV = [
-        'Date,FieldId,Value',
-        '2024-01-01,exercise,1'
-      ].join('\n');
-      
-      const dailyCSV = [
-        'Date,FieldId,Value',
-        ...dailyRecords.map(record => 
-          `${record.date},${record.fieldId},${record.value}`
-        )
-      ].join('\n');
-      
-      expect(dailyCSV).toBe(expectedCSV);
-    });
-
-    it('should handle empty/null values in CSV', () => {
-      const weightRecords = [
-        {
-          date: '2024-01-01',
-          time: '08:00',
-          weight: 70.5,
-          bodyFat: null,
-          waist: null,
-          note: null,
-          excludeFromGraph: false,
-        },
-      ];
-      
-      const expectedCSV = [
-        'Date,Time,Weight,BodyFat,Waist,Note,ExcludeFromGraph',
-        '2024-01-01,08:00,70.5,,,,false'
-      ].join('\n');
-      
-      const weightCSV = [
-        'Date,Time,Weight,BodyFat,Waist,Note,ExcludeFromGraph',
-        ...weightRecords.map(record => 
-          `${record.date},${record.time},${record.weight},${record.bodyFat || ''},${record.waist || ''},${record.note || ''},${record.excludeFromGraph || false}`
-        )
-      ].join('\n');
-      
-      expect(weightCSV).toBe(expectedCSV);
+      expect(parsed).toEqual(mockData);
+      expect(parsed.weightRecords).toHaveLength(1);
+      expect(parsed.weightRecords[0].weight).toBe(70.5);
     });
   });
 });

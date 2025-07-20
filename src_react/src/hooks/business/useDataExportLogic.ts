@@ -80,59 +80,8 @@ export const useDataExportLogic = () => {
     }
   }, [getAllData, formatDateForFilename, downloadFile]);
 
-  /**
-   * CSVファイルとしてエクスポート（将来の拡張用）
-   */
-  const exportAsCSV = useCallback(async (onStatusChange?: (status: string | null) => void) => {
-    try {
-      onStatusChange?.('CSVエクスポート中...');
-
-      const data = await getAllData();
-      
-      // 体重データのCSV変換
-      const weightCSV = [
-        'Date,Time,Weight,BodyFat,Waist,Note,ExcludeFromGraph',
-        ...data.weightRecords.map(record => 
-          `${record.date},${record.time},${record.weight},${record.bodyFat || ''},${record.waist || ''},${record.note || ''},${record.excludeFromGraph || false}`
-        )
-      ].join('\n');
-
-      // 血圧データのCSV変換
-      const bpCSV = [
-        'Date,Time,Systolic,Diastolic,HeartRate,Note,ExcludeFromGraph',
-        ...data.bpRecords.map(record => 
-          `${record.date},${record.time},${record.systolic},${record.diastolic},${record.heartRate || ''},${record.note || ''},${record.excludeFromGraph || false}`
-        )
-      ].join('\n');
-
-      // 日常記録のCSV変換
-      const dailyCSV = [
-        'Date,FieldId,Value',
-        ...data.dailyRecords.map(record => 
-          `${record.date},${record.fieldId},${record.value}`
-        )
-      ].join('\n');
-
-      // 複数のCSVファイルを作成
-      const timestamp = formatDateForFilename(new Date());
-      
-      downloadFile(new Blob([weightCSV], { type: 'text/csv' }), `weight-records-${timestamp}.csv`);
-      downloadFile(new Blob([bpCSV], { type: 'text/csv' }), `bp-records-${timestamp}.csv`);
-      downloadFile(new Blob([dailyCSV], { type: 'text/csv' }), `daily-records-${timestamp}.csv`);
-
-      onStatusChange?.('CSVエクスポートが完了しました');
-    } catch (error) {
-      onStatusChange?.(
-        `CSVエクスポートエラー: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
-    }
-  }, [getAllData, formatDateForFilename, downloadFile]);
-
   return {
     exportAsJSON,
-    exportAsCSV,
     getAllData,
     formatDateForFilename,
     downloadFile,
