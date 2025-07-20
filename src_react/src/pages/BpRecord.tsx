@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import { observer } from 'mobx-react-lite';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
@@ -335,4 +334,4 @@ const BpRecord: React.FC = () => {
   );
 };
 
-export default observer(BpRecord);
+export default BpRecord;
