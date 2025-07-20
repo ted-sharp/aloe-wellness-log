@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { observer } from 'mobx-react-lite';
 import type { GoalData } from '../types/goal';
 
 interface BMIIndicatorProps {
@@ -25,18 +24,23 @@ const bmiBands: BMIBand[] = [
   { min: 40, max: 100, color: '#f44336', label: '肥満(4度)', range: '40.0+' },
 ];
 
-const BMIIndicator = observer(function BMIIndicator({
+const BMIIndicator = function BMIIndicator({
   currentWeight,
   goal,
   showWeightDiff = true,
 }: BMIIndicatorProps) {
+  // ゴールデータがない場合は早期リターン
+  if (!goal) {
+    return null;
+  }
+  
   // observable値を確実に読み取るため、最初にgoalの値をチェック
   const goalHeight = goal?.height;
   const goalStartWeight = goal?.startWeight;
   
   // BMI計算
   const bmi =
-    currentWeight && goal && goalHeight
+    currentWeight && goalHeight
       ? currentWeight / Math.pow(goalHeight / 100, 2)
       : null;
   
@@ -87,7 +91,6 @@ const BMIIndicator = observer(function BMIIndicator({
   useEffect(() => {
     if (
       showWeightDiff &&
-      goal &&
       goalStartWeight !== undefined &&
       currentWeight !== null &&
       currentWeight - goalStartWeight < 0
@@ -113,9 +116,9 @@ const BMIIndicator = observer(function BMIIndicator({
     } else {
       setAnimatedDiff(0);
     }
-  }, [goal, currentWeight, showWeightDiff]);
+  }, [goalStartWeight, currentWeight, showWeightDiff]);
 
-  if (!bmi || !goal || !goalHeight) {
+  if (!bmi || !goalHeight) {
     return null;
   }
 
@@ -196,6 +199,6 @@ const BMIIndicator = observer(function BMIIndicator({
       </div>
     </div>
   );
-});
+};
 
 export default BMIIndicator;

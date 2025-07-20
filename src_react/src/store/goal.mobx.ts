@@ -214,7 +214,10 @@ export class GoalStore {
           this.goal = result.data || null;
         } else {
           this.goal = null;
-          this.error = result?.error || 'Failed to load goal';
+          // 'Goal not found'エラーの場合はエラーとして扱わない
+          if (result?.error !== 'Goal not found') {
+            this.error = result?.error || 'Failed to load goal';
+          }
         }
       });
     } catch (error) {
