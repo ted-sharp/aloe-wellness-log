@@ -41,11 +41,14 @@ yarn build:preview      # Build for preview
 yarn preview            # Preview production build
 
 # Testing
-yarn test               # Run unit tests with Vitest (watch mode)
-yarn test:run           # Run unit tests once (for CI/validation)
+yarn test               # Run unit tests with Vitest (single run)
 yarn test:coverage      # Run tests with coverage report
 yarn test:e2e           # Run E2E tests with Playwright
 yarn test:e2e:ui        # Run E2E tests with UI mode
+
+# Single Test Files
+yarn test <filename>    # Run specific test file
+yarn test:e2e --grep "test name"  # Run specific E2E test
 
 # Code Quality
 yarn lint               # Run ESLint
@@ -68,7 +71,7 @@ yarn deploy             # Deploy to GitHub Pages
 ### Database Layer
 - **IndexedDB** for client-side data persistence
 - Repository pattern with structured data access layer
-- Repositories: WeightRecordRepository, GoalRepository, BpRecordRepository
+- Repositories: WeightRecordRepository, GoalRepository (BpRecordRepository may exist but not confirmed in current structure)
 - Database operations centralized in `src/db/indexedDb.ts`
 - Supports health records, daily activities, blood pressure, and goals
 - Error handling with custom `DbError` types
@@ -146,7 +149,7 @@ The app manages health data including:
 - **Daily activities** (exercise, meals, sleep, smoking, alcohol)
 - **Blood pressure monitoring**
 - **Data visualization** with charts and graphs
-- **CSV export** functionality
+- **JSON export** functionality (CSV functionality was removed)
 - **Goal setting and tracking**
 - **Milestone tracking** for special health guidance support
 
@@ -186,6 +189,20 @@ Always work from the `src_react/` directory when running commands, as this conta
 - Development environment: Windows 10 with PowerShell 7
 - Package manager: Uses yarn (verify before running npm commands)
 - All commands must be run from the `src_react/` directory unless otherwise specified
+
+## 🔄 Database Migration Notes
+
+When working with IndexedDB repositories, be aware that:
+- Database structure changes may require version updates in `src/db/config.ts`
+- Repository patterns are established - follow existing patterns for new repositories
+- Test data can be generated using TestDataGenerator component
+
+## 🎨 Styling Conventions
+
+- Uses Tailwind CSS utility classes throughout
+- Component-specific styles in DatePickerBar use modular approach
+- Responsive design patterns: `sm:`, `md:`, `lg:` breakpoints
+- Dark mode support not currently implemented
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
