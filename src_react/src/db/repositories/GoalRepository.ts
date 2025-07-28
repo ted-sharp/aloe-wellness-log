@@ -286,22 +286,8 @@ export class GoalRepository {
       return '現在の体重は20kg〜300kgの範囲で設定してください';
     }
 
-    if (goal.targetDate) {
-      const targetDate = new Date(goal.targetDate);
-      const today = new Date();
-      
-      if (targetDate <= today) {
-        return '目標日は今日より後の日付を設定してください';
-      }
-
-      // 1年以上先の日付は警告
-      const oneYearLater = new Date();
-      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
-      
-      if (targetDate > oneYearLater) {
-        return '目標日は1年以内の日付を推奨します';
-      }
-    }
+    // 目標日のバリデーションは削除
+    // 過去日でも未来日でも受け入れる（時間経過で過去になることもあるため）
 
     return null;
   }

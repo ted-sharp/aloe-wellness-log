@@ -158,16 +158,17 @@ export class GoalStore {
       runInAction(() => {
         if (result.success) {
           this.goal = goal;
+          this.error = null; // 成功時はエラーをクリア
         } else {
           this.error = result.error || 'Failed to set goal';
-          throw new Error(this.error);
+          console.warn('Goal validation failed:', this.error);
         }
       });
     } catch (error) {
       runInAction(() => {
         this.error = error instanceof Error ? error.message : 'Unknown error';
       });
-      throw error;
+      console.error('Goal setting error:', error);
     } finally {
       runInAction(() => {
         this.setLoading(false);

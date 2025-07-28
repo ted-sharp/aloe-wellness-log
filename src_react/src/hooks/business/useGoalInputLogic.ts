@@ -153,8 +153,13 @@ export const useGoalInputLogic = () => {
 
   // 入力変更時に即保存
   const saveGoal = useCallback(() => {
+    // バリデーションエラーがある場合は保存しない
     const validationError = validate();
+    if (validationError) {
+      return;
+    }
     
+    // 必須フィールドがすべて入力されている場合のみ保存
     if (
       gender &&
       birthYear &&
@@ -162,8 +167,7 @@ export const useGoalInputLogic = () => {
       startWeight &&
       targetStart &&
       targetEnd &&
-      targetWeight &&
-      !validationError
+      targetWeight
     ) {
       const goalData = {
         gender,
