@@ -143,14 +143,14 @@ export function useGraphData() {
       .sort((a, b) => a.timestamp - b.timestamp); // 時系列順でソート
   }, [bpRecords]);
   
-  // 統合された最新日付
+  // 統合された最新日付（MobXストアから直接取得）
   const latestDate = useMemo(() => {
     const allDates = [
-      ...processedWeightData.map(r => r.date),
-      ...processedBpData.map(r => r.date),
+      ...weightRecords.map(r => r.date),
+      ...bpRecords.map(r => r.date),
     ];
     return allDates.length > 0 ? allDates.sort().reverse()[0] : null;
-  }, [processedWeightData, processedBpData]);
+  }, [weightRecords, bpRecords]);
   
   // 期間内のデータ取得
   const getDataInPeriod = useCallback((days: number) => {
@@ -211,7 +211,7 @@ export function useGraphData() {
     // MobXストアの最適化済みメソッドを使用
     const processedData = recordsStore.processedWeightRecordsForGraph;
     
-    // 期間フィルタリング
+    // 今日の日付を基準に期間フィルタリング
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - period + 1);
@@ -222,7 +222,7 @@ export function useGraphData() {
     
     // 除外フラグ考慮
     const filteredData = showExcluded ? periodData : periodData.filter(r => !r.excludeFromGraph);
-    console.log('getFilteredData (MobX optimized): period=', period, 'showExcluded=', showExcluded, 'filtered=', filteredData.length);
+    console.log('getFilteredData (MobX optimized): period=', period, 'showExcluded=', showExcluded, 'endDate=', endDateStr, 'filtered=', filteredData.length);
     
     return filteredData.map(r => ({
       ...r,
@@ -235,7 +235,7 @@ export function useGraphData() {
     // MobXストアの最適化済みメソッドを使用
     const processedData = recordsStore.processedBpRecordsForGraph;
     
-    // 期間フィルタリング
+    // 今日の日付を基準に期間フィルタリング
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - period + 1);
@@ -260,7 +260,7 @@ export function useGraphData() {
     // MobXストアの最適化済みメソッドを使用
     const processedData = recordsStore.processedBodyCompositionForGraph;
     
-    // 期間フィルタリング
+    // 今日の日付を基準に期間フィルタリング
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - period + 1);
