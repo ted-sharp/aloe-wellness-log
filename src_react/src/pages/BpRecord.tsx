@@ -231,8 +231,8 @@ const BpRecord: React.FC = () => {
               
               <textarea
                 className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-2 mb-0"
-                value={rec.note ?? ''}
-                onChange={e => handleUpdate({ ...rec, note: e.target.value })}
+                defaultValue={rec.note ?? ''}
+                onBlur={e => handleUpdate({ ...rec, note: e.target.value })}
                 placeholder="補足・メモ（任意）"
               />
             </div>
