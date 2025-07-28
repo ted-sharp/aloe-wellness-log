@@ -71,7 +71,7 @@ yarn deploy             # Deploy to GitHub Pages
 ### Database Layer
 - **IndexedDB** for client-side data persistence
 - Repository pattern with structured data access layer
-- Repositories: WeightRecordRepository, GoalRepository (BpRecordRepository may exist but not confirmed in current structure)
+- Repositories: WeightRecordRepository, GoalRepository (BpRecordRepository not yet implemented)
 - Database operations centralized in `src/db/indexedDb.ts`
 - Supports health records, daily activities, blood pressure, and goals
 - Error handling with custom `DbError` types
@@ -124,7 +124,7 @@ class RootStore {
 // Structured database access in src/db/
 export { WeightRecordRepository } from './repositories/WeightRecordRepository';
 export { GoalRepository } from './repositories/GoalRepository';
-export { BpRecordRepository } from './repositories/BpRecordRepository';
+// Note: BpRecordRepository not yet implemented
 ```
 
 ### Business Logic Hooks
@@ -181,7 +181,7 @@ Always work from the `src_react/` directory when running commands, as this conta
 
 ### Development Tips
 - Use `yarn dev` for development with HMR
-- Run `yarn test:run` and `tsc` before committing changes
+- Run `yarn test` and `tsc` before committing changes
 - Check `yarn lint` for code quality issues
 - Use `yarn test:e2e` to verify critical user flows
 
