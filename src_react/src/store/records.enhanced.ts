@@ -1,17 +1,23 @@
-import { makeAutoObservable, runInAction, computed } from 'mobx';
-import { 
-  getAllWeightRecords,
+import { computed, makeAutoObservable, runInAction } from 'mobx';
+import {
+  DbError,
+  DbErrorType,
   addWeightRecord,
-  updateWeightRecord,
+  deleteAllData,
   deleteWeightRecord,
-  getAllDailyRecords,
   getAllBpRecords,
   getAllDailyFields,
-  deleteAllData
+  getAllDailyRecords,
+  getAllWeightRecords,
+  updateWeightRecord,
 } from '../db';
-import { DbError, DbErrorType } from '../db';
-import type { WeightRecordV2, DailyRecordV2, DailyFieldV2 } from '../types/record';
-import type { BpRecordV2 } from '../types/record';
+import type {
+  BpRecordV2,
+  DailyFieldV2,
+  DailyRecordV2,
+  WeightRecordV2,
+} from '../types/record';
+import { formatDate } from '../utils/dateUtils';
 
 /**
  * レコードタイプの定義
@@ -58,7 +64,7 @@ export class EnhancedRecordsStore {
   dailyRecords: DailyRecordV2[] = [];
   bpRecords: BpRecordV2[] = [];
   dailyFields: DailyFieldV2[] = [];
-  
+
   // === 状態管理 ===
   loading: LoadingState = {
     weight: false,
@@ -67,7 +73,7 @@ export class EnhancedRecordsStore {
     fields: false,
     global: false,
   };
-  
+
   errors: ErrorState = {
     weight: null,
     daily: null,
@@ -75,46 +81,47 @@ export class EnhancedRecordsStore {
     fields: null,
     global: null,
   };
-  
+
   cache: { [K in RecordType]: CacheInfo } = {
     weight: { lastUpdated: null, isStale: false },
     daily: { lastUpdated: null, isStale: false },
     bp: { lastUpdated: null, isStale: false },
     fields: { lastUpdated: null, isStale: false },
   };
-  
+
   // キャッシュ有効期限（5分）
   private readonly CACHE_DURATION = 5 * 60 * 1000;
 
   constructor() {
     makeAutoObservable(this);
   }
-  
+
   // === Computed Values ===
-  
+
   get recordStats() {
     return computed(() => ({
       weightCount: this.weightRecords.length,
       dailyCount: this.dailyRecords.length,
       bpCount: this.bpRecords.length,
       fieldsCount: this.dailyFields.length,
-      totalCount: this.weightRecords.length + this.dailyRecords.length + this.bpRecords.length,
+      totalCount:
+        this.weightRecords.length +
+        this.dailyRecords.length +
+        this.bpRecords.length,
     })).get();
   }
-  
+
   get latestWeightRecord(): WeightRecordV2 | null {
     return computed(() => {
       if (this.weightRecords.length === 0) return null;
-      return this.weightRecords
-        .slice()
-        .sort((a, b) => {
-          const dateCompare = b.date.localeCompare(a.date);
-          if (dateCompare !== 0) return dateCompare;
-          return b.time.localeCompare(a.time);
-        })[0];
+      return this.weightRecords.slice().sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        return b.time.localeCompare(a.time);
+      })[0];
     }).get();
   }
-  
+
   get weightRecordsForGraph(): WeightRecordV2[] {
     return computed(() => {
       return this.weightRecords
@@ -128,28 +135,33 @@ export class EnhancedRecordsStore {
   }
 
   // 期間別データ取得の最適化（重要：MobXで管理）
-  getRecordsByDateRange = (startDate: string, endDate: string): WeightRecordV2[] => {
+  getRecordsByDateRange = (
+    startDate: string,
+    endDate: string
+  ): WeightRecordV2[] => {
     return computed(() => {
-      return this.weightRecords.filter(record => 
-        record.date >= startDate && record.date <= endDate
+      return this.weightRecords.filter(
+        record => record.date >= startDate && record.date <= endDate
       );
     }).get();
   };
 
   // グラフ用の処理済みデータ（タイムスタンプ重複解決済み）
-  get processedWeightRecordsForGraph(): (WeightRecordV2 & { timestamp: number })[] {
+  get processedWeightRecordsForGraph(): (WeightRecordV2 & {
+    timestamp: number;
+  })[] {
     return computed(() => {
       const timestampCounts = new Map<number, number>();
-      
+
       return this.weightRecords
-        .map((record) => {
+        .map(record => {
           const dateTime = `${record.date}T${record.time}`;
           const baseTimestamp = new Date(dateTime).getTime();
-          
+
           const currentCount = timestampCounts.get(baseTimestamp) || 0;
           const uniqueTimestamp = baseTimestamp + currentCount;
           timestampCounts.set(baseTimestamp, currentCount + 1);
-          
+
           return {
             ...record,
             timestamp: uniqueTimestamp,
@@ -163,16 +175,16 @@ export class EnhancedRecordsStore {
   get processedBpRecordsForGraph(): (BpRecordV2 & { timestamp: number })[] {
     return computed(() => {
       const timestampCounts = new Map<number, number>();
-      
+
       return this.bpRecords
-        .map((record) => {
+        .map(record => {
           const dateTime = `${record.date}T${record.time}`;
           const baseTimestamp = new Date(dateTime).getTime();
-          
+
           const currentCount = timestampCounts.get(baseTimestamp) || 0;
           const uniqueTimestamp = baseTimestamp + currentCount;
           timestampCounts.set(baseTimestamp, currentCount + 1);
-          
+
           return {
             ...record,
             timestamp: uniqueTimestamp,
@@ -183,21 +195,28 @@ export class EnhancedRecordsStore {
   }
 
   // 体組成データの処理済みデータ（体脂肪率・腹囲）
-  get processedBodyCompositionForGraph(): (WeightRecordV2 & { timestamp: number; bodyFat?: number; waist?: number })[] {
+  get processedBodyCompositionForGraph(): (WeightRecordV2 & {
+    timestamp: number;
+    bodyFat?: number;
+    waist?: number;
+  })[] {
     return computed(() => {
       const timestampCounts = new Map<number, number>();
-      
+
       return this.weightRecords
-        .filter((record) => record.bodyFat !== undefined && record.bodyFat !== null || 
-                           record.waist !== undefined && record.waist !== null)
-        .map((record) => {
+        .filter(
+          record =>
+            (record.bodyFat !== undefined && record.bodyFat !== null) ||
+            (record.waist !== undefined && record.waist !== null)
+        )
+        .map(record => {
           const dateTime = `${record.date}T${record.time}`;
           const baseTimestamp = new Date(dateTime).getTime();
-          
+
           const currentCount = timestampCounts.get(baseTimestamp) || 0;
           const uniqueTimestamp = baseTimestamp + currentCount;
           timestampCounts.set(baseTimestamp, currentCount + 1);
-          
+
           return {
             ...record,
             timestamp: uniqueTimestamp,
@@ -210,87 +229,100 @@ export class EnhancedRecordsStore {
   }
 
   // 日課データの統計計算（期間別）
-  getDailyRecordStats = (fieldId: string, days: number = 30): { total: number; achieved: number; rate: number } => {
+  getDailyRecordStats = (
+    fieldId: string,
+    days: number = 30
+  ): { total: number; achieved: number; rate: number } => {
     return computed(() => {
       const endDate = new Date();
       const startDate = new Date(endDate);
       startDate.setDate(startDate.getDate() - days + 1);
-      
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-      
+
+      const startDateStr = formatDate(startDate);
+      const endDateStr = formatDate(endDate);
+
       const filteredRecords = this.dailyRecords.filter(
-        record => record.fieldId === fieldId && 
-                 record.date >= startDateStr && 
-                 record.date <= endDateStr
+        record =>
+          record.fieldId === fieldId &&
+          record.date >= startDateStr &&
+          record.date <= endDateStr
       );
-      
-      const achieved = filteredRecords.filter(record => record.value === 1).length;
+
+      const achieved = filteredRecords.filter(
+        record => record.value === 1
+      ).length;
       const total = filteredRecords.length;
       const rate = total > 0 ? (achieved / total) * 100 : 0;
-      
+
       return { total, achieved, rate };
     }).get();
   };
 
   // 期間別データ取得（最適化版）
-  getRecordsByDateRangeOptimized = (startDate: string, endDate: string, recordType: 'weight' | 'bp' | 'daily'): WeightRecordV2[] | BpRecordV2[] | DailyRecordV2[] => {
+  getRecordsByDateRangeOptimized = (
+    startDate: string,
+    endDate: string,
+    recordType: 'weight' | 'bp' | 'daily'
+  ): WeightRecordV2[] | BpRecordV2[] | DailyRecordV2[] => {
     return computed(() => {
       switch (recordType) {
         case 'weight':
-          return this.weightRecords.filter(record => 
-            record.date >= startDate && record.date <= endDate
+          return this.weightRecords.filter(
+            record => record.date >= startDate && record.date <= endDate
           );
         case 'bp':
-          return this.bpRecords.filter(record => 
-            record.date >= startDate && record.date <= endDate
+          return this.bpRecords.filter(
+            record => record.date >= startDate && record.date <= endDate
           );
         case 'daily':
-          return this.dailyRecords.filter(record => 
-            record.date >= startDate && record.date <= endDate
+          return this.dailyRecords.filter(
+            record => record.date >= startDate && record.date <= endDate
           );
         default:
           return [];
       }
     }).get();
   };
-  
+
   // === Private Methods ===
-  
+
   private isStale(type: RecordType): boolean {
     const cache = this.cache[type];
     if (!cache.lastUpdated) return true;
-    
+
     const now = new Date();
     const elapsed = now.getTime() - cache.lastUpdated.getTime();
     return elapsed > this.CACHE_DURATION;
   }
-  
+
   private updateCache(type: RecordType) {
     this.cache[type] = {
       lastUpdated: new Date(),
       isStale: false,
     };
   }
-  
+
   private setLoading(type: RecordType | 'global', loading: boolean) {
     this.loading[type] = loading;
   }
-  
+
   private setError(type: RecordType | 'global', error: DbError | null) {
     this.errors[type] = error;
   }
-  
+
   // === データ取得アクション ===
-  
+
   loadWeightRecords = async (): Promise<void> => {
-    if (this.loading.weight || (!this.isStale('weight') && this.weightRecords.length > 0)) {
+    if (
+      this.loading.weight ||
+      (!this.isStale('weight') && this.weightRecords.length > 0)
+    ) {
       return;
     }
-    
+
     this.setLoading('weight', true);
     this.setError('weight', null);
-    
+
     try {
       const records = await getAllWeightRecords();
       runInAction(() => {
@@ -298,10 +330,15 @@ export class EnhancedRecordsStore {
         this.updateCache('weight');
       });
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to load weight records', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to load weight records',
+              error
+            );
+
       runInAction(() => {
         this.setError('weight', dbError);
       });
@@ -311,15 +348,18 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   loadDailyRecords = async (): Promise<void> => {
-    if (this.loading.daily || (!this.isStale('daily') && this.dailyRecords.length > 0)) {
+    if (
+      this.loading.daily ||
+      (!this.isStale('daily') && this.dailyRecords.length > 0)
+    ) {
       return;
     }
-    
+
     this.setLoading('daily', true);
     this.setError('daily', null);
-    
+
     try {
       const records = await getAllDailyRecords();
       runInAction(() => {
@@ -327,10 +367,15 @@ export class EnhancedRecordsStore {
         this.updateCache('daily');
       });
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to load daily records', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to load daily records',
+              error
+            );
+
       runInAction(() => {
         this.setError('daily', dbError);
       });
@@ -340,15 +385,15 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   loadBpRecords = async (): Promise<void> => {
     if (this.loading.bp || (!this.isStale('bp') && this.bpRecords.length > 0)) {
       return;
     }
-    
+
     this.setLoading('bp', true);
     this.setError('bp', null);
-    
+
     try {
       const records = await getAllBpRecords();
       runInAction(() => {
@@ -356,10 +401,15 @@ export class EnhancedRecordsStore {
         this.updateCache('bp');
       });
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to load bp records', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to load bp records',
+              error
+            );
+
       runInAction(() => {
         this.setError('bp', dbError);
       });
@@ -369,15 +419,18 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   loadDailyFields = async (): Promise<void> => {
-    if (this.loading.fields || (!this.isStale('fields') && this.dailyFields.length > 0)) {
+    if (
+      this.loading.fields ||
+      (!this.isStale('fields') && this.dailyFields.length > 0)
+    ) {
       return;
     }
-    
+
     this.setLoading('fields', true);
     this.setError('fields', null);
-    
+
     try {
       const fields = await getAllDailyFields();
       runInAction(() => {
@@ -385,10 +438,15 @@ export class EnhancedRecordsStore {
         this.updateCache('fields');
       });
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to load daily fields', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to load daily fields',
+              error
+            );
+
       runInAction(() => {
         this.setError('fields', dbError);
       });
@@ -398,11 +456,11 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   loadAllData = async (): Promise<void> => {
     this.setLoading('global', true);
     this.setError('global', null);
-    
+
     try {
       await Promise.all([
         this.loadWeightRecords(),
@@ -411,10 +469,11 @@ export class EnhancedRecordsStore {
         this.loadDailyFields(),
       ]);
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to load all data', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(DbErrorType.UNKNOWN, 'Failed to load all data', error);
+
       runInAction(() => {
         this.setError('global', dbError);
       });
@@ -424,12 +483,17 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   // === データ操作アクション ===
-  
-  addWeightRecord = async (record: Omit<WeightRecordV2, 'id'>): Promise<WeightRecordV2 | null> => {
+
+  addWeightRecord = async (
+    record: Omit<WeightRecordV2, 'id'>
+  ): Promise<WeightRecordV2 | null> => {
     try {
-      const newRecord = { ...record, id: `weight_${Date.now()}` } as WeightRecordV2;
+      const newRecord = {
+        ...record,
+        id: `weight_${Date.now()}`,
+      } as WeightRecordV2;
       await addWeightRecord(newRecord);
       runInAction(() => {
         this.weightRecords.push(newRecord);
@@ -437,17 +501,22 @@ export class EnhancedRecordsStore {
       });
       return newRecord;
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to add weight record', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to add weight record',
+              error
+            );
+
       runInAction(() => {
         this.setError('weight', dbError);
       });
       return null;
     }
   };
-  
+
   updateWeightRecord = async (record: WeightRecordV2): Promise<boolean> => {
     try {
       await updateWeightRecord(record);
@@ -460,17 +529,22 @@ export class EnhancedRecordsStore {
       });
       return true;
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to update weight record', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to update weight record',
+              error
+            );
+
       runInAction(() => {
         this.setError('weight', dbError);
       });
       return false;
     }
   };
-  
+
   deleteWeightRecord = async (id: string): Promise<boolean> => {
     try {
       await deleteWeightRecord(id);
@@ -480,23 +554,28 @@ export class EnhancedRecordsStore {
       });
       return true;
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to delete weight record', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to delete weight record',
+              error
+            );
+
       runInAction(() => {
         this.setError('weight', dbError);
       });
       return false;
     }
   };
-  
+
   // === 全データ操作 ===
-  
+
   deleteAllData = async (): Promise<void> => {
     this.setLoading('global', true);
     this.setError('global', null);
-    
+
     try {
       await deleteAllData();
       runInAction(() => {
@@ -504,17 +583,22 @@ export class EnhancedRecordsStore {
         this.dailyRecords = [];
         this.bpRecords = [];
         this.dailyFields = [];
-        
+
         // キャッシュをクリア
         Object.keys(this.cache).forEach(key => {
           this.cache[key as RecordType] = { lastUpdated: null, isStale: false };
         });
       });
     } catch (error) {
-      const dbError = error instanceof DbError 
-        ? error 
-        : new DbError(DbErrorType.UNKNOWN, 'Failed to delete all data', error);
-      
+      const dbError =
+        error instanceof DbError
+          ? error
+          : new DbError(
+              DbErrorType.UNKNOWN,
+              'Failed to delete all data',
+              error
+            );
+
       runInAction(() => {
         this.setError('global', dbError);
       });
@@ -525,31 +609,34 @@ export class EnhancedRecordsStore {
       });
     }
   };
-  
+
   refreshAllData = async (): Promise<void> => {
     // キャッシュを無効化
     Object.keys(this.cache).forEach(key => {
       this.cache[key as RecordType].isStale = true;
     });
-    
+
     await this.loadAllData();
   };
-  
+
   // === エラー管理 ===
-  
+
   clearError = (type: RecordType | 'global'): void => {
     this.setError(type, null);
   };
-  
+
   clearAllErrors = (): void => {
     Object.keys(this.errors).forEach(key => {
       this.errors[key as keyof ErrorState] = null;
     });
   };
-  
+
   // === セレクター（計算されたプロパティ） ===
-  
-  getRecordsOfDay = (date: string, type: 'weight' | 'daily' | 'bp'): WeightRecordV2[] | DailyRecordV2[] | BpRecordV2[] => {
+
+  getRecordsOfDay = (
+    date: string,
+    type: 'weight' | 'daily' | 'bp'
+  ): WeightRecordV2[] | DailyRecordV2[] | BpRecordV2[] => {
     switch (type) {
       case 'weight':
         return this.weightRecords.filter(record => record.date === date);
@@ -561,7 +648,7 @@ export class EnhancedRecordsStore {
         return [];
     }
   };
-  
+
   isRecorded = (date: string, type: 'weight' | 'daily' | 'bp'): boolean => {
     return this.getRecordsOfDay(date, type).length > 0;
   };
@@ -578,42 +665,45 @@ export const useEnhancedRecordsStore = () => {
     dailyRecords: enhancedRecordsStore.dailyRecords,
     bpRecords: enhancedRecordsStore.bpRecords,
     dailyFields: enhancedRecordsStore.dailyFields,
-    
+
     // 状態
     loading: enhancedRecordsStore.loading,
     errors: enhancedRecordsStore.errors,
-    
+
     // 計算されたプロパティ
     recordStats: enhancedRecordsStore.recordStats,
     latestWeightRecord: enhancedRecordsStore.latestWeightRecord,
     weightRecordsForGraph: enhancedRecordsStore.weightRecordsForGraph,
-    processedWeightRecordsForGraph: enhancedRecordsStore.processedWeightRecordsForGraph,
+    processedWeightRecordsForGraph:
+      enhancedRecordsStore.processedWeightRecordsForGraph,
     processedBpRecordsForGraph: enhancedRecordsStore.processedBpRecordsForGraph,
-    processedBodyCompositionForGraph: enhancedRecordsStore.processedBodyCompositionForGraph,
-    
+    processedBodyCompositionForGraph:
+      enhancedRecordsStore.processedBodyCompositionForGraph,
+
     // データロード
     loadWeightRecords: enhancedRecordsStore.loadWeightRecords,
     loadDailyRecords: enhancedRecordsStore.loadDailyRecords,
     loadBpRecords: enhancedRecordsStore.loadBpRecords,
     loadDailyFields: enhancedRecordsStore.loadDailyFields,
     loadAllData: enhancedRecordsStore.loadAllData,
-    
+
     // データ操作
     addWeightRecord: enhancedRecordsStore.addWeightRecord,
     updateWeightRecord: enhancedRecordsStore.updateWeightRecord,
     deleteWeightRecord: enhancedRecordsStore.deleteWeightRecord,
     deleteAllData: enhancedRecordsStore.deleteAllData,
     refreshAllData: enhancedRecordsStore.refreshAllData,
-    
+
     // エラー管理
     clearError: enhancedRecordsStore.clearError,
     clearAllErrors: enhancedRecordsStore.clearAllErrors,
-    
+
     // セレクター
     getRecordsOfDay: enhancedRecordsStore.getRecordsOfDay,
     isRecorded: enhancedRecordsStore.isRecorded,
     getDailyRecordStats: enhancedRecordsStore.getDailyRecordStats,
-    getRecordsByDateRangeOptimized: enhancedRecordsStore.getRecordsByDateRangeOptimized,
+    getRecordsByDateRangeOptimized:
+      enhancedRecordsStore.getRecordsByDateRangeOptimized,
   };
 };
 
@@ -625,10 +715,10 @@ export const useRecordsSelectors = {
   dailyRecords: () => enhancedRecordsStore.dailyRecords,
   bpRecords: () => enhancedRecordsStore.bpRecords,
   dailyFields: () => enhancedRecordsStore.dailyFields,
-  
+
   loading: () => enhancedRecordsStore.loading,
   errors: () => enhancedRecordsStore.errors,
-  
+
   actions: () => ({
     loadWeightRecords: enhancedRecordsStore.loadWeightRecords,
     loadDailyRecords: enhancedRecordsStore.loadDailyRecords,
