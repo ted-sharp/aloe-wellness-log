@@ -56,7 +56,8 @@ const DatePickerBar: React.FC<DatePickerBarProps> = props => {
             // スクロールバーは非表示
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            scrollSnapType: 'x mandatory',
+            // 以前: 'x mandatory' → 暴れ低減のため 'x proximity' に変更
+            scrollSnapType: 'x proximity',
             WebkitOverflowScrolling: 'touch',
           }}
         >

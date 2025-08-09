@@ -18,7 +18,10 @@ interface UseTouchProps {
  */
 export const useTouch = ({ setCenterDate, getBaseDate }: UseTouchProps) => {
   const touchRef = useRef<HTMLDivElement>(null);
-  const coordsRef = useRef<TouchCoordinates>({ startX: null, startY: null });
+  const coordsRef = useRef<TouchCoordinates>({
+    startX: null,
+    startY: null,
+  });
   const baseDateRef = useRef<Date | null>(null);
 
   /**
@@ -37,10 +40,13 @@ export const useTouch = ({ setCenterDate, getBaseDate }: UseTouchProps) => {
     [getBaseDate]
   );
 
+  // 初期対応へ戻す（moveは追跡しない）
+  const handleTouchMove = useCallback((_e: TouchEvent) => {}, []);
+
   /**
    * タッチ終了時の処理（フリック判定・最適化版）
    */
-  const handleTouchEnd = useCallback(
+  const finalizeSwipe = useCallback(
     (e: TouchEvent) => {
       const { startX, startY } = coordsRef.current;
 
@@ -70,11 +76,23 @@ export const useTouch = ({ setCenterDate, getBaseDate }: UseTouchProps) => {
       }
 
       // 座標をリセット
-      coordsRef.current = { startX: null, startY: null };
+      coordsRef.current = {
+        startX: null,
+        startY: null,
+      };
       baseDateRef.current = null;
     },
     [setCenterDate, getBaseDate]
   ); // centerDateは直接参照せず、getBaseDateで取得
+
+  const handleTouchEnd = useCallback(
+    (e: TouchEvent) => finalizeSwipe(e),
+    [finalizeSwipe]
+  );
+  const handleTouchCancel = useCallback(
+    (e: TouchEvent) => finalizeSwipe(e),
+    [finalizeSwipe]
+  );
 
   // タッチイベントリスナーの設定
   useEffect(() => {
@@ -82,13 +100,19 @@ export const useTouch = ({ setCenterDate, getBaseDate }: UseTouchProps) => {
     if (!element) return;
 
     element.addEventListener('touchstart', handleTouchStart, { passive: true });
+    element.addEventListener('touchmove', handleTouchMove, { passive: true });
     element.addEventListener('touchend', handleTouchEnd, { passive: true });
+    element.addEventListener('touchcancel', handleTouchCancel, {
+      passive: true,
+    });
 
     return () => {
       element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
       element.removeEventListener('touchend', handleTouchEnd);
+      element.removeEventListener('touchcancel', handleTouchCancel);
     };
-  }, [handleTouchStart, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, handleTouchCancel]);
 
   return {
     touchRef,

@@ -18,7 +18,6 @@ export const useScrollCorrection = ({
   prevWidthRef,
   dateRange,
 }: UseScrollCorrectionProps) => {
-  
   // 日付範囲拡張時のスクロール位置補正（左端のみ）
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -26,7 +25,7 @@ export const useScrollCorrection = ({
 
     const prevWidth = prevWidthRef.current ?? 0;
     const diff = container.scrollWidth - prevWidth;
-    
+
     if (lastEdgeRef.current === 'left' && diff > 0) {
       // 左端拡張時はスクロール位置を補正して表示位置を維持
       container.scrollLeft += diff;
@@ -34,7 +33,8 @@ export const useScrollCorrection = ({
 
     // リセット
     if (lastEdgeRef.current) {
-      (lastEdgeRef as React.MutableRefObject<ScrollDirection | null>).current = null;
+      (lastEdgeRef as React.MutableRefObject<ScrollDirection | null>).current =
+        null;
     }
   }, [containerRef, lastEdgeRef, prevWidthRef, dateRange]);
 };

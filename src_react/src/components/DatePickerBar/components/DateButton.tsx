@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
-import type { DateItem } from '../types';
 import { formatDate, formatDay, formatWeekday } from '../../../utils/dateUtils';
+import type { DateItem } from '../types';
 
 interface DateButtonProps {
   dateItem: DateItem;
@@ -10,7 +10,10 @@ interface DateButtonProps {
 /**
  * 個別の日付ボタンコンポーネント（最適化版）
  */
-const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) => {
+const DateButtonComponent: React.FC<DateButtonProps> = ({
+  dateItem,
+  onSelect,
+}) => {
   const {
     date,
     isSelected,
@@ -25,11 +28,11 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
   // スタイル計算のメモ化
   const buttonClasses = useMemo(() => {
     const baseClasses = `
-      flex flex-col items-center justify-center 
-      min-w-12 w-12 max-w-12 h-12 
-      px-0 py-0 mt-2 mb-2 
+      flex flex-col items-center justify-center
+      min-w-12 w-12 max-w-12 h-12
+      px-0 py-0 mt-2 mb-2
       rounded-full transition-colors duration-150 shadow-md
-      hover:bg-blue-200 dark:hover:bg-blue-700 
+      hover:bg-blue-200 dark:hover:bg-blue-700
       focus:outline-none focus:ring-2 focus:ring-blue-400
     `.trim();
 
@@ -40,7 +43,7 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
       : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200';
 
     const centerClass = isCenter && !isSelected ? 'scale-105' : '';
-    
+
     const checkpointClass = isCheckpoint
       ? isSelected
         ? 'relative after:content-["⭐"] after:absolute after:-top-1 after:-right-1 after:text-xs after:text-yellow-300'
@@ -52,11 +55,12 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
 
   const statusIndicatorClasses = useMemo(() => {
     const baseStyle = 'inline-block w-2 h-2 rounded-full';
-    const statusColor = status === 'green' 
-      ? 'bg-green-500' 
-      : status === 'red' 
-      ? 'bg-red-500' 
-      : '';
+    const statusColor =
+      status === 'green'
+        ? 'bg-green-500'
+        : status === 'red'
+        ? 'bg-red-500'
+        : '';
     return `${baseStyle} ${statusColor}`.trim();
   }, [status]);
 
@@ -65,11 +69,12 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
     const dateStr = formatDate(date);
     const dayStr = formatDay(date);
     const weekdayStr = formatWeekday(date);
-    const statusText = status === 'green' ? '記録済み' : status === 'red' ? '注意' : '';
+    const statusText =
+      status === 'green' ? '記録済み' : status === 'red' ? '注意' : '';
     const selectedText = isSelected ? '選択中' : '';
     const todayText = isToday ? '今日' : '';
     const checkpointText = isCheckpoint ? 'チェックポイント' : '';
-    
+
     return `${dateStr} ${weekdayStr} ${dayStr}日 ${statusText} ${selectedText} ${todayText} ${checkpointText}`.trim();
   }, [date, status, isSelected, isToday, isCheckpoint]);
 
@@ -81,7 +86,8 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
       className={buttonClasses}
       style={{
         position: 'relative',
-        scrollSnapAlign: 'center',
+        // 以前: 'center' → proximityに合わせ 'start' へ緩和
+        scrollSnapAlign: 'start',
         border: 'none',
       }}
       aria-current={isSelected ? 'date' : undefined}
@@ -89,16 +95,19 @@ const DateButtonComponent: React.FC<DateButtonProps> = ({ dateItem, onSelect }) 
       role="gridcell"
       tabIndex={isSelected ? 0 : -1}
     >
-      <span className={`text-xs font-medium ${weekdayColor}`} aria-hidden="true">
+      <span
+        className={`text-xs font-medium ${weekdayColor}`}
+        aria-hidden="true"
+      >
         {formatWeekday(date)}
       </span>
-      
+
       <span className="text-lg font-bold" aria-hidden="true">
         {formatDay(date)}
       </span>
-      
-      <span 
-        className={statusIndicatorClasses} 
+
+      <span
+        className={statusIndicatorClasses}
         aria-hidden="true"
         role="presentation"
       />
@@ -111,7 +120,7 @@ export const DateButton = memo(DateButtonComponent, (prevProps, nextProps) => {
   // カスタム比較関数でパフォーマンスを最適化
   const prev = prevProps.dateItem;
   const next = nextProps.dateItem;
-  
+
   return (
     prev.date.getTime() === next.date.getTime() &&
     prev.isSelected === next.isSelected &&
