@@ -395,7 +395,7 @@ const RecordGraph: React.FC = () => {
         )}
       </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
-        {(graphType === 'weight' || graphType === 'bloodPressure') && (
+        {(graphType === 'weight' || graphType === 'bloodPressure' || graphType === 'bodyComposition') && (
           <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
             <input
               type="checkbox"
@@ -481,12 +481,17 @@ const RecordGraph: React.FC = () => {
                 dataKey="bodyFat"
                 stroke="#8b5cf6"
                 strokeWidth={3}
-                dot={{
-                  fill: '#8b5cf6',
-                  stroke: '#fff',
-                  strokeWidth: 1,
-                  r: 4,
-                }}
+                dot={({ cx, cy, payload, index }) => (
+                  <circle
+                    key={`bodyFat-dot-${payload?.id || index}`}
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill={payload.excluded ? '#f87171' : '#8b5cf6'}
+                    stroke="#fff"
+                    strokeWidth={1}
+                  />
+                )}
                 activeDot={false}
                 connectNulls={false}
               />
@@ -498,12 +503,17 @@ const RecordGraph: React.FC = () => {
                 dataKey="waist"
                 stroke="#f59e0b"
                 strokeWidth={3}
-                dot={{
-                  fill: '#f59e0b',
-                  stroke: '#fff',
-                  strokeWidth: 1,
-                  r: 4,
-                }}
+                dot={({ cx, cy, payload, index }) => (
+                  <circle
+                    key={`waist-dot-${payload?.id || index}`}
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill={payload.excluded ? '#f87171' : '#f59e0b'}
+                    stroke="#fff"
+                    strokeWidth={1}
+                  />
+                )}
                 activeDot={false}
                 connectNulls={false}
               />
