@@ -399,6 +399,11 @@ const RecordGraph: React.FC = () => {
           </>
         )}
       </div>
+      {graphType === 'bloodPressure' && (
+        <div className="w-full mx-auto text-gray-600 dark:text-gray-300 text-[11px] sm:text-xs mb-1 px-1 leading-tight">
+          10分以内に複数回測定がある場合、最も低い結果を代表値として表示します（合計が同じ場合は拡張期→時刻で決定）。
+        </div>
+      )}
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
         {(graphType === 'weight' ||
           graphType === 'bloodPressure' ||

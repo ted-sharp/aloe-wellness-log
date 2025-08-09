@@ -273,7 +273,45 @@ export function useGraphData() {
         ? periodData
         : periodData.filter(r => !r.excludeFromGraph);
 
-      return filteredData.map(r => ({
+      // 10分（600000ms）以内の測定は「最小値の測定」を1つに集約
+      const WINDOW_MS = 10 * 60 * 1000;
+      type BpPoint = (typeof filteredData)[number];
+      const score = (p: BpPoint) => (p.systolic ?? 0) + (p.diastolic ?? 0);
+      const isBetter = (a: BpPoint, b: BpPoint) => {
+        const sa = score(a);
+        const sb = score(b);
+        if (sa !== sb) return sa < sb;
+        if ((a.diastolic ?? 0) !== (b.diastolic ?? 0))
+          return (a.diastolic ?? 0) < (b.diastolic ?? 0);
+        return a.timestamp < b.timestamp;
+      };
+
+      const reduced: BpPoint[] = [];
+      let groupAnchorTs: number | null = null;
+      let groupBest: BpPoint | null = null;
+
+      for (const rec of filteredData) {
+        const ts = rec.timestamp as number;
+        if (groupAnchorTs === null) {
+          groupAnchorTs = ts;
+          groupBest = rec;
+          continue;
+        }
+        if (ts - groupAnchorTs <= WINDOW_MS) {
+          // 同一ウィンドウ内 → より低い値を選択
+          if (groupBest && isBetter(rec, groupBest)) {
+            groupBest = rec;
+          }
+        } else {
+          // グループ終了
+          if (groupBest) reduced.push(groupBest);
+          groupAnchorTs = ts;
+          groupBest = rec;
+        }
+      }
+      if (groupBest) reduced.push(groupBest);
+
+      return reduced.map(r => ({
         ...r,
         systolic: r.systolic,
         diastolic: r.diastolic,
