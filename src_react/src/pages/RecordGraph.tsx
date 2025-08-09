@@ -960,8 +960,10 @@ const RecordGraph: React.FC = () => {
         </ResponsiveContainer>
       </div>
       {graphType === 'bloodPressure' && (
-        <div className="w-full mx-auto text-gray-600 dark:text-gray-300 text-[11px] sm:text-xs mt-1 px-1 leading-tight">
-          10分以内に複数回測定がある場合、最も低い結果を代表値として表示します（合計が同じ場合は拡張期→時刻で決定）。
+        <div className="w-full flex justify-center">
+          <div className="text-gray-600 dark:text-gray-300 text-[11px] sm:text-xs mt-1 px-1 leading-tight text-left max-w-[720px] w-full">
+            10分以内に複数回測定がある場合、最も低い結果を代表値として表示します（合計が同じ場合は拡張期→時刻で決定）。
+          </div>
         </div>
       )}
       {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
