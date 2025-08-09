@@ -395,7 +395,9 @@ const RecordGraph: React.FC = () => {
         )}
       </div>
       <div className="w-full h-[400px] bg-white dark:bg-gray-800 rounded-xl shadow p-1 relative">
-        {(graphType === 'weight' || graphType === 'bloodPressure' || graphType === 'bodyComposition') && (
+        {(graphType === 'weight' ||
+          graphType === 'bloodPressure' ||
+          graphType === 'bodyComposition') && (
           <label className="flex items-center absolute right-0 top-0 bg-white/80 dark:bg-gray-800/80 px-1 py-0 h-6 min-h-0 rounded-none leading-tight text-xs font-bold z-10 w-auto cursor-pointer select-none">
             <input
               type="checkbox"
@@ -457,7 +459,16 @@ const RecordGraph: React.FC = () => {
                       <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
                         {d ? formatDateTimeLabel(ts) : ''}
                       </div>
-                      {payload.map((item, idx) => (
+                      {(
+                        payload
+                          // 体組成は実データのみ表示（傾向線は除外）
+                          .filter(
+                            item =>
+                              item &&
+                              (item.dataKey === 'bodyFat' ||
+                                item.dataKey === 'waist')
+                          ) || []
+                      ).map((item, idx) => (
                         <div
                           key={idx}
                           style={{ color: item.color, fontSize: 14 }}
@@ -680,15 +691,15 @@ const RecordGraph: React.FC = () => {
                   const getY = (x: number) =>
                     y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
                   const targetLineData = [
-                    { timestamp: lineStart, value: getY(lineStart) },
-                    { timestamp: lineEnd, value: getY(lineEnd) },
+                    { timestamp: lineStart, targetValue: getY(lineStart) },
+                    { timestamp: lineEnd, targetValue: getY(lineEnd) },
                   ];
                   return (
                     <Line
                       key="weight-target"
                       type="linear"
                       data={targetLineData}
-                      dataKey="value"
+                      dataKey="targetValue"
                       stroke="#f59e42"
                       strokeWidth={3}
                       dot={false}
@@ -750,12 +761,18 @@ const RecordGraph: React.FC = () => {
                       </div>
                       {(graphType as string) !== 'bodyComposition' &&
                         ((payload ?? []) as TooltipItem[])
-                          .filter(
-                            item =>
-                              item &&
-                              item.color !== '#f59e42' &&
-                              item.color !== '#22c55e'
-                          )
+                          .filter(item => {
+                            // 目標線・傾向線はデータキーで除外
+                            const key = (item as any)?.dataKey as
+                              | string
+                              | undefined;
+                            return (
+                              key !== 'targetValue' &&
+                              key !== 'weightTrend' &&
+                              key !== 'systolicTrend' &&
+                              key !== 'diastolicTrend'
+                            );
+                          })
                           .map((item, idx) => (
                             <div
                               key={idx}
