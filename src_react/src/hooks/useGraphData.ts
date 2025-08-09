@@ -300,10 +300,15 @@ export function useGraphData() {
         r => r.date >= startDateStr && r.date <= endDateStr
       );
 
-      // 除外フラグ考慮
-      return showExcluded
+      // 除外フラグ考慮 + excludedフラグを明示付与
+      const filtered = showExcluded
         ? periodData
         : periodData.filter(r => !r.excludeFromGraph);
+
+      return filtered.map(r => ({
+        ...r,
+        excluded: Boolean(r.excludeFromGraph),
+      }));
     },
     [recordsStore.processedBodyCompositionForGraph]
   );

@@ -69,7 +69,6 @@ const RecordGraph: React.FC = () => {
 
   // 期間に応じたデータを抽出
   const data = useMemo(() => {
-    console.log('RecordGraph: data useMemo triggered');
     const days = PERIODS[periodIdx].days;
     if (graphType === 'weight') {
       return getFilteredData(days || 9999, showExcluded);
@@ -81,13 +80,19 @@ const RecordGraph: React.FC = () => {
       // 体脂肪率・腹囲データの場合
       return getFilteredBodyCompositionData(days || 9999, showExcluded);
     }
-  }, [periodIdx, showExcluded, graphType]); // 関数を依存配列から削除（無限ループ回避）
+  }, [
+    periodIdx,
+    showExcluded,
+    graphType,
+    getFilteredData,
+    getFilteredBpData,
+    getFilteredBodyCompositionData,
+  ]);
 
   // グラフ範囲内の日付すべての00:00（ローカル）UNIXタイムスタンプ
   const dayStartLines = useMemo(() => {
-    console.log('RecordGraph: dayStartLines useMemo triggered', data.length);
     return graphCalculations.calculateDayStartLines(data);
-  }, [data]); // graphCalculationsを依存配列から削除（無限ループ回避）
+  }, [data, graphCalculations]);
 
   // X軸domain（日単位で固定）
   const xAxisDomain = useMemo(() => {
@@ -109,7 +114,7 @@ const RecordGraph: React.FC = () => {
   const xAxisTicks = useMemo(() => {
     if (periodIdx !== 0 || !data.length) return undefined;
     return graphCalculations.calculateXAxisTicks(data);
-  }, [data, periodIdx]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, periodIdx, graphCalculations]);
 
   // X軸ラベルをMM/DD(曜) HH:mm形式で表示
   const formatDateTimeLabel = (ts: number) => {
@@ -128,31 +133,31 @@ const RecordGraph: React.FC = () => {
       return graphCalculations.calculateWeightTrendLine(data);
     }
     return null;
-  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, graphType, graphCalculations]);
 
   // 体脂肪率の傾向線計算
   const bodyFatTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateBodyFatTrendLine(data);
-  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, graphType, graphCalculations]);
 
   // 腹囲の傾向線計算
   const waistTrendLine = useMemo(() => {
     if (graphType !== 'bodyComposition') return null;
     return graphCalculations.calculateWaistTrendLine(data);
-  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, graphType, graphCalculations]);
 
   // 血圧（収縮期）の傾向線計算
   const systolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateSystolicTrendLine(data);
-  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, graphType, graphCalculations]);
 
   // 血圧（拡張期）の傾向線計算
   const diastolicTrendLine = useMemo(() => {
     if (graphType !== 'bloodPressure') return null;
     return graphCalculations.calculateDiastolicTrendLine(data);
-  }, [data, graphType]); // graphCalculationsを依存配列から除外（無限ループ回避）
+  }, [data, graphType, graphCalculations]);
 
   // type StatusKey = 'exercise' | 'meal' | 'sleep';
   type CustomTickProps = {
@@ -763,9 +768,7 @@ const RecordGraph: React.FC = () => {
                         ((payload ?? []) as TooltipItem[])
                           .filter(item => {
                             // 目標線・傾向線はデータキーで除外
-                            const key = (item as any)?.dataKey as
-                              | string
-                              | undefined;
+                            const key = (item as { dataKey?: string })?.dataKey;
                             return (
                               key !== 'targetValue' &&
                               key !== 'weightTrend' &&
