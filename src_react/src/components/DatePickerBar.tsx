@@ -1,22 +1,18 @@
-import React, { useState, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
+import React, { useCallback, useState } from 'react';
 import { HiCalendarDays } from 'react-icons/hi2';
-import type { DatePickerBarProps } from './DatePickerBar/types';
-import { useDatePickerBehavior } from './DatePickerBar/hooks/useDatePickerBehavior';
+import { CalendarModal } from './DatePickerBar/components/CalendarModal';
 import { DateButton } from './DatePickerBar/components/DateButton';
 import { MonthIndicator } from './DatePickerBar/components/MonthIndicator';
-import { CalendarModal } from './DatePickerBar/components/CalendarModal';
-import { goalStore } from '../store/goal.mobx';
+import { useDatePickerBehavior } from './DatePickerBar/hooks/useDatePickerBehavior';
+import type { DatePickerBarProps } from './DatePickerBar/types';
 
 /**
  * リファクタリングされたDatePickerBarコンポーネント
  * 複数のカスタムフックと子コンポーネントに分離してシンプルに
  */
-const DatePickerBar: React.FC<DatePickerBarProps> = (props) => {
-  const {
-    selectedDate,
-    isRecorded,
-  } = props;
+const DatePickerBar: React.FC<DatePickerBarProps> = props => {
+  const { selectedDate, isRecorded } = props;
 
   // ローカル状態
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -55,6 +51,9 @@ const DatePickerBar: React.FC<DatePickerBarProps> = (props) => {
           ref={scrollRef}
           className="flex-1 flex gap-1 mx-1 overflow-x-auto justify-center scrollbar-hide"
           style={{
+            // スクロールチェーン/オーバースクロールを抑止して初回右フリックの取りこぼしを防ぐ
+            overscrollBehaviorX: 'contain',
+            // スクロールバーは非表示
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             scrollSnapType: 'x mandatory',
@@ -63,26 +62,20 @@ const DatePickerBar: React.FC<DatePickerBarProps> = (props) => {
         >
           {/* スクロールバー非表示のスタイル */}
           <style>{`
-            .scrollbar-hide::-webkit-scrollbar, 
-            .scrollbar-none::-webkit-scrollbar, 
+            .scrollbar-hide::-webkit-scrollbar,
+            .scrollbar-none::-webkit-scrollbar,
             .scrollbar-fake::-webkit-scrollbar {
               display: none !important;
             }
           `}</style>
-
           {/* 日付アイテム */}
-          {dateItems.map((dateItem) => (
+          {dateItems.map(dateItem => (
             <React.Fragment key={`${dateItem.date.getTime()}`}>
               {/* 月表示 */}
-              {dateItem.showMonth && (
-                <MonthIndicator date={dateItem.date} />
-              )}
-              
+              {dateItem.showMonth && <MonthIndicator date={dateItem.date} />}
+
               {/* 日付ボタン */}
-              <DateButton
-                dateItem={dateItem}
-                onSelect={handleDateSelect}
-              />
+              <DateButton dateItem={dateItem} onSelect={handleDateSelect} />
             </React.Fragment>
           ))}
         </div>

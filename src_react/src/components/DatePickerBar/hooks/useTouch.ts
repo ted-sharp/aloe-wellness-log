@@ -11,6 +11,10 @@ interface UseTouchProps {
 
 /**
  * タッチ操作を管理するカスタムフック
+ * ポリシー:
+ * - ユーザー主体の操作感を最優先とするため、
+ *   フリック後に「自動で中央スクロール」や「スムースアニメーション」は行わない。
+ * - 本フックは centerDate の更新のみに責務を限定する。
  */
 export const useTouch = ({ setCenterDate, getBaseDate }: UseTouchProps) => {
   const touchRef = useRef<HTMLDivElement>(null);

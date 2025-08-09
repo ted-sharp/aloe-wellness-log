@@ -31,16 +31,19 @@ export const useDatePickerBehavior = ({
     onScrollEdge: expandRange,
   });
 
-  // タッチ機能
-  const { touchRef } = useTouch({
-    setCenterDate,
-    getBaseDate: () => centerDate,
-  });
-
   // 中央スクロール機能
+  // ポリシー: フリック後は中央スクロールしない。
+  // ここでは、初回表示や明示的操作（例: カレンダー選択）時のみ利用する。
   const { requestCenterScroll } = useCenterScroll({
     centerDate,
     containerRef: scrollRef,
+  });
+
+  // タッチ機能（ユーザー操作以外の自動スクロールは行わない）
+  // ポリシー: フリック後に requestCenterScroll は呼ばない。
+  const { touchRef } = useTouch({
+    setCenterDate,
+    getBaseDate: () => centerDate,
   });
 
   // スクロール位置補正
