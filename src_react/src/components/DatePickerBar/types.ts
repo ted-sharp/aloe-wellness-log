@@ -9,6 +9,7 @@ export interface DatePickerBarProps {
   today?: Date;
   isRecorded?: (date: Date) => boolean;
   getDateStatus?: (date: Date) => DateStatus;
+  checkpointDates?: string[];
 }
 
 // 日付配列の各項目の型定義

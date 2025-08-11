@@ -1,33 +1,66 @@
 /**
  * 統合データベース API
- * 
+ *
  * このファイルは、アプリケーション全体で使用される
  * データベース操作の統一インターフェースを提供します。
- * 
+ *
  * 旧来の indexedDb.ts を置き換え、
  * 責任が分離された各クラスへの統一アクセス点となります。
  */
 
 // コアコンポーネント
-export { dbConnection, openDb, executeTransaction } from './connection';
-export { trackDbOperation, getPerformanceStats, clearPerformanceMetrics } from './performance';
-export { DbError, DbErrorType, classifyDbError, isRetryableError } from './errors';
 export { DATABASE_CONFIG, STORE_NAMES, type StoreName } from './config';
+export { dbConnection, executeTransaction, openDb } from './connection';
+export {
+  DbError,
+  DbErrorType,
+  classifyDbError,
+  isRetryableError,
+} from './errors';
+export {
+  clearPerformanceMetrics,
+  getPerformanceStats,
+  trackDbOperation,
+} from './performance';
 
 // リポジトリクラス
-export { WeightRecordRepository, weightRecordRepository } from './repositories/WeightRecordRepository';
+export {
+  BpRecordRepository,
+  bpRecordRepository,
+} from './repositories/BpRecordRepository';
+export {
+  DailyFieldRepository,
+  DailyRecordRepository,
+  dailyFieldRepository,
+  dailyRecordRepository,
+} from './repositories/DailyRecordRepository';
 export { GoalRepository, goalRepository } from './repositories/GoalRepository';
+export {
+  WeightRecordRepository,
+  weightRecordRepository,
+} from './repositories/WeightRecordRepository';
 
 // 型定義
-export type { WeightRecordQuery, WeightRecordStats } from './repositories/WeightRecordRepository';
-export type { GoalOperationResult, GoalStats } from './repositories/GoalRepository';
+export type {
+  GoalOperationResult,
+  GoalStats,
+} from './repositories/GoalRepository';
+export type {
+  WeightRecordQuery,
+  WeightRecordStats,
+} from './repositories/WeightRecordRepository';
 export type { OperationResult, QueryOptions } from './repository';
 
 // 旧来の関数との互換性のための便利な関数
-import { weightRecordRepository } from './repositories/WeightRecordRepository';
-import { goalRepository } from './repositories/GoalRepository';
-import type { WeightRecordV2 } from '../types/record';
 import type { GoalData } from '../types/goal';
+import type { WeightRecordV2 } from '../types/record';
+import { bpRecordRepository } from './repositories/BpRecordRepository';
+import {
+  dailyFieldRepository,
+  dailyRecordRepository,
+} from './repositories/DailyRecordRepository';
+import { goalRepository } from './repositories/GoalRepository';
+import { weightRecordRepository } from './repositories/WeightRecordRepository';
 
 // === 体重記録関連の便利な関数 ===
 
@@ -58,7 +91,9 @@ export async function getAllWeightRecords(): Promise<WeightRecordV2[]> {
  * 体重記録の更新
  * @deprecated weightRecordRepository.update() を直接使用してください
  */
-export async function updateWeightRecord(record: WeightRecordV2): Promise<void> {
+export async function updateWeightRecord(
+  record: WeightRecordV2
+): Promise<void> {
   const result = await weightRecordRepository.update(record);
   if (!result.success) {
     throw new Error(result.error || 'Failed to update weight record');
@@ -121,24 +156,9 @@ export async function clearGoalData(): Promise<void> {
 export async function addBpRecord(
   record: import('../types/record').BpRecordV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('add-bp-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.BP_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(record);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await bpRecordRepository.add(record);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to add BP record');
 }
 
 /**
@@ -148,24 +168,10 @@ export async function addBpRecord(
 export async function getAllBpRecords(): Promise<
   import('../types/record').BpRecordV2[]
 > {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('get-all-bp-records', async () => {
-    return executeTransaction(
-      STORE_NAMES.BP_RECORDS,
-      'readonly',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<import('../types/record').BpRecordV2[]>((resolve, reject) => {
-          const request = objectStore.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await bpRecordRepository.getAll();
+  if (!result.success)
+    throw new Error(result.error || 'Failed to get BP records');
+  return result.data || [];
 }
 
 /**
@@ -174,48 +180,18 @@ export async function getAllBpRecords(): Promise<
 export async function updateBpRecord(
   record: import('../types/record').BpRecordV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('update-bp-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.BP_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(record);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await bpRecordRepository.update(record);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to update BP record');
 }
 
 /**
  * 血圧記録の削除（旧来の関数の簡単な実装）
  */
 export async function deleteBpRecord(id: string): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('delete-bp-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.BP_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.delete(id);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await bpRecordRepository.delete(id);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to delete BP record');
 }
 
 /**
@@ -225,24 +201,9 @@ export async function deleteBpRecord(id: string): Promise<void> {
 export async function addDailyRecord(
   record: import('../types/record').DailyRecordV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('add-daily-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(record);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyRecordRepository.add(record);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to add daily record');
 }
 
 /**
@@ -251,24 +212,10 @@ export async function addDailyRecord(
 export async function getAllDailyRecords(): Promise<
   import('../types/record').DailyRecordV2[]
 > {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('get-all-daily-records', async () => {
-    return executeTransaction(
-      STORE_NAMES.DAILY_RECORDS,
-      'readonly',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<import('../types/record').DailyRecordV2[]>((resolve, reject) => {
-          const request = objectStore.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyRecordRepository.getAll();
+  if (!result.success)
+    throw new Error(result.error || 'Failed to get daily records');
+  return result.data || [];
 }
 
 /**
@@ -277,48 +224,18 @@ export async function getAllDailyRecords(): Promise<
 export async function updateDailyRecord(
   record: import('../types/record').DailyRecordV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('update-daily-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(record);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyRecordRepository.update(record);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to update daily record');
 }
 
 /**
  * 日課記録の削除（旧来の関数の簡単な実装）
  */
 export async function deleteDailyRecord(id: string): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('delete-daily-record', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_RECORDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.delete(id);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyRecordRepository.delete(id);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to delete daily record');
 }
 
 /**
@@ -327,24 +244,9 @@ export async function deleteDailyRecord(id: string): Promise<void> {
 export async function addDailyField(
   field: import('../types/record').DailyFieldV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('add-daily-field', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_FIELDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(field);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyFieldRepository.add(field);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to add daily field');
 }
 
 /**
@@ -353,24 +255,10 @@ export async function addDailyField(
 export async function getAllDailyFields(): Promise<
   import('../types/record').DailyFieldV2[]
 > {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('get-all-daily-fields', async () => {
-    return executeTransaction(
-      STORE_NAMES.DAILY_FIELDS,
-      'readonly',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<import('../types/record').DailyFieldV2[]>((resolve, reject) => {
-          const request = objectStore.getAll();
-          request.onsuccess = () => resolve(request.result || []);
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyFieldRepository.getAll();
+  if (!result.success)
+    throw new Error(result.error || 'Failed to get daily fields');
+  return result.data || [];
 }
 
 /**
@@ -379,48 +267,18 @@ export async function getAllDailyFields(): Promise<
 export async function updateDailyField(
   field: import('../types/record').DailyFieldV2
 ): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('update-daily-field', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_FIELDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.put(field);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyFieldRepository.update(field);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to update daily field');
 }
 
 /**
  * 日課フィールドの削除（旧来の関数の簡単な実装）
  */
 export async function deleteDailyField(fieldId: string): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-  
-  return trackDbOperation('delete-daily-field', async () => {
-    await executeTransaction(
-      STORE_NAMES.DAILY_FIELDS,
-      'readwrite',
-      async (_transaction, store) => {
-        const objectStore = store as IDBObjectStore;
-        return new Promise<void>((resolve, reject) => {
-          const request = objectStore.delete(fieldId);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      }
-    );
-  });
+  const result = await dailyFieldRepository.delete(fieldId);
+  if (!result.success)
+    throw new Error(result.error || 'Failed to delete daily field');
 }
 
 /**
@@ -430,7 +288,7 @@ export async function deleteAllData(): Promise<void> {
   const { executeTransaction } = await import('./connection');
   const { STORE_NAMES } = await import('./config');
   const { trackDbOperation } = await import('./performance');
-  
+
   return trackDbOperation('delete-all-data', async () => {
     await executeTransaction(
       [
@@ -454,7 +312,7 @@ export async function deleteAllData(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
           let completedOperations = 0;
           const totalOperations = 5;
-          
+
           const checkCompletion = () => {
             completedOperations++;
             if (completedOperations === totalOperations) {
@@ -479,11 +337,13 @@ export async function deleteAllData(): Promise<void> {
 
           const dailyRecordRequest = dailyRecordStore.clear();
           dailyRecordRequest.onsuccess = checkCompletion;
-          dailyRecordRequest.onerror = () => handleError(dailyRecordRequest.error);
+          dailyRecordRequest.onerror = () =>
+            handleError(dailyRecordRequest.error);
 
           const dailyFieldRequest = dailyFieldStore.clear();
           dailyFieldRequest.onsuccess = checkCompletion;
-          dailyFieldRequest.onerror = () => handleError(dailyFieldRequest.error);
+          dailyFieldRequest.onerror = () =>
+            handleError(dailyFieldRequest.error);
         });
       }
     );

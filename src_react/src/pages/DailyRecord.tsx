@@ -21,11 +21,12 @@ import {
 } from 'react-icons/hi2';
 import Button from '../components/Button';
 import DailyAchievementItem from '../components/DailyAchievementItem';
+import DatePickerBar from '../components/DatePickerBar';
 import SortableItem from '../components/SortableItem';
+import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
-import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
-import DatePickerBar from '../components/DatePickerBar';
+import { useGoalStore } from '../store/goal.mobx';
 import type { DailyFieldV2 } from '../types/record';
 
 /**
@@ -33,6 +34,7 @@ import type { DailyFieldV2 } from '../types/record';
  */
 
 const DailyRecord: React.FC = () => {
+  const { goal } = useGoalStore();
   // ビジネスロジック
   const {
     fields,
@@ -62,7 +64,7 @@ const DailyRecord: React.FC = () => {
     // isRecorded: isRecordedByHook,
   } = useDateSelection({
     records,
-    getRecordDate: (record) => record.date,
+    getRecordDate: record => record.date,
   });
 
   // 新規項目追加用state
@@ -94,7 +96,9 @@ const DailyRecord: React.FC = () => {
       setShowAddField(false);
       setNewFieldName('');
     } catch (error) {
-      setAddFieldError(error instanceof Error ? error.message : 'エラーが発生しました');
+      setAddFieldError(
+        error instanceof Error ? error.message : 'エラーが発生しました'
+      );
     }
   };
 
@@ -142,10 +146,12 @@ const DailyRecord: React.FC = () => {
   }, [editingFieldId]);
 
   // カレット位置変更のコールバック
-  const handleCaretPositionChange = useCallback((fieldId: string, start: number, end: number) => {
-    caretPosRef.current[fieldId] = { start, end };
-  }, []);
-
+  const handleCaretPositionChange = useCallback(
+    (fieldId: string, start: number, end: number) => {
+      caretPosRef.current[fieldId] = { start, end };
+    },
+    []
+  );
 
   // 編集内容保存
   const handleEditSave = async () => {
@@ -195,10 +201,9 @@ const DailyRecord: React.FC = () => {
 
   const streak = calcStreak(selectedDate);
   const animatedStreak = useAnimatedNumber(streak);
-  
+
   const totalAchievedDays = calcTotalAchievedDays(selectedDate);
   const animatedTotalAchievedDays = useAnimatedNumber(totalAchievedDays);
-
 
   return (
     <div className="bg-transparent">
@@ -209,6 +214,7 @@ const DailyRecord: React.FC = () => {
         centerDate={centerDate}
         setCenterDate={setCenterDate}
         getDateStatus={getDateStatus}
+        checkpointDates={goal?.checkpointDates}
         data-testid="date-picker"
       />
       {/* タイトル：日付ピッカー下・左上 */}
@@ -319,7 +325,11 @@ const DailyRecord: React.FC = () => {
                     await handleAchievementInput(field.fieldId, 1, recordDate);
                   }}
                   onPartial={async () => {
-                    await handleAchievementInput(field.fieldId, 0.5, recordDate);
+                    await handleAchievementInput(
+                      field.fieldId,
+                      0.5,
+                      recordDate
+                    );
                   }}
                   onUnachieve={async () => {
                     await handleAchievementInput(field.fieldId, 0, recordDate);
