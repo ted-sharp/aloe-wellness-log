@@ -1,10 +1,6 @@
 import { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react';
 import { HiChartBarSquare } from 'react-icons/hi2';
-import {
-  ErrorMessage,
-  InfoMessage,
-  SuccessMessage,
-} from '../components/StatusMessage';
+import { useToastStore } from '../store/toast.mobx';
 import { isDev } from '../utils/devTools';
 import { useRenderPerformance } from '../utils/performance';
 
@@ -25,6 +21,7 @@ const RecordExport = memo(function RecordExport({
 
   const [globalStatus, setGlobalStatus] = useState<string | null>(null);
   const [errorToThrow, setErrorToThrow] = useState<Error | null>(null);
+  const { showSuccess, showError } = useToastStore();
 
   // エラーバウンダリテスト用
   useEffect(() => {
@@ -56,8 +53,8 @@ const RecordExport = memo(function RecordExport({
       waiting: {
         postMessage: (message: { type: string }) => {
           console.log('Mock Service Worker message:', message);
-        }
-      }
+        },
+      },
     } as ServiceWorkerRegistration;
 
     // 新しいバージョンのメッセージを表示
@@ -76,7 +73,7 @@ const RecordExport = memo(function RecordExport({
         <button id="sw-update-btn" style="background:#fff;color:#059669;font-weight:bold;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;width:100%;">再読み込み</button>
       </div>
     `;
-    
+
     const btn = toastRoot.querySelector('#sw-update-btn') as HTMLButtonElement;
     btn.onclick = () => {
       if (mockRegistration.waiting) {
@@ -94,6 +91,18 @@ const RecordExport = memo(function RecordExport({
       }
     }, 10000);
   }, []);
+
+  const resetTipsHistory = useCallback(() => {
+    try {
+      // App.tsxで使用している履歴キー
+      const SHOWN_TIPS_KEY = 'shownTipIndices_v1';
+      localStorage.removeItem(SHOWN_TIPS_KEY);
+      showSuccess('TIPS表示履歴をリセットしました');
+    } catch (e) {
+      console.error(e);
+      showError('TIPS履歴のリセットに失敗しました');
+    }
+  }, [showSuccess, showError]);
 
   return (
     <div className="flex flex-col items-center justify-start py-4 bg-transparent min-h-screen">
@@ -122,7 +131,7 @@ const RecordExport = memo(function RecordExport({
                 </div>
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-3 flex-col sm:flex-row">
                 <button
                   type="button"
                   onClick={showTipsModal}
@@ -130,11 +139,17 @@ const RecordExport = memo(function RecordExport({
                 >
                   TIPSを表示
                 </button>
+                <button
+                  type="button"
+                  onClick={resetTipsHistory}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                >
+                  TIPS履歴をリセット
+                </button>
               </div>
             </div>
           </div>
         )}
-
 
         {/* Suspenseでラップして読み込み中の表示を追加 */}
         <Suspense
@@ -194,12 +209,18 @@ const RecordExport = memo(function RecordExport({
               <div className="flex justify-center">
                 <ul className="list-disc list-inside space-y-2 text-xs text-gray-500 dark:text-gray-400 text-left max-w-sm px-2">
                   <li>
-                    <span className="font-medium">エラーバウンダリ:</span><br className="sm:hidden" />
-                    <span className="sm:ml-1">意図的にエラーを発生させて、エラーハンドリングをテストします</span>
+                    <span className="font-medium">エラーバウンダリ:</span>
+                    <br className="sm:hidden" />
+                    <span className="sm:ml-1">
+                      意図的にエラーを発生させて、エラーハンドリングをテストします
+                    </span>
                   </li>
                   <li>
-                    <span className="font-medium">バージョン更新通知:</span><br className="sm:hidden" />
-                    <span className="sm:ml-1">新しいバージョンがある際の通知メッセージをテストします</span>
+                    <span className="font-medium">バージョン更新通知:</span>
+                    <br className="sm:hidden" />
+                    <span className="sm:ml-1">
+                      新しいバージョンがある際の通知メッセージをテストします
+                    </span>
                   </li>
                 </ul>
               </div>
