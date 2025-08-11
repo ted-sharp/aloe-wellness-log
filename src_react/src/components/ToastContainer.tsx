@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
+import React, { useEffect, useRef } from 'react';
 import {
   HiCheckCircle,
   HiExclamationTriangle,
@@ -122,6 +122,15 @@ const ToastContainer: React.FC = observer(() => {
                 {toast.message}
               </p>
             </div>
+            {toast.action && (
+              <button
+                onClick={toast.action.onClick}
+                className="flex-shrink-0 ml-2 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-md px-2 py-1 text-sm"
+                aria-label={toast.action.label}
+              >
+                {toast.action.label}
+              </button>
+            )}
             <button
               onClick={() => removeToast(toast.id)}
               className="flex-shrink-0 text-gray-400 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-full p-1"

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useGoalStore, useRecordsStore } from '../store';
 import { formatDate } from '../utils/dateUtils';
+import { isDev } from '../utils/devTools';
 
 /**
  * グラフ表示用の統合データフェッチングフック
@@ -19,7 +20,7 @@ export function useGraphData() {
   // 初期データロード（MobXストアの初期化状態を活用）
   useEffect(() => {
     const loadData = async () => {
-      console.log('useGraphData: Loading initial data');
+      if (isDev) console.log('useGraphData: Loading initial data');
       await Promise.all([goalStore.loadGoal(), recordsStore.loadAllData()]);
     };
 
@@ -43,10 +44,12 @@ export function useGraphData() {
 
   // 体重データの処理（最適化版：O(n) アルゴリズム）
   const processedWeightData = useMemo(() => {
-    console.log(
-      'useGraphData: Processing weight records:',
-      weightRecords.length
-    );
+    if (isDev) {
+      console.log(
+        'useGraphData: Processing weight records:',
+        weightRecords.length
+      );
+    }
 
     // 最適化：タイムスタンプの重複をMapで管理（O(n)）
     const timestampCounts = new Map<number, number>();
@@ -105,7 +108,8 @@ export function useGraphData() {
 
   // 血圧データの処理（最適化版：O(n) アルゴリズム）
   const processedBpData = useMemo(() => {
-    console.log('useGraphData: Processing BP records:', bpRecords.length);
+    if (isDev)
+      console.log('useGraphData: Processing BP records:', bpRecords.length);
 
     // 最適化：タイムスタンプの重複をMapで管理（O(n)）
     const timestampCounts = new Map<number, number>();
@@ -232,16 +236,18 @@ export function useGraphData() {
       const filteredData = showExcluded
         ? periodData
         : periodData.filter(r => !r.excludeFromGraph);
-      console.log(
-        'getFilteredData (MobX optimized): period=',
-        period,
-        'showExcluded=',
-        showExcluded,
-        'endDate=',
-        endDateStr,
-        'filtered=',
-        filteredData.length
-      );
+      if (isDev) {
+        console.log(
+          'getFilteredData (MobX optimized): period=',
+          period,
+          'showExcluded=',
+          showExcluded,
+          'endDate=',
+          endDateStr,
+          'filtered=',
+          filteredData.length
+        );
+      }
 
       return filteredData.map(r => ({
         ...r,

@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react';
-import { goalStore } from '../../../store/goal.mobx';
 import { getDateArray } from '../../../utils/dateUtils';
 import { createDateItems } from '../helpers';
 import type { DatePickerBarProps } from '../types';
@@ -21,6 +20,7 @@ export const useDatePickerBehavior = ({
   today,
   isRecorded,
   getDateStatus,
+  checkpointDates,
 }: DatePickerBarProps) => {
   // 日付範囲管理
   const { dateRange, lastEdgeRef, prevWidthRef, expandRange } =
@@ -70,7 +70,7 @@ export const useDatePickerBehavior = ({
         today || new Date(),
         getDateStatus,
         isRecorded,
-        goalStore.checkpointDates
+        checkpointDates
       ),
     [
       dateArray,
@@ -79,7 +79,7 @@ export const useDatePickerBehavior = ({
       today,
       getDateStatus,
       isRecorded,
-      goalStore.checkpointDates,
+      checkpointDates,
     ]
   );
 

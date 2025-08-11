@@ -1,10 +1,12 @@
+import { StrictMode } from 'react';
+import 'react-day-picker/style.css';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import ToastContainer from './components/ToastContainer';
 import './index.css';
-import 'react-day-picker/style.css';
+import { toastStore } from './store/toast.mobx';
 import { initializePrivacySettings } from './utils/privacy';
 
 // i18nの初期化
@@ -198,15 +200,17 @@ const routerBase = (() => {
   return raw.length > 1 ? raw.replace(/\/$/, '') : '';
 })();
 
-createRoot(document.getElementById('root')!).render(
-  // <StrictMode>
+const app = (
   <ErrorBoundary>
     <ToastContainer />
     <Router basename={routerBase}>
       <App />
     </Router>
   </ErrorBoundary>
-  // </StrictMode>
+);
+
+createRoot(document.getElementById('root')!).render(
+  import.meta.env.DEV ? <StrictMode>{app}</StrictMode> : app
 );
 
 // 初期ロード時間を計測
@@ -251,28 +255,16 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 
 // --- アップデート通知Toast表示関数 ---
 function showUpdateToast(reg: ServiceWorkerRegistration) {
-  // 既存のToastContainerを利用
-  const toastRoot = document.createElement('div');
-  toastRoot.style.position = 'fixed';
-  toastRoot.style.bottom = '32px';
-  toastRoot.style.left = '50%';
-  toastRoot.style.transform = 'translateX(-50%)';
-  toastRoot.style.zIndex = '9999';
-  document.body.appendChild(toastRoot);
-
-  toastRoot.innerHTML = `
-    <div style="background:#059669;color:#fff;padding:16px 24px;border-radius:12px;box-shadow:0 2px 8px #0002;display:flex;align-items:center;gap:16px;font-size:1rem;">
-      <span>新しいバージョンがあります。<br>再読み込みで最新に更新できます。</span>
-      <button id="sw-update-btn" style="background:#fff;color:#059669;font-weight:bold;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;">再読み込み</button>
-    </div>
-  `;
-  const btn = toastRoot.querySelector('#sw-update-btn') as HTMLButtonElement;
-  btn.onclick = () => {
-    if (reg.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  toastStore.showActionableToast(
+    '新しいバージョンがあります。再読み込みで最新に更新できます。',
+    '再読み込み',
+    () => {
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      // controllerchange で自動リロード
     }
-    window.location.reload();
-  };
+  );
 }
 
 // Service WorkerからのskipWaitingメッセージ受信対応（sw.js側も要対応）

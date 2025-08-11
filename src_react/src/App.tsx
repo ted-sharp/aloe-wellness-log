@@ -4,28 +4,29 @@ import './App.css';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TipsModal from './components/TipsModal';
+import { STORAGE_KEYS } from './constants/storageKeys';
 import tipsList from './data/tips';
+import * as db from './db';
+import { rootStore } from './store';
+import { isDev } from './utils/devTools';
 // Lazy load for better performance
 const BpRecord = lazy(() => import('./pages/BpRecord'));
 const DailyRecord = lazy(() => import('./pages/DailyRecord'));
 const GoalInput = lazy(() => import('./pages/GoalInput'));
 const RecordGraph = lazy(() => import('./pages/RecordGraph'));
 const WeightRecord = lazy(() => import('./pages/WeightRecord'));
-import { rootStore } from './store';
-import { isDev } from './utils/devTools';
-import * as db from './db';
 
 // ローディング用コンポーネント
 const PageLoader = ({ pageName }: { pageName?: string }) => {
   return (
-    <div 
+    <div
       className="flex items-center justify-center min-h-[400px]"
-      role="status" 
+      role="status"
       aria-live="polite"
       aria-label={pageName ? `${pageName}を読み込み中` : 'ページを読み込み中'}
     >
       <div className="flex flex-col items-center space-y-4">
-        <div 
+        <div
           className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"
           aria-hidden="true"
         ></div>
@@ -33,7 +34,10 @@ const PageLoader = ({ pageName }: { pageName?: string }) => {
           {pageName ? `${pageName}を読み込み中...` : 'ページを読み込み中...'}
         </p>
         {isDev && (
-          <p className="text-xs text-gray-400 dark:text-gray-500" aria-hidden="true">
+          <p
+            className="text-xs text-gray-400 dark:text-gray-500"
+            aria-hidden="true"
+          >
             パフォーマンス測定中
           </p>
         )}
@@ -252,26 +256,70 @@ function App() {
   const [tipText, setTipText] = useState('');
   const [isDataInitialized, setIsDataInitialized] = useState(false);
 
+  // tips表示制御: 未表示のものからランダムに選択し、全件表示後はリセット
+  const SHOWN_TIPS_KEY = STORAGE_KEYS.shownTipIndices;
+
+  const getShownTipIndices = (): number[] => {
+    try {
+      const raw = localStorage.getItem(SHOWN_TIPS_KEY);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      const arr = Array.isArray(data)
+        ? data
+        : data && Array.isArray(data.indices)
+        ? data.indices
+        : [];
+      return (arr as unknown[])
+        .map(n => (typeof n === 'number' ? n : Number.NaN))
+        .filter(n => Number.isInteger(n) && n >= 0 && n < tipsList.length);
+    } catch {
+      return [];
+    }
+  };
+
+  const saveShownTipIndices = (indices: number[]) => {
+    try {
+      localStorage.setItem(SHOWN_TIPS_KEY, JSON.stringify(indices));
+    } catch {
+      // no-op
+    }
+  };
+
+  const pickNextTipIndex = (): number => {
+    const shown = getShownTipIndices();
+    const all = Array.from({ length: tipsList.length }, (_, i) => i);
+    const unseen = all.filter(i => !shown.includes(i));
+    const pool = unseen.length > 0 ? unseen : all;
+    const idx = pool[Math.floor(Math.random() * pool.length)];
+    const nextShownSet = new Set<number>(shown);
+    nextShownSet.add(idx);
+    if (nextShownSet.size >= all.length) {
+      // 全件消化直後にリセットし、今回選ばれた1件のみを履歴に保持
+      saveShownTipIndices([idx]);
+    } else {
+      saveShownTipIndices(Array.from(nextShownSet));
+    }
+    return idx;
+  };
+
   // tips表示用関数（disableTipsをチェック）
   const showTipsModal = () => {
-    const disableTips = localStorage.getItem('disableTips') === '1';
+    const disableTips = localStorage.getItem(STORAGE_KEYS.disableTips) === '1';
     console.log('showTipsModal呼び出し - disableTips:', disableTips);
-    
     if (disableTips) {
       console.log('TIPS表示無効化設定により表示をスキップ');
       return;
     }
-    
-    const randomTip = tipsList[Math.floor(Math.random() * tipsList.length)];
-    setTipText(randomTip);
+    const idx = pickNextTipIndex();
+    setTipText(tipsList[idx]);
     setTipsModalOpen(true);
   };
 
   // 開発者ツール用の強制表示関数（disableTipsを無視）
   const forceShowTipsModal = () => {
     console.log('開発者ツール: TIPS強制表示');
-    const randomTip = tipsList[Math.floor(Math.random() * tipsList.length)];
-    setTipText(randomTip);
+    const idx = pickNextTipIndex();
+    setTipText(tipsList[idx]);
     setTipsModalOpen(true);
   };
 
@@ -281,7 +329,7 @@ function App() {
       try {
         // MobXストアの初期化
         const cleanupStores = await rootStore.initialize();
-        
+
         // 日課フィールドの初期化
         const baseDailyFieldStructure = [
           { fieldId: 'exercise', name: '運動', order: 6, display: true },
@@ -299,7 +347,7 @@ function App() {
         }
 
         setIsDataInitialized(true);
-        
+
         // コンポーネントアンマウント時のクリーンアップ
         return () => {
           cleanupStores();
@@ -313,8 +361,6 @@ function App() {
     initializeData();
   }, []);
 
-  
-
   // 初回マウント時のtips表示（日付チェック）
   useEffect(() => {
     const today = new Date();
@@ -322,14 +368,14 @@ function App() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
-    const lastTipsDate = localStorage.getItem('lastTipsDate');
-    
+    const lastTipsDate = localStorage.getItem(STORAGE_KEYS.lastTipsDate);
+
     console.log('TIPS自動表示チェック:', {
       lastTipsDate,
       todayStr,
-      shouldShow: lastTipsDate !== todayStr
+      shouldShow: lastTipsDate !== todayStr,
     });
-    
+
     if (lastTipsDate !== todayStr) {
       showTipsModal(); // この中でdisableTipsをチェック
     }
@@ -341,7 +387,7 @@ function App() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
-    localStorage.setItem('lastTipsDate', todayStr);
+    localStorage.setItem(STORAGE_KEYS.lastTipsDate, todayStr);
     setTipsModalOpen(false);
   };
 

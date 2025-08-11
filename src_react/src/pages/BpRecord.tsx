@@ -12,10 +12,11 @@ import {
   getAllBpRecords,
   updateBpRecord,
 } from '../db';
+import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
-import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
+import { useGoalSummary } from '../store/goal.mobx';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値
@@ -31,6 +32,7 @@ const initialFormValues = {
 const BpRecord: React.FC = () => {
   // 血圧記録のビジネスロジック
   const bpLogic = useBpRecordLogic();
+  const { checkpointDates } = useGoalSummary();
 
   // 記録のCRUD操作
   const {
@@ -60,29 +62,26 @@ const BpRecord: React.FC = () => {
     isRecorded,
   } = useDateSelection({
     records: bpRecords,
-    getRecordDate: (record) => record.date,
+    getRecordDate: record => record.date,
   });
 
   // フォーム状態管理
-  const {
-    formData,
-    updateField,
-    resetForm,
-    createRecordFromForm,
-  } = useRecordForm({
-    initialValues: initialFormValues,
-    createRecord: (formData, date) => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      date,
-      time: formData.time,
-      systolic: Number(formData.systolic),
-      diastolic: Number(formData.diastolic),
-      heartRate: formData.heartRate !== '' ? Number(formData.heartRate) : null,
-      note: formData.note || null,
-      excludeFromGraph: formData.excludeFromGraph || false,
-    }),
-    resetValues: initialFormValues,
-  });
+  const { formData, updateField, resetForm, createRecordFromForm } =
+    useRecordForm({
+      initialValues: initialFormValues,
+      createRecord: (formData, date) => ({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        date,
+        time: formData.time,
+        systolic: Number(formData.systolic),
+        diastolic: Number(formData.diastolic),
+        heartRate:
+          formData.heartRate !== '' ? Number(formData.heartRate) : null,
+        note: formData.note || null,
+        excludeFromGraph: formData.excludeFromGraph || false,
+      }),
+      resetValues: initialFormValues,
+    });
 
   // レコード追加処理
   const handleAddRecord = useCallback(async () => {
@@ -94,7 +93,14 @@ const BpRecord: React.FC = () => {
     } catch (error) {
       // エラーハンドリングはuseRecordCRUDで行われる
     }
-  }, [bpLogic, formData, createRecordFromForm, recordDate, addRecord, resetForm]);
+  }, [
+    bpLogic,
+    formData,
+    createRecordFromForm,
+    recordDate,
+    addRecord,
+    resetForm,
+  ]);
 
   return (
     <div className="bg-transparent">
@@ -105,9 +111,10 @@ const BpRecord: React.FC = () => {
         setCenterDate={setCenterDate}
         today={today}
         isRecorded={isRecorded}
+        checkpointDates={checkpointDates}
         data-testid="date-picker"
       />
-      
+
       <div className="w-full max-w-md mx-auto mt-3 mb-3 flex justify-start pl-4">
         <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
           {selectedDate.toLocaleDateString('ja-JP', {
@@ -190,11 +197,13 @@ const BpRecord: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-1 w-full">
                 <NumberInput
                   value={rec.systolic}
-                  onChange={(value) => handleUpdate({ ...rec, systolic: Number(value) })}
+                  onChange={value =>
+                    handleUpdate({ ...rec, systolic: Number(value) })
+                  }
                   placeholder="収縮"
                   step="1"
                   min="0"
@@ -202,10 +211,12 @@ const BpRecord: React.FC = () => {
                   width="md"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500 text-sm">mmHg</span>
-                
+
                 <NumberInput
                   value={rec.diastolic}
-                  onChange={(value) => handleUpdate({ ...rec, diastolic: Number(value) })}
+                  onChange={value =>
+                    handleUpdate({ ...rec, diastolic: Number(value) })
+                  }
                   placeholder="拡張"
                   step="1"
                   min="0"
@@ -213,13 +224,15 @@ const BpRecord: React.FC = () => {
                   width="md"
                 />
                 <span className="ml-0.5 mr-3 text-gray-500 text-sm">mmHg</span>
-                
+
                 <NumberInput
                   value={rec.heartRate ?? ''}
-                  onChange={(value) => handleUpdate({ 
-                    ...rec, 
-                    heartRate: value === '' ? null : Number(value) 
-                  })}
+                  onChange={value =>
+                    handleUpdate({
+                      ...rec,
+                      heartRate: value === '' ? null : Number(value),
+                    })
+                  }
                   placeholder="心拍"
                   step="1"
                   min="0"
@@ -228,7 +241,7 @@ const BpRecord: React.FC = () => {
                 />
                 <span className="ml-0.5 mr-3 text-gray-500 text-sm">bpm</span>
               </div>
-              
+
               <textarea
                 className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-2 mb-0"
                 defaultValue={rec.note ?? ''}
@@ -245,7 +258,7 @@ const BpRecord: React.FC = () => {
             <div className="flex items-center w-full mb-1 justify-between">
               <TimeInputWithPresets
                 value={formData.time}
-                onChange={(time) => updateField('time', time)}
+                onChange={time => updateField('time', time)}
               />
               <div className="flex items-center gap-2">
                 <Button
@@ -262,8 +275,12 @@ const BpRecord: React.FC = () => {
                 <Button
                   variant={formData.excludeFromGraph ? 'secondary' : 'sky'}
                   size="sm"
-                  aria-label={formData.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'}
-                  onClick={() => updateField('excludeFromGraph', !formData.excludeFromGraph)}
+                  aria-label={
+                    formData.excludeFromGraph ? 'グラフ除外' : 'グラフ表示'
+                  }
+                  onClick={() =>
+                    updateField('excludeFromGraph', !formData.excludeFromGraph)
+                  }
                 >
                   {''}
                   <span className="relative inline-block w-5 h-5">
@@ -275,11 +292,11 @@ const BpRecord: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1 w-full mb-1">
               <NumberInput
                 value={formData.systolic}
-                onChange={(systolic) => updateField('systolic', systolic)}
+                onChange={systolic => updateField('systolic', systolic)}
                 placeholder="収縮"
                 step="1"
                 min="0"
@@ -287,10 +304,10 @@ const BpRecord: React.FC = () => {
                 width="md"
               />
               <span className="ml-0.5 mr-3 text-gray-500 text-sm">mmHg</span>
-              
+
               <NumberInput
                 value={formData.diastolic}
-                onChange={(diastolic) => updateField('diastolic', diastolic)}
+                onChange={diastolic => updateField('diastolic', diastolic)}
                 placeholder="拡張"
                 step="1"
                 min="0"
@@ -298,10 +315,10 @@ const BpRecord: React.FC = () => {
                 width="md"
               />
               <span className="ml-0.5 mr-3 text-gray-500 text-sm">mmHg</span>
-              
+
               <NumberInput
                 value={formData.heartRate}
-                onChange={(heartRate) => updateField('heartRate', heartRate)}
+                onChange={heartRate => updateField('heartRate', heartRate)}
                 placeholder="心拍"
                 step="1"
                 min="0"
@@ -310,7 +327,7 @@ const BpRecord: React.FC = () => {
               />
               <span className="ml-0.5 mr-3 text-gray-500 text-sm">bpm</span>
             </div>
-            
+
             <textarea
               className="h-10 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-base bg-inherit text-gray-700 dark:text-gray-200 resize-none w-full pr-2 mb-1"
               rows={1}
@@ -318,7 +335,6 @@ const BpRecord: React.FC = () => {
               onChange={e => updateField('note', e.target.value)}
               placeholder="補足・メモ（任意）"
             />
-            
           </div>
         </div>
 

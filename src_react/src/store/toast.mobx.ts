@@ -1,10 +1,15 @@
-import { makeAutoObservable, runInAction, action, computed } from 'mobx';
+import { action, computed, makeAutoObservable, runInAction } from 'mobx';
 
 export enum ToastType {
   SUCCESS = 'success',
   ERROR = 'error',
   WARNING = 'warning',
-  INFO = 'info'
+  INFO = 'info',
+}
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
 }
 
 export interface Toast {
@@ -13,6 +18,7 @@ export interface Toast {
   message: string;
   duration?: number; // ミリ秒、undefinedの場合は自動消去しない
   timestamp?: number; // 作成時刻（パフォーマンス計測用）
+  action?: ToastAction; // 任意のアクション（例: 再読み込みなど）
 }
 
 // 型安全性のためのインターフェース
@@ -93,11 +99,11 @@ export class ToastStore {
       [ToastType.WARNING]: 0,
       [ToastType.INFO]: 0,
     };
-    
+
     this.toasts.forEach(toast => {
       counts[toast.type]++;
     });
-    
+
     return counts;
   }
 
@@ -145,14 +151,18 @@ export class ToastStore {
     };
   }
 
-  showToast = (message: string, type: ToastType = ToastType.INFO, duration: number = 3000) => {
+  showToast = (
+    message: string,
+    type: ToastType = ToastType.INFO,
+    duration: number = 3000
+  ) => {
     const id = generateToastId();
     const newToast: Toast = {
       id,
       type,
       message,
       duration,
-      timestamp: Date.now() // パフォーマンス計測のためのタイムスタンプ
+      timestamp: Date.now(), // パフォーマンス計測のためのタイムスタンプ
     };
 
     this.toasts.push(newToast);
@@ -181,6 +191,36 @@ export class ToastStore {
     this.showToast(message, ToastType.INFO, duration);
   };
 
+  // アクション付きの永続トースト（例: SW更新→再読み込み）
+  showActionableToast = (
+    message: string,
+    actionLabel: string,
+    onAction: () => void,
+    type: ToastType = ToastType.INFO
+  ) => {
+    const id = generateToastId();
+    const newToast: Toast = {
+      id,
+      type,
+      message,
+      // 永続表示（ユーザー操作まで保持）
+      duration: undefined,
+      timestamp: Date.now(),
+      action: {
+        label: actionLabel,
+        onClick: () => {
+          try {
+            onAction();
+          } finally {
+            this.removeToast(id);
+          }
+        },
+      },
+    };
+
+    this.toasts.push(newToast);
+  };
+
   removeToast = (id: string) => {
     runInAction(() => {
       this.toasts = this.toasts.filter(toast => toast.id !== id);
@@ -206,7 +246,7 @@ export const useToastStore = () => ({
   showInfo: toastStore.showInfo,
   removeToast: toastStore.removeToast,
   clearAll: toastStore.clearAll,
-  
+
   // 新しいAPI（ベストプラクティス）
   hasToasts: toastStore.hasToasts,
   activeToasts: toastStore.activeToasts,
@@ -259,8 +299,8 @@ export const isValidToastType = (type: string): type is ToastType => {
 };
 
 export const createToast = (
-  message: string, 
-  type: ToastType = ToastType.INFO, 
+  message: string,
+  type: ToastType = ToastType.INFO,
   duration?: number
 ): Omit<Toast, 'id' | 'timestamp'> => {
   return {
