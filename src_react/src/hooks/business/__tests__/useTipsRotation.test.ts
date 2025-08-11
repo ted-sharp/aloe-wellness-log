@@ -31,13 +31,15 @@ const pickNextTipIndex = (): number => {
   const all = Array.from({ length: tipsList.length }, (_, i) => i);
   const unseen = all.filter(i => !shown.includes(i));
   const pool = unseen.length > 0 ? unseen : all;
-  if (unseen.length === 0) {
-    // 全件表示済み → リセット
-    saveShownTipIndices([]);
-  }
   const idx = pool[Math.floor(Math.random() * pool.length)];
-  const base = unseen.length > 0 ? shown : [];
-  saveShownTipIndices([...base, idx]);
+  const nextShownSet = new Set<number>(shown);
+  nextShownSet.add(idx);
+  if (nextShownSet.size >= all.length) {
+    // 全件消化直後にリセットし、今回選ばれた1件のみを履歴に保持
+    saveShownTipIndices([idx]);
+  } else {
+    saveShownTipIndices(Array.from(nextShownSet));
+  }
   return idx;
 };
 

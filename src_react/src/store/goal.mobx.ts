@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction, action, computed } from 'mobx';
+import { action, computed, makeAutoObservable, runInAction } from 'mobx';
 import { goalRepository } from '../db';
 import type { GoalData } from '../types/goal';
 
@@ -60,11 +60,11 @@ export class GoalStore {
     if (!this.goal || !this.goal.currentWeight || !this.goal.targetWeight) {
       return 0;
     }
-    
+
     const startWeight = this.goal.startWeight || this.goal.currentWeight;
     const totalChange = this.goal.targetWeight - startWeight;
     const currentChange = this.goal.currentWeight - startWeight;
-    
+
     if (totalChange === 0) return 100;
     return Math.max(0, Math.min(100, (currentChange / totalChange) * 100));
   }
@@ -73,10 +73,12 @@ export class GoalStore {
     if (!this.goal || !this.goal.currentWeight || !this.goal.targetWeight) {
       return false;
     }
-    
+
     // 目標が減量か増量かで判定ロジックを変える
-    const isWeightLoss = this.goal.targetWeight < (this.goal.startWeight || this.goal.currentWeight);
-    
+    const isWeightLoss =
+      this.goal.targetWeight <
+      (this.goal.startWeight || this.goal.currentWeight);
+
     if (isWeightLoss) {
       return this.goal.currentWeight <= this.goal.targetWeight;
     } else {
@@ -88,7 +90,7 @@ export class GoalStore {
     if (!this.goal || !this.goal.currentWeight || !this.goal.targetWeight) {
       return 0;
     }
-    
+
     return Math.abs(this.goal.targetWeight - this.goal.currentWeight);
   }
 
@@ -96,30 +98,30 @@ export class GoalStore {
     if (!this.goal?.targetStart) {
       return [];
     }
-    
+
     const startDate = new Date(this.goal.targetStart);
     const checkpoints: string[] = [];
-    
+
     // 2週間後
     const twoWeeks = new Date(startDate);
     twoWeeks.setDate(startDate.getDate() + 14);
     checkpoints.push(twoWeeks.toISOString().split('T')[0]);
-    
+
     // 1ヶ月後
     const oneMonth = new Date(startDate);
     oneMonth.setMonth(startDate.getMonth() + 1);
     checkpoints.push(oneMonth.toISOString().split('T')[0]);
-    
+
     // 2ヶ月後
     const twoMonths = new Date(startDate);
     twoMonths.setMonth(startDate.getMonth() + 2);
     checkpoints.push(twoMonths.toISOString().split('T')[0]);
-    
+
     // 3ヶ月後
     const threeMonths = new Date(startDate);
     threeMonths.setMonth(startDate.getMonth() + 3);
     checkpoints.push(threeMonths.toISOString().split('T')[0]);
-    
+
     return checkpoints;
   }
 
@@ -151,10 +153,10 @@ export class GoalStore {
   setGoal = async (goal: GoalData): Promise<void> => {
     this.setLoading(true);
     this.setError(null);
-    
+
     try {
       const result = await goalRepository.setGoal(goal);
-      
+
       runInAction(() => {
         if (result.success) {
           this.goal = goal;
@@ -162,6 +164,7 @@ export class GoalStore {
         } else {
           this.error = result.error || 'Failed to set goal';
           console.warn('Goal validation failed:', this.error);
+          throw new Error(this.error);
         }
       });
     } catch (error) {
@@ -169,6 +172,7 @@ export class GoalStore {
         this.error = error instanceof Error ? error.message : 'Unknown error';
       });
       console.error('Goal setting error:', error);
+      throw error;
     } finally {
       runInAction(() => {
         this.setLoading(false);
@@ -179,10 +183,10 @@ export class GoalStore {
   clearGoal = async (): Promise<void> => {
     this.setLoading(true);
     this.setError(null);
-    
+
     try {
       const result = await goalRepository.clearGoal();
-      
+
       runInAction(() => {
         if (result.success) {
           this.goal = null;
@@ -206,10 +210,10 @@ export class GoalStore {
   loadGoal = async (): Promise<void> => {
     this.setLoading(true);
     this.setError(null);
-    
+
     try {
       const result = await goalRepository.getGoal();
-      
+
       runInAction(() => {
         if (result && result.success) {
           this.goal = result.data || null;
@@ -251,7 +255,7 @@ export const useGoalStore = () => {
     setGoal: goalStore.setGoal,
     clearGoal: goalStore.clearGoal,
     loadGoal: goalStore.loadGoal,
-    
+
     // 新しいAPI（ベストプラクティス）
     isLoading: goalStore.isLoading,
     error: goalStore.error,
@@ -304,10 +308,18 @@ export const useGoalActions = () => ({
 
 // 型安全なユーティリティ関数
 export const isValidGoalData = (data: Partial<GoalData>): data is GoalData => {
-  return !!(data.targetWeight && typeof data.targetWeight === 'number' && data.targetWeight > 0);
+  return !!(
+    data.targetWeight &&
+    typeof data.targetWeight === 'number' &&
+    data.targetWeight > 0
+  );
 };
 
-export const createGoalData = (targetWeight: number, currentWeight?: number, startWeight?: number): GoalData => {
+export const createGoalData = (
+  targetWeight: number,
+  currentWeight?: number,
+  startWeight?: number
+): GoalData => {
   return {
     targetWeight,
     currentWeight: currentWeight || 0,
