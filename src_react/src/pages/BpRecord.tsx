@@ -16,7 +16,7 @@ import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
-import { useGoalStore } from '../store/goal.mobx';
+import { useGoalSummary } from '../store/goal.mobx';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値
@@ -32,7 +32,7 @@ const initialFormValues = {
 const BpRecord: React.FC = () => {
   // 血圧記録のビジネスロジック
   const bpLogic = useBpRecordLogic();
-  const { goal } = useGoalStore();
+  const { checkpointDates } = useGoalSummary();
 
   // 記録のCRUD操作
   const {
@@ -111,7 +111,7 @@ const BpRecord: React.FC = () => {
         setCenterDate={setCenterDate}
         today={today}
         isRecorded={isRecorded}
-        checkpointDates={goal?.checkpointDates}
+        checkpointDates={checkpointDates}
         data-testid="date-picker"
       />
 

@@ -24,7 +24,7 @@ import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
-import { useGoalStore } from '../store/goal.mobx';
+import { useGoalStore, useGoalSummary } from '../store/goal.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
@@ -73,6 +73,7 @@ function useSparkleDropdown() {
 
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const { goal, loadGoal } = useGoalStore();
+  const { checkpointDates } = useGoalSummary();
 
   // useCallbackで関数を安定化して無限ループを防ぐ
   const getAllRecords = useCallback(async () => {
@@ -215,7 +216,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
         setCenterDate={setCenterDate}
         today={today}
         isRecorded={isRecorded}
-        checkpointDates={goal?.checkpointDates}
+        checkpointDates={checkpointDates}
         data-testid="date-picker"
       />
 

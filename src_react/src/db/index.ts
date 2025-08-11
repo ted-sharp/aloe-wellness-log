@@ -61,6 +61,10 @@ import {
 } from './repositories/DailyRecordRepository';
 import { goalRepository } from './repositories/GoalRepository';
 import { weightRecordRepository } from './repositories/WeightRecordRepository';
+// Use static imports to avoid dynamic import warnings during build
+import { STORE_NAMES } from './config';
+import { executeTransaction } from './connection';
+import { trackDbOperation } from './performance';
 
 // === 体重記録関連の便利な関数 ===
 
@@ -285,10 +289,6 @@ export async function deleteDailyField(fieldId: string): Promise<void> {
  * 全データ削除（記録と項目の両方）
  */
 export async function deleteAllData(): Promise<void> {
-  const { executeTransaction } = await import('./connection');
-  const { STORE_NAMES } = await import('./config');
-  const { trackDbOperation } = await import('./performance');
-
   return trackDbOperation('delete-all-data', async () => {
     await executeTransaction(
       [

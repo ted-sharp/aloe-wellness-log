@@ -26,7 +26,7 @@ import SortableItem from '../components/SortableItem';
 import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
-import { useGoalStore } from '../store/goal.mobx';
+import { useGoalSummary } from '../store/goal.mobx';
 import type { DailyFieldV2 } from '../types/record';
 
 /**
@@ -34,7 +34,7 @@ import type { DailyFieldV2 } from '../types/record';
  */
 
 const DailyRecord: React.FC = () => {
-  const { goal } = useGoalStore();
+  const { checkpointDates } = useGoalSummary();
   // ビジネスロジック
   const {
     fields,
@@ -214,7 +214,7 @@ const DailyRecord: React.FC = () => {
         centerDate={centerDate}
         setCenterDate={setCenterDate}
         getDateStatus={getDateStatus}
-        checkpointDates={goal?.checkpointDates}
+        checkpointDates={checkpointDates}
         data-testid="date-picker"
       />
       {/* タイトル：日付ピッカー下・左上 */}
