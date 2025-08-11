@@ -4,6 +4,7 @@ import './App.css';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TipsModal from './components/TipsModal';
+import { STORAGE_KEYS } from './constants/storageKeys';
 import tipsList from './data/tips';
 import * as db from './db';
 import { rootStore } from './store';
@@ -256,7 +257,7 @@ function App() {
   const [isDataInitialized, setIsDataInitialized] = useState(false);
 
   // tips表示制御: 未表示のものからランダムに選択し、全件表示後はリセット
-  const SHOWN_TIPS_KEY = 'shownTipIndices_v1';
+  const SHOWN_TIPS_KEY = STORAGE_KEYS.shownTipIndices;
 
   const getShownTipIndices = (): number[] => {
     try {
@@ -301,7 +302,7 @@ function App() {
 
   // tips表示用関数（disableTipsをチェック）
   const showTipsModal = () => {
-    const disableTips = localStorage.getItem('disableTips') === '1';
+    const disableTips = localStorage.getItem(STORAGE_KEYS.disableTips) === '1';
     console.log('showTipsModal呼び出し - disableTips:', disableTips);
     if (disableTips) {
       console.log('TIPS表示無効化設定により表示をスキップ');
@@ -365,7 +366,7 @@ function App() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
-    const lastTipsDate = localStorage.getItem('lastTipsDate');
+    const lastTipsDate = localStorage.getItem(STORAGE_KEYS.lastTipsDate);
 
     console.log('TIPS自動表示チェック:', {
       lastTipsDate,
@@ -384,7 +385,7 @@ function App() {
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
-    localStorage.setItem('lastTipsDate', todayStr);
+    localStorage.setItem(STORAGE_KEYS.lastTipsDate, todayStr);
     setTipsModalOpen(false);
   };
 

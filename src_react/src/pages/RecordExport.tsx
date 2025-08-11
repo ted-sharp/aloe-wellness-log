@@ -1,5 +1,6 @@
 import { Suspense, lazy, memo, useCallback, useEffect, useState } from 'react';
 import { HiChartBarSquare } from 'react-icons/hi2';
+import { STORAGE_KEYS } from '../constants/storageKeys';
 import { useToastStore } from '../store/toast.mobx';
 import { isDev } from '../utils/devTools';
 import { useRenderPerformance } from '../utils/performance';
@@ -95,8 +96,7 @@ const RecordExport = memo(function RecordExport({
   const resetTipsHistory = useCallback(() => {
     try {
       // App.tsxで使用している履歴キー
-      const SHOWN_TIPS_KEY = 'shownTipIndices_v1';
-      localStorage.removeItem(SHOWN_TIPS_KEY);
+      localStorage.removeItem(STORAGE_KEYS.shownTipIndices);
       showSuccess('TIPS表示履歴をリセットしました');
     } catch (e) {
       console.error(e);
