@@ -67,7 +67,11 @@ const CalorieCalculator = memo(function CalorieCalculator({
     case 'total':
       return (
         <div className="text-sm mb-2 text-black dark:text-white">
-          あと{weightLoss}kg減らすには
+          あと
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
+            {weightLoss}kg
+          </span>
+          減らすには
           <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{Math.round(totalCalories).toLocaleString()}kcal
           </span>
