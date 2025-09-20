@@ -71,9 +71,30 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/utils/devTools.ts', 'src/utils/performanceMonitor.ts'],
+    files: ['src/utils/devTools.ts', 'src/utils/performanceMonitor.ts', 'src/utils/logger.ts'],
     rules: {
       'no-console': 'off',
+    },
+  },
+  {
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        Headers: 'readonly',
+        URL: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      'no-undef': 'off',
     },
   }
 );

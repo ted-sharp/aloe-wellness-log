@@ -26,7 +26,9 @@ import SortableItem from '../components/SortableItem';
 import { useDailyRecordLogic } from '../hooks/business/useDailyRecordLogic';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { useDateSelection } from '../hooks/useDateSelection';
+import { useSaveState } from '../hooks/useSaveState';
 import { useGoalSummary } from '../store/goal.mobx';
+import { useToastStore } from '../store/toast.mobx';
 import type { DailyFieldV2 } from '../types/record';
 
 /**
@@ -35,11 +37,22 @@ import type { DailyFieldV2 } from '../types/record';
 
 const DailyRecord: React.FC = () => {
   const { checkpointDates } = useGoalSummary();
+  const toastStore = useToastStore();
+
+  // 保存状態管理
+  const { saveState, executeSave } = useSaveState({
+    onSuccess: () => {
+      toastStore.showSuccess('編集を保存しました！');
+    },
+    onError: error => {
+      toastStore.showError(`保存に失敗しました: ${error.message}`);
+    },
+  });
+
   // ビジネスロジック
   const {
     fields,
     records,
-    getBoolRecord,
     getAchievementValue,
     isRecorded,
     handleAchievementInput,
@@ -59,7 +72,6 @@ const DailyRecord: React.FC = () => {
     setSelectedDate,
     centerDate,
     setCenterDate,
-    today,
     recordDate,
     // isRecorded: isRecordedByHook,
   } = useDateSelection({
@@ -116,8 +128,10 @@ const DailyRecord: React.FC = () => {
           display:
             'display' in f
               ? (f as DailyFieldV2).display
-              : typeof (f as any).defaultDisplay === 'boolean'
-              ? (f as any).defaultDisplay
+              : typeof (f as DailyFieldV2 & { defaultDisplay?: boolean })
+                  .defaultDisplay === 'boolean'
+              ? (f as DailyFieldV2 & { defaultDisplay?: boolean })
+                  .defaultDisplay
               : true,
         }))
       );
@@ -153,20 +167,22 @@ const DailyRecord: React.FC = () => {
     []
   );
 
-  // 編集内容保存
+  // 編集内容保存（改善版）
   const handleEditSave = async () => {
-    // 削除
-    for (const delId of editDelete) {
-      await deleteField(delId);
-    }
-    // 並び替え・名称変更
-    for (let i = 0; i < editOrder.length; ++i) {
-      const f = editFields.find(f => f.fieldId === editOrder[i]);
-      if (f) {
-        await updateField({ ...f, order: i * 10 });
+    await executeSave(async () => {
+      // 削除
+      for (const delId of editDelete) {
+        await deleteField(delId);
       }
-    }
-    setIsEditMode(false);
+      // 並び替え・名称変更
+      for (let i = 0; i < editOrder.length; ++i) {
+        const f = editFields.find(f => f.fieldId === editOrder[i]);
+        if (f) {
+          await updateField({ ...f, order: i * 10 });
+        }
+      }
+      setIsEditMode(false);
+    });
   };
   // 編集キャンセル
   const handleEditCancel = () => {
@@ -405,6 +421,9 @@ const DailyRecord: React.FC = () => {
                 icon={HiCheckCircle}
                 onClick={handleEditSave}
                 fullWidth
+                loading={saveState === 'saving'}
+                success={saveState === 'success'}
+                pulseOnClick={true}
               >
                 保存
               </Button>

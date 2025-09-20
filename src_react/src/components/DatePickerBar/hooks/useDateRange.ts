@@ -19,7 +19,7 @@ export const useDateRange = (centerDate: Date) => {
   useEffect(() => {
     const { minDate, maxDate } = dateRange;
     let needsUpdate = false;
-    let newRange = { ...dateRange };
+    const newRange = { ...dateRange };
 
     if (centerDate < minDate) {
       newRange.minDate = expandDateRange(centerDate, 'backward');

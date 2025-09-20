@@ -154,8 +154,8 @@ export async function clearGoalData(): Promise<void> {
 // === その他のデータベース操作 ===
 
 /**
- * 血圧記録の追加（旧来の関数の簡単な実装）
- * TODO: BpRecordRepository の実装後に置き換える
+ * 血圧記録の追加
+ * @deprecated bpRecordRepository.add() を直接使用してください
  */
 export async function addBpRecord(
   record: import('../types/record').BpRecordV2
@@ -166,8 +166,8 @@ export async function addBpRecord(
 }
 
 /**
- * 血圧記録の全件取得（旧来の関数の簡単な実装）
- * TODO: BpRecordRepository の実装後に置き換える
+ * 血圧記録の全件取得
+ * @deprecated bpRecordRepository.getAll() を直接使用してください
  */
 export async function getAllBpRecords(): Promise<
   import('../types/record').BpRecordV2[]
@@ -179,7 +179,8 @@ export async function getAllBpRecords(): Promise<
 }
 
 /**
- * 血圧記録の更新（旧来の関数の簡単な実装）
+ * 血圧記録の更新
+ * @deprecated bpRecordRepository.update() を直接使用してください
  */
 export async function updateBpRecord(
   record: import('../types/record').BpRecordV2
@@ -190,7 +191,8 @@ export async function updateBpRecord(
 }
 
 /**
- * 血圧記録の削除（旧来の関数の簡単な実装）
+ * 血圧記録の削除
+ * @deprecated bpRecordRepository.delete() を直接使用してください
  */
 export async function deleteBpRecord(id: string): Promise<void> {
   const result = await bpRecordRepository.delete(id);
@@ -199,8 +201,8 @@ export async function deleteBpRecord(id: string): Promise<void> {
 }
 
 /**
- * 日課記録の追加（旧来の関数の簡単な実装）
- * TODO: DailyRecordRepository の実装後に置き換える
+ * 日課記録の追加
+ * @deprecated dailyRecordRepository.add() を直接使用してください
  */
 export async function addDailyRecord(
   record: import('../types/record').DailyRecordV2
@@ -211,7 +213,8 @@ export async function addDailyRecord(
 }
 
 /**
- * 日課記録の全件取得（旧来の関数の簡単な実装）
+ * 日課記録の全件取得
+ * @deprecated dailyRecordRepository.getAll() を直接使用してください
  */
 export async function getAllDailyRecords(): Promise<
   import('../types/record').DailyRecordV2[]
@@ -223,7 +226,8 @@ export async function getAllDailyRecords(): Promise<
 }
 
 /**
- * 日課記録の更新（旧来の関数の簡単な実装）
+ * 日課記録の更新
+ * @deprecated dailyRecordRepository.update() を直接使用してください
  */
 export async function updateDailyRecord(
   record: import('../types/record').DailyRecordV2
@@ -234,7 +238,8 @@ export async function updateDailyRecord(
 }
 
 /**
- * 日課記録の削除（旧来の関数の簡単な実装）
+ * 日課記録の削除
+ * @deprecated dailyRecordRepository.delete() を直接使用してください
  */
 export async function deleteDailyRecord(id: string): Promise<void> {
   const result = await dailyRecordRepository.delete(id);
@@ -243,7 +248,8 @@ export async function deleteDailyRecord(id: string): Promise<void> {
 }
 
 /**
- * 日課フィールドの追加（旧来の関数の簡単な実装）
+ * 日課フィールドの追加
+ * @deprecated dailyFieldRepository.add() を直接使用してください
  */
 export async function addDailyField(
   field: import('../types/record').DailyFieldV2
@@ -254,7 +260,8 @@ export async function addDailyField(
 }
 
 /**
- * 日課フィールドの全件取得（旧来の関数の簡単な実装）
+ * 日課フィールドの全件取得
+ * @deprecated dailyFieldRepository.getAll() を直接使用してください
  */
 export async function getAllDailyFields(): Promise<
   import('../types/record').DailyFieldV2[]
@@ -266,7 +273,8 @@ export async function getAllDailyFields(): Promise<
 }
 
 /**
- * 日課フィールドの更新（旧来の関数の簡単な実装）
+ * 日課フィールドの更新
+ * @deprecated dailyFieldRepository.update() を直接使用してください
  */
 export async function updateDailyField(
   field: import('../types/record').DailyFieldV2
@@ -277,7 +285,8 @@ export async function updateDailyField(
 }
 
 /**
- * 日課フィールドの削除（旧来の関数の簡単な実装）
+ * 日課フィールドの削除
+ * @deprecated dailyFieldRepository.delete() を直接使用してください
  */
 export async function deleteDailyField(fieldId: string): Promise<void> {
   const result = await dailyFieldRepository.delete(fieldId);

@@ -16,6 +16,7 @@ import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
 import BMIIndicator from '../components/BMIIndicator';
 import Button from '../components/Button';
+import ConfirmDialog from '../components/ConfirmDialog';
 import DatePickerBar from '../components/DatePickerBar';
 import NumberInput from '../components/NumberInput';
 import TimeInputWithPresets from '../components/TimeInputWithPresets';
@@ -24,7 +25,9 @@ import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
+import { useSaveState } from '../hooks/useSaveState';
 import { useGoalStore, useGoalSummary } from '../store/goal.mobx';
+import { useToastStore } from '../store/toast.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
@@ -74,6 +77,24 @@ function useSparkleDropdown() {
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const { goal, loadGoal } = useGoalStore();
   const { checkpointDates } = useGoalSummary();
+  const toastStore = useToastStore();
+
+  // 削除確認ダイアログ用state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    record: WeightRecordV2 | null;
+  }>({ open: false, record: null });
+
+  // 保存状態管理
+  const { saveState, executeSave } = useSaveState({
+    onSuccess: () => {
+      toastStore.showSuccess('体重記録を保存しました！');
+      if (showTipsModal) showTipsModal();
+    },
+    onError: error => {
+      toastStore.showError(`保存に失敗しました: ${error.message}`);
+    },
+  });
 
   // useCallbackで関数を安定化して無限ループを防ぐ
   const getAllRecords = useCallback(async () => {
@@ -119,7 +140,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     addRecord: addRecordCallback,
     updateRecord: updateRecordCallback,
     deleteRecord: deleteRecordCallback,
-    onRecordAdded: showTipsModal,
   });
 
   // 日付選択管理
@@ -192,17 +212,49 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   // いずれかのフィールドが入力されているかチェック
   const hasAnyData = weightLogic.hasRecordData(formData);
 
-  // レコード追加処理
+  // レコード追加処理（改善版）
   const handleAddRecord = useCallback(async () => {
     if (!hasAnyData) return;
-    try {
+
+    await executeSave(async () => {
       const record = createRecordFromForm(recordDate);
       await addRecord(record);
       resetForm();
+    });
+  }, [
+    hasAnyData,
+    createRecordFromForm,
+    recordDate,
+    addRecord,
+    resetForm,
+    executeSave,
+  ]);
+
+  // 削除確認ダイアログを開く
+  const openDeleteConfirm = useCallback((record: WeightRecordV2) => {
+    setDeleteConfirm({ open: true, record });
+  }, []);
+
+  // 削除確認ダイアログを閉じる
+  const closeDeleteConfirm = useCallback(() => {
+    setDeleteConfirm({ open: false, record: null });
+  }, []);
+
+  // 削除実行
+  const executeDelete = useCallback(async () => {
+    if (!deleteConfirm.record) return;
+
+    try {
+      await handleDelete(deleteConfirm.record.id);
+      toastStore.showSuccess('記録を削除しました');
     } catch (error) {
-      // エラーハンドリングはuseRecordCRUDで行われる
+      toastStore.showError(
+        `削除に失敗しました: ${
+          error instanceof Error ? error.message : '不明なエラー'
+        }`
+      );
     }
-  }, [hasAnyData, createRecordFromForm, recordDate, addRecord, resetForm]);
+  }, [deleteConfirm.record, handleDelete, toastStore]);
 
   // メモ欄用スパークルドロップダウン
   const noteSparkle = useSparkleDropdown();
@@ -292,7 +344,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                     size="sm"
                     icon={HiTrash}
                     aria-label="削除"
-                    onClick={() => handleDelete(rec.id)}
+                    onClick={() => openDeleteConfirm(rec)}
+                    pulseOnClick={true}
                   >
                     {''}
                   </Button>
@@ -387,6 +440,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   onClick={handleAddRecord}
                   data-testid="save-btn"
                   disabled={isLoading || !hasAnyData}
+                  loading={saveState === 'saving'}
+                  success={saveState === 'success'}
+                  pulseOnClick={true}
                 >
                   {''}
                 </Button>
@@ -495,6 +551,18 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
           </div>
         </div>
       </div>
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onClose={closeDeleteConfirm}
+        onConfirm={executeDelete}
+        title="記録を削除"
+        message={`${deleteConfirm.record?.date} ${deleteConfirm.record?.time} の記録を削除しますか？`}
+        confirmText="削除"
+        cancelText="キャンセル"
+        variant="danger"
+      />
     </div>
   );
 };

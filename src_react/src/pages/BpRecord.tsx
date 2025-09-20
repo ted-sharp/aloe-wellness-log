@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
 import Button from '../components/Button';
+import ConfirmDialog from '../components/ConfirmDialog';
 import DatePickerBar from '../components/DatePickerBar';
 import NumberInput from '../components/NumberInput';
 import TimeInputWithPresets from '../components/TimeInputWithPresets';
@@ -16,7 +17,10 @@ import { useBpRecordLogic } from '../hooks/business/useBpRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
+import { useSaveState } from '../hooks/useSaveState';
 import { useGoalSummary } from '../store/goal.mobx';
+import { useToastStore } from '../store/toast.mobx';
+import type { BpRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
 // フォームの初期値
@@ -33,6 +37,23 @@ const BpRecord: React.FC = () => {
   // 血圧記録のビジネスロジック
   const bpLogic = useBpRecordLogic();
   const { checkpointDates } = useGoalSummary();
+  const toastStore = useToastStore();
+
+  // 削除確認ダイアログ用state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    record: BpRecordV2 | null;
+  }>({ open: false, record: null });
+
+  // 保存状態管理
+  const { saveState, executeSave } = useSaveState({
+    onSuccess: () => {
+      toastStore.showSuccess('血圧記録を保存しました！');
+    },
+    onError: error => {
+      toastStore.showError(`保存に失敗しました: ${error.message}`);
+    },
+  });
 
   // 記録のCRUD操作
   const {
@@ -83,16 +104,15 @@ const BpRecord: React.FC = () => {
       resetValues: initialFormValues,
     });
 
-  // レコード追加処理
+  // レコード追加処理（改善版）
   const handleAddRecord = useCallback(async () => {
     if (!bpLogic.hasRecordData(formData)) return;
-    try {
+
+    await executeSave(async () => {
       const record = createRecordFromForm(recordDate);
       await addRecord(record);
       resetForm();
-    } catch (error) {
-      // エラーハンドリングはuseRecordCRUDで行われる
-    }
+    });
   }, [
     bpLogic,
     formData,
@@ -100,7 +120,34 @@ const BpRecord: React.FC = () => {
     recordDate,
     addRecord,
     resetForm,
+    executeSave,
   ]);
+
+  // 削除確認ダイアログを開く
+  const openDeleteConfirm = useCallback((record: BpRecordV2) => {
+    setDeleteConfirm({ open: true, record });
+  }, []);
+
+  // 削除確認ダイアログを閉じる
+  const closeDeleteConfirm = useCallback(() => {
+    setDeleteConfirm({ open: false, record: null });
+  }, []);
+
+  // 削除実行
+  const executeDelete = useCallback(async () => {
+    if (!deleteConfirm.record) return;
+
+    try {
+      await handleDelete(deleteConfirm.record.id);
+      toastStore.showSuccess('記録を削除しました');
+    } catch (error) {
+      toastStore.showError(
+        `削除に失敗しました: ${
+          error instanceof Error ? error.message : '不明なエラー'
+        }`
+      );
+    }
+  }, [deleteConfirm.record, handleDelete, toastStore]);
 
   return (
     <div className="bg-transparent">
@@ -170,7 +217,8 @@ const BpRecord: React.FC = () => {
                     size="sm"
                     icon={HiTrash}
                     aria-label="削除"
-                    onClick={() => handleDelete(rec.id)}
+                    onClick={() => openDeleteConfirm(rec)}
+                    pulseOnClick={true}
                   >
                     {''}
                   </Button>
@@ -269,6 +317,9 @@ const BpRecord: React.FC = () => {
                   onClick={handleAddRecord}
                   data-testid="save-btn"
                   disabled={isLoading || !bpLogic.hasRecordData(formData)}
+                  loading={saveState === 'saving'}
+                  success={saveState === 'success'}
+                  pulseOnClick={true}
                 >
                   {''}
                 </Button>
@@ -346,6 +397,18 @@ const BpRecord: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 削除確認ダイアログ */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onClose={closeDeleteConfirm}
+        onConfirm={executeDelete}
+        title="記録を削除"
+        message={`${deleteConfirm.record?.date} ${deleteConfirm.record?.time} の血圧記録を削除しますか？`}
+        confirmText="削除"
+        cancelText="キャンセル"
+        variant="danger"
+      />
     </div>
   );
 };
