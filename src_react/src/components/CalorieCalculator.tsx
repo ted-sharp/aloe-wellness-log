@@ -75,7 +75,7 @@ const CalorieCalculator = memo(function CalorieCalculator({
           <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{Math.round(totalCalories).toLocaleString()}kcal
           </span>
-          の消費が必要です
+          の消費が必要です。
         </div>
       );
 
@@ -86,7 +86,7 @@ const CalorieCalculator = memo(function CalorieCalculator({
           <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{dailyCalories.toLocaleString()}kcal
           </span>
-          の消費が必要です
+          の消費が必要です。
         </div>
       );
 
