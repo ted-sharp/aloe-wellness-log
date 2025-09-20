@@ -1,20 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getAllWeightRecords, getAllBpRecords, getAllDailyRecords } from '../../db';
-import { 
-  useYearValidation,
-  useHeightValidation, 
-  useWeightValidation 
-} from '../useNumericValidation';
+import {
+  getAllBpRecords,
+  getAllDailyRecords,
+  getAllWeightRecords,
+} from '../../db';
 import { useGoalStore } from '../../store/goal.mobx';
+import {
+  useHeightValidation,
+  useWeightValidation,
+  useYearValidation,
+} from '../useNumericValidation';
 
 /**
  * 目標入力のビジネスロジックを管理するカスタムHook
  */
 export const useGoalInputLogic = () => {
   const { goal, setGoal, loadGoal } = useGoalStore();
-  
+
   // フォーム状態
-  const [gender, setGender] = useState<'male' | 'female' | 'unknown'>('unknown');
+  const [gender, setGender] = useState<'male' | 'female' | 'unknown'>(
+    'unknown'
+  );
   const [birthYear, setBirthYear] = useState('');
   const [height, setHeight] = useState('');
   const [startWeight, setStartWeight] = useState('');
@@ -48,21 +54,31 @@ export const useGoalInputLogic = () => {
 
   const targetStartError = validateDate(targetStart, '目標開始日');
   const targetEndError = validateDate(targetEnd, '目標終了日');
-  const dateRangeError = targetStart && targetEnd && targetStart > targetEnd 
-    ? '目標終了日は開始日以降の日付にしてください。' 
-    : null;
+  const dateRangeError =
+    targetStart && targetEnd && targetStart > targetEnd
+      ? '目標終了日は開始日以降の日付にしてください。'
+      : null;
 
   // 統合バリデーション
   const validate = useCallback(() => {
-    return birthYearError || 
-           heightError || 
-           startWeightError || 
-           targetStartError || 
-           targetEndError || 
-           dateRangeError || 
-           targetWeightError;
-  }, [birthYearError, heightError, startWeightError, targetStartError, 
-      targetEndError, dateRangeError, targetWeightError]);
+    return (
+      birthYearError ||
+      heightError ||
+      startWeightError ||
+      targetStartError ||
+      targetEndError ||
+      dateRangeError ||
+      targetWeightError
+    );
+  }, [
+    birthYearError,
+    heightError,
+    startWeightError,
+    targetStartError,
+    targetEndError,
+    dateRangeError,
+    targetWeightError,
+  ]);
 
   // データ取得処理
   const fetchData = useCallback(async () => {
@@ -71,7 +87,7 @@ export const useGoalInputLogic = () => {
       const [weightRecords, bpRecords, dailyRecords] = await Promise.all([
         getAllWeightRecords(),
         getAllBpRecords(),
-        getAllDailyRecords()
+        getAllDailyRecords(),
       ]);
 
       // 体重データの処理
@@ -81,7 +97,7 @@ export const useGoalInputLogic = () => {
           const bdt = new Date(`${b.date}T${b.time}`).getTime();
           return adt - bdt; // 昇順ソート
         });
-        
+
         setOldestWeight(sorted[0].weight);
         setLatestWeight(sorted[sorted.length - 1].weight);
       } else {
@@ -91,17 +107,17 @@ export const useGoalInputLogic = () => {
 
       // 全データから最古の日付を取得
       const allDates: string[] = [];
-      
+
       // 体重データの日付を追加
       weightRecords.forEach(record => {
         allDates.push(record.date);
       });
-      
+
       // 血圧データの日付を追加
       bpRecords.forEach(record => {
         allDates.push(record.date);
       });
-      
+
       // 日常記録データの日付を追加
       dailyRecords.forEach(record => {
         allDates.push(record.date);
@@ -158,7 +174,7 @@ export const useGoalInputLogic = () => {
     if (validationError) {
       return;
     }
-    
+
     // 必須フィールドがすべて入力されている場合のみ保存
     if (
       gender &&
@@ -184,7 +200,7 @@ export const useGoalInputLogic = () => {
         smokingGoal,
         alcoholGoal,
       };
-      
+
       setGoal(goalData);
     }
   }, [
@@ -212,7 +228,10 @@ export const useGoalInputLogic = () => {
 
   // ヘルパー関数
   const currentYear = new Date().getFullYear();
-  const yearFromAge = useCallback((age: number) => (currentYear - age).toString(), [currentYear]);
+  const yearFromAge = useCallback(
+    (age: number) => (currentYear - age).toString(),
+    [currentYear]
+  );
   const heightNum = Number(height) || 170;
 
   // クイック入力関数
@@ -238,19 +257,25 @@ export const useGoalInputLogic = () => {
     }
   }, [oldestDate]);
 
-  const setTargetEndFromStart = useCallback((months: number) => {
-    const d = targetStart ? new Date(targetStart) : new Date();
-    d.setMonth(d.getMonth() + months);
-    setTargetEnd(d.toISOString().slice(0, 10));
-  }, [targetStart]);
+  const setTargetEndFromStart = useCallback(
+    (months: number) => {
+      const d = targetStart ? new Date(targetStart) : new Date();
+      d.setMonth(d.getMonth() + months);
+      setTargetEnd(d.toISOString().slice(0, 10));
+    },
+    [targetStart]
+  );
 
-  const setTargetWeightFromStart = useCallback((diff: number) => {
-    if (startWeight && !isNaN(Number(startWeight))) {
-      setTargetWeight(
-        (Math.round((Number(startWeight) + diff) * 10) / 10).toString()
-      );
-    }
-  }, [startWeight]);
+  const setTargetWeightFromStart = useCallback(
+    (diff: number) => {
+      if (startWeight && !isNaN(Number(startWeight))) {
+        setTargetWeight(
+          (Math.round((Number(startWeight) + diff) * 10) / 10).toString()
+        );
+      }
+    },
+    [startWeight]
+  );
 
   return {
     // フォーム状態
@@ -306,5 +331,8 @@ export const useGoalInputLogic = () => {
     setOldestDateAsTargetStart,
     setTargetEndFromStart,
     setTargetWeightFromStart,
+
+    // 保存関数
+    saveGoal,
   };
 };

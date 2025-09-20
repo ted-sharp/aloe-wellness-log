@@ -131,7 +131,7 @@ const DailyRecord: React.FC = () => {
               : typeof (f as DailyFieldV2 & { defaultDisplay?: boolean })
                   .defaultDisplay === 'boolean'
               ? (f as DailyFieldV2 & { defaultDisplay?: boolean })
-                  .defaultDisplay
+                  .defaultDisplay ?? true
               : true,
         }))
       );

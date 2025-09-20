@@ -3,6 +3,8 @@ import Button from '../components/Button';
 import CalorieCalculator from '../components/CalorieCalculator';
 import SparkleDropdown from '../components/SparkleDropdown';
 import { useGoalInputLogic } from '../hooks/business/useGoalInputLogic';
+import { useSaveState } from '../hooks/useSaveState';
+import { useToastStore } from '../store/toast.mobx';
 
 // 運動目標の例リスト
 const exerciseExamples = [
@@ -61,6 +63,18 @@ const genderOptions = [
 ];
 
 export default observer(function GoalInput() {
+  const toastStore = useToastStore();
+
+  // 保存状態管理
+  const { saveState, executeSave } = useSaveState({
+    onSuccess: () => {
+      toastStore.showSuccess('目標設定を保存しました！');
+    },
+    onError: error => {
+      toastStore.showError(`保存に失敗しました: ${error.message}`);
+    },
+  });
+
   const {
     // フォーム状態
     gender,
@@ -114,444 +128,465 @@ export default observer(function GoalInput() {
     setOldestDateAsTargetStart,
     setTargetEndFromStart,
     setTargetWeightFromStart,
+
+    // 保存関数
+    saveGoal,
   } = useGoalInputLogic();
+
+  // 保存処理（改善版）
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    await executeSave(async () => {
+      saveGoal();
+    });
+  };
 
   return (
     <div className="bg-transparent">
       {/* メインコンテンツ */}
-      <div className="flex flex-col items-center justify-start min-h-[60vh]">
-        <div className="flex flex-col gap-1 w-full max-w-md">
-          {/* プロフィールカード */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              プロフィール
-            </h2>
-            <div className="space-y-3">
-              {/* 性別選択欄 */}
-              <label className="flex flex-col gap-1">
-                <span>性別</span>
-                <div className="flex gap-4 mt-1">
-                  {genderOptions.map(opt => (
-                    <label
-                      key={opt.value}
-                      className="flex items-center gap-1 text-base"
+      <form onSubmit={handleSave}>
+        <div className="flex flex-col items-center justify-start min-h-[60vh]">
+          <div className="flex flex-col gap-1 w-full max-w-md">
+            {/* プロフィールカード */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                プロフィール
+              </h2>
+              <div className="space-y-3">
+                {/* 性別選択欄 */}
+                <label className="flex flex-col gap-1">
+                  <span>性別</span>
+                  <div className="flex gap-4 mt-1">
+                    {genderOptions.map(opt => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-1 text-base"
+                      >
+                        <input
+                          type="radio"
+                          name="gender"
+                          value={opt.value}
+                          checked={gender === opt.value}
+                          onChange={() =>
+                            setGender(
+                              opt.value as 'male' | 'female' | 'unknown'
+                            )
+                          }
+                          className="accent-blue-500"
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span>生年（例: 1990）</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1900"
+                      max={currentYear}
+                      value={birthYear}
+                      onChange={e => setBirthYear(e.target.value)}
+                      className="border rounded px-3 py-2 text-base w-32"
+                      required
+                      placeholder="例: 1990"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setBirthYear(yearFromAge(40))}
                     >
-                      <input
-                        type="radio"
-                        name="gender"
-                        value={opt.value}
-                        checked={gender === opt.value}
-                        onChange={() =>
-                          setGender(opt.value as 'male' | 'female' | 'unknown')
-                        }
-                        className="accent-blue-500"
-                      />
-                      {opt.label}
-                    </label>
-                  ))}
-                </div>
-              </label>
+                      40
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setBirthYear((Number(birthYear) - 5).toString())
+                      }
+                    >
+                      -5
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setBirthYear((Number(birthYear) + 5).toString())
+                      }
+                    >
+                      +5
+                    </Button>
+                  </div>
+                  {birthYearError && (
+                    <span className="text-red-500 text-sm">
+                      {birthYearError}
+                    </span>
+                  )}
+                </label>
 
-              <label className="flex flex-col gap-1">
-                <span>生年（例: 1990）</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1900"
-                    max={currentYear}
-                    value={birthYear}
-                    onChange={e => setBirthYear(e.target.value)}
-                    className="border rounded px-3 py-2 text-base w-32"
-                    required
-                    placeholder="例: 1990"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setBirthYear(yearFromAge(40))}
-                  >
-                    40
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() =>
-                      setBirthYear((Number(birthYear) - 5).toString())
-                    }
-                  >
-                    -5
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() =>
-                      setBirthYear((Number(birthYear) + 5).toString())
-                    }
-                  >
-                    +5
-                  </Button>
-                </div>
-                {birthYearError && (
-                  <span className="text-red-500 text-sm">{birthYearError}</span>
-                )}
-              </label>
+                <label className="flex flex-col gap-1">
+                  <span>身長[cm] (例: 165.0)</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="100"
+                      max="250"
+                      value={height}
+                      onChange={e => setHeight(e.target.value)}
+                      className="border rounded px-3 py-2 text-base w-32"
+                      required
+                      placeholder="例: 165.0"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setHeight('170')}
+                    >
+                      170
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setHeight((heightNum - 5).toString())}
+                    >
+                      -5
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setHeight((heightNum + 5).toString())}
+                    >
+                      +5
+                    </Button>
+                  </div>
+                  {heightError && (
+                    <span className="text-red-500 text-sm">{heightError}</span>
+                  )}
+                </label>
+              </div>
+            </div>
 
-              <label className="flex flex-col gap-1">
-                <span>身長[cm] (例: 165.0)</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="100"
-                    max="250"
-                    value={height}
-                    onChange={e => setHeight(e.target.value)}
-                    className="border rounded px-3 py-2 text-base w-32"
-                    required
-                    placeholder="例: 165.0"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setHeight('170')}
-                  >
-                    170
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setHeight((heightNum - 5).toString())}
-                  >
-                    -5
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setHeight((heightNum + 5).toString())}
-                  >
-                    +5
-                  </Button>
+            {/* 目標カード */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                体重目標
+              </h2>
+              <div className="space-y-3">
+                <label className="flex flex-col gap-1">
+                  <span>開始体重[kg] (例: 68.0)</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="30"
+                      max="200"
+                      step="0.1"
+                      value={startWeight}
+                      onChange={e => setStartWeight(e.target.value)}
+                      className="border rounded px-3 py-2 text-base w-32"
+                      required
+                      placeholder="例: 68.0"
+                      data-testid="goal-weight-input"
+                    />
+                    {latestWeight !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={setLatestWeightAsStart}
+                      >
+                        最新
+                      </Button>
+                    )}
+                    {oldestWeight !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={setOldestWeightAsStart}
+                      >
+                        最古
+                      </Button>
+                    )}
+                  </div>
+                  {startWeightError && (
+                    <span className="text-red-500 text-sm">
+                      {startWeightError}
+                    </span>
+                  )}
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span>目標体重[kg] (例: 75.0)</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="30"
+                      max="200"
+                      step="0.1"
+                      value={targetWeight}
+                      onChange={e => setTargetWeight(e.target.value)}
+                      className="border rounded px-3 py-2 text-base w-32"
+                      required
+                      placeholder="例: 75.0"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setTargetWeightFromStart(-2)}
+                    >
+                      -2kg
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setTargetWeightFromStart(-5)}
+                    >
+                      -5kg
+                    </Button>
+                  </div>
+                </label>
+
+                {/* 目標体重入力後に必要カロリー表示 */}
+                <CalorieCalculator
+                  startWeight={startWeight}
+                  targetWeight={targetWeight}
+                  targetStart={targetStart}
+                  targetEnd={targetEnd}
+                  gender={gender}
+                  type="total"
+                />
+
+                <label className="flex flex-col gap-1">
+                  <span>目標開始日</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={targetStart}
+                      onChange={e => setTargetStart(e.target.value)}
+                      className="border rounded px-3 py-2 text-base"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={setTodayAsTargetStart}
+                    >
+                      今日
+                    </Button>
+                    {oldestDate && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={setOldestDateAsTargetStart}
+                      >
+                        最古
+                      </Button>
+                    )}
+                  </div>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span>目標終了日</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={targetEnd}
+                      onChange={e => setTargetEnd(e.target.value)}
+                      className="border rounded px-3 py-2 text-base"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setTargetEndFromStart(3)}
+                    >
+                      3か月後
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setTargetEndFromStart(6)}
+                    >
+                      半年後
+                    </Button>
+                  </div>
+                </label>
+
+                {/* 目標終了日の下に一日あたり消費カロリーを表示 */}
+                <CalorieCalculator
+                  startWeight={startWeight}
+                  targetWeight={targetWeight}
+                  targetStart={targetStart}
+                  targetEnd={targetEnd}
+                  gender={gender}
+                  type="daily"
+                />
+              </div>
+            </div>
+
+            {/* 日課カード */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                生活習慣目標
+              </h2>
+              <div className="space-y-3">
+                <label className="flex flex-col gap-1">
+                  <span>運動目標 (例: なるべく階段を使う)</span>
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={exerciseGoal}
+                      onChange={e => setExerciseGoal(e.target.value)}
+                      className="border rounded px-3 py-2 text-base flex-1 pr-10"
+                      placeholder="例: 毎日30分歩く"
+                    />
+                    <SparkleDropdown
+                      examples={exerciseExamples}
+                      onSelect={example => setExerciseGoal(example)}
+                      label="運動目標の定型文を挿入"
+                    />
+                  </div>
+                </label>
+
+                {/* 運動目標の下に一日あたり消費カロリーの半分を表示 */}
+                <CalorieCalculator
+                  startWeight={startWeight}
+                  targetWeight={targetWeight}
+                  targetStart={targetStart}
+                  targetEnd={targetEnd}
+                  gender={gender}
+                  type="exercise"
+                />
+
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  簡単に取り組める日常の動作の延長が効果的です。
                 </div>
-                {heightError && (
-                  <span className="text-red-500 text-sm">{heightError}</span>
-                )}
-              </label>
+
+                <label className="flex flex-col gap-1">
+                  <span>減食目標 (例: 間食を控える)</span>
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={dietGoal}
+                      onChange={e => setDietGoal(e.target.value)}
+                      className="border rounded px-3 py-2 text-base flex-1 pr-10"
+                      placeholder="例: 間食を控える"
+                    />
+                    <SparkleDropdown
+                      examples={dietExamples}
+                      onSelect={example => setDietGoal(example)}
+                      label="減食目標の定型文を挿入"
+                    />
+                  </div>
+                </label>
+
+                {/* 減食目標の下に一日あたり消費カロリーの半分を表示 */}
+                <CalorieCalculator
+                  startWeight={startWeight}
+                  targetWeight={targetWeight}
+                  targetStart={targetStart}
+                  targetEnd={targetEnd}
+                  gender={gender}
+                  type="diet"
+                />
+
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  カロリーコントロールが一番効果があります。
+                </div>
+
+                <label className="flex flex-col gap-1">
+                  <span>睡眠目標 (例: 23時までに就寝する)</span>
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={sleepGoal}
+                      onChange={e => setSleepGoal(e.target.value)}
+                      className="border rounded px-3 py-2 text-base flex-1 pr-10"
+                      placeholder="例: 7時間以上寝る"
+                    />
+                    <SparkleDropdown
+                      examples={sleepExamples}
+                      onSelect={example => setSleepGoal(example)}
+                      label="睡眠目標の定型文を挿入"
+                    />
+                  </div>
+                </label>
+
+                <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
+                  十分な睡眠(7時間以上)をとると痩せやすくなります。
+                </div>
+
+                <label className="flex flex-col gap-1">
+                  <span>喫煙目標 (例: 1日○本までにする)</span>
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={smokingGoal}
+                      onChange={e => setSmokingGoal(e.target.value)}
+                      className="border rounded px-3 py-2 text-base flex-1 pr-10"
+                      placeholder="例: 1日○本までにする"
+                    />
+                    <SparkleDropdown
+                      examples={smokingExamples}
+                      onSelect={example => setSmokingGoal(example)}
+                      label="喫煙目標の定型文を挿入"
+                    />
+                  </div>
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span>飲酒目標 (例: 週2回までにする)</span>
+                  <div className="relative flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={alcoholGoal}
+                      onChange={e => setAlcoholGoal(e.target.value)}
+                      className="border rounded px-3 py-2 text-base flex-1 pr-10"
+                      placeholder="例: 週2回までにする"
+                    />
+                    <SparkleDropdown
+                      examples={alcoholExamples}
+                      onSelect={example => setAlcoholGoal(example)}
+                      label="飲酒目標の定型文を挿入"
+                    />
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* 目標カード */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              体重目標
-            </h2>
-            <div className="space-y-3">
-              <label className="flex flex-col gap-1">
-                <span>開始体重[kg] (例: 68.0)</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="30"
-                    max="200"
-                    step="0.1"
-                    value={startWeight}
-                    onChange={e => setStartWeight(e.target.value)}
-                    className="border rounded px-3 py-2 text-base w-32"
-                    required
-                    placeholder="例: 68.0"
-                    data-testid="goal-weight-input"
-                  />
-                  {latestWeight !== null && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={setLatestWeightAsStart}
-                    >
-                      最新
-                    </Button>
-                  )}
-                  {oldestWeight !== null && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={setOldestWeightAsStart}
-                    >
-                      最古
-                    </Button>
-                  )}
-                </div>
-                {startWeightError && (
-                  <span className="text-red-500 text-sm">
-                    {startWeightError}
-                  </span>
-                )}
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span>目標体重[kg] (例: 75.0)</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="30"
-                    max="200"
-                    step="0.1"
-                    value={targetWeight}
-                    onChange={e => setTargetWeight(e.target.value)}
-                    className="border rounded px-3 py-2 text-base w-32"
-                    required
-                    placeholder="例: 75.0"
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setTargetWeightFromStart(-2)}
-                  >
-                    -2kg
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setTargetWeightFromStart(-5)}
-                  >
-                    -5kg
-                  </Button>
-                </div>
-              </label>
-
-              {/* 目標体重入力後に必要カロリー表示 */}
-              <CalorieCalculator
-                startWeight={startWeight}
-                targetWeight={targetWeight}
-                targetStart={targetStart}
-                targetEnd={targetEnd}
-                gender={gender}
-                type="total"
-              />
-
-              <label className="flex flex-col gap-1">
-                <span>目標開始日</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={targetStart}
-                    onChange={e => setTargetStart(e.target.value)}
-                    className="border rounded px-3 py-2 text-base"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={setTodayAsTargetStart}
-                  >
-                    今日
-                  </Button>
-                  {oldestDate && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={setOldestDateAsTargetStart}
-                    >
-                      最古
-                    </Button>
-                  )}
-                </div>
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span>目標終了日</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={targetEnd}
-                    onChange={e => setTargetEnd(e.target.value)}
-                    className="border rounded px-3 py-2 text-base"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setTargetEndFromStart(3)}
-                  >
-                    3か月後
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setTargetEndFromStart(6)}
-                  >
-                    半年後
-                  </Button>
-                </div>
-              </label>
-
-              {/* 目標終了日の下に一日あたり消費カロリーを表示 */}
-              <CalorieCalculator
-                startWeight={startWeight}
-                targetWeight={targetWeight}
-                targetStart={targetStart}
-                targetEnd={targetEnd}
-                gender={gender}
-                type="daily"
-              />
-            </div>
-          </div>
-
-          {/* 日課カード */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-1">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              生活習慣目標
-            </h2>
-            <div className="space-y-3">
-              <label className="flex flex-col gap-1">
-                <span>運動目標 (例: なるべく階段を使う)</span>
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={exerciseGoal}
-                    onChange={e => setExerciseGoal(e.target.value)}
-                    className="border rounded px-3 py-2 text-base flex-1 pr-10"
-                    placeholder="例: 毎日30分歩く"
-                  />
-                  <SparkleDropdown
-                    examples={exerciseExamples}
-                    onSelect={example => setExerciseGoal(example)}
-                    label="運動目標の定型文を挿入"
-                  />
-                </div>
-              </label>
-
-              {/* 運動目標の下に一日あたり消費カロリーの半分を表示 */}
-              <CalorieCalculator
-                startWeight={startWeight}
-                targetWeight={targetWeight}
-                targetStart={targetStart}
-                targetEnd={targetEnd}
-                gender={gender}
-                type="exercise"
-              />
-
-              <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
-                簡単に取り組める日常の動作の延長が効果的です。
-              </div>
-
-              <label className="flex flex-col gap-1">
-                <span>減食目標 (例: 間食を控える)</span>
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={dietGoal}
-                    onChange={e => setDietGoal(e.target.value)}
-                    className="border rounded px-3 py-2 text-base flex-1 pr-10"
-                    placeholder="例: 間食を控える"
-                  />
-                  <SparkleDropdown
-                    examples={dietExamples}
-                    onSelect={example => setDietGoal(example)}
-                    label="減食目標の定型文を挿入"
-                  />
-                </div>
-              </label>
-
-              {/* 減食目標の下に一日あたり消費カロリーの半分を表示 */}
-              <CalorieCalculator
-                startWeight={startWeight}
-                targetWeight={targetWeight}
-                targetStart={targetStart}
-                targetEnd={targetEnd}
-                gender={gender}
-                type="diet"
-              />
-
-              <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
-                カロリーコントロールが一番効果があります。
-              </div>
-
-              <label className="flex flex-col gap-1">
-                <span>睡眠目標 (例: 23時までに就寝する)</span>
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={sleepGoal}
-                    onChange={e => setSleepGoal(e.target.value)}
-                    className="border rounded px-3 py-2 text-base flex-1 pr-10"
-                    placeholder="例: 7時間以上寝る"
-                  />
-                  <SparkleDropdown
-                    examples={sleepExamples}
-                    onSelect={example => setSleepGoal(example)}
-                    label="睡眠目標の定型文を挿入"
-                  />
-                </div>
-              </label>
-
-              <div className="text-blue-700 dark:text-blue-300 text-sm font-semibold mb-2">
-                十分な睡眠(7時間以上)をとると痩せやすくなります。
-              </div>
-
-              <label className="flex flex-col gap-1">
-                <span>喫煙目標 (例: 1日○本までにする)</span>
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={smokingGoal}
-                    onChange={e => setSmokingGoal(e.target.value)}
-                    className="border rounded px-3 py-2 text-base flex-1 pr-10"
-                    placeholder="例: 1日○本までにする"
-                  />
-                  <SparkleDropdown
-                    examples={smokingExamples}
-                    onSelect={example => setSmokingGoal(example)}
-                    label="喫煙目標の定型文を挿入"
-                  />
-                </div>
-              </label>
-
-              <label className="flex flex-col gap-1">
-                <span>飲酒目標 (例: 週2回までにする)</span>
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={alcoholGoal}
-                    onChange={e => setAlcoholGoal(e.target.value)}
-                    className="border rounded px-3 py-2 text-base flex-1 pr-10"
-                    placeholder="例: 週2回までにする"
-                  />
-                  <SparkleDropdown
-                    examples={alcoholExamples}
-                    onSelect={example => setAlcoholGoal(example)}
-                    label="飲酒目標の定型文を挿入"
-                  />
-                </div>
-              </label>
-            </div>
+          {/* 保存ボタン（枠の外） */}
+          <div className="w-full max-w-md mt-2 mb-2">
+            <Button
+              type="submit"
+              size="lg"
+              variant="primary"
+              fullWidth
+              data-testid="save-btn"
+              loading={saveState === 'saving'}
+              success={saveState === 'success'}
+              pulseOnClick={true}
+            >
+              保存
+            </Button>
           </div>
         </div>
-
-        {/* 保存ボタン（枠の外） */}
-        <div className="w-full max-w-md mt-2 mb-2">
-          <Button
-            type="submit"
-            size="lg"
-            variant="primary"
-            fullWidth
-            data-testid="save-btn"
-          >
-            保存
-          </Button>
-        </div>
-      </div>
+      </form>
     </div>
   );
 });
