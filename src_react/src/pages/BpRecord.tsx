@@ -1,9 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { HiCheck, HiNoSymbol, HiTrash } from 'react-icons/hi2';
 import { PiChartLineDown } from 'react-icons/pi';
 import BpIndicator from '../components/BpIndicator';
 import Button from '../components/Button';
-import ConfirmDialog from '../components/ConfirmDialog';
 import DatePickerBar from '../components/DatePickerBar';
 import NumberInput from '../components/NumberInput';
 import TimeInputWithPresets from '../components/TimeInputWithPresets';
@@ -38,12 +37,6 @@ const BpRecord: React.FC = () => {
   const bpLogic = useBpRecordLogic();
   const { checkpointDates } = useGoalSummary();
   const toastStore = useToastStore();
-
-  // 削除確認ダイアログ用state
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    open: boolean;
-    record: BpRecordV2 | null;
-  }>({ open: false, record: null });
 
   // 保存状態管理
   const { saveState, executeSave } = useSaveState({
@@ -123,31 +116,22 @@ const BpRecord: React.FC = () => {
     executeSave,
   ]);
 
-  // 削除確認ダイアログを開く
-  const openDeleteConfirm = useCallback((record: BpRecordV2) => {
-    setDeleteConfirm({ open: true, record });
-  }, []);
-
-  // 削除確認ダイアログを閉じる
-  const closeDeleteConfirm = useCallback(() => {
-    setDeleteConfirm({ open: false, record: null });
-  }, []);
-
-  // 削除実行
-  const executeDelete = useCallback(async () => {
-    if (!deleteConfirm.record) return;
-
-    try {
-      await handleDelete(deleteConfirm.record.id);
-      toastStore.showSuccess('記録を削除しました');
-    } catch (error) {
-      toastStore.showError(
-        `削除に失敗しました: ${
-          error instanceof Error ? error.message : '不明なエラー'
-        }`
-      );
-    }
-  }, [deleteConfirm.record, handleDelete, toastStore]);
+  // 削除実行（直接削除）
+  const executeDelete = useCallback(
+    async (record: BpRecordV2) => {
+      try {
+        await handleDelete(record.id);
+        toastStore.showSuccess('記録を削除しました');
+      } catch (error) {
+        toastStore.showError(
+          `削除に失敗しました: ${
+            error instanceof Error ? error.message : '不明なエラー'
+          }`
+        );
+      }
+    },
+    [handleDelete, toastStore]
+  );
 
   return (
     <div className="bg-transparent">
@@ -217,7 +201,7 @@ const BpRecord: React.FC = () => {
                     size="sm"
                     icon={HiTrash}
                     aria-label="削除"
-                    onClick={() => openDeleteConfirm(rec)}
+                    onClick={() => executeDelete(rec)}
                     pulseOnClick={true}
                   >
                     {''}
@@ -397,18 +381,6 @@ const BpRecord: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* 削除確認ダイアログ */}
-      <ConfirmDialog
-        open={deleteConfirm.open}
-        onClose={closeDeleteConfirm}
-        onConfirm={executeDelete}
-        title="記録を削除"
-        message={`${deleteConfirm.record?.date} ${deleteConfirm.record?.time} の血圧記録を削除しますか？`}
-        confirmText="削除"
-        cancelText="キャンセル"
-        variant="danger"
-      />
     </div>
   );
 };

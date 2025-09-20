@@ -16,7 +16,6 @@ import { MdAutoAwesome } from 'react-icons/md';
 import { PiChartLineDown } from 'react-icons/pi';
 import BMIIndicator from '../components/BMIIndicator';
 import Button from '../components/Button';
-import ConfirmDialog from '../components/ConfirmDialog';
 import DatePickerBar from '../components/DatePickerBar';
 import NumberInput from '../components/NumberInput';
 import TimeInputWithPresets from '../components/TimeInputWithPresets';
@@ -78,12 +77,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const { goal, loadGoal } = useGoalStore();
   const { checkpointDates } = useGoalSummary();
   const toastStore = useToastStore();
-
-  // 削除確認ダイアログ用state
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    open: boolean;
-    record: WeightRecordV2 | null;
-  }>({ open: false, record: null });
 
   // 保存状態管理
   const { saveState, executeSave } = useSaveState({
@@ -230,31 +223,22 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     executeSave,
   ]);
 
-  // 削除確認ダイアログを開く
-  const openDeleteConfirm = useCallback((record: WeightRecordV2) => {
-    setDeleteConfirm({ open: true, record });
-  }, []);
-
-  // 削除確認ダイアログを閉じる
-  const closeDeleteConfirm = useCallback(() => {
-    setDeleteConfirm({ open: false, record: null });
-  }, []);
-
-  // 削除実行
-  const executeDelete = useCallback(async () => {
-    if (!deleteConfirm.record) return;
-
-    try {
-      await handleDelete(deleteConfirm.record.id);
-      toastStore.showSuccess('記録を削除しました');
-    } catch (error) {
-      toastStore.showError(
-        `削除に失敗しました: ${
-          error instanceof Error ? error.message : '不明なエラー'
-        }`
-      );
-    }
-  }, [deleteConfirm.record, handleDelete, toastStore]);
+  // 削除実行（直接削除）
+  const executeDelete = useCallback(
+    async (record: WeightRecordV2) => {
+      try {
+        await handleDelete(record.id);
+        toastStore.showSuccess('記録を削除しました');
+      } catch (error) {
+        toastStore.showError(
+          `削除に失敗しました: ${
+            error instanceof Error ? error.message : '不明なエラー'
+          }`
+        );
+      }
+    },
+    [handleDelete, toastStore]
+  );
 
   // メモ欄用スパークルドロップダウン
   const noteSparkle = useSparkleDropdown();
@@ -344,7 +328,7 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                     size="sm"
                     icon={HiTrash}
                     aria-label="削除"
-                    onClick={() => openDeleteConfirm(rec)}
+                    onClick={() => executeDelete(rec)}
                     pulseOnClick={true}
                   >
                     {''}
@@ -551,18 +535,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
           </div>
         </div>
       </div>
-
-      {/* 削除確認ダイアログ */}
-      <ConfirmDialog
-        open={deleteConfirm.open}
-        onClose={closeDeleteConfirm}
-        onConfirm={executeDelete}
-        title="記録を削除"
-        message={`${deleteConfirm.record?.date} ${deleteConfirm.record?.time} の記録を削除しますか？`}
-        confirmText="削除"
-        cancelText="キャンセル"
-        variant="danger"
-      />
     </div>
   );
 };
