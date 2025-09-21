@@ -277,7 +277,7 @@ self.addEventListener('fetch', event => {
 
 // メッセージハンドリング（設定更新など）
 self.addEventListener('message', event => {
-  const { type, payload } = event.data || {};
+  const { type } = event.data || {};
 
   switch (type) {
     case 'SKIP_WAITING':

@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
   ComposedChart,
@@ -56,7 +55,6 @@ const RecordGraph: React.FC = () => {
   const {
     // weightRecords,
     // bpRecords,
-    dailyRecords,
     goal,
     // latestTimestamp,
     isLoading,
@@ -461,7 +459,7 @@ const RecordGraph: React.FC = () => {
                         borderRadius: 8,
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#333' }}>
                         {d ? formatDateTimeLabel(ts) : ''}
                       </div>
                       {(
@@ -476,7 +474,7 @@ const RecordGraph: React.FC = () => {
                       ).map((item, idx) => (
                         <div
                           key={idx}
-                          style={{ color: item.color, fontSize: 14 }}
+                          style={{ color: item.color || '#333', fontSize: 14 }}
                         >
                           {item.dataKey === 'bodyFat' ? '体脂肪率: ' : '腹囲: '}
                           {typeof item.value === 'number'
@@ -737,7 +735,7 @@ const RecordGraph: React.FC = () => {
                         borderRadius: 8,
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#333' }}>
                         {(() => {
                           type Pt = { timestamp: number };
                           if (
@@ -779,7 +777,7 @@ const RecordGraph: React.FC = () => {
                           .map((item, idx) => (
                             <div
                               key={idx}
-                              style={{ color: item.color, fontSize: 14 }}
+                              style={{ color: item.color || '#333', fontSize: 14 }}
                             >
                               {typeof item.value === 'number'
                                 ? item.value.toFixed(
@@ -789,54 +787,6 @@ const RecordGraph: React.FC = () => {
                               {graphType === 'weight' ? 'kg' : 'mmHg'}
                             </div>
                           ))}
-                      <div style={{ marginTop: 6, fontSize: 13 }}>
-                        {(() => {
-                          const statusList = [
-                            { key: 'exercise', label: '🏃‍♂️' },
-                            { key: 'meal', label: '🍽' },
-                            { key: 'sleep', label: '🛌' },
-                          ];
-                          return statusList.map(({ key, label }) => {
-                            const rec = dailyRecords.find(
-                              r => r.fieldId === key && r.date === dateStr
-                            );
-                            if (rec === undefined) return null; // 入力がなければ非表示
-                            return (
-                              <span
-                                key={key}
-                                style={{
-                                  marginRight: 8,
-                                  verticalAlign: 'middle',
-                                  fontSize: '1.1em',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                {label}
-                                {rec.value === 1 ? (
-                                  <HiCheck
-                                    style={{
-                                      color: '#38bdf8',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                ) : (
-                                  <HiXMark
-                                    style={{
-                                      color: '#bbb',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                )}
-                              </span>
-                            );
-                          });
-                        })()}
-                      </div>
                     </div>
                   );
                 }}
@@ -966,6 +916,61 @@ const RecordGraph: React.FC = () => {
           </div>
         </div>
       )}
+      {/* 体重グラフの最小・最大値表示 */}
+      {graphType === 'weight' && (() => {
+        // 体重データのみに絞り込み
+        const weightData = data.filter(d =>
+          'value' in d && d.value != null && !isNaN(d.value)
+        ) as Array<typeof data[0] & { value: number }>;
+
+        if (weightData.length === 0) return null;
+
+        const weights = weightData.map(d => d.value);
+        const minWeight = Math.min(...weights);
+        const maxWeight = Math.max(...weights);
+        const weightDiff = maxWeight - minWeight;
+        const calorieEquivalent = Math.round(weightDiff * 7200); // 1kg = 7,200kcal
+        const marathonEquivalent = (calorieEquivalent / 2700).toFixed(1); // フルマラソン = 2,700kcal
+
+        return (
+          <div className="w-full flex justify-center mt-3 mb-2">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-red-600 dark:text-red-400 font-medium">最大:</span>
+                  <span className="font-bold text-red-700 dark:text-red-300">
+                    {maxWeight.toFixed(2)}kg
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">最小:</span>
+                  <span className="font-bold text-blue-700 dark:text-blue-300">
+                    {minWeight.toFixed(2)}kg
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600 dark:text-green-400 font-medium">差:</span>
+                  <span className="font-bold text-green-700 dark:text-green-300">
+                    {weightDiff.toFixed(2)}kg
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                <span>
+                  カロリー換算: <span className="font-semibold text-orange-600 dark:text-orange-400">
+                    {calorieEquivalent.toLocaleString()}kcal
+                  </span>
+                </span>
+                <span>
+                  マラソン換算: <span className="font-semibold text-purple-600 dark:text-purple-400">
+                    {marathonEquivalent}回分
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* グラフ下部に日課達成率を表示（3行・目標併記） */}
       {graphType === 'weight' && (
         <div className="w-full flex flex-col items-start gap-1 mt-4 mb-2 text-left">

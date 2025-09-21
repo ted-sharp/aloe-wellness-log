@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { IconType } from 'react-icons';
 
 // ボタンのバリアント（用途別）
@@ -24,6 +24,9 @@ export interface ButtonProps
   iconPosition?: 'left' | 'right';
   loading?: boolean;
   fullWidth?: boolean;
+  success?: boolean; // 成功状態
+  successDuration?: number; // 成功表示時間（ms）
+  pulseOnClick?: boolean; // クリック時のパルス効果
   children: React.ReactNode;
 }
 
@@ -57,19 +60,36 @@ export const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   loading = false,
   fullWidth = false,
+  success = false,
+  successDuration = 2000,
+  pulseOnClick = true,
   className = '',
   children,
   disabled,
   ...props
 }) => {
+  const [showSuccess, setShowSuccess] = useState(false);
   const isDisabled = disabled || loading;
+
+  // 成功状態の管理
+  useEffect(() => {
+    if (success) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, successDuration);
+      return () => clearTimeout(timer);
+    }
+  }, [success, successDuration]);
 
   const buttonClasses = [
     baseStyles,
-    variantStyles[variant],
+    variantStyles[showSuccess ? 'success' : variant],
     sizeStyles[size],
     fullWidth ? 'w-full' : 'w-auto',
-    'hover:shadow-lg',
+    'hover:shadow-lg transform transition-all duration-200',
+    pulseOnClick ? 'active:scale-95 hover:scale-105' : '',
+    showSuccess ? 'success-bounce' : '',
     className,
   ].join(' ');
 
@@ -83,7 +103,18 @@ export const Button: React.FC<ButtonProps> = ({
           <div
             className={`animate-spin rounded-full border-2 border-current border-t-transparent ${iconSize}`}
           />
+          <span className="sr-only" aria-live="polite">
+            読み込み中です。しばらくお待ちください。
+          </span>
           読み込み中...
+        </>
+      ) : showSuccess ? (
+        <>
+          {Icon && <Icon className={iconSize} aria-hidden="true" />}
+          <span className="sr-only" aria-live="polite">
+            操作が完了しました。
+          </span>
+          完了!
         </>
       ) : (
         <>

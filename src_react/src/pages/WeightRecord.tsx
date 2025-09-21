@@ -24,7 +24,9 @@ import { useWeightRecordLogic } from '../hooks/business/useWeightRecordLogic';
 import { useDateSelection } from '../hooks/useDateSelection';
 import { useRecordCRUD } from '../hooks/useRecordCRUD';
 import { useRecordForm } from '../hooks/useRecordForm';
+import { useSaveState } from '../hooks/useSaveState';
 import { useGoalStore, useGoalSummary } from '../store/goal.mobx';
+import { useToastStore } from '../store/toast.mobx';
 import type { WeightRecordV2 } from '../types/record';
 import { getCurrentTimeString } from '../utils/dateUtils';
 
@@ -74,6 +76,18 @@ function useSparkleDropdown() {
 const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   const { goal, loadGoal } = useGoalStore();
   const { checkpointDates } = useGoalSummary();
+  const toastStore = useToastStore();
+
+  // 保存状態管理
+  const { saveState, executeSave } = useSaveState({
+    onSuccess: () => {
+      toastStore.showSuccess('体重記録を保存しました！');
+      if (showTipsModal) showTipsModal();
+    },
+    onError: error => {
+      toastStore.showError(`保存に失敗しました: ${error.message}`);
+    },
+  });
 
   // useCallbackで関数を安定化して無限ループを防ぐ
   const getAllRecords = useCallback(async () => {
@@ -119,7 +133,6 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
     addRecord: addRecordCallback,
     updateRecord: updateRecordCallback,
     deleteRecord: deleteRecordCallback,
-    onRecordAdded: showTipsModal,
   });
 
   // 日付選択管理
@@ -192,17 +205,40 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
   // いずれかのフィールドが入力されているかチェック
   const hasAnyData = weightLogic.hasRecordData(formData);
 
-  // レコード追加処理
+  // レコード追加処理（改善版）
   const handleAddRecord = useCallback(async () => {
     if (!hasAnyData) return;
-    try {
+
+    await executeSave(async () => {
       const record = createRecordFromForm(recordDate);
       await addRecord(record);
       resetForm();
-    } catch (error) {
-      // エラーハンドリングはuseRecordCRUDで行われる
-    }
-  }, [hasAnyData, createRecordFromForm, recordDate, addRecord, resetForm]);
+    });
+  }, [
+    hasAnyData,
+    createRecordFromForm,
+    recordDate,
+    addRecord,
+    resetForm,
+    executeSave,
+  ]);
+
+  // 削除実行（直接削除）
+  const executeDelete = useCallback(
+    async (record: WeightRecordV2) => {
+      try {
+        await handleDelete(record.id);
+        toastStore.showSuccess('記録を削除しました');
+      } catch (error) {
+        toastStore.showError(
+          `削除に失敗しました: ${
+            error instanceof Error ? error.message : '不明なエラー'
+          }`
+        );
+      }
+    },
+    [handleDelete, toastStore]
+  );
 
   // メモ欄用スパークルドロップダウン
   const noteSparkle = useSparkleDropdown();
@@ -292,7 +328,8 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                     size="sm"
                     icon={HiTrash}
                     aria-label="削除"
-                    onClick={() => handleDelete(rec.id)}
+                    onClick={() => executeDelete(rec)}
+                    pulseOnClick={true}
                   >
                     {''}
                   </Button>
@@ -387,6 +424,9 @@ const WeightRecord: React.FC<WeightRecordProps> = ({ showTipsModal }) => {
                   onClick={handleAddRecord}
                   data-testid="save-btn"
                   disabled={isLoading || !hasAnyData}
+                  loading={saveState === 'saving'}
+                  success={saveState === 'success'}
+                  pulseOnClick={true}
                 >
                   {''}
                 </Button>

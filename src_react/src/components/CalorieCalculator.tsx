@@ -67,11 +67,15 @@ const CalorieCalculator = memo(function CalorieCalculator({
     case 'total':
       return (
         <div className="text-sm mb-2 text-black dark:text-white">
-          あと{weightLoss}kg減らすには
-          <span className="text-blue-700 dark:text-blue-300 font-bold">
+          あと
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
+            {weightLoss}kg
+          </span>
+          減らすには
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{Math.round(totalCalories).toLocaleString()}kcal
           </span>
-          の消費が必要です
+          の消費が必要です。
         </div>
       );
 
@@ -79,10 +83,10 @@ const CalorieCalculator = memo(function CalorieCalculator({
       return (
         <div className="text-sm mb-2 text-black dark:text-white">
           期間中に一日あたり
-          <span className="text-blue-700 dark:text-blue-300 font-bold">
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{dailyCalories.toLocaleString()}kcal
           </span>
-          の消費が必要です
+          の消費が必要です。
         </div>
       );
 
@@ -90,7 +94,7 @@ const CalorieCalculator = memo(function CalorieCalculator({
       return (
         <div className="text-sm text-black dark:text-white">
           運動で一日あたり
-          <span className="text-blue-700 dark:text-blue-300 font-bold">
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{Math.round(dailyCalories / 2).toLocaleString()}kcal
           </span>
           の消費を目標にしましょう。
@@ -101,7 +105,7 @@ const CalorieCalculator = memo(function CalorieCalculator({
       return (
         <div className="text-sm text-black dark:text-white">
           減食で一日あたり
-          <span className="text-blue-700 dark:text-blue-300 font-bold">
+          <span className="text-blue-700 dark:text-blue-300 font-bold text-xl">
             約{Math.round(dailyCalories / 2).toLocaleString()}kcal
           </span>
           の消費を目標にしましょう。
