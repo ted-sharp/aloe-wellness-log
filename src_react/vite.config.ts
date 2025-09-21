@@ -6,6 +6,9 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 
+// package.jsonからバージョンを読み込み
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+
 // Service Worker自動更新プラグイン
 function swAutoUpdate(basePath: string) {
   return {
@@ -94,6 +97,11 @@ export default defineConfig(({ mode, command }) => {
   return {
     plugins,
     base,
+
+    // 環境変数の定義
+    define: {
+      'import.meta.env.PACKAGE_VERSION': JSON.stringify(packageJson.version),
+    },
 
     // パフォーマンス最適化設定
     build: {

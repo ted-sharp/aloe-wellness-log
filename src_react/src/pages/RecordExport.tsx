@@ -228,6 +228,26 @@ const RecordExport = memo(function RecordExport({
           </div>
         )}
 
+        {/* アプリ情報 */}
+        <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-xl shadow p-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200 text-center">
+            アプリ情報
+          </h3>
+          <div className="flex justify-center">
+            <div className="text-center space-y-2">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium">バージョン:</span>
+                <span className="ml-2 font-mono text-green-600 dark:text-green-400">
+                  v{import.meta.env.PACKAGE_VERSION || '1.1.0'}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-500">
+                アロエ健康管理ログ
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* 使用上の注意 */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl shadow p-6">
           <h3 className="text-lg font-semibold mb-3 text-blue-800 dark:text-blue-200 text-center">
