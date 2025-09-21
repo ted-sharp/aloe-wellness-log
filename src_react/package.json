@@ -1,7 +1,7 @@
 {
   "name": "aloe-wellness-log-react",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "体重、血圧、運動記録などを日々記録できる健康管理Progressive Web App（PWA）",
   "keywords": [
