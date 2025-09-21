@@ -111,10 +111,11 @@ function Navigation() {
 
       {/* デスクトップ用ナビゲーション */}
       <nav
-        className="hidden md:flex justify-between items-center gap-4 mb-12 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg mx-4 mt-4"
+        className="hidden md:block"
         role="navigation"
         aria-label="メインへ移動"
       >
+        <div className="flex justify-between items-center gap-4 mb-12 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg mx-4 mt-4">
         <div className="flex gap-4">
           {navItems.map(item => (
             <Link
@@ -143,6 +144,7 @@ function Navigation() {
           {shouldShowPWAButton && (
             <PWAInstallButton className="ml-2" debug={false} />
           )}
+        </div>
         </div>
       </nav>
 
