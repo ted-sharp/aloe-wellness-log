@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { HiCheck, HiXMark } from 'react-icons/hi2';
 import {
   CartesianGrid,
   ComposedChart,
@@ -56,7 +55,6 @@ const RecordGraph: React.FC = () => {
   const {
     // weightRecords,
     // bpRecords,
-    dailyRecords,
     goal,
     // latestTimestamp,
     isLoading,
@@ -461,7 +459,7 @@ const RecordGraph: React.FC = () => {
                         borderRadius: 8,
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#333' }}>
                         {d ? formatDateTimeLabel(ts) : ''}
                       </div>
                       {(
@@ -476,7 +474,7 @@ const RecordGraph: React.FC = () => {
                       ).map((item, idx) => (
                         <div
                           key={idx}
-                          style={{ color: item.color, fontSize: 14 }}
+                          style={{ color: item.color || '#333', fontSize: 14 }}
                         >
                           {item.dataKey === 'bodyFat' ? '体脂肪率: ' : '腹囲: '}
                           {typeof item.value === 'number'
@@ -737,7 +735,7 @@ const RecordGraph: React.FC = () => {
                         borderRadius: 8,
                       }}
                     >
-                      <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#333' }}>
                         {(() => {
                           type Pt = { timestamp: number };
                           if (
@@ -779,7 +777,7 @@ const RecordGraph: React.FC = () => {
                           .map((item, idx) => (
                             <div
                               key={idx}
-                              style={{ color: item.color, fontSize: 14 }}
+                              style={{ color: item.color || '#333', fontSize: 14 }}
                             >
                               {typeof item.value === 'number'
                                 ? item.value.toFixed(
@@ -789,54 +787,6 @@ const RecordGraph: React.FC = () => {
                               {graphType === 'weight' ? 'kg' : 'mmHg'}
                             </div>
                           ))}
-                      <div style={{ marginTop: 6, fontSize: 13 }}>
-                        {(() => {
-                          const statusList = [
-                            { key: 'exercise', label: '🏃‍♂️' },
-                            { key: 'meal', label: '🍽' },
-                            { key: 'sleep', label: '🛌' },
-                          ];
-                          return statusList.map(({ key, label }) => {
-                            const rec = dailyRecords.find(
-                              r => r.fieldId === key && r.date === dateStr
-                            );
-                            if (rec === undefined) return null; // 入力がなければ非表示
-                            return (
-                              <span
-                                key={key}
-                                style={{
-                                  marginRight: 8,
-                                  verticalAlign: 'middle',
-                                  fontSize: '1.1em',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                {label}
-                                {rec.value === 1 ? (
-                                  <HiCheck
-                                    style={{
-                                      color: '#38bdf8',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                ) : (
-                                  <HiXMark
-                                    style={{
-                                      color: '#bbb',
-                                      fontSize: '1.3em',
-                                      marginLeft: 2,
-                                      verticalAlign: 'middle',
-                                    }}
-                                  />
-                                )}
-                              </span>
-                            );
-                          });
-                        })()}
-                      </div>
                     </div>
                   );
                 }}
