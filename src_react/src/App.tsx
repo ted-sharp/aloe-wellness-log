@@ -7,6 +7,7 @@ import TipsModal from './components/TipsModal';
 import { STORAGE_KEYS } from './constants/storageKeys';
 import tipsList from './data/tips';
 import * as db from './db';
+import { usePWAInstallStatus } from './hooks/usePWAInstallStatus';
 import { rootStore } from './store';
 import { isDev } from './utils/devTools';
 // Lazy load for better performance
@@ -50,6 +51,7 @@ const PageLoader = ({ pageName }: { pageName?: string }) => {
 function Navigation() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { shouldShowPWAButton } = usePWAInstallStatus();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -134,11 +136,13 @@ function Navigation() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center ${shouldShowPWAButton ? 'gap-2' : ''}`}>
           {/* QRコードボタン（デスクトップ用） */}
           <QRCodeDisplay />
           {/* PWAインストールボタン（デスクトップ用） */}
-          <PWAInstallButton className="ml-2" debug={import.meta.env.DEV} />
+          {shouldShowPWAButton && (
+            <PWAInstallButton className="ml-2" debug={false} />
+          )}
         </div>
       </nav>
 
@@ -224,12 +228,14 @@ function Navigation() {
               ))}
 
               {/* QRコードとPWAボタン */}
-              <div className="flex justify-center gap-2 px-4 py-3 border-t border-gray-100 dark:border-gray-600">
+              <div className={`flex justify-center px-4 py-3 border-t border-gray-100 dark:border-gray-600 ${shouldShowPWAButton ? 'gap-2' : ''}`}>
                 <QRCodeDisplay className="text-sm px-3 py-2" />
-                <PWAInstallButton
-                  className="text-sm px-3 py-2"
-                  debug={import.meta.env.DEV}
-                />
+                {shouldShowPWAButton && (
+                  <PWAInstallButton
+                    className="text-sm px-3 py-2"
+                    debug={false}
+                  />
+                )}
               </div>
             </div>
           </nav>
