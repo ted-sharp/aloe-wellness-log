@@ -1,13 +1,11 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
-import { PWAInstallButton } from './components/PWAInstallButton';
 import QRCodeDisplay from './components/QRCodeDisplay';
 import TipsModal from './components/TipsModal';
 import { STORAGE_KEYS } from './constants/storageKeys';
 import tipsList from './data/tips';
 import * as db from './db';
-import { usePWAInstallStatus } from './hooks/usePWAInstallStatus';
 import { rootStore } from './store';
 import { isDev } from './utils/devTools';
 // Lazy load for better performance
@@ -51,7 +49,6 @@ const PageLoader = ({ pageName }: { pageName?: string }) => {
 function Navigation() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { shouldShowPWAButton } = usePWAInstallStatus();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -137,13 +134,9 @@ function Navigation() {
           ))}
         </div>
 
-        <div className={`flex items-center ${shouldShowPWAButton ? 'gap-2' : ''}`}>
+        <div className="flex items-center">
           {/* QRコードボタン（デスクトップ用） */}
           <QRCodeDisplay />
-          {/* PWAインストールボタン（デスクトップ用） */}
-          {shouldShowPWAButton && (
-            <PWAInstallButton className="ml-2" debug={false} />
-          )}
         </div>
         </div>
       </nav>
@@ -229,15 +222,9 @@ function Navigation() {
                 </Link>
               ))}
 
-              {/* QRコードとPWAボタン */}
-              <div className={`flex justify-center px-4 py-3 border-t border-gray-100 dark:border-gray-600 ${shouldShowPWAButton ? 'gap-2' : ''}`}>
+              {/* QRコード */}
+              <div className="flex justify-center px-4 py-3 border-t border-gray-100 dark:border-gray-600">
                 <QRCodeDisplay className="text-sm px-3 py-2" />
-                {shouldShowPWAButton && (
-                  <PWAInstallButton
-                    className="text-sm px-3 py-2"
-                    debug={false}
-                  />
-                )}
               </div>
             </div>
           </nav>
