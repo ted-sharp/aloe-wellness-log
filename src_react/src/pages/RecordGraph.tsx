@@ -30,7 +30,7 @@ const STATUS_LABELS = {
   exercise: '🏃',
   meal: '🍽',
   sleep: '🛌',
-};
+} as const;
 
 // Tooltip用の型定義
 interface TooltipItem {
@@ -1033,4 +1033,5 @@ const RecordGraph: React.FC = () => {
   );
 };
 
+// Cache invalidation: 2025-09-27
 export default RecordGraph;

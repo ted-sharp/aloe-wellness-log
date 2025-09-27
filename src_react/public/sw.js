@@ -4,9 +4,9 @@
 // Viteビルド時に自動で置換されるbase path
 const BASE_PATH = '/';
 
-const CACHE_NAME = 'aloe-wellness-v2.0.0';
-const STATIC_CACHE_NAME = 'aloe-wellness-static-v2.0.0';
-const DYNAMIC_CACHE_NAME = 'aloe-wellness-dynamic-v2.0.0';
+const CACHE_NAME = 'aloe-wellness-v2.0.1';
+const STATIC_CACHE_NAME = 'aloe-wellness-static-v2.0.1';
+const DYNAMIC_CACHE_NAME = 'aloe-wellness-dynamic-v2.0.1';
 
 // セキュリティ設定
 const SECURITY_CONFIG = {
