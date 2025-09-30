@@ -197,8 +197,8 @@ export class EnhancedRecordsStore {
   // 体組成データの処理済みデータ（体脂肪率・腹囲）
   get processedBodyCompositionForGraph(): (WeightRecordV2 & {
     timestamp: number;
-    bodyFat?: number;
-    waist?: number;
+    bodyFat?: number | null;
+    waist?: number | null;
   })[] {
     return computed(() => {
       const timestampCounts = new Map<number, number>();

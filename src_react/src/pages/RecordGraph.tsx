@@ -496,7 +496,7 @@ const RecordGraph: React.FC = () => {
                 stroke="#8b5cf6"
                 strokeWidth={3}
                 dot={({ cx, cy, payload, index }) => {
-                  if (payload?.bodyFat == null) return null;
+                  if (payload?.bodyFat == null) return <></>;
                   return (
                     <circle
                       key={`bodyFat-dot-${payload?.id || index}`}
@@ -521,7 +521,7 @@ const RecordGraph: React.FC = () => {
                 stroke="#f59e0b"
                 strokeWidth={3}
                 dot={({ cx, cy, payload, index }) => {
-                  if (payload?.waist == null) return null;
+                  if (payload?.waist == null) return <></>;
                   return (
                     <circle
                       key={`waist-dot-${payload?.id || index}`}
@@ -925,9 +925,9 @@ const RecordGraph: React.FC = () => {
       {/* 体重グラフの最小・最大値表示 */}
       {graphType === 'weight' && (() => {
         // 体重データのみに絞り込み
-        const weightData = data.filter(d =>
-          'value' in d && d.value != null && !isNaN(d.value)
-        ) as Array<typeof data[0] & { value: number }>;
+        const weightData = data.filter((d): d is typeof d & { value: number } =>
+          'value' in d && d.value != null && typeof d.value === 'number' && !isNaN(d.value)
+        );
 
         if (weightData.length === 0) return null;
 
