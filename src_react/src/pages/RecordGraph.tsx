@@ -930,7 +930,9 @@ const RecordGraph: React.FC = () => {
         const maxWeight = Math.max(...weights);
         const weightDiff = maxWeight - minWeight;
         const calorieEquivalent = Math.round(weightDiff * 7200); // 1kg = 7,200kcal
-        const marathonEquivalent = (calorieEquivalent / 2700).toFixed(1); // フルマラソン = 2,700kcal
+        const latestWeight = weights[weights.length - 1]; // 最新の体重
+        const marathonCaloriesForUser = latestWeight * 44.3; // その人の体重でのマラソンカロリー消費量 (体重 × 42.195km × 1.05)
+        const marathonEquivalent = (calorieEquivalent / marathonCaloriesForUser).toFixed(1);
 
         return (
           <div className="w-full flex justify-center mt-3 mb-2">
