@@ -495,17 +495,20 @@ const RecordGraph: React.FC = () => {
                 dataKey="bodyFat"
                 stroke="#8b5cf6"
                 strokeWidth={3}
-                dot={({ cx, cy, payload, index }) => (
-                  <circle
-                    key={`bodyFat-dot-${payload?.id || index}`}
-                    cx={cx}
-                    cy={cy}
-                    r={4}
-                    fill={payload.excluded ? '#f87171' : '#8b5cf6'}
-                    stroke="#fff"
-                    strokeWidth={1}
-                  />
-                )}
+                dot={({ cx, cy, payload, index }) => {
+                  if (payload?.bodyFat == null) return null;
+                  return (
+                    <circle
+                      key={`bodyFat-dot-${payload?.id || index}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill={payload.excluded ? '#f87171' : '#8b5cf6'}
+                      stroke="#fff"
+                      strokeWidth={1}
+                    />
+                  );
+                }}
                 activeDot={false}
                 connectNulls={false}
               />
@@ -517,17 +520,20 @@ const RecordGraph: React.FC = () => {
                 dataKey="waist"
                 stroke="#f59e0b"
                 strokeWidth={3}
-                dot={({ cx, cy, payload, index }) => (
-                  <circle
-                    key={`waist-dot-${payload?.id || index}`}
-                    cx={cx}
-                    cy={cy}
-                    r={4}
-                    fill={payload.excluded ? '#f87171' : '#f59e0b'}
-                    stroke="#fff"
-                    strokeWidth={1}
-                  />
-                )}
+                dot={({ cx, cy, payload, index }) => {
+                  if (payload?.waist == null) return null;
+                  return (
+                    <circle
+                      key={`waist-dot-${payload?.id || index}`}
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill={payload.excluded ? '#f87171' : '#f59e0b'}
+                      stroke="#fff"
+                      strokeWidth={1}
+                    />
+                  );
+                }}
                 activeDot={false}
                 connectNulls={false}
               />
