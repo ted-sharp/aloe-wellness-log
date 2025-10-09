@@ -1,5 +1,10 @@
 import { DATABASE_CONFIG, STORE_CONFIGS, type StoreName } from './config';
-import { DbError, DbErrorType, classifyDbError, isRetryableError } from './errors';
+import {
+  DbError,
+  DbErrorType,
+  classifyDbError,
+  isRetryableError,
+} from './errors';
 
 /**
  * データベース接続の管理を行うクラス
@@ -37,7 +42,7 @@ export class DatabaseConnectionManager {
 
     // 新しい接続を作成
     this.connectionPromise = this.createConnection();
-    
+
     try {
       this.dbInstance = await this.connectionPromise;
       return this.dbInstance;
@@ -54,18 +59,25 @@ export class DatabaseConnectionManager {
     return this.withRetry(async () => {
       return new Promise<IDBDatabase>((resolve, reject) => {
         try {
-          const request = indexedDB.open(DATABASE_CONFIG.NAME, DATABASE_CONFIG.VERSION);
+          const request = indexedDB.open(
+            DATABASE_CONFIG.NAME,
+            DATABASE_CONFIG.VERSION
+          );
 
-          request.onupgradeneeded = (event) => {
+          request.onupgradeneeded = event => {
             const db = (event.target as IDBOpenDBRequest).result;
-            this.upgradeDatabase(db, event.oldVersion, event.newVersion || DATABASE_CONFIG.VERSION);
+            this.upgradeDatabase(
+              db,
+              event.oldVersion,
+              event.newVersion || DATABASE_CONFIG.VERSION
+            );
           };
 
           request.onsuccess = () => {
             const db = request.result;
 
             // データベースエラーイベントを監視
-            db.onerror = (event) => {
+            db.onerror = event => {
               console.error('Database error:', event);
             };
 
@@ -109,8 +121,14 @@ export class DatabaseConnectionManager {
   /**
    * データベースのアップグレード処理
    */
-  private upgradeDatabase(db: IDBDatabase, oldVersion: number, newVersion: number): void {
-    console.log(`Upgrading database from version ${oldVersion} to ${newVersion}`);
+  private upgradeDatabase(
+    db: IDBDatabase,
+    oldVersion: number,
+    newVersion: number
+  ): void {
+    console.log(
+      `Upgrading database from version ${oldVersion} to ${newVersion}`
+    );
 
     // 全ストアの作成と設定
     STORE_CONFIGS.forEach(config => {
@@ -118,29 +136,27 @@ export class DatabaseConnectionManager {
 
       if (!db.objectStoreNames.contains(config.name)) {
         // 新しいストアの作成
+        console.log(`Creating new object store: ${config.name}`);
         store = db.createObjectStore(config.name, {
           keyPath: config.keyPath,
           autoIncrement: config.autoIncrement || false,
         });
-      } else {
-        // 既存ストアの取得（トランザクション経由）
-        // アップグレード中は直接アクセス可能
-        const transaction = db.transaction([config.name], 'versionchange');
-        store = transaction.objectStore(config.name);
-      }
 
-      // インデックスの作成
-      if (config.indexes) {
-        config.indexes.forEach(indexConfig => {
-          if (!store.indexNames.contains(indexConfig.name)) {
+        // インデックスの作成（新規ストアのみ）
+        if (config.indexes) {
+          config.indexes.forEach(indexConfig => {
+            console.log(
+              `Creating index: ${indexConfig.name} on ${config.name}`
+            );
             store.createIndex(
               indexConfig.name,
               indexConfig.keyPath,
               indexConfig.options
             );
-          }
-        });
+          });
+        }
       }
+      // 既存ストアの場合は何もしない（インデックスは既に作成済み）
     });
   }
 
@@ -194,7 +210,9 @@ export class DatabaseConnectionManager {
           };
 
           // ストア取得（型安全性向上）
-          const stores: IDBObjectStore | IDBObjectStore[] = Array.isArray(storeNames)
+          const stores: IDBObjectStore | IDBObjectStore[] = Array.isArray(
+            storeNames
+          )
             ? storeNames.map(name => transaction.objectStore(name))
             : transaction.objectStore(storeNames);
 
@@ -234,7 +252,7 @@ export class DatabaseConnectionManager {
         }
 
         // リトライ前の待機（指数バックオフ）
-        await new Promise(resolve => 
+        await new Promise(resolve =>
           setTimeout(resolve, delay * Math.pow(2, attempt - 1))
         );
       }
@@ -258,7 +276,9 @@ export class DatabaseConnectionManager {
    * 接続状態の確認
    */
   isConnected(): boolean {
-    return this.dbInstance !== null && this.dbInstance.objectStoreNames.length > 0;
+    return (
+      this.dbInstance !== null && this.dbInstance.objectStoreNames.length > 0
+    );
   }
 
   /**

@@ -12,6 +12,7 @@ import { isDev } from './utils/devTools';
 const BpRecord = lazy(() => import('./pages/BpRecord'));
 const DailyRecord = lazy(() => import('./pages/DailyRecord'));
 const GoalInput = lazy(() => import('./pages/GoalInput'));
+const MailCompose = lazy(() => import('./pages/MailCompose'));
 const RecordGraph = lazy(() => import('./pages/RecordGraph'));
 const WeightRecord = lazy(() => import('./pages/WeightRecord'));
 
@@ -91,6 +92,7 @@ function Navigation() {
     { path: '/bp', label: '血圧', color: 'teal' },
     { path: '/graph', label: 'グラフ', color: 'blue' },
     { path: '/goal', label: '目標', color: 'teal' },
+    { path: '/mail', label: 'メール', color: 'green' },
     { path: '/export', label: '管理', color: 'purple' },
   ];
 
@@ -113,31 +115,33 @@ function Navigation() {
         aria-label="メインへ移動"
       >
         <div className="flex justify-between items-center gap-4 mb-12 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg mx-4 mt-4">
-        <div className="flex gap-4">
-          {navItems.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`${
-                item.color === 'purple'
-                  ? 'bg-purple-600 border-purple-600 hover:bg-purple-700 hover:border-purple-700'
-                  : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
-              } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-              aria-current={isCurrentPage(item.path) ? 'page' : undefined}
-              aria-label={item.label}
-            >
-              {item.label}
-              {isCurrentPage(item.path) && (
-                <span className="sr-only">現在のページ</span>
-              )}
-            </Link>
-          ))}
-        </div>
+          <div className="flex gap-4">
+            {navItems.map(item => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${
+                  item.color === 'purple'
+                    ? 'bg-purple-600 border-purple-600 hover:bg-purple-700 hover:border-purple-700'
+                    : item.color === 'green'
+                    ? 'bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700'
+                    : 'bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600'
+                } !text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-200 font-medium text-base border-2 hover:!text-white visited:!text-white active:!text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                aria-current={isCurrentPage(item.path) ? 'page' : undefined}
+                aria-label={item.label}
+              >
+                {item.label}
+                {isCurrentPage(item.path) && (
+                  <span className="sr-only">現在のページ</span>
+                )}
+              </Link>
+            ))}
+          </div>
 
-        <div className="flex items-center">
-          {/* QRコードボタン（デスクトップ用） */}
-          <QRCodeDisplay />
-        </div>
+          <div className="flex items-center">
+            {/* QRコードボタン（デスクトップ用） */}
+            <QRCodeDisplay />
+          </div>
         </div>
       </nav>
 
@@ -210,6 +214,8 @@ function Navigation() {
                       ? 'bg-blue-600 text-white'
                       : item.color === 'purple'
                       ? '!text-purple-600 dark:!text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:bg-purple-50 dark:focus:bg-purple-900/20 hover:!text-purple-600 dark:hover:!text-purple-400 visited:!text-purple-600 dark:visited:!text-purple-400 active:!text-purple-600 dark:active:!text-purple-400'
+                      : item.color === 'green'
+                      ? '!text-green-600 dark:!text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:bg-green-50 dark:focus:bg-green-900/20 hover:!text-green-600 dark:hover:!text-green-400 visited:!text-green-600 dark:visited:!text-green-400 active:!text-green-600 dark:active:!text-green-400'
                       : '!text-blue-500 dark:!text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:bg-blue-50 dark:focus:bg-blue-900/20 hover:!text-blue-500 dark:hover:!text-blue-400 visited:!text-blue-500 dark:visited:!text-blue-400 active:!text-blue-500 dark:active:!text-blue-400'
                   }`}
                   aria-current={isCurrentPage(item.path) ? 'page' : undefined}
@@ -440,6 +446,14 @@ function App() {
                 element={
                   <Suspense fallback={<PageLoader pageName="グラフ" />}>
                     <RecordGraph />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/mail"
+                element={
+                  <Suspense fallback={<PageLoader pageName="メール" />}>
+                    <MailCompose />
                   </Suspense>
                 }
               />
