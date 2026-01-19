@@ -19,12 +19,12 @@ export class MailSenderRepository {
     return trackDbOperation('mail-sender-get', async () => {
       try {
         const data = await executeTransaction(
-          [STORE_NAMES.MAIL_SENDER],
+          STORE_NAMES.MAIL_SENDER,
           'readonly',
-          async (_transaction, stores) => {
-            const store = stores as IDBObjectStore;
+          async (_transaction, store) => {
+            const objectStore = store as IDBObjectStore;
             return new Promise<MailSenderInfo | null>((resolve, reject) => {
-              const request = store.get(FIXED_ID);
+              const request = objectStore.get(FIXED_ID);
               request.onsuccess = () => {
                 const result = request.result as
                   | (MailSenderInfo & { id: string })
@@ -66,17 +66,17 @@ export class MailSenderRepository {
     return trackDbOperation('mail-sender-save', async () => {
       try {
         await executeTransaction(
-          [STORE_NAMES.MAIL_SENDER],
+          STORE_NAMES.MAIL_SENDER,
           'readwrite',
-          async (_transaction, stores) => {
-            const store = stores as IDBObjectStore;
+          async (_transaction, store) => {
+            const objectStore = store as IDBObjectStore;
             return new Promise<void>((resolve, reject) => {
               const dataWithId = {
                 ...info,
                 id: FIXED_ID,
                 updatedAt: new Date().toISOString(),
               };
-              const request = store.put(dataWithId);
+              const request = objectStore.put(dataWithId);
               request.onsuccess = () => resolve();
               request.onerror = () => reject(request.error);
             });
@@ -106,12 +106,12 @@ export class MailSenderRepository {
     return trackDbOperation('mail-sender-clear', async () => {
       try {
         await executeTransaction(
-          [STORE_NAMES.MAIL_SENDER],
+          STORE_NAMES.MAIL_SENDER,
           'readwrite',
-          async (_transaction, stores) => {
-            const store = stores as IDBObjectStore;
+          async (_transaction, store) => {
+            const objectStore = store as IDBObjectStore;
             return new Promise<void>((resolve, reject) => {
-              const request = store.delete(FIXED_ID);
+              const request = objectStore.delete(FIXED_ID);
               request.onsuccess = () => resolve();
               request.onerror = () => reject(request.error);
             });

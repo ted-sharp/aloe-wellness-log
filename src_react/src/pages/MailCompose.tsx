@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
-import { FaCamera, FaEdit, FaEnvelope, FaInfoCircle } from 'react-icons/fa';
+import { FaCamera, FaEdit, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Button from '../components/Button';
 import StatusMessage from '../components/StatusMessage';
@@ -36,6 +36,7 @@ type WeeklyWeightSummary = {
   minWeight: number;
   maxWeight: number;
   recordCount: number;
+  weekNum: number;
 };
 
 /**
@@ -45,7 +46,6 @@ type WeeklyWeightSummary = {
 const MailCompose = observer(() => {
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('特定保健指導データ送付');
-  const [additionalMessage, setAdditionalMessage] = useState('');
   const [showScreenshotGuide, setShowScreenshotGuide] = useState(false);
 
   // 差出人情報（メールページで入力）
@@ -64,8 +64,8 @@ const MailCompose = observer(() => {
   );
 
   /**
-   * 初期データの読み込み（差出人情報）
-   * 優先順位: 1. 保存された差出人情報 2. 目標ページの情報
+   * 初期データの読み込み（差出人情報とメール内容）
+   * 優先順位: 1. 保存された情報 2. 目標ページの情報
    */
   useEffect(() => {
     const loadSenderInfo = async () => {
@@ -73,11 +73,13 @@ const MailCompose = observer(() => {
         setIsLoading(true);
         const result = await mailSenderRepository.get();
 
-        // 保存された差出人情報がある場合はそれを使用
+        // 保存された情報がある場合はそれを使用
         if (result.success && result.data) {
           const info = result.data;
           setSenderName(info.name || '');
           setSenderContact(info.contact || '');
+          setRecipient(info.recipient || '');
+          setSubject(info.subject || '特定保健指導データ送付');
         } else {
           // 保存された情報がない場合は目標ページから取得
           if (goalData) {
@@ -95,7 +97,7 @@ const MailCompose = observer(() => {
   }, [goalData]);
 
   /**
-   * 差出人情報の自動保存（入力から500ms後に保存）
+   * 入力情報の自動保存（入力から500ms後に保存）
    */
   useEffect(() => {
     // 初期読み込み中は保存しない
@@ -106,6 +108,8 @@ const MailCompose = observer(() => {
         const info: MailSenderInfo = {
           name: senderName,
           contact: senderContact,
+          recipient: recipient,
+          subject: subject,
         };
 
         const result = await mailSenderRepository.save(info);
@@ -118,7 +122,13 @@ const MailCompose = observer(() => {
     }, 500); // 500ms のデバウンス
 
     return () => clearTimeout(timer);
-  }, [senderName, senderContact, isLoading]);
+  }, [
+    senderName,
+    senderContact,
+    recipient,
+    subject,
+    isLoading,
+  ]);
 
   /**
    * 1ヶ月分の体重データを週ごとに集計
@@ -142,6 +152,14 @@ const MailCompose = observer(() => {
         setWeeklySummaries([]);
         return;
       }
+
+      // 目標開始日から週番号を計算するための基準日を決定
+      const goalStartDate = goalData?.targetStart
+        ? new Date(goalData.targetStart)
+        : null;
+      const goalStartWeekMonday = goalStartDate
+        ? getWeekStart(goalStartDate)
+        : null;
 
       // 週ごとにグループ化
       const weeklyData = new Map<string, WeightRecordV2[]>();
@@ -169,12 +187,22 @@ const MailCompose = observer(() => {
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
 
+        // 目標開始日がある場合はそれを基準に、ない場合は1とする
+        let weekNum = 1;
+        if (goalStartWeekMonday) {
+          const daysDiff = Math.floor(
+            (weekStart.getTime() - goalStartWeekMonday.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          weekNum = Math.floor(daysDiff / 7) + 1;
+        }
+
         summaries.push({
           weekStart: weekStartStr,
           weekEnd: weekEnd.toISOString().split('T')[0],
           minWeight,
           maxWeight,
           recordCount: records.length,
+          weekNum,
         });
       });
 
@@ -185,7 +213,7 @@ const MailCompose = observer(() => {
     };
 
     calculateWeeklySummaries();
-  }, [recordsStore.weightRecords]);
+  }, [recordsStore.weightRecords, goalData?.targetStart]);
 
   /**
    * 体重データサマリーの生成
@@ -198,8 +226,7 @@ const MailCompose = observer(() => {
     const lines: string[] = [];
     lines.push('【体重データ サマリー（過去1ヶ月）】\n');
 
-    weeklySummaries.forEach((summary, index) => {
-      const weekNum = index + 1;
+    weeklySummaries.forEach((summary) => {
       const startDate = new Date(summary.weekStart);
       const endDate = new Date(summary.weekEnd);
 
@@ -211,10 +238,10 @@ const MailCompose = observer(() => {
       };
 
       lines.push(
-        `第${weekNum}週（${formatDate(startDate)}～${formatDate(endDate)}）`
+        `第${summary.weekNum}週（${formatDate(startDate)}～${formatDate(endDate)}）`
       );
-      lines.push(`  最低: ${summary.minWeight.toFixed(1)}kg`);
       lines.push(`  最高: ${summary.maxWeight.toFixed(1)}kg`);
+      lines.push(`  最低: ${summary.minWeight.toFixed(1)}kg`);
       lines.push(`  記録: ${summary.recordCount}件`);
       lines.push('');
     });
@@ -274,26 +301,27 @@ const MailCompose = observer(() => {
     // 氏名（メールページまたは目標ページ）
     const name = senderName.trim() || goalData?.name || '';
     if (name) {
-      parts.push(`氏名: ${name}`);
-    }
-    // 年齢（目標ページの生年から計算）
-    if (goalData?.birthYear) {
-      const age = calculateAge(goalData.birthYear);
-      parts.push(`年齢: ${age}歳`);
-    }
-    // 性別（目標ページから）
-    if (goalData?.gender) {
-      const genderLabel =
-        goalData.gender === 'male'
-          ? '男性'
-          : goalData.gender === 'female'
-          ? '女性'
-          : 'その他';
-      parts.push(`性別: ${genderLabel}`);
+      // 年齢と性別を含める
+      const details: string[] = [];
+      if (goalData?.birthYear) {
+        const age = calculateAge(goalData.birthYear);
+        details.push(`${age}歳`);
+      }
+      if (goalData?.gender) {
+        const genderLabel =
+          goalData.gender === 'male'
+            ? '男性'
+            : goalData.gender === 'female'
+            ? '女性'
+            : 'その他';
+        details.push(genderLabel);
+      }
+      const detailsStr = details.length > 0 ? `（${details.join('、')}）` : '';
+      parts.push(`${name}${detailsStr}`);
     }
     // 連絡先（メールページで入力）
     if (senderContact.trim()) {
-      parts.push(`連絡先: ${senderContact.trim()}`);
+      parts.push(senderContact.trim());
     }
     parts.push('');
 
@@ -306,15 +334,19 @@ const MailCompose = observer(() => {
       if (goalData.targetWeight) {
         parts.push(`目標体重: ${goalData.targetWeight}kg`);
       }
-      if (goalData.targetDate) {
-        parts.push(`目標期日: ${goalData.targetDate}`);
+      if (goalData.targetStart) {
+        parts.push(`開始日: ${goalData.targetStart}`);
       }
-      if (goalData.height && goalData.targetWeight) {
-        const heightM = goalData.height / 100;
-        const targetBMI = (goalData.targetWeight / (heightM * heightM)).toFixed(
-          1
+      if (goalData.targetDate) {
+        parts.push(`終了日: ${goalData.targetDate}`);
+      }
+      if (goalData.targetStart) {
+        const startDate = new Date(goalData.targetStart);
+        const today = new Date();
+        const elapsedDays = Math.floor(
+          (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
         );
-        parts.push(`目標BMI: ${targetBMI}`);
+        parts.push(`経過日: ${elapsedDays}日`);
       }
       parts.push('');
     }
@@ -332,13 +364,6 @@ const MailCompose = observer(() => {
     // 体重データサマリーセクション
     parts.push(generateWeightSummary());
     parts.push('');
-
-    // 追加メッセージ
-    if (additionalMessage.trim()) {
-      parts.push('【メッセージ】');
-      parts.push(additionalMessage.trim());
-      parts.push('');
-    }
 
     // フッター
     parts.push('---');
@@ -397,10 +422,10 @@ const MailCompose = observer(() => {
         {/* ページタイトル */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-            メール送信
+            メール作成
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            健康データをメールで送信できます
+            健康データをまとめたメールを作成できます
           </p>
         </div>
 
@@ -409,54 +434,53 @@ const MailCompose = observer(() => {
           <div className="text-sm text-gray-600 dark:text-gray-400 flex justify-center">
             <div className="text-left max-w-md">
               <ul className="list-disc list-inside space-y-1">
+                <li>メーラーアプリが起動するので、そこから送信してください</li>
                 <li>個人情報とデータサマリーを本文に含めることができます</li>
                 <li>
                   グラフのスクリーンショットを添付して詳細データを共有できます
                 </li>
-                <li>メーラーアプリが起動するので、そこから送信してください</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* 差出人情報入力フォーム */}
+        {/* メール情報 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
-            差出人情報
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 差出人情報セクション */}
+          <div className="mb-6 space-y-4">
             {/* 氏名 */}
-            <div>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
               <label
                 htmlFor="senderName"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-fit"
               >
-                氏名 <span className="text-red-600">*必須</span>
+                氏名
               </label>
-              <input
-                type="text"
-                id="senderName"
-                value={senderName}
-                onChange={e => setSenderName(e.target.value)}
-                placeholder="山田 太郎"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              />
-              {goalData?.name && !senderName && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  目標ページ: {goalData.name}
-                </p>
-              )}
+              <div className="flex-1">
+                <input
+                  type="text"
+                  id="senderName"
+                  value={senderName}
+                  onChange={e => setSenderName(e.target.value)}
+                  placeholder="山田 太郎"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  required
+                />
+                {goalData?.name && !senderName && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    目標ページ: {goalData.name}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* 連絡先 */}
-            <div>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
               <label
                 htmlFor="senderContact"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-fit"
               >
-                連絡先（任意）
+                連絡先
               </label>
               <input
                 type="text"
@@ -464,177 +488,56 @@ const MailCompose = observer(() => {
                 value={senderContact}
                 onChange={e => setSenderContact(e.target.value)}
                 placeholder="電話番号やメールアドレスなど"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-            💡
-            氏名は目標ページから自動入力されます。年齢・性別は目標ページから参照されます。
-          </p>
-        </div>
-
-        {/* 目標ページの情報（参考情報） */}
-        {goalData && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
-              <FaInfoCircle className="text-blue-600" />
-              参考情報（目標ページより）
-            </h2>
-            <div className="flex justify-center mb-4">
-              <Link
-                to="/goal"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
+          {/* メール送信情報セクション */}
+          <div className="space-y-4">
+            {/* 宛先 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+              <label
+                htmlFor="recipient"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-fit"
               >
-                <FaEdit />
-                目標ページで編集
-              </Link>
+                宛先
+              </label>
+              <input
+                type="email"
+                id="recipient"
+                value={recipient}
+                onChange={e => setRecipient(e.target.value)}
+                placeholder="example@example.com"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-              {goalData.name && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">氏名</span>
-                  <div className="font-medium text-gray-800 dark:text-white">
-                    {goalData.name}
-                  </div>
-                </div>
-              )}
-              {goalData.birthYear && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">年齢</span>
-                  <div className="font-medium text-gray-800 dark:text-white">
-                    {calculateAge(goalData.birthYear)}歳 (生年:{' '}
-                    {goalData.birthYear})
-                  </div>
-                </div>
-              )}
-              {goalData.gender && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">性別</span>
-                  <div className="font-medium text-gray-800 dark:text-white">
-                    {goalData.gender === 'male'
-                      ? '男性'
-                      : goalData.gender === 'female'
-                      ? '女性'
-                      : 'その他'}
-                  </div>
-                </div>
-              )}
-              {goalData.height && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">身長</span>
-                  <div className="font-medium text-gray-800 dark:text-white">
-                    {goalData.height}cm
-                  </div>
-                </div>
-              )}
-              {goalData.targetWeight && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    目標体重
-                  </span>
-                  <div className="font-medium text-green-600 dark:text-green-400">
-                    {goalData.targetWeight}kg
-                  </div>
-                </div>
-              )}
-              {goalData.targetDate && (
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">
-                    目標期日
-                  </span>
-                  <div className="font-medium text-green-600 dark:text-green-400">
-                    {goalData.targetDate}
-                  </div>
-                </div>
-              )}
+            {/* 件名 */}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+              <label
+                htmlFor="subject"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-fit"
+              >
+                件名
+              </label>
+              <input
+                type="text"
+                id="subject"
+                value={subject}
+                onChange={e => setSubject(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
             </div>
-          </div>
-        )}
-
-        {/* メールフォーム */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2 justify-center">
-            メール情報
-          </h2>
-
-          {/* 宛先 */}
-          <div className="mb-4">
-            <label
-              htmlFor="recipient"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              宛先（任意）
-            </label>
-            <input
-              type="email"
-              id="recipient"
-              value={recipient}
-              onChange={e => setRecipient(e.target.value)}
-              placeholder="example@example.com"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              空欄の場合、メーラーで宛先を指定できます
-            </p>
-          </div>
-
-          {/* 件名 */}
-          <div className="mb-4">
-            <label
-              htmlFor="subject"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              件名
-            </label>
-            <input
-              type="text"
-              id="subject"
-              value={subject}
-              onChange={e => setSubject(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            />
           </div>
 
           {/* データが無い場合の警告 */}
-          {!senderName.trim() && !goalData?.name && (
-            <StatusMessage
-              type="error"
-              message="氏名を入力してください（必須）。"
-            />
-          )}
           {!goalData?.targetWeight && (
             <StatusMessage
               type="info"
               message="目標体重が設定されていません。"
             />
           )}
-          {weeklySummaries.length === 0 && (
-            <StatusMessage
-              type="warning"
-              message="体重データがありません（過去1ヶ月）。体重ページで記録を追加してください。"
-            />
-          )}
-
-          {/* 追加メッセージ */}
-          <div className="mb-4">
-            <label
-              htmlFor="additionalMessage"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              追加メッセージ（任意）
-            </label>
-            <textarea
-              id="additionalMessage"
-              value={additionalMessage}
-              onChange={e => setAdditionalMessage(e.target.value)}
-              rows={4}
-              placeholder="相談内容や質問などをご記入ください"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-vertical"
-            />
-          </div>
         </div>
 
         {/* 体重データ週次サマリー表示 */}
@@ -651,10 +554,10 @@ const MailCompose = observer(() => {
                       期間
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      最低
+                      最高
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      最高
+                      最低
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       記録数
@@ -662,8 +565,7 @@ const MailCompose = observer(() => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {weeklySummaries.map((summary, index) => {
-                    const weekNum = index + 1;
+                  {weeklySummaries.map((summary) => {
                     const startDate = new Date(summary.weekStart);
                     const endDate = new Date(summary.weekEnd);
                     const formatDate = (date: Date) => {
@@ -675,17 +577,17 @@ const MailCompose = observer(() => {
                     return (
                       <tr key={summary.weekStart}>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                          第{weekNum}週
+                          第{summary.weekNum}週
                           <br />
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {formatDate(startDate)}～{formatDate(endDate)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
-                          {summary.minWeight.toFixed(1)}kg
-                        </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-red-600 dark:text-red-400">
                           {summary.maxWeight.toFixed(1)}kg
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {summary.minWeight.toFixed(1)}kg
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                           {summary.recordCount}件
@@ -749,7 +651,7 @@ const MailCompose = observer(() => {
             本文プレビュー
           </h2>
           <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono">
+            <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono text-left">
               {previewBody}
             </pre>
           </div>
@@ -897,21 +799,23 @@ const MailCompose = observer(() => {
         </div>
 
         {/* 補足説明 */}
-        <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-2">
-          <p>
-            ※
-            メーラーアプリが起動します。必要に応じてグラフのスクリーンショットを添付してから送信してください。
-          </p>
-          <p>
-            ※
-            メーラーが起動しない場合は、お使いのデバイスにメールアプリが設定されているかご確認ください。
-          </p>
-          {!senderName.trim() && !goalData?.name && (
-            <p className="text-red-600 dark:text-red-400">
-              ※ <strong>氏名は必須です。</strong>
-              差出人情報に入力してください。
+        <div className="mt-6 flex justify-center">
+          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2 text-left max-w-md">
+            <p>
+              ※
+              メーラーアプリが起動します。必要に応じてグラフのスクリーンショットを添付してから送信してください。
             </p>
-          )}
+            <p>
+              ※
+              メーラーが起動しない場合は、お使いのデバイスにメールアプリが設定されているかご確認ください。
+            </p>
+            {!senderName.trim() && !goalData?.name && (
+              <p className="text-red-600 dark:text-red-400">
+                ※ <strong>氏名は必須です。</strong>
+                差出人情報に入力してください。
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
