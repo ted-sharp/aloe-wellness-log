@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import type { IconType } from 'react-icons';
 
 // ボタンのバリアント（用途別）
@@ -60,36 +60,23 @@ export const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   loading = false,
   fullWidth = false,
-  success = false,
-  successDuration = 2000,
+  _success,
+  _successDuration,
   pulseOnClick = true,
   className = '',
   children,
   disabled,
   ...props
 }) => {
-  const [showSuccess, setShowSuccess] = useState(false);
   const isDisabled = disabled || loading;
-
-  // 成功状態の管理
-  useEffect(() => {
-    if (success) {
-      setShowSuccess(true);
-      const timer = setTimeout(() => {
-        setShowSuccess(false);
-      }, successDuration);
-      return () => clearTimeout(timer);
-    }
-  }, [success, successDuration]);
 
   const buttonClasses = [
     baseStyles,
-    variantStyles[showSuccess ? 'success' : variant],
+    variantStyles[variant],
     sizeStyles[size],
     fullWidth ? 'w-full' : 'w-auto',
     'hover:shadow-lg transform transition-all duration-200',
     pulseOnClick ? 'active:scale-95 hover:scale-105' : '',
-    showSuccess ? 'success-bounce' : '',
     className,
   ].join(' ');
 
@@ -107,14 +94,6 @@ export const Button: React.FC<ButtonProps> = ({
             読み込み中です。しばらくお待ちください。
           </span>
           読み込み中...
-        </>
-      ) : showSuccess ? (
-        <>
-          {Icon && <Icon className={iconSize} aria-hidden="true" />}
-          <span className="sr-only" aria-live="polite">
-            操作が完了しました。
-          </span>
-          完了!
         </>
       ) : (
         <>
