@@ -1,7 +1,7 @@
 // データベース設定の定数定義
 export const DATABASE_CONFIG = {
   NAME: 'aloe-wellness-log',
-  VERSION: 4,
+  VERSION: 5, // メール送信者情報ストア追加のためバージョンアップ
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000, // 1秒
   TRANSACTION_TIMEOUT: 30000, // 30秒
@@ -14,10 +14,11 @@ export const STORE_NAMES = {
   BP_RECORDS: 'bp_records',
   DAILY_RECORDS: 'daily_records',
   DAILY_FIELDS: 'daily_fields',
+  MAIL_SENDER: 'mail_sender', // メール送信者情報
 } as const;
 
 // ストア名の型定義
-export type StoreName = typeof STORE_NAMES[keyof typeof STORE_NAMES];
+export type StoreName = (typeof STORE_NAMES)[keyof typeof STORE_NAMES];
 
 // インデックス設定の型定義
 export interface IndexConfig {
@@ -84,5 +85,9 @@ export const STORE_CONFIGS: StoreConfig[] = [
   {
     name: STORE_NAMES.DAILY_FIELDS,
     keyPath: 'fieldId',
+  },
+  {
+    name: STORE_NAMES.MAIL_SENDER,
+    keyPath: 'id', // 固定ID 'default' を使用
   },
 ];

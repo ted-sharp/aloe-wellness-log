@@ -36,6 +36,10 @@ export {
 } from './repositories/DailyRecordRepository';
 export { GoalRepository, goalRepository } from './repositories/GoalRepository';
 export {
+  MailSenderRepository,
+  mailSenderRepository,
+} from './repositories/MailSenderRepository';
+export {
   WeightRecordRepository,
   weightRecordRepository,
 } from './repositories/WeightRecordRepository';
@@ -306,6 +310,7 @@ export async function deleteAllData(): Promise<void> {
         STORE_NAMES.BP_RECORDS,
         STORE_NAMES.DAILY_RECORDS,
         STORE_NAMES.DAILY_FIELDS,
+        STORE_NAMES.MAIL_SENDER,
       ],
       'readwrite',
       async (_transaction, stores) => {
@@ -316,11 +321,12 @@ export async function deleteAllData(): Promise<void> {
           bpStore,
           dailyRecordStore,
           dailyFieldStore,
+          mailSenderStore,
         ] = storeArray;
 
         return new Promise<void>((resolve, reject) => {
           let completedOperations = 0;
-          const totalOperations = 5;
+          const totalOperations = 6;
 
           const checkCompletion = () => {
             completedOperations++;
@@ -353,6 +359,11 @@ export async function deleteAllData(): Promise<void> {
           dailyFieldRequest.onsuccess = checkCompletion;
           dailyFieldRequest.onerror = () =>
             handleError(dailyFieldRequest.error);
+
+          const mailSenderRequest = mailSenderStore.clear();
+          mailSenderRequest.onsuccess = checkCompletion;
+          mailSenderRequest.onerror = () =>
+            handleError(mailSenderRequest.error);
         });
       }
     );
